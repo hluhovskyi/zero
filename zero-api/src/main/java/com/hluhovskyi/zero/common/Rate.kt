@@ -14,7 +14,7 @@ interface Rate {
 
         operator fun invoke(value: Double): Rate = ValueRate(BigDecimal.valueOf(value))
 
-        operator fun invoke(value: BigDecimal): Rate = ValueRate(value)
+        operator fun invoke(value: BigDecimal?): Rate = value?.let(::ValueRate) ?: Same
     }
 }
 

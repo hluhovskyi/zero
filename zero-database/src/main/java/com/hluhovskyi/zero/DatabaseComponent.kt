@@ -28,15 +28,16 @@ interface DatabaseComponent {
 
     companion object {
 
-        fun factory(): DatabaseComponent.Factory = DaggerDatabaseComponent.factory()
+        fun builder(dependencies: Dependencies): Builder = DaggerDatabaseComponent.builder()
+            .dependencies(dependencies)
     }
 
-    @dagger.Component.Factory
-    interface Factory {
+    @dagger.Component.Builder
+    interface Builder {
 
-        fun create(
-            dependencies: Dependencies
-        ): DatabaseComponent
+        fun dependencies(dependencies: Dependencies): Builder
+
+        fun build(): DatabaseComponent
     }
 
     @dagger.Module

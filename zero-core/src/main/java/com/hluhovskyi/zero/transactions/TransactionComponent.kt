@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.common.AttachableViewComponent
+import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.ViewProvider
 import dagger.BindsInstance
@@ -27,16 +28,18 @@ abstract class TransactionComponent : AttachableViewComponent {
 
     companion object {
 
-        fun factory(): Factory = DaggerTransactionComponent.factory()
+        fun builder(dependencies: Dependencies): Builder = DaggerTransactionComponent.builder()
+            .dependencies(dependencies)
+            .transactionRepository(TransactionRepository.Noop)
     }
 
-    @dagger.Component.Factory
-    interface Factory {
+    @dagger.Component.Builder
+    interface Builder : Buildable<TransactionComponent> {
 
-        fun create(
-            dependencies: Dependencies,
-            @BindsInstance transactionRepository: TransactionRepository = TransactionRepository.Noop
-        ): TransactionComponent
+        fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun transactionRepository(transactionRepository: TransactionRepository): Builder
     }
 
     @dagger.Module

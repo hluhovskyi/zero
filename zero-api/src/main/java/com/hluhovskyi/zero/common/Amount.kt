@@ -20,7 +20,7 @@ interface Amount {
 
         operator fun invoke(value: Long): Amount = ValueAmount(BigDecimal.valueOf(value))
 
-        operator fun invoke(value: BigDecimal): Amount = ValueAmount(value)
+        operator fun invoke(value: BigDecimal?): Amount = value?.let(::ValueAmount) ?: zero()
     }
 }
 

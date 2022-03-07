@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions.edit
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,28 +12,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.hluhovskyi.zero.accounts.AccountRepository
-import com.hluhovskyi.zero.accounts.StubAccountRepository
 import com.hluhovskyi.zero.common.Account
-import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
-import com.hluhovskyi.zero.common.IdGenerator
-import com.hluhovskyi.zero.common.Rate
-import com.hluhovskyi.zero.common.Transaction
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.currencies.CurrencyRepository
-import com.hluhovskyi.zero.currencies.StubCurrencyRepository
-import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
-import kotlinx.coroutines.launch
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel
@@ -83,9 +69,32 @@ private fun TransactionEditView(
                     keyboardType = KeyboardType.Number
                 ),
                 onValueChange = {
-                    viewModel.action(TransactionEditViewModel.Action.ChangeAmount(
-                        amount = it
-                    ))
+                    viewModel.action(
+                        TransactionEditViewModel.Action.ChangeAmount(
+                            amount = it
+                        )
+                    )
+                }
+            )
+        }
+        val isVisible = if (state.selectedCurrency != null && state.selectedAccount != null) {
+            state.selectedCurrency?.id != state.selectedAccount?.currencyId
+        } else {
+            false
+        }
+        AnimatedVisibility(visible = isVisible) {
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(top = 16.dp),
+                value = state.rate,
+                label = { Text(text = "Rate") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                onValueChange = { rate ->
+                    viewModel.action(
+                        TransactionEditViewModel.Action.ChangeRate(rate)
+                    )
                 }
             )
         }
@@ -100,6 +109,7 @@ private fun TransactionEditView(
                 Text(text = "Save")
             }
         }
+
     }
 }
 

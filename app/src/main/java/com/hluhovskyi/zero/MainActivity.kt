@@ -26,24 +26,11 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val databaseComponent = DatabaseComponent.factory()
-        .create(
-            dependencies = object : DatabaseComponent.Dependencies {
-                override val context: Context = this@MainActivity
-            }
-        )
-    private val transactionComponent = TransactionComponent.factory()
-        .create(
-            dependencies = object : TransactionComponent.Dependencies {},
-            transactionRepository = databaseComponent.transactionRepository
-        )
-    private val transactionEditComponent = TransactionEditComponent.factory()
-        .create(
-            dependencies = object : TransactionEditComponent.Dependencies {},
-            transactionRepository = databaseComponent.transactionRepository,
-            currencyRepository = StubCurrencyRepository(),
-            accountRepository = StubAccountRepository()
-        )
+    private val activityComponent: ActivityComponent by lazy {
+        application.requireApplicationComponent()
+            .activityComponentBuilder
+            .build()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {
                             Column {
-                                transactionComponent.viewProvider()
+                                activityComponent.transactionComponentBuilder.AttachWithView()
                                 Button(
                                     onClick = {
                                         navController.navigate("transactions/edit")
@@ -68,7 +55,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable("transactions/edit") {
-                            transactionEditComponent.AttachWithView()
+                            activityComponent.transactionEditComponentBuilder
+                                .onTransactionSavedHandler { navController.navigate("home") }
+                                .AttachWithView()
                         }
                     }
                 }
