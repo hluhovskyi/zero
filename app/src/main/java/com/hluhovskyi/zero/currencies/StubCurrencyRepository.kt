@@ -12,15 +12,18 @@ class StubCurrencyRepository : CurrencyRepository {
             listOf(
                 Currency(
                     id = Id("UAH"),
-                    name = "UAH"
+                    name = "UAH",
+                    symbol = '₴',
                 ),
                 Currency(
                     id = Id("USD"),
-                    name = "USD"
+                    name = "USD",
+                    symbol = '$',
                 ),
                 Currency(
                     id = Id("EUR"),
-                    name = "EUR"
+                    name = "EUR",
+                    symbol = '€',
                 ),
             )
         )

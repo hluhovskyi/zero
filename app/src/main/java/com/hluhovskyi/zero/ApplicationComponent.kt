@@ -3,6 +3,11 @@ package com.hluhovskyi.zero
 import android.content.Context
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.StubAccountRepository
+import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.StubCategoryRepository
+import com.hluhovskyi.zero.common.AndroidUriResourceFactory
+import com.hluhovskyi.zero.common.DefaultAndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.StubCurrencyRepository
@@ -56,11 +61,26 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun imageLoader(
+            context: Context
+        ): ImageLoader = ImageLoader.factory(context).create()
+
+        @Provides
+        @ApplicationScope
+        fun androidUriResourceFactory(
+            context: Context
+        ): AndroidUriResourceFactory = DefaultAndroidUriResourceFactory(
+            packageName = context.packageName
+        )
+
+        @Provides
+        @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
             logger: Logger
         ): ActivityComponent.Builder = ActivityComponent.builder(component)
             .logger(logger)
+
     }
 }
 
@@ -87,4 +107,12 @@ private object DatabaseModule {
     @Provides
     @ApplicationScope
     fun currencyRepository(): CurrencyRepository = StubCurrencyRepository()
+
+    @Provides
+    @ApplicationScope
+    fun categoryRepository(
+        androidUriResourceFactory: AndroidUriResourceFactory
+    ): CategoryRepository = StubCategoryRepository(
+        uriFactory = androidUriResourceFactory
+    )
 }

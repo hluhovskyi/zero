@@ -47,10 +47,7 @@ private fun TransactionView(
                     )
             ) {
                 Row {
-                    Text(text = transaction.amount.value.toPlainString())
-                }
-                Row {
-                    Text(text = transaction.currencyId.value)
+                    Text(text = "${transaction.amount.value.toPlainString()}")
                 }
             }
         }

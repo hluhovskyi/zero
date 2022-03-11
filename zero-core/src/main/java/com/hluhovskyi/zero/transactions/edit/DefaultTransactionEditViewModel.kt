@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.IdGenerator
@@ -23,10 +24,12 @@ private const val TAG = "DefaultTransactionEditViewModel"
 
 internal class DefaultTransactionEditViewModel(
     private val accountRepository: AccountRepository,
+    private val categoryRepository: CategoryRepository,
     private val currencyRepository: CurrencyRepository,
     private val transactionRepository: TransactionRepository,
     private val idGenerator: IdGenerator,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
+    private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
 ): TransactionEditViewModel {
@@ -36,8 +39,8 @@ internal class DefaultTransactionEditViewModel(
     private val mutableState = MutableStateFlow(TransactionEditViewModel.State())
     override val state: Flow<TransactionEditViewModel.State> = mutableState
 
-    override fun action(action: TransactionEditViewModel.Action) {
-        logger.d("action=$action")
+    override fun perform(action: TransactionEditViewModel.Action) {
+        logger.d("perform=$action")
         when (action) {
             is TransactionEditViewModel.Action.ChangeAmount -> {
                 mutableState.update { state ->
@@ -47,6 +50,21 @@ internal class DefaultTransactionEditViewModel(
             is TransactionEditViewModel.Action.ChangeRate -> {
                 mutableState.update { state ->
                     state.copy(rate = action.rate)
+                }
+            }
+            is TransactionEditViewModel.Action.SelectAccount -> {
+                mutableState.update { state ->
+                    state.copy(selectedAccount = action.account)
+                }
+            }
+            is TransactionEditViewModel.Action.SelectCurrency -> {
+                mutableState.update { state ->
+                    state.copy(selectedCurrency = action.currency)
+                }
+            }
+            is TransactionEditViewModel.Action.EditCategories -> {
+                coroutineScope.launch(context = Dispatchers.Main) {
+                    onEditCategoriesHandler.onEdit()
                 }
             }
             is TransactionEditViewModel.Action.Save -> {
@@ -72,16 +90,6 @@ internal class DefaultTransactionEditViewModel(
                     }
                 }
             }
-            is TransactionEditViewModel.Action.SelectAccount -> {
-                mutableState.update { state ->
-                    state.copy(selectedAccount = action.account)
-                }
-            }
-            is TransactionEditViewModel.Action.SelectCurrency -> {
-                mutableState.update { state ->
-                    state.copy(selectedCurrency = action.currency)
-                }
-            }
         }
     }
 
@@ -93,6 +101,16 @@ internal class DefaultTransactionEditViewModel(
                         state.copy(
                             accounts = accounts,
                             selectedAccount = state.selectedAccount ?: accounts.firstOrNull()
+                        )
+                    }
+                }
+
+            categoryRepository.query(CategoryRepository.Criteria.All())
+                .collectLatest { categories ->
+                    mutableState.update { state ->
+                        state.copy(
+                            categories = categories,
+                            selectedCategory = state.selectedCategory ?: categories.firstOrNull()
                         )
                     }
                 }

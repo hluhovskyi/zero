@@ -1,0 +1,66 @@
+package com.hluhovskyi.zero
+
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.Uri
+
+interface ImageLoader {
+
+    @Composable
+    fun View(
+        uri: Uri,
+        contentDescription: String?,
+        modifier: Modifier,
+        scale: Scale
+    )
+
+    @Composable
+    fun View(
+        image: Image,
+        modifier: Modifier = Modifier,
+        scale: Scale = Scale.Fit
+    ) {
+        View(
+            uri = image.uri,
+            contentDescription = image.description,
+            modifier = modifier,
+            scale = scale
+        )
+    }
+
+    enum class Scale {
+        Fit,
+        Crop
+    }
+
+    interface Factory {
+
+        fun create(): ImageLoader
+    }
+
+    companion object {
+
+        fun empty(): ImageLoader = EmptyImageLoader
+
+        fun factory(
+            context: Context
+        ): Factory = CoilImageLoaderFactory(context)
+    }
+}
+
+@Composable
+fun ImageLoader.View(
+    uri: Uri,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    scale: ImageLoader.Scale = ImageLoader.Scale.Fit
+) {
+    View(
+        uri = uri,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        scale = scale
+    )
+}

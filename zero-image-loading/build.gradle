@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
 }
 
 android {
@@ -11,9 +10,9 @@ android {
         minSdk versions.minSdk
         targetSdk versions.targetSdk
 
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -27,27 +26,19 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    buildFeatures {
-        compose true
-    }
     composeOptions {
         kotlinCompilerExtensionVersion versions.compose
+    }
+    buildFeatures {
+        buildConfig false
+        compose true
     }
 }
 
 dependencies {
 
     implementation(project(":zero-api"))
-    implementation(project(":zero-ui"))
-    implementation(project(":zero-image-loading"))
-
-    implementation deps.dagger.runtime
-    kapt deps.dagger.compiler
 
     implementation deps.android.compose.foundation
-    implementation deps.android.compose.ui
-    implementation deps.android.compose.material
-
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation deps.coil
 }

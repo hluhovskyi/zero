@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> TextFieldDropdownMenu(
+    modifier: Modifier = Modifier,
     items: List<T>,
     selectedItem: T?,
     label: @Composable (() -> Unit)? = null,
@@ -24,6 +25,7 @@ fun <T> TextFieldDropdownMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
+        modifier = modifier,
         expanded = expanded,
         onExpandedChange = { expanded = it },
     ) {

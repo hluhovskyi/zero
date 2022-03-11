@@ -1,8 +1,8 @@
 package com.hluhovskyi.zero.common
 
-interface Category {
-
-    val id: Id.Known
-    val name: String
-    val icon: Image
-}
+data class Category(
+    val id: Id.Known,
+    val parentCategoryId: Id,
+    val name: String,
+    val icon: Image,
+)

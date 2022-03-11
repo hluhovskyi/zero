@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":zero-api"))
     implementation(project(":zero-database"))
     implementation(project(":zero-core"))
+    implementation(project(":zero-image-loading"))
 
     implementation deps.android.compose.navigation
 
