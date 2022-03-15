@@ -1,7 +1,5 @@
 package com.hluhovskyi.zero.common
 
-import java.util.UUID
-
 interface IdGenerator {
 
     operator fun invoke(): Id.Known

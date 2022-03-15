@@ -3,22 +3,29 @@ package com.hluhovskyi.zero.transactions
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.Transaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
 
 internal class RoomTransactionRepository(
-    private val transactionRoom: () -> TransactionRoom
+    private val transactionRoom: () -> TransactionRoom,
+    private val currentUserId: Flow<Id.Known>,
+    private val incorrectStateDetector: IncorrectStateDetector,
 ) : TransactionRepository {
-    override fun query(criteria: TransactionRepository.Criteria): Flow<List<Transaction>> =
-        transactionRoom().selectAll()
+    override fun query(criteria: TransactionRepository.Criteria): Flow<List<Transaction>> = currentUserId.take(1).flatMapConcat { userId ->
+        transactionRoom().selectByUserId(userId)
             .map { entities ->
                 entities.mapNotNull { entity ->
                     when (entity.type) {
                         TransactionEntity.Type.EXPENSE -> {
-                            val categoryId = entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
+                            val categoryId =
+                                entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
                             Transaction.Expense(
                                 id = entity.id,
                                 amount = entity.amount.convert(),
@@ -30,7 +37,8 @@ internal class RoomTransactionRepository(
                         }
 
                         TransactionEntity.Type.INCOME -> {
-                            val categoryId = entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
+                            val categoryId =
+                                entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
                             Transaction.Income(
                                 id = entity.id,
                                 amount = entity.amount.convert(),
@@ -55,47 +63,56 @@ internal class RoomTransactionRepository(
                     }
                 }
             }
+    }
 
     override suspend fun insert(transaction: Transaction) {
-        val entity = when (transaction) {
-            is Transaction.Expense -> TransactionEntity(
-                id = transaction.id,
-                type = TransactionEntity.Type.EXPENSE,
-                currencyId = transaction.currencyId,
-                accountId = transaction.accountId,
-                categoryId = transaction.categoryId.value,
-                amount = transaction.amount.convert(),
-                rate = transaction.rate.convert(),
-                targetAccount = null,
-                targetAmount = AmountEntity.empty()
-            )
+        incorrectStateDetector.asyncRequireNonNull(
+            value = currentUserId.firstOrNull(),
+            message = "Current user id is empty"
+        ) { userId ->
+            val entity = when (transaction) {
+                is Transaction.Expense -> TransactionEntity(
+                    id = transaction.id,
+                    userId = userId,
+                    type = TransactionEntity.Type.EXPENSE,
+                    currencyId = transaction.currencyId,
+                    accountId = transaction.accountId,
+                    categoryId = transaction.categoryId.value,
+                    amount = transaction.amount.convert(),
+                    rate = transaction.rate.convert(),
+                    targetAccount = null,
+                    targetAmount = AmountEntity.empty()
+                )
 
-            is Transaction.Income -> TransactionEntity(
-                id = transaction.id,
-                type = TransactionEntity.Type.INCOME,
-                currencyId = transaction.currencyId,
-                accountId = transaction.accountId,
-                categoryId = transaction.categoryId.value,
-                amount = transaction.amount.convert(),
-                rate = transaction.rate.convert(),
-                targetAccount = null,
-                targetAmount = AmountEntity.empty()
-            )
+                is Transaction.Income -> TransactionEntity(
+                    id = transaction.id,
+                    userId = userId,
+                    type = TransactionEntity.Type.INCOME,
+                    currencyId = transaction.currencyId,
+                    accountId = transaction.accountId,
+                    categoryId = transaction.categoryId.value,
+                    amount = transaction.amount.convert(),
+                    rate = transaction.rate.convert(),
+                    targetAccount = null,
+                    targetAmount = AmountEntity.empty()
+                )
 
-            is Transaction.Transfer -> TransactionEntity(
-                id = transaction.id,
-                type = TransactionEntity.Type.INCOME,
-                currencyId = transaction.currencyId,
-                accountId = transaction.accountId,
-                categoryId = null,
-                amount = transaction.amount.convert(),
-                rate = RateEntity.empty(),
-                targetAccount = transaction.targetAccount.value,
-                targetAmount = transaction.targetAmount.convert()
-            )
+                is Transaction.Transfer -> TransactionEntity(
+                    id = transaction.id,
+                    userId = userId,
+                    type = TransactionEntity.Type.INCOME,
+                    currencyId = transaction.currencyId,
+                    accountId = transaction.accountId,
+                    categoryId = null,
+                    amount = transaction.amount.convert(),
+                    rate = RateEntity.empty(),
+                    targetAccount = transaction.targetAccount.value,
+                    targetAmount = transaction.targetAmount.convert()
+                )
+            }
+
+            transactionRoom().insert(entity)
         }
-
-        transactionRoom().insert(entity)
     }
 
     private fun AmountEntity.convert(): Amount = Amount(value)

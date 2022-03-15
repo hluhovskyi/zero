@@ -2,15 +2,19 @@ package com.hluhovskyi.zero.transactions
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.RateEntity
 
-@Entity
+@Entity(
+    indices = [Index("userId")]
+)
 internal data class TransactionEntity(
     @PrimaryKey val id: Id.Known,
+    val userId: Id.Known,
     val type: Type,
     val currencyId: Id.Known,
     val accountId: Id.Known,
