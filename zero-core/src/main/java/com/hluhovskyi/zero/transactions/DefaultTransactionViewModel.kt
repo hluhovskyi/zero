@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
-import com.hluhovskyi.zero.common.Account
 import com.hluhovskyi.zero.common.Category
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
@@ -77,7 +76,7 @@ internal class DefaultTransactionViewModel(
     private fun resolve(
         transaction: Transaction,
         idToCategories: Map<Id.Known, Category>,
-        idToAccounts: Map<Id.Known, Account>,
+        idToAccounts: Map<Id.Known, AccountRepository.Account>,
         idToCurrencies: Map<Id.Known, Currency>,
     ): TransactionViewModel.TransactionItem? {
         return when (transaction) {

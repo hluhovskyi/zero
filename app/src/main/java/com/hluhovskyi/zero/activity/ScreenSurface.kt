@@ -7,6 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.hluhovskyi.zero.activity.screens.AccountsEditScreen
 import com.hluhovskyi.zero.activity.screens.AccountsScreen
 import com.hluhovskyi.zero.activity.screens.CategoriesScreen
 import com.hluhovskyi.zero.activity.screens.TransactionScreen
@@ -25,7 +26,14 @@ fun ScreenSurface(
     ) {
         composable(Destination.Account.All) {
             AccountsScreen(
-                component = activityComponent.accountComponentBuilder
+                component = activityComponent.accountComponentBuilder,
+                onAccountEdit = { navController.navigate("accounts/edit") }
+            )
+        }
+        composable(Destination.Account.Edit) {
+            AccountsEditScreen(
+                component = activityComponent.accountEditComponentBuilder
+                    .onAccountSavedHandler { navController.navigate("accounts") },
             )
         }
         composable(Destination.Transaction.All) {

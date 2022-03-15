@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.hluhovskyi.zero.common.Account
+import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.Category
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
@@ -137,9 +137,9 @@ private fun TransactionEditView(
 @Composable
 private fun AccountSelect(
     modifier: Modifier = Modifier,
-    accounts: List<Account>,
-    selectedAccount: Account?,
-    onAccountSelected: (Account) -> Unit
+    accounts: List<AccountRepository.Account>,
+    selectedAccount: AccountRepository.Account?,
+    onAccountSelected: (AccountRepository.Account) -> Unit
 ) {
     TextFieldDropdownMenu(
         modifier = modifier,

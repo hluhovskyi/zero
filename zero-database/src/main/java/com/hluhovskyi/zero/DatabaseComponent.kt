@@ -2,6 +2,8 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import androidx.room.Room
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.emptyFlow
 import javax.inject.Provider
 import javax.inject.Qualifier
 import javax.inject.Scope
-import kotlin.math.log
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -35,6 +36,7 @@ private annotation class CurrentUserId
 interface DatabaseComponent {
 
     val currentUserRepository: CurrentUserRepository
+    val accountRepository: AccountRepository
     val transactionRepository: TransactionRepository
 
     interface Dependencies {
@@ -107,6 +109,20 @@ interface DatabaseComponent {
             idGenerator = idGenerator,
             logger = logger,
             currentUserRoom = { database.get().currentUser() }
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun accountRepository(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            incorrectStateDetector: IncorrectStateDetector,
+            idGenerator: IdGenerator,
+        ): AccountRepository = RoomAccountRepository(
+            accountRoom = { database.get().account() },
+            currentUserId = currentUserId,
+            incorrectStateDetector = incorrectStateDetector,
+            idGenerator = idGenerator
         )
     }
 }

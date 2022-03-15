@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.accounts
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -31,6 +32,7 @@ abstract class AccountComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerAccountComponent.builder()
             .dependencies(dependencies)
             .accountRepository(AccountRepository.Noop)
+            .transactionRepository(TransactionRepository.Noop)
     }
 
     @dagger.Component.Builder
@@ -40,6 +42,9 @@ abstract class AccountComponent : AttachableViewComponent {
 
         @BindsInstance
         fun accountRepository(accountRepository: AccountRepository): Builder
+
+        @BindsInstance
+        fun transactionRepository(transactionRepository: TransactionRepository): Builder
     }
 
     @dagger.Module
@@ -47,10 +52,20 @@ abstract class AccountComponent : AttachableViewComponent {
 
         @Provides
         @AccountScope
-        fun viewModel(
+        fun useCase(
             accountRepository: AccountRepository,
+            transactionRepository: TransactionRepository
+        ): AccountUseCase = DefaultAccountUseCase(
+            accountRepository = accountRepository,
+            transactionRepository = transactionRepository,
+        )
+
+        @Provides
+        @AccountScope
+        fun viewModel(
+            useCase: AccountUseCase
         ): AccountViewModel = DefaultAccountViewModel(
-            accountRepository = accountRepository
+            useCase = useCase
         )
 
         @Provides

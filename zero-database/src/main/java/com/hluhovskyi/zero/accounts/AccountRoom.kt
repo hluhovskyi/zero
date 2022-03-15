@@ -1,0 +1,21 @@
+package com.hluhovskyi.zero.accounts
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.hluhovskyi.zero.common.Id
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface AccountRoom {
+
+    @Query("SELECT * FROM AccountEntity WHERE userId=:userId")
+    fun selectByUserId(userId: String): Flow<List<AccountEntity>>
+
+    fun selectByUserId(userId: Id.Known): Flow<List<AccountEntity>> =
+        selectByUserId(userId.value)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(accountEntity: AccountEntity)
+}

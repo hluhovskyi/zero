@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -65,6 +66,7 @@ abstract class ActivityComponent :
         fun builder(dependencies: Dependencies): Builder = DaggerActivityComponent.builder()
             .dependencies(dependencies)
             .logger(Logger.Noop)
+            .idGenerator(IdGenerator.UUID)
     }
 
     @dagger.Component.Builder
@@ -74,6 +76,9 @@ abstract class ActivityComponent :
 
         @BindsInstance
         fun logger(logger: Logger): Builder
+
+        @BindsInstance
+        fun idGenerator(idGenerator: IdGenerator): Builder
     }
 
     @dagger.Module(
@@ -85,15 +90,23 @@ abstract class ActivityComponent :
         @ActivityScope
         fun accountComponentBuilder(
             component: ActivityComponent,
-            accountRepository: AccountRepository
+            accountRepository: AccountRepository,
+            transactionRepository: TransactionRepository,
         ): AccountComponent.Builder = AccountComponent.builder(component)
             .accountRepository(accountRepository)
+            .transactionRepository(transactionRepository)
 
         @Provides
         @ActivityScope
         fun accountEditComponentBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
+            idGenerator: IdGenerator,
+            currencyRepository: CurrencyRepository,
+            accountRepository: AccountRepository
         ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
+            .idGenerator(idGenerator)
+            .currencyRepository(currencyRepository)
+            .accountRepository(accountRepository)
 
         @Provides
         @ActivityScope
@@ -120,11 +133,13 @@ abstract class ActivityComponent :
             transactionRepository: TransactionRepository,
             categoryRepository: CategoryRepository,
             logger: Logger,
+            idGenerator: IdGenerator
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
             .accountRepository(accountRepository)
             .currencyRepository(currencyRepository)
             .transactionRepository(transactionRepository)
             .categoryRepository(categoryRepository)
+            .idGenerator(idGenerator)
             .logger(logger)
 
         @Provides

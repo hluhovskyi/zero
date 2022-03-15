@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.accounts
 
-import com.hluhovskyi.zero.common.Account
 import com.hluhovskyi.zero.common.AttachableStateViewModel
 
 interface AccountViewModel

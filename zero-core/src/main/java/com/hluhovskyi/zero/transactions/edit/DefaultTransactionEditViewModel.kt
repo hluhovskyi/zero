@@ -32,7 +32,7 @@ internal class DefaultTransactionEditViewModel(
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
-): TransactionEditViewModel {
+) : TransactionEditViewModel {
 
     private val logger = logger.withTag(TAG)
 
@@ -102,35 +102,46 @@ internal class DefaultTransactionEditViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            accountRepository.query(AccountRepository.Criteria.All())
-                .collectLatest { accounts ->
-                    mutableState.update { state ->
-                        state.copy(
-                            accounts = accounts,
-                            selectedAccount = state.selectedAccount ?: accounts.firstOrNull()
-                        )
+            launch {
+                accountRepository.query(AccountRepository.Criteria.All())
+                    .collectLatest { accounts ->
+                        logger.d("attach, accounts=$accounts")
+                        mutableState.update { state ->
+                            state.copy(
+                                accounts = accounts,
+                                selectedAccount = state.selectedAccount ?: accounts.firstOrNull()
+                            )
+                        }
                     }
-                }
+            }
 
-            categoryRepository.query(CategoryRepository.Criteria.All())
-                .collectLatest { categories ->
-                    mutableState.update { state ->
-                        state.copy(
-                            categories = categories,
-                            selectedCategory = state.selectedCategory ?: categories.firstOrNull()
-                        )
+            launch {
+                categoryRepository.query(CategoryRepository.Criteria.All())
+                    .collectLatest { categories ->
+                        logger.d("attach, categories=$categories")
+                        mutableState.update { state ->
+                            state.copy(
+                                categories = categories,
+                                selectedCategory = state.selectedCategory
+                                    ?: categories.firstOrNull()
+                            )
+                        }
                     }
-                }
+            }
 
-            currencyRepository.query(CurrencyRepository.Criteria.All())
-                .collectLatest { currencies ->
-                    mutableState.update { state ->
-                        state.copy(
-                            currencies = currencies,
-                            selectedCurrency = state.selectedCurrency ?: currencies.firstOrNull()
-                        )
+            launch {
+                currencyRepository.query(CurrencyRepository.Criteria.All())
+                    .collectLatest { currencies ->
+                        logger.d("attach, currencies=$currencies")
+                        mutableState.update { state ->
+                            state.copy(
+                                currencies = currencies,
+                                selectedCurrency = state.selectedCurrency
+                                    ?: currencies.firstOrNull()
+                            )
+                        }
                     }
-                }
+            }
         }
     }
 }

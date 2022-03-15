@@ -2,7 +2,6 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import com.hluhovskyi.zero.accounts.AccountRepository
-import com.hluhovskyi.zero.accounts.StubAccountRepository
 import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.StubCategoryRepository
@@ -101,9 +100,11 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
-            logger: Logger
+            logger: Logger,
+            idGenerator: IdGenerator
         ): ActivityComponent.Builder = ActivityComponent.builder(component)
             .logger(logger)
+            .idGenerator(idGenerator)
 
     }
 }
@@ -144,7 +145,9 @@ private object DatabaseModule {
 
     @Provides
     @ApplicationScope
-    fun accountRepository(): AccountRepository = StubAccountRepository()
+    fun accountRepository(
+        databaseComponent: DatabaseComponent
+    ): AccountRepository = databaseComponent.accountRepository
 
     @Provides
     @ApplicationScope

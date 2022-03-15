@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultAccountViewModel(
-    private val accountRepository: AccountRepository,
+    private val useCase: AccountUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : AccountViewModel {
 
@@ -26,14 +26,13 @@ internal class DefaultAccountViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            accountRepository.query(AccountRepository.Criteria.All())
-                .collectLatest { accounts ->
-                    mutableState.update { state ->
-                        state.copy(
-                            accounts = accounts
-                        )
-                    }
+            useCase.accounts.collectLatest { accounts ->
+                mutableState.update { state ->
+                    state.copy(
+                        accounts = accounts
+                    )
                 }
+            }
         }
     }
 }
