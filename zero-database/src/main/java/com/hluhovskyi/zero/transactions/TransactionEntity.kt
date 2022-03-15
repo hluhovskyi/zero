@@ -14,6 +14,7 @@ internal data class TransactionEntity(
     val type: Type,
     val currencyId: Id.Known,
     val accountId: Id.Known,
+    val categoryId: String?,
     @Embedded(prefix = "amount_") val amount: AmountEntity,
     @Embedded(prefix = "rate_") val rate: RateEntity,
     val targetAccount: String?,

@@ -62,6 +62,11 @@ internal class DefaultTransactionEditViewModel(
                     state.copy(selectedCurrency = action.currency)
                 }
             }
+            is TransactionEditViewModel.Action.SelectCategory -> {
+                mutableState.update { state ->
+                    state.copy(selectedCategory = action.category)
+                }
+            }
             is TransactionEditViewModel.Action.EditCategories -> {
                 coroutineScope.launch(context = Dispatchers.Main) {
                     onEditCategoriesHandler.onEdit()
@@ -72,12 +77,14 @@ internal class DefaultTransactionEditViewModel(
                     val state = mutableState.value
                     val account = state.selectedAccount ?: return@launch
                     val currency = state.selectedCurrency ?: return@launch
+                    val category = state.selectedCategory ?: return@launch
                     transactionRepository.insert(
                         Transaction.Expense(
                             id = idGenerator(),
                             amount = Amount(state.amount.toBigDecimalOrNull()),
                             accountId = account.id,
                             currencyId = currency.id,
+                            categoryId = category.id,
                             rate = if (account.currencyId == currency.id) {
                                 Rate.Same
                             } else {

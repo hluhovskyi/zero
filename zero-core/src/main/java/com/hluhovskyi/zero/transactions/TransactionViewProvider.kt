@@ -1,53 +1,122 @@
 package com.hluhovskyi.zero.transactions
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.hluhovskyi.zero.common.Transaction
+import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class TransactionViewProvider(
-    private val transactionRepository: TransactionRepository
+    private val viewModel: TransactionViewModel,
+    private val imageLoader: ImageLoader
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        val transactions by transactionRepository.query(TransactionRepository.Criteria.All())
-            .collectAsState(initial = emptyList())
-
         TransactionView(
-            transactions = transactions
+            viewModel = viewModel,
+            imageLoader = imageLoader
         )
     }
 }
 
 @Composable
 private fun TransactionView(
-    transactions: List<Transaction>
+    viewModel: TransactionViewModel,
+    imageLoader: ImageLoader
 ) {
-    LazyColumn {
-        itemsIndexed(transactions) { index, transaction ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { }
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
+    val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
+
+    LazyColumn(
+        contentPadding = PaddingValues(vertical = 8.dp)
+    ) {
+        items(state.transactions) { transaction ->
+            val modifier = Modifier
+                .fillMaxWidth()
+                .clickable { }
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                )
+
+            when (transaction) {
+                is TransactionViewModel.TransactionItem.Expense ->
+                    TransactionExpenseView(
+                        item = transaction,
+                        imageLoader = imageLoader,
+                        modifier = modifier
                     )
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionExpenseView(
+    modifier: Modifier,
+    item: TransactionViewModel.TransactionItem.Expense,
+    imageLoader: ImageLoader
+) {
+    Row(modifier = modifier) {
+        Column {
+            Box(
+                // TODO: Provide custom color
+                modifier = Modifier
+                    .background(Color.Red, shape = CircleShape)
+                    .padding(10.dp)
             ) {
-                Row {
-                    Text(text = "${transaction.amount.value.toPlainString()}")
+                imageLoader.View(
+                    image = item.categoryIcon,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.padding(start = 16.dp)
+        ) {
+            Row {
+                Text(
+                    text = item.categoryName,
+                    fontSize = 18.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    text = "-${item.amount.value.toPlainString()}${item.currencySymbol}"
+                )
+            }
+            Row {
+                Text(
+                    fontSize = 14.sp,
+                    text = item.accountName,
+                    modifier = Modifier.weight(1f),
+                )
+                if (item.conversion is TransactionViewModel.Conversion.WithAmount) {
+                    val rate = item.conversion.amount.value.toPlainString()
+                    Text(
+                        fontSize = 14.sp,
+                        text = rate + item.conversion.currencySymbol?.toString().orEmpty(),
+                    )
                 }
             }
         }

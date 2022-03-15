@@ -6,6 +6,8 @@ interface Amount {
 
     val value: BigDecimal
 
+    fun withRate(rate: Rate): Amount
+
     operator fun plus(amount: Amount): Amount
 
     operator fun minus(amount: Amount): Amount
@@ -25,6 +27,8 @@ interface Amount {
 }
 
 private class ValueAmount(override val value: BigDecimal) : Amount {
+
+    override fun withRate(rate: Rate): Amount = ValueAmount(value.multiply(rate.value))
 
     override fun plus(amount: Amount): Amount = ValueAmount(value + amount.value)
 

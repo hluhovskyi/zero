@@ -11,27 +11,35 @@ import kotlinx.coroutines.flow.map
 
 internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom
-): TransactionRepository {
+) : TransactionRepository {
     override fun query(criteria: TransactionRepository.Criteria): Flow<List<Transaction>> =
         transactionRoom().selectAll()
             .map { entities ->
                 entities.mapNotNull { entity ->
                     when (entity.type) {
-                        TransactionEntity.Type.EXPENSE -> Transaction.Expense(
-                            id = entity.id,
-                            amount = entity.amount.convert(),
-                            accountId = entity.accountId,
-                            currencyId = entity.currencyId,
-                            rate = entity.rate.convert()
-                        )
+                        TransactionEntity.Type.EXPENSE -> {
+                            val categoryId = entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
+                            Transaction.Expense(
+                                id = entity.id,
+                                amount = entity.amount.convert(),
+                                accountId = entity.accountId,
+                                currencyId = entity.currencyId,
+                                categoryId = categoryId,
+                                rate = entity.rate.convert()
+                            )
+                        }
 
-                        TransactionEntity.Type.INCOME -> Transaction.Income(
-                            id = entity.id,
-                            amount = entity.amount.convert(),
-                            accountId = entity.accountId,
-                            currencyId = entity.currencyId,
-                            rate = entity.rate.convert()
-                        )
+                        TransactionEntity.Type.INCOME -> {
+                            val categoryId = entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
+                            Transaction.Income(
+                                id = entity.id,
+                                amount = entity.amount.convert(),
+                                accountId = entity.accountId,
+                                currencyId = entity.currencyId,
+                                categoryId = categoryId,
+                                rate = entity.rate.convert()
+                            )
+                        }
 
                         TransactionEntity.Type.TRANSFER -> {
                             val targetAccount = entity.targetAccount ?: return@mapNotNull null
@@ -55,6 +63,7 @@ internal class RoomTransactionRepository(
                 type = TransactionEntity.Type.EXPENSE,
                 currencyId = transaction.currencyId,
                 accountId = transaction.accountId,
+                categoryId = transaction.categoryId.value,
                 amount = transaction.amount.convert(),
                 rate = transaction.rate.convert(),
                 targetAccount = null,
@@ -66,17 +75,19 @@ internal class RoomTransactionRepository(
                 type = TransactionEntity.Type.INCOME,
                 currencyId = transaction.currencyId,
                 accountId = transaction.accountId,
+                categoryId = transaction.categoryId.value,
                 amount = transaction.amount.convert(),
                 rate = transaction.rate.convert(),
                 targetAccount = null,
                 targetAmount = AmountEntity.empty()
             )
 
-            is Transaction.Transfer ->  TransactionEntity(
+            is Transaction.Transfer -> TransactionEntity(
                 id = transaction.id,
                 type = TransactionEntity.Type.INCOME,
                 currencyId = transaction.currencyId,
                 accountId = transaction.accountId,
+                categoryId = null,
                 amount = transaction.amount.convert(),
                 rate = RateEntity.empty(),
                 targetAccount = transaction.targetAccount.value,

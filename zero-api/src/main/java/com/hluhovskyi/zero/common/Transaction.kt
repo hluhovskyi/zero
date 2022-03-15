@@ -12,6 +12,7 @@ sealed interface Transaction {
         override val amount: Amount,
         override val accountId: Id.Known,
         override val currencyId: Id.Known,
+        val categoryId: Id.Known,
         val rate: Rate,
     ) : Transaction
 
@@ -20,6 +21,7 @@ sealed interface Transaction {
         override val amount: Amount,
         override val accountId: Id.Known,
         override val currencyId: Id.Known,
+        val categoryId: Id.Known,
         val rate: Rate,
     ) : Transaction
 

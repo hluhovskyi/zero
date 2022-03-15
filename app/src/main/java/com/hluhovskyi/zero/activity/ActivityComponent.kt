@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero.activity
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
@@ -31,6 +33,8 @@ private annotation class ActivityScope
 )
 abstract class ActivityComponent :
     AttachableViewComponent,
+    AccountComponent.Dependencies,
+    AccountEditComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
@@ -38,6 +42,8 @@ abstract class ActivityComponent :
 
     override fun attach(): Closeable = Closeables.empty()
 
+    abstract val accountComponentBuilder: AccountComponent.Builder
+    abstract val accountEditComponentBuilder: AccountEditComponent.Builder
     abstract val categoryComponentBuilder: CategoryComponent.Builder
     abstract val categoryEditComponentBuilder: CategoryEditComponent.Builder
     abstract val transactionComponentBuilder: TransactionComponent.Builder
@@ -77,6 +83,20 @@ abstract class ActivityComponent :
 
         @Provides
         @ActivityScope
+        fun accountComponentBuilder(
+            component: ActivityComponent,
+            accountRepository: AccountRepository
+        ): AccountComponent.Builder = AccountComponent.builder(component)
+            .accountRepository(accountRepository)
+
+        @Provides
+        @ActivityScope
+        fun accountEditComponentBuilder(
+            component: ActivityComponent
+        ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
+
+        @Provides
+        @ActivityScope
         fun categoryComponentBuilder(
             component: ActivityComponent,
             categoryRepository: CategoryRepository,
@@ -112,8 +132,16 @@ abstract class ActivityComponent :
         fun transactionComponentBuilder(
             component: ActivityComponent,
             transactionRepository: TransactionRepository,
+            categoryRepository: CategoryRepository,
+            accountRepository: AccountRepository,
+            currencyRepository: CurrencyRepository,
+            imageLoader: ImageLoader
         ): TransactionComponent.Builder = TransactionComponent.builder(component)
             .transactionRepository(transactionRepository)
+            .categoryRepository(categoryRepository)
+            .accountRepository(accountRepository)
+            .currencyRepository(currencyRepository)
+            .imageLoader(imageLoader)
     }
 }
 

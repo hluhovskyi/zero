@@ -27,6 +27,14 @@ internal class DefaultMainActivityViewModel(
             ),
             destination = Destination.Category.All
         ),
+        BottomNavigation.Item(
+            name = "Accounts",
+            icon = Image(
+                uri = androidUriResourceFactory.drawable("ic_fastfood_24"),
+                description = "Accounts icon"
+            ),
+            destination = Destination.Account.All
+        )
     )
 
     private val mutableState = MutableStateFlow(

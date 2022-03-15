@@ -1,9 +1,13 @@
 package com.hluhovskyi.zero.transactions
 
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -20,7 +24,8 @@ private annotation class TransactionScope
 )
 abstract class TransactionComponent : AttachableViewComponent {
 
-    override fun attach(): Closeable = Closeables.empty()
+    internal abstract val viewModel: TransactionViewModel
+    override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
 
@@ -31,6 +36,10 @@ abstract class TransactionComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionComponent.builder()
             .dependencies(dependencies)
             .transactionRepository(TransactionRepository.Noop)
+            .accountRepository(AccountRepository.Noop)
+            .currencyRepository(CurrencyRepository.Noop)
+            .categoryRepository(CategoryRepository.Noop)
+            .imageLoader(ImageLoader.empty())
     }
 
     @dagger.Component.Builder
@@ -40,6 +49,18 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun transactionRepository(transactionRepository: TransactionRepository): Builder
+
+        @BindsInstance
+        fun accountRepository(accountRepository: AccountRepository): Builder
+
+        @BindsInstance
+        fun currencyRepository(currencyRepository: CurrencyRepository): Builder
+
+        @BindsInstance
+        fun categoryRepository(categoryRepository: CategoryRepository): Builder
+
+        @BindsInstance
+        fun imageLoader(imageLoader: ImageLoader): Builder
     }
 
     @dagger.Module
@@ -47,10 +68,26 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @Provides
         @TransactionScope
+        fun viewModel(
+            transactionRepository: TransactionRepository,
+            accountRepository: AccountRepository,
+            currencyRepository: CurrencyRepository,
+            categoryRepository: CategoryRepository
+        ): TransactionViewModel = DefaultTransactionViewModel(
+            transactionRepository = transactionRepository,
+            accountRepository = accountRepository,
+            currencyRepository = currencyRepository,
+            categoryRepository = categoryRepository,
+        )
+
+        @Provides
+        @TransactionScope
         fun viewProvider(
-            transactionRepository: TransactionRepository
+            viewModel: TransactionViewModel,
+            imageLoader: ImageLoader,
         ): ViewProvider = TransactionViewProvider(
-            transactionRepository = transactionRepository
+            viewModel = viewModel,
+            imageLoader = imageLoader
         )
     }
 }
