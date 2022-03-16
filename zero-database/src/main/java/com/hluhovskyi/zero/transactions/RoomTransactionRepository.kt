@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.RateEntity
-import com.hluhovskyi.zero.common.Transaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
@@ -18,7 +17,9 @@ internal class RoomTransactionRepository(
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : TransactionRepository {
-    override fun query(criteria: TransactionRepository.Criteria): Flow<List<Transaction>> = currentUserId.take(1).flatMapConcat { userId ->
+    override fun query(
+        criteria: TransactionRepository.Criteria
+    ): Flow<List<TransactionRepository.Transaction>> = currentUserId.take(1).flatMapConcat { userId ->
         transactionRoom().selectByUserId(userId)
             .map { entities ->
                 entities.mapNotNull { entity ->
@@ -26,7 +27,7 @@ internal class RoomTransactionRepository(
                         TransactionEntity.Type.EXPENSE -> {
                             val categoryId =
                                 entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
-                            Transaction.Expense(
+                            TransactionRepository.Transaction.Expense(
                                 id = entity.id,
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
@@ -39,7 +40,7 @@ internal class RoomTransactionRepository(
                         TransactionEntity.Type.INCOME -> {
                             val categoryId =
                                 entity.categoryId?.let(Id::Known) ?: return@mapNotNull null
-                            Transaction.Income(
+                            TransactionRepository.Transaction.Income(
                                 id = entity.id,
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
@@ -51,7 +52,7 @@ internal class RoomTransactionRepository(
 
                         TransactionEntity.Type.TRANSFER -> {
                             val targetAccount = entity.targetAccount ?: return@mapNotNull null
-                            Transaction.Transfer(
+                            TransactionRepository.Transaction.Transfer(
                                 id = entity.id,
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
@@ -65,13 +66,13 @@ internal class RoomTransactionRepository(
             }
     }
 
-    override suspend fun insert(transaction: Transaction) {
+    override suspend fun insert(transaction: TransactionRepository.Transaction) {
         incorrectStateDetector.asyncRequireNonNull(
             value = currentUserId.firstOrNull(),
             message = "Current user id is empty"
         ) { userId ->
             val entity = when (transaction) {
-                is Transaction.Expense -> TransactionEntity(
+                is TransactionRepository.Transaction.Expense -> TransactionEntity(
                     id = transaction.id,
                     userId = userId,
                     type = TransactionEntity.Type.EXPENSE,
@@ -84,7 +85,7 @@ internal class RoomTransactionRepository(
                     targetAmount = AmountEntity.empty()
                 )
 
-                is Transaction.Income -> TransactionEntity(
+                is TransactionRepository.Transaction.Income -> TransactionEntity(
                     id = transaction.id,
                     userId = userId,
                     type = TransactionEntity.Type.INCOME,
@@ -97,10 +98,10 @@ internal class RoomTransactionRepository(
                     targetAmount = AmountEntity.empty()
                 )
 
-                is Transaction.Transfer -> TransactionEntity(
+                is TransactionRepository.Transaction.Transfer -> TransactionEntity(
                     id = transaction.id,
                     userId = userId,
-                    type = TransactionEntity.Type.INCOME,
+                    type = TransactionEntity.Type.TRANSFER,
                     currencyId = transaction.currencyId,
                     accountId = transaction.accountId,
                     categoryId = null,

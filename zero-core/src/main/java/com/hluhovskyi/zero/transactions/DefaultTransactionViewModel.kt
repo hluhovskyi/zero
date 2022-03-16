@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.common.Category
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Transaction
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,13 +73,13 @@ internal class DefaultTransactionViewModel(
     }
 
     private fun resolve(
-        transaction: Transaction,
+        transaction: TransactionRepository.Transaction,
         idToCategories: Map<Id.Known, Category>,
         idToAccounts: Map<Id.Known, AccountRepository.Account>,
         idToCurrencies: Map<Id.Known, Currency>,
     ): TransactionViewModel.TransactionItem? {
         return when (transaction) {
-            is Transaction.Expense -> {
+            is TransactionRepository.Transaction.Expense -> {
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
@@ -104,8 +103,26 @@ internal class DefaultTransactionViewModel(
                 )
             }
 
-            is Transaction.Income -> TODO()
-            is Transaction.Transfer -> TODO()
+            is TransactionRepository.Transaction.Income -> {
+                val account = idToAccounts[transaction.accountId] ?: return null
+                TransactionViewModel.TransactionItem.Income(
+                    id = transaction.id,
+                    amount = transaction.amount,
+                    accountName = account.name
+                )
+            }
+
+            is TransactionRepository.Transaction.Transfer -> {
+                val account = idToAccounts[transaction.accountId] ?: return null
+                val targetAccount = idToAccounts[transaction.targetAccount] ?: return null
+
+                TransactionViewModel.TransactionItem.Transfer(
+                    id = transaction.id,
+                    amount = transaction.amount,
+                    accountName = account.name,
+                    targetAccountName = targetAccount.name
+                )
+            }
         }
     }
 }

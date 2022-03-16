@@ -1,8 +1,20 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
 
@@ -23,4 +35,37 @@ fun TransactionEditCategorySelect(
         selectedItem = selectedCategory,
         onItemSelected = onCategorySelected
     )
+}
+
+@Composable
+fun TransactionEditCategorySelectWithEditButton(
+    modifier: Modifier = Modifier,
+    categories: List<TransactionEditCategory>,
+    selectedCategory: TransactionEditCategory?,
+    onCategorySelected: (TransactionEditCategory) -> Unit,
+    onCategoryEdit: () -> Unit,
+) {
+    Row(
+        modifier = modifier.height(IntrinsicSize.Min)
+    ) {
+        TransactionEditCategorySelect(
+            modifier = Modifier.weight(1f),
+            categories = categories,
+            selectedCategory = selectedCategory,
+            onCategorySelected = onCategorySelected
+        )
+        Button(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 8.dp)
+                .sizeIn(maxHeight = 54.dp)
+                .aspectRatio(1f, true),
+            onClick = onCategoryEdit
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = "Edit categories",
+                tint = Color.White
+            )
+        }
+    }
 }

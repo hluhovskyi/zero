@@ -2,9 +2,11 @@ package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
+import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -112,7 +114,58 @@ internal class DefaultTransactionEditUseCase(
                 }
             }
             is TransactionEditUseCase.Action.Save -> {
-                // TODO: Handle save
+                coroutineScope.launch(context = Dispatchers.IO) {
+                    val state = mutableState.value
+                    val transaction = when (state.transactionType) {
+                        TransactionEditType.EXPENSE -> {
+                            val account = state.selectedAccount ?: return@launch
+                            val currency = state.selectedCurrency ?: return@launch
+                            val category = state.selectedCategory ?: return@launch
+
+                            TransactionRepository.Transaction.Expense(
+                                id = idGenerator(),
+                                amount = Amount(state.amount.toBigDecimalOrNull()),
+                                accountId = account.id,
+                                currencyId = currency.id,
+                                categoryId = category.id,
+                                rate = Rate(state.amount.toBigDecimalOrNull())
+                            )
+                        }
+                        TransactionEditType.INCOME -> {
+                            val account = state.selectedAccount ?: return@launch
+                            val currency = state.selectedCurrency ?: return@launch
+                            val category = state.selectedCategory ?: return@launch
+
+                            TransactionRepository.Transaction.Income(
+                                id = idGenerator(),
+                                amount = Amount(state.amount.toBigDecimalOrNull()),
+                                accountId = account.id,
+                                currencyId = currency.id,
+                                categoryId = category.id,
+                                rate = Rate(state.amount.toBigDecimalOrNull())
+                            )
+                        }
+                        TransactionEditType.TRANSFER -> {
+                            val account = state.selectedAccount ?: return@launch
+                            val targetAccount = state.selectedTargetAccount ?: return@launch
+                            val currency = state.selectedCurrency ?: return@launch
+
+                            TransactionRepository.Transaction.Transfer(
+                                id = idGenerator(),
+                                amount = Amount(state.amount.toBigDecimalOrNull()),
+                                accountId = account.id,
+                                currencyId = currency.id,
+                                targetAccount = targetAccount.id,
+                                targetAmount = Amount(state.amount.toBigDecimalOrNull())
+                            )
+                        }
+                    }
+
+                    transactionRepository.insert(transaction)
+                    launch(context = Dispatchers.Main) {
+                        onTransactionSavedHandler.onSaved()
+                    }
+                }
             }
         }
     }
@@ -135,7 +188,9 @@ internal class DefaultTransactionEditUseCase(
                         mutableState.update { state ->
                             state.copy(
                                 accounts = accounts,
-                                selectedAccount = state.selectedAccount ?: accounts.firstOrNull()
+                                selectedAccount = state.selectedAccount ?: accounts.firstOrNull(),
+                                targetAccounts = accounts,
+                                selectedTargetAccount = state.selectedTargetAccount ?: accounts.firstOrNull()
                             )
                         }
                     }

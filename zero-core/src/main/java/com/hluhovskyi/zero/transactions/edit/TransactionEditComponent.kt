@@ -10,6 +10,8 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
+import com.hluhovskyi.zero.transactions.edit.income.TransactionEditIncomeComponent
+import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferComponent
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -27,7 +29,9 @@ private const val TAG = "TransactionEditComponent"
     dependencies = [TransactionEditComponent.Dependencies::class]
 )
 abstract class TransactionEditComponent : AttachableViewComponent,
-    TransactionEditExpenseComponent.Dependencies {
+    TransactionEditExpenseComponent.Dependencies,
+    TransactionEditIncomeComponent.Dependencies,
+    TransactionEditTransferComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
     override fun attach(): Closeable = useCase.attach()
@@ -116,10 +120,14 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
-            expenseComponentBuilder: TransactionEditExpenseComponent.Builder
+            expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
+            incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
+            transferComponentBuilder: TransactionEditTransferComponent.Builder
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
-            expenseComponent = expenseComponentBuilder
+            expenseComponent = expenseComponentBuilder,
+            incomeComponent = incomeComponentBuilder,
+            transferComponent = transferComponentBuilder
         )
 
         @Provides
@@ -129,6 +137,24 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             useCase: TransactionEditUseCase,
         ): TransactionEditExpenseComponent.Builder =
             TransactionEditExpenseComponent.builder(component)
+                .transactionEditUseCase(useCase)
+
+        @Provides
+        @TransactionEditScope
+        fun transactionEditTransferComponentBuilder(
+            component: TransactionEditComponent,
+            useCase: TransactionEditUseCase
+        ): TransactionEditTransferComponent.Builder =
+            TransactionEditTransferComponent.builder(component)
+                .transactionEditUseCase(useCase)
+
+        @Provides
+        @TransactionEditScope
+        fun transactionEditIncomeComponentBuilder(
+            component: TransactionEditComponent,
+            useCase: TransactionEditUseCase
+        ): TransactionEditIncomeComponent.Builder =
+            TransactionEditIncomeComponent.builder(component)
                 .transactionEditUseCase(useCase)
     }
 }

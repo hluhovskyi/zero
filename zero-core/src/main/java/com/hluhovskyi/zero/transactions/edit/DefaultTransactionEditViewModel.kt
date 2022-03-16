@@ -11,7 +11,8 @@ internal class DefaultTransactionEditViewModel(
     override val state: Flow<TransactionEditViewModel.State> = useCase.state
         .map { state ->
             TransactionEditViewModel.State(
-                transactionType = when (state) {
+                transactionTypes = TransactionEditType.values().toList(),
+                selectedTransactionType = when (state) {
                     is TransactionEditUseCase.State.Expense -> TransactionEditType.EXPENSE
                     is TransactionEditUseCase.State.Income -> TransactionEditType.INCOME
                     is TransactionEditUseCase.State.Transfer -> TransactionEditType.TRANSFER

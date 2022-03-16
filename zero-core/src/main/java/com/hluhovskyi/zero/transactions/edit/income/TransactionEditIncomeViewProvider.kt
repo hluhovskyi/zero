@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.edit.expense
+package com.hluhovskyi.zero.transactions.edit.income
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
@@ -16,29 +16,29 @@ import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCategorySelec
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCurrencySelect
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 
-internal class TransactionEditExpenseViewProvider(
-    private val viewModel: TransactionEditExpenseViewModel
+internal class TransactionEditIncomeViewProvider(
+    private val viewModel: TransactionEditIncomeViewModel
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditExpenseView(viewModel)
+        TransactionEditIncomeView(viewModel = viewModel)
     }
 }
 
 @Composable
-private fun TransactionEditExpenseView(
-    viewModel: TransactionEditExpenseViewModel
+private fun TransactionEditIncomeView(
+    viewModel: TransactionEditIncomeViewModel
 ) {
     Column {
         val defaultModifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-        val state by viewModel.state.collectAsState(initial = TransactionEditExpenseViewModel.State())
+        val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
         TransactionEditAccountSelect(
             modifier = defaultModifier,
             accounts = state.accounts,
             selectedAccount = state.selectedAccount,
             onAccountSelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectAccount(it))
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectAccount(it))
             }
         )
         TransactionEditCategorySelectWithEditButton(
@@ -46,10 +46,10 @@ private fun TransactionEditExpenseView(
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(it))
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(it))
             },
             onCategoryEdit = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.EditCategories)
+                viewModel.perform(TransactionEditIncomeViewModel.Action.EditCategories)
             }
         )
         TransactionEditCurrencySelect(
@@ -57,14 +57,14 @@ private fun TransactionEditExpenseView(
             currencies = state.currencies,
             selectedCurrency = state.selectedCurrency,
             onCurrencySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCurrency(it))
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
             }
         )
         TransactionEditAmountTextField(
             modifier = defaultModifier,
             amount = state.amount,
             onValueChange = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeAmount(it))
+                viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
             }
         )
         AnimatedVisibility(visible = state.showRate) {
@@ -72,9 +72,10 @@ private fun TransactionEditExpenseView(
                 modifier = defaultModifier,
                 rate = state.rate,
                 onValueChange = { rate ->
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeRate(rate))
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeRate(rate))
                 }
             )
         }
     }
 }
+

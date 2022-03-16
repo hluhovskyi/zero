@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Transaction
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -31,24 +30,23 @@ internal class DefaultAccountUseCase(
         }
     }
 
-    private fun List<Transaction>.calculateBalance(): Map<Id.Known, Amount> {
-
+    private fun List<TransactionRepository.Transaction>.calculateBalance(): Map<Id.Known, Amount> {
         val balances = mutableMapOf<Id.Known, Amount>().withDefault { Amount.zero() }
 
         forEach { transaction ->
             val accountId = transaction.accountId
             when (transaction) {
-                is Transaction.Expense -> {
+                is TransactionRepository.Transaction.Expense -> {
                     balances.compute(accountId) { balance ->
                         balance - transaction.amount
                     }
                 }
-                is Transaction.Income -> {
+                is TransactionRepository.Transaction.Income -> {
                     balances.compute(accountId) { balance ->
                         balance + transaction.amount
                     }
                 }
-                is Transaction.Transfer -> {
+                is TransactionRepository.Transaction.Transfer -> {
                     balances.compute(accountId) { balance ->
                         balance - transaction.amount
                     }

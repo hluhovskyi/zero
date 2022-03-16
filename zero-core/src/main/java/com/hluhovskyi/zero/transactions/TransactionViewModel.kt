@@ -27,6 +27,19 @@ interface TransactionViewModel
             val categoryIcon: Image,
             val conversion: Conversion
         ) : TransactionItem
+
+        data class Income(
+            val id: Id.Known,
+            val amount: Amount,
+            val accountName: String,
+        ) : TransactionItem
+
+        data class Transfer(
+            val id: Id.Known,
+            val amount: Amount,
+            val accountName: String,
+            val targetAccountName: String
+        ): TransactionItem
     }
 
     sealed interface Conversion {

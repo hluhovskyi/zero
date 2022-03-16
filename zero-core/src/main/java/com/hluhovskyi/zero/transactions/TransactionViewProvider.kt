@@ -65,6 +65,18 @@ private fun TransactionView(
                         imageLoader = imageLoader,
                         modifier = modifier
                     )
+                is TransactionViewModel.TransactionItem.Transfer -> {
+                    TransactionTransferView(
+                        item = transaction,
+                        modifier = modifier
+                    )
+                }
+                is TransactionViewModel.TransactionItem.Income -> {
+                    TransactionIncomeView(
+                        item = transaction,
+                        modifier = modifier
+                    )
+                }
             }
         }
     }
@@ -120,5 +132,44 @@ fun TransactionExpenseView(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TransactionTransferView(
+    modifier: Modifier,
+    item: TransactionViewModel.TransactionItem.Transfer
+) {
+    Row(modifier = modifier) {
+        Text(
+            text = item.accountName,
+            fontSize = 18.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            text = "-${item.amount.value.toPlainString()}"
+        )
+    }
+}
+
+@Composable
+fun TransactionIncomeView(
+    modifier: Modifier,
+    item: TransactionViewModel.TransactionItem.Income
+) {
+    Row(modifier = modifier) {
+        Text(
+            text = item.accountName,
+            fontSize = 18.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Green,
+            text = "+${item.amount.value.toPlainString()}"
+        )
     }
 }
