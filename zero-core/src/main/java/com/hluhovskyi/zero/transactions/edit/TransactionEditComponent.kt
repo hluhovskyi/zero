@@ -1,16 +1,15 @@
 package com.hluhovskyi.zero.transactions.edit
 
-import android.util.Log
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -27,10 +26,11 @@ private const val TAG = "TransactionEditComponent"
     modules = [TransactionEditComponent.Module::class],
     dependencies = [TransactionEditComponent.Dependencies::class]
 )
-abstract class TransactionEditComponent : AttachableViewComponent {
+abstract class TransactionEditComponent : AttachableViewComponent,
+    TransactionEditExpenseComponent.Dependencies {
 
-    internal abstract val viewModel: TransactionEditViewModel
-    override fun attach(): Closeable = viewModel.attach()
+    internal abstract val useCase: TransactionEditUseCase
+    override fun attach(): Closeable = useCase.attach()
 
     interface Dependencies {
 
@@ -84,15 +84,7 @@ abstract class TransactionEditComponent : AttachableViewComponent {
 
         @Provides
         @TransactionEditScope
-        fun viewProvider(
-            viewModel: TransactionEditViewModel
-        ): ViewProvider = TransactionEditViewProvider(
-            viewModel = viewModel
-        )
-
-        @Provides
-        @TransactionEditScope
-        fun viewModel(
+        fun useCase(
             accountRepository: AccountRepository,
             categoryRepository: CategoryRepository,
             currencyRepository: CurrencyRepository,
@@ -101,7 +93,7 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             logger: Logger
-        ): TransactionEditViewModel = DefaultTransactionEditViewModel(
+        ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             accountRepository = accountRepository,
             categoryRepository = categoryRepository,
             currencyRepository = currencyRepository,
@@ -111,5 +103,32 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             onEditCategoriesHandler = onEditCategoriesHandler,
             logger = logger
         )
+
+        @Provides
+        @TransactionEditScope
+        fun viewModel(
+            useCase: TransactionEditUseCase
+        ): TransactionEditViewModel = DefaultTransactionEditViewModel(
+            useCase = useCase
+        )
+
+        @Provides
+        @TransactionEditScope
+        fun viewProvider(
+            viewModel: TransactionEditViewModel,
+            expenseComponentBuilder: TransactionEditExpenseComponent.Builder
+        ): ViewProvider = TransactionEditViewProvider(
+            viewModel = viewModel,
+            expenseComponent = expenseComponentBuilder
+        )
+
+        @Provides
+        @TransactionEditScope
+        fun transactionEditExpenseComponentBuilder(
+            component: TransactionEditComponent,
+            useCase: TransactionEditUseCase,
+        ): TransactionEditExpenseComponent.Builder =
+            TransactionEditExpenseComponent.builder(component)
+                .transactionEditUseCase(useCase)
     }
 }
