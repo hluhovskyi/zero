@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.accounts.AccountRepository
-import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.IdGenerator
@@ -24,9 +24,9 @@ private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
     private val accountRepository: AccountRepository,
-    private val categoryRepository: CategoryRepository,
     private val currencyRepository: CurrencyRepository,
     private val transactionRepository: TransactionRepository,
+    private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val idGenerator: IdGenerator,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
@@ -197,12 +197,14 @@ internal class DefaultTransactionEditUseCase(
             }
 
             launch {
-                categoryRepository.query(CategoryRepository.Criteria.All())
+                categoriesQueryUseCase.queryAll()
                     .map { categories ->
                         categories.map { category ->
                             TransactionEditCategory(
                                 id = category.id,
-                                name = category.name
+                                name = category.name,
+                                color = category.color,
+                                icon = category.icon,
                             )
                         }
                     }
@@ -211,8 +213,16 @@ internal class DefaultTransactionEditUseCase(
                         mutableState.update { state ->
                             state.copy(
                                 categories = categories,
-                                selectedCategory = state.selectedCategory
-                                    ?: categories.firstOrNull()
+                                selectedCategory = if (state.selectedCategory != null) {
+                                    val updated = categories.find { it.id == state.selectedCategory.id }
+                                    if (updated != state.selectedCategory) {
+                                        updated
+                                    } else {
+                                        state.selectedCategory
+                                    }
+                                } else {
+                                    state.selectedCategory ?: categories.firstOrNull()
+                                }
                             )
                         }
                     }

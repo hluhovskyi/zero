@@ -38,6 +38,8 @@ android {
 
 dependencies {
 
+    implementation(project(":zero-api"))
+
     implementation deps.android.compose.foundation
     implementation deps.android.compose.material
 }

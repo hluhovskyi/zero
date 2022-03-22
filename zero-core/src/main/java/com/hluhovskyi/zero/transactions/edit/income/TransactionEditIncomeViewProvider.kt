@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAccountSelect
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAmountTextField
@@ -17,21 +18,28 @@ import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCurrencySelec
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 
 internal class TransactionEditIncomeViewProvider(
-    private val viewModel: TransactionEditIncomeViewModel
+    private val viewModel: TransactionEditIncomeViewModel,
+    private val imageLoader: ImageLoader,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditIncomeView(viewModel = viewModel)
+        TransactionEditIncomeView(
+            viewModel = viewModel,
+            imageLoader = imageLoader
+        )
     }
 }
 
 @Composable
 private fun TransactionEditIncomeView(
-    viewModel: TransactionEditIncomeViewModel
+    viewModel: TransactionEditIncomeViewModel,
+    imageLoader: ImageLoader
 ) {
     Column {
-        val defaultModifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+        val defaultModifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
         val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
         TransactionEditAccountSelect(
             modifier = defaultModifier,
@@ -43,6 +51,7 @@ private fun TransactionEditIncomeView(
         )
         TransactionEditCategorySelectWithEditButton(
             modifier = defaultModifier,
+            imageLoader = imageLoader,
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             onCategorySelected = {

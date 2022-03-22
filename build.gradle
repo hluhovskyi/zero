@@ -21,6 +21,9 @@ buildscript {
                                 material  : "androidx.compose.material:material:${versions.compose}",
                                 uiPreview : "androidx.compose.ui:ui-tooling-preview:${versions.compose}",
                                 activity  : "androidx.activity:activity-compose:1.4.0"
+                        ],
+                        tools  : [
+                                desugar: "com.android.tools:desugar_jdk_libs:1.1.5",
                         ]
                 ],
                 dagger : [

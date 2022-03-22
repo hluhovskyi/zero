@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.Color
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
@@ -18,24 +19,27 @@ interface TransactionViewModel
 
     sealed interface TransactionItem {
 
+        abstract val id: Id.Known
+
         data class Expense(
-            val id: Id.Known,
+            override val id: Id.Known,
             val amount: Amount,
             val currencySymbol: Char,
             val accountName: String,
             val categoryName: String,
+            val categoryColor: Color,
             val categoryIcon: Image,
             val conversion: Conversion
         ) : TransactionItem
 
         data class Income(
-            val id: Id.Known,
+            override val id: Id.Known,
             val amount: Amount,
             val accountName: String,
         ) : TransactionItem
 
         data class Transfer(
-            val id: Id.Known,
+            override val id: Id.Known,
             val amount: Amount,
             val accountName: String,
             val targetAccountName: String

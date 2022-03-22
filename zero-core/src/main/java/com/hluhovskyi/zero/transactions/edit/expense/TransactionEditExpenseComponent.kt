@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions.edit.expense
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
@@ -24,7 +25,7 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
     override fun attach(): Closeable = Closeables.empty()
 
     interface Dependencies {
-
+        val imageLoader: ImageLoader
     }
 
     companion object {
@@ -57,9 +58,11 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
         @Provides
         @TransactionEditExpenseScope
         fun viewProvider(
-            viewModel: TransactionEditExpenseViewModel
+            viewModel: TransactionEditExpenseViewModel,
+            imageLoader: ImageLoader
         ): ViewProvider = TransactionEditExpenseViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
+            imageLoader = imageLoader
         )
     }
 }

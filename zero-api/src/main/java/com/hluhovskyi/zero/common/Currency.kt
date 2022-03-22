@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.common
 
 data class Currency(
-    val id: Id.Known,
+    override val id: Id.Known,
     val name: String,
     val symbol: Char
-)
+) : Identifiable

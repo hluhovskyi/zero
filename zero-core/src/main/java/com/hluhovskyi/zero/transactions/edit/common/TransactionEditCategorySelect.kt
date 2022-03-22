@@ -1,25 +1,32 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.common.toCompose
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
 
 @Composable
 fun TransactionEditCategorySelect(
+    imageLoader: ImageLoader,
     modifier: Modifier = Modifier,
     categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
@@ -32,7 +39,33 @@ fun TransactionEditCategorySelect(
             Text(text = "Category")
         },
         nameMapping = { it.name },
+        menuItem = { category ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .background(category.color.toCompose(), CircleShape)
+                        .padding(6.dp)
+                ) {
+                    imageLoader.View(
+                        modifier = Modifier.sizeIn(maxHeight = 20.dp, maxWidth = 20.dp),
+                        image = category.icon
+                    )
+                }
+                Text(text = category.name)
+            }
+        },
         selectedItem = selectedCategory,
+        selectedItemIcon = { category ->
+            imageLoader.View(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .sizeIn(maxWidth = 32.dp, maxHeight = 32.dp)
+                    .background(category.color.toCompose(), CircleShape)
+                    .padding(6.dp),
+                image = category.icon
+            )
+        },
         onItemSelected = onCategorySelected
     )
 }
@@ -40,6 +73,7 @@ fun TransactionEditCategorySelect(
 @Composable
 fun TransactionEditCategorySelectWithEditButton(
     modifier: Modifier = Modifier,
+    imageLoader: ImageLoader = ImageLoader.empty(),
     categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
     onCategorySelected: (TransactionEditCategory) -> Unit,
@@ -50,6 +84,7 @@ fun TransactionEditCategorySelectWithEditButton(
     ) {
         TransactionEditCategorySelect(
             modifier = Modifier.weight(1f),
+            imageLoader = imageLoader,
             categories = categories,
             selectedCategory = selectedCategory,
             onCategorySelected = onCategorySelected

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 internal interface TransactionRoom {
 
-    @Query("SELECT * FROM TransactionEntity WHERE userId=:userId")
+    @Query("SELECT * FROM TransactionEntity WHERE userId=:userId ORDER BY datetime(enteredDateTime) DESC")
     fun selectByUserId(userId: String): Flow<List<TransactionEntity>>
 
     fun selectByUserId(userId: Id.Known): Flow<List<TransactionEntity>> =

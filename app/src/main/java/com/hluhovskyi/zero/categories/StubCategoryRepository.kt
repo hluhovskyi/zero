@@ -1,10 +1,7 @@
 package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
-import com.hluhovskyi.zero.common.Category
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Image
-import com.hluhovskyi.zero.common.Uri
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -12,46 +9,41 @@ internal class StubCategoryRepository(
     private val uriFactory: AndroidUriResourceFactory
 ) : CategoryRepository {
 
-    override fun query(criteria: CategoryRepository.Criteria): Flow<List<Category>> =
+    override fun query(criteria: CategoryRepository.Criteria): Flow<List<CategoryRepository.Category>> =
         flowOf(
             listOf(
-                Category(
+                CategoryRepository.Category(
                     id = Id("food"),
                     parentCategoryId = Id.Unknown,
                     name = "Food",
-                    icon = Image(
-                        uri = uriFactory.drawable("ic_fastfood_24"),
-                        description = "Food icon"
-                    )
+                    iconId = Id("fastfood"),
+                    colorId = Id("red"),
                 ),
-                Category(
+                CategoryRepository.Category(
                     id = Id("grocery"),
                     parentCategoryId = Id("food"),
                     name = "Grocery",
-                    icon = Image(
-                        uri = uriFactory.drawable("ic_grocery_store_24"),
-                        description = "Grocery icon"
-                    )
+                    iconId = Id("grocery"),
+                    colorId = Id("blue"),
                 ),
-                Category(
+                CategoryRepository.Category(
                     id = Id("presents"),
                     parentCategoryId = Id.Unknown,
                     name = "Presents",
-                    icon = Image.empty()
+                    iconId = Id("presents"),
+                    colorId = Id("red"),
                 ),
-                Category(
+                CategoryRepository.Category(
                     id = Id("flowers"),
                     parentCategoryId = Id.Unknown,
                     name = "Flowers",
-                    icon = Image(
-                        uri = uriFactory.drawable("ic_florist_24"),
-                        description = "Flower icon"
-                    )
+                    iconId = Id("flowers"),
+                    colorId = Id("blue"),
                 ),
             )
         )
 
-    override suspend fun insert(category: Category) {
+    override suspend fun insert(category: CategoryRepository.Category) {
 
     }
 }

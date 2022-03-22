@@ -1,0 +1,60 @@
+package com.hluhovskyi.zero.categories
+
+import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.common.Color
+import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.coroutines.associateById
+import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
+import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.icons.IconRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+
+internal class DefaultCategoriesQueryUseCase(
+    private val categoryRepository: CategoryRepository,
+    private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
+) : CategoriesQueryUseCase {
+
+    private val queryAll = combine(
+        categoryRepository.query(CategoryRepository.Criteria.All()),
+        iconRepository.query(IconRepository.Criteria.All())
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
+            .associateById(),
+        colorRepository.query(ColorRepository.Criteria.All())
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
+            .associateById(),
+    ) { categories, idToIcons, idToColors ->
+        categories.map { category ->
+            resolve(
+                category = category,
+                idToIcons = idToIcons,
+                idToColors = idToColors
+            )
+        }
+    }
+
+    override fun queryAll(): Flow<List<CategoriesQueryUseCase.Category>> = queryAll
+
+    private fun resolve(
+        category: CategoryRepository.Category,
+        idToIcons: Map<Id.Known, IconRepository.Icon>,
+        idToColors: Map<Id.Known, ColorRepository.Color>
+    ): CategoriesQueryUseCase.Category {
+        val icon = idToIcons[category.iconId]
+            ?: idToIcons[IconRepository.unknownCategoryIconId()]
+            ?: IconRepository.Icon.empty()
+
+        val color = idToColors[category.colorId]
+            ?: idToColors[ColorRepository.unknownCategoryColorId()]
+
+        return CategoriesQueryUseCase.Category(
+            id = category.id,
+            name = category.name,
+            icon = icon.image,
+            color = color?.color ?: Color.unspecified()
+        )
+    }
+}

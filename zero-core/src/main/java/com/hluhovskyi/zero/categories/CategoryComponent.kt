@@ -1,10 +1,11 @@
 package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import dagger.BindsInstance
+import com.hluhovskyi.zero.icons.IconRepository
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -25,26 +26,31 @@ abstract class CategoryComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
-
+        val imageLoader: ImageLoader
+        val categoryRepository: CategoryRepository
+        val iconRepository: IconRepository
     }
 
     companion object {
+
+        fun queryUseCase(
+            categoryRepository: CategoryRepository,
+            iconRepository: IconRepository,
+            colorRepository: ColorRepository
+        ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
+            categoryRepository = categoryRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository
+        )
+
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
-            .imageLoader(ImageLoader.empty())
-            .categoryRepository(CategoryRepository.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<CategoryComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun imageLoader(imageLoader: ImageLoader): Builder
-
-        @BindsInstance
-        fun categoryRepository(categoryRepository: CategoryRepository): Builder
     }
 
     @dagger.Module
@@ -53,9 +59,11 @@ abstract class CategoryComponent : AttachableViewComponent {
         @Provides
         @CategoryScope
         fun viewModel(
-            categoryRepository: CategoryRepository
+            categoryRepository: CategoryRepository,
+            iconRepository: IconRepository,
         ): CategoryViewModel = DefaultCategoryViewModel(
-            categoryRepository = categoryRepository
+            categoryRepository = categoryRepository,
+            iconRepository = iconRepository,
         )
 
         @Provides

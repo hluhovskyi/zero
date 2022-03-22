@@ -4,9 +4,11 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
+import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -15,6 +17,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
@@ -55,10 +58,14 @@ abstract class ActivityComponent :
         val imageLoader: ImageLoader
         val androidUriResourceFactory: AndroidUriResourceFactory
 
+        val categoriesQueryUseCase: CategoriesQueryUseCase
+
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
         val categoryRepository: CategoryRepository
         val transactionRepository: TransactionRepository
+        val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -111,12 +118,8 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun categoryComponentBuilder(
-            component: ActivityComponent,
-            categoryRepository: CategoryRepository,
-            imageLoader: ImageLoader,
+            component: ActivityComponent
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
-            .categoryRepository(categoryRepository)
-            .imageLoader(imageLoader)
 
         @Provides
         @ActivityScope
@@ -128,35 +131,13 @@ abstract class ActivityComponent :
         @ActivityScope
         fun transactionEditComponentBuilder(
             component: ActivityComponent,
-            accountRepository: AccountRepository,
-            currencyRepository: CurrencyRepository,
-            transactionRepository: TransactionRepository,
-            categoryRepository: CategoryRepository,
-            logger: Logger,
-            idGenerator: IdGenerator
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
-            .accountRepository(accountRepository)
-            .currencyRepository(currencyRepository)
-            .transactionRepository(transactionRepository)
-            .categoryRepository(categoryRepository)
-            .idGenerator(idGenerator)
-            .logger(logger)
 
         @Provides
         @ActivityScope
         fun transactionComponentBuilder(
             component: ActivityComponent,
-            transactionRepository: TransactionRepository,
-            categoryRepository: CategoryRepository,
-            accountRepository: AccountRepository,
-            currencyRepository: CurrencyRepository,
-            imageLoader: ImageLoader
         ): TransactionComponent.Builder = TransactionComponent.builder(component)
-            .transactionRepository(transactionRepository)
-            .categoryRepository(categoryRepository)
-            .accountRepository(accountRepository)
-            .currencyRepository(currencyRepository)
-            .imageLoader(imageLoader)
     }
 }
 

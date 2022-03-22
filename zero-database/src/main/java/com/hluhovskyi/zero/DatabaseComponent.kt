@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
@@ -42,6 +43,7 @@ interface DatabaseComponent {
     interface Dependencies {
 
         val context: Context
+        val clock: Clock
     }
 
     companion object {
@@ -92,11 +94,13 @@ interface DatabaseComponent {
         internal fun transactionRepository(
             database: Provider<MainDatabase>,
             @CurrentUserId currentUserId: Flow<Id.Known>,
-            incorrectStateDetector: IncorrectStateDetector
+            incorrectStateDetector: IncorrectStateDetector,
+            clock: Clock,
         ): TransactionRepository = RoomTransactionRepository(
             transactionRoom = { database.get().transaction() },
             currentUserId = currentUserId,
-            incorrectStateDetector = incorrectStateDetector
+            incorrectStateDetector = incorrectStateDetector,
+            clock = clock,
         )
 
         @Provides

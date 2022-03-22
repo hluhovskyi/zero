@@ -36,7 +36,6 @@ android {
 }
 
 dependencies {
-
     implementation(project(":zero-api"))
     implementation(project(":zero-ui"))
     implementation(project(":zero-image-loading"))

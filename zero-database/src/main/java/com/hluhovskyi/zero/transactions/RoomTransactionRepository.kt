@@ -6,6 +6,8 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.RateEntity
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
@@ -16,6 +18,7 @@ internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom,
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
+    private val clock: Clock
 ) : TransactionRepository {
     override fun query(
         criteria: TransactionRepository.Criteria
@@ -82,7 +85,10 @@ internal class RoomTransactionRepository(
                     amount = transaction.amount.convert(),
                     rate = transaction.rate.convert(),
                     targetAccount = null,
-                    targetAmount = AmountEntity.empty()
+                    targetAmount = AmountEntity.empty(),
+                    enteredDateTime = clock.localDateTime(),
+                    creationDateTime = clock.localDateTime(),
+                    updatedDateTime = clock.localDateTime(),
                 )
 
                 is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -95,7 +101,10 @@ internal class RoomTransactionRepository(
                     amount = transaction.amount.convert(),
                     rate = transaction.rate.convert(),
                     targetAccount = null,
-                    targetAmount = AmountEntity.empty()
+                    targetAmount = AmountEntity.empty(),
+                    enteredDateTime = clock.localDateTime(),
+                    creationDateTime = clock.localDateTime(),
+                    updatedDateTime = clock.localDateTime(),
                 )
 
                 is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -108,7 +117,10 @@ internal class RoomTransactionRepository(
                     amount = transaction.amount.convert(),
                     rate = RateEntity.empty(),
                     targetAccount = transaction.targetAccount.value,
-                    targetAmount = transaction.targetAmount.convert()
+                    targetAmount = transaction.targetAmount.convert(),
+                    enteredDateTime = clock.localDateTime(),
+                    creationDateTime = clock.localDateTime(),
+                    updatedDateTime = clock.localDateTime(),
                 )
             }
 

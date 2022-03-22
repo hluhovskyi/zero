@@ -1,6 +1,8 @@
 package com.hluhovskyi.zero.transactions.edit
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -8,6 +10,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
 import com.hluhovskyi.zero.transactions.edit.income.TransactionEditIncomeComponent
@@ -37,18 +40,21 @@ abstract class TransactionEditComponent : AttachableViewComponent,
     override fun attach(): Closeable = useCase.attach()
 
     interface Dependencies {
+        val idGenerator: IdGenerator
+        val logger: Logger
+        val imageLoader: ImageLoader
 
+        val categoriesQueryUseCase: CategoriesQueryUseCase
+
+        val accountRepository: AccountRepository
+        val currencyRepository: CurrencyRepository
+        val transactionRepository: TransactionRepository
     }
 
     companion object {
 
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditComponent.builder()
             .dependencies(dependencies)
-            .idGenerator(IdGenerator.UUID)
-            .accountRepository(AccountRepository.Noop)
-            .currencyRepository(CurrencyRepository.Noop)
-            .transactionRepository(TransactionRepository.Noop)
-            .categoryRepository(CategoryRepository.Noop)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
     }
@@ -57,24 +63,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
     interface Builder : Buildable<TransactionEditComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun idGenerator(idGenerator: IdGenerator): Builder
-
-        @BindsInstance
-        fun accountRepository(accountRepository: AccountRepository): Builder
-
-        @BindsInstance
-        fun currencyRepository(currencyRepository: CurrencyRepository): Builder
-
-        @BindsInstance
-        fun transactionRepository(transactionRepository: TransactionRepository): Builder
-
-        @BindsInstance
-        fun categoryRepository(categoryRepository: CategoryRepository): Builder
-
-        @BindsInstance
-        fun logger(logger: Logger): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -90,7 +78,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @TransactionEditScope
         fun useCase(
             accountRepository: AccountRepository,
-            categoryRepository: CategoryRepository,
+            categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
             transactionRepository: TransactionRepository,
             idGenerator: IdGenerator,
@@ -99,9 +87,9 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             logger: Logger
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             accountRepository = accountRepository,
-            categoryRepository = categoryRepository,
             currencyRepository = currencyRepository,
             transactionRepository = transactionRepository,
+            categoriesQueryUseCase = categoriesQueryUseCase,
             idGenerator = idGenerator,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,

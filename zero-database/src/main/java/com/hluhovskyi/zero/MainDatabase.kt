@@ -23,7 +23,8 @@ private const val MAIN_DATABASE_VERSION = 1
 @TypeConverters(
     value = [
         IdConverters::class,
-        BigDecimalConverters::class
+        BigDecimalConverters::class,
+        LocalDateTimeConverter::class
     ]
 )
 internal abstract class MainDatabase : RoomDatabase() {

@@ -19,8 +19,10 @@ fun <T> TextFieldDropdownMenu(
     modifier: Modifier = Modifier,
     items: List<T>,
     selectedItem: T?,
-    label: @Composable (() -> Unit)? = null,
+    selectedItemIcon: @Composable ((T) -> Unit)? = null,
     nameMapping: (T) -> String = { it.toString() },
+    menuItem: @Composable (T) -> Unit = { item -> Text(text = nameMapping(item)) },
+    label: @Composable (() -> Unit)? = null,
     onItemSelected: (T) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -33,6 +35,9 @@ fun <T> TextFieldDropdownMenu(
             value = selectedItem?.let(nameMapping).orEmpty(),
             readOnly = true,
             label = label,
+            leadingIcon = selectedItem?.let { item ->
+                selectedItemIcon?.let { { it.invoke(item) } }
+            },
             onValueChange = { },
             modifier = Modifier.fillMaxWidth()
         )
@@ -47,7 +52,7 @@ fun <T> TextFieldDropdownMenu(
                         expanded = false
                     }
                 ) {
-                    Text(text = nameMapping(item))
+                    menuItem(item)
                 }
             }
         }

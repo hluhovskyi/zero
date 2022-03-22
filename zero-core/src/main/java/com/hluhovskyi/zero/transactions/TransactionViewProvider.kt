@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.toCompose
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -91,9 +91,8 @@ fun TransactionExpenseView(
     Row(modifier = modifier) {
         Column {
             Box(
-                // TODO: Provide custom color
                 modifier = Modifier
-                    .background(Color.Red, shape = CircleShape)
+                    .background(item.categoryColor.toCompose(), shape = CircleShape)
                     .padding(10.dp)
             ) {
                 imageLoader.View(
