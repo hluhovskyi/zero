@@ -16,20 +16,6 @@ interface IconRepository {
         data class ById(val id: Id.Known) : Criteria<Icon>
     }
 
-    data class Icon(
-        override val id: Id.Known,
-        val image: Image
-    ) : Identifiable {
-
-        companion object {
-
-            fun empty(): Icon = Icon(
-                id = Id("empty_icon"),
-                image = Image.empty()
-            )
-        }
-    }
-
     companion object {
 
         fun unknownCategoryIconId(): Id.Known = Id("unknown_category_icon")

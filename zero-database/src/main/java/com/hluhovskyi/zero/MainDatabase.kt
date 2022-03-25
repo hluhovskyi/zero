@@ -5,6 +5,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.hluhovskyi.zero.accounts.AccountEntity
 import com.hluhovskyi.zero.accounts.AccountRoom
+import com.hluhovskyi.zero.categories.CategoryEntity
+import com.hluhovskyi.zero.categories.CategoryRoom
 import com.hluhovskyi.zero.transactions.TransactionEntity
 import com.hluhovskyi.zero.transactions.TransactionRoom
 import com.hluhovskyi.zero.users.CurrentUserEntity
@@ -16,7 +18,8 @@ private const val MAIN_DATABASE_VERSION = 1
     entities = [
         CurrentUserEntity::class,
         AccountEntity::class,
-        TransactionEntity::class
+        TransactionEntity::class,
+        CategoryEntity::class,
     ],
     version = MAIN_DATABASE_VERSION
 )
@@ -34,4 +37,6 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun account(): AccountRoom
 
     abstract fun transaction(): TransactionRoom
+
+    abstract fun category(): CategoryRoom
 }

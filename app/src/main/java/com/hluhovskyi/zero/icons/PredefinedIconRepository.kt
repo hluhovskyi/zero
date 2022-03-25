@@ -11,7 +11,7 @@ internal class PredefinedIconRepository(
     private val androidUriResourceFactory: AndroidUriResourceFactory
 ) : IconRepository {
 
-    private val icons: Map<Id.Known, IconRepository.Icon> = mapOf(
+    private val icons: Map<Id.Known, Icon> = mapOf(
         iconOf(
             id = IconRepository.unknownCategoryIconId().value,
             resourceName = "ic_unknown_category_24",
@@ -34,7 +34,7 @@ internal class PredefinedIconRepository(
         resourceName: String,
         description: String
     ) = Id(id).let { knownId ->
-        knownId to IconRepository.Icon(
+        knownId to Icon(
             id = knownId,
             image = Image(
                 uri = androidUriResourceFactory.drawable(resourceName),

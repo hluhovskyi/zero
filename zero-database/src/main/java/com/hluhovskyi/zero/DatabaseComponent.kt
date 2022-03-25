@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.RoomCategoryRepository
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -39,6 +41,7 @@ interface DatabaseComponent {
     val currentUserRepository: CurrentUserRepository
     val accountRepository: AccountRepository
     val transactionRepository: TransactionRepository
+    val categoryRepository: CategoryRepository
 
     interface Dependencies {
 
@@ -127,6 +130,22 @@ interface DatabaseComponent {
             currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
             idGenerator = idGenerator
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun categoryRepository(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            idGenerator: IdGenerator,
+            incorrectStateDetector: IncorrectStateDetector,
+            clock: Clock,
+        ): CategoryRepository = RoomCategoryRepository(
+            categoryRoom = { database.get().category() },
+            currentUserId = currentUserId,
+            idGenerator = idGenerator,
+            clock = clock,
+            incorrectStateDetector = incorrectStateDetector,
         )
     }
 }

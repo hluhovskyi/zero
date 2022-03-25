@@ -28,10 +28,12 @@ internal class MainActivityViewProvider(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colors.background
             ) {
-                val state by viewModel.state.collectAsState(initial = MainActivityViewModel.State(
-                    currentDestination = Destination.Transaction.All,
-                    bottomNavigation = BottomNavigation.None
-                ))
+                val state by viewModel.state.collectAsState(
+                    initial = MainActivityViewModel.State(
+                        currentDestination = Destination.Transaction.All,
+                        bottomNavigation = BottomNavigation.None
+                    )
+                )
                 val navController = rememberNavController()
                 Scaffold(
                     bottomBar = {
@@ -49,7 +51,7 @@ internal class MainActivityViewProvider(
                     ScreenSurface(
                         activityComponent = activityComponent,
                         navController = navController,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }

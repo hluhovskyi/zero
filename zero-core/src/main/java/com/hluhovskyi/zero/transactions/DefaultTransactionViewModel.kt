@@ -90,7 +90,7 @@ internal class DefaultTransactionViewModel(
                         val symbol = idToCurrencies[account.currencyId]?.symbol
                         TransactionViewModel.Conversion.WithAmount(
                             amount = transaction.amount.withRate(transaction.rate),
-                            currencySymbol = symbol
+                            currencySymbol = symbol.orEmpty()
                         )
                     } else {
                         TransactionViewModel.Conversion.None

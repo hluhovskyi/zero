@@ -16,4 +16,8 @@ internal sealed class Destination(val route: String) {
         object All : Category("categories")
         object Edit : Category("categories/edit")
     }
+
+    sealed class Icon(route: String) : Destination(route) {
+        object Picker : Icon("icons/picker")
+    }
 }

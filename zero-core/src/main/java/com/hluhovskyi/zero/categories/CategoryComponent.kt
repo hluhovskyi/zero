@@ -27,8 +27,8 @@ abstract class CategoryComponent : AttachableViewComponent {
 
     interface Dependencies {
         val imageLoader: ImageLoader
-        val categoryRepository: CategoryRepository
-        val iconRepository: IconRepository
+
+        val categoryQueryUseCase: CategoriesQueryUseCase
     }
 
     companion object {
@@ -59,11 +59,9 @@ abstract class CategoryComponent : AttachableViewComponent {
         @Provides
         @CategoryScope
         fun viewModel(
-            categoryRepository: CategoryRepository,
-            iconRepository: IconRepository,
+            categoriesQueryUseCase: CategoriesQueryUseCase
         ): CategoryViewModel = DefaultCategoryViewModel(
-            categoryRepository = categoryRepository,
-            iconRepository = iconRepository,
+            categoriesQueryUseCase
         )
 
         @Provides

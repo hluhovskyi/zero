@@ -234,7 +234,8 @@ internal class DefaultTransactionEditUseCase(
                         currencies.map { currency ->
                             TransactionEditCurrency(
                                 id = currency.id,
-                                name = currency.name
+                                name = currency.name,
+                                currencySymbol = currency.symbol
                             )
                         }
                     }

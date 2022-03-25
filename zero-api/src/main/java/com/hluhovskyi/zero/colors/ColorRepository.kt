@@ -17,7 +17,18 @@ interface ColorRepository {
     data class Color(
         override val id: Id.Known,
         val color: ColorValue,
-    ) : Identifiable
+    ) : Identifiable {
+
+        companion object {
+
+            private val UNSPECIFIED = Color(
+                id = Id("unspecified"),
+                color = ColorValue.unspecified(),
+            )
+
+            fun unspecified(): Color = UNSPECIFIED
+        }
+    }
 
     companion object {
 

@@ -5,4 +5,5 @@ import com.hluhovskyi.zero.common.Id
 data class TransactionEditCurrency(
     val id: Id.Known,
     val name: String,
+    val currencySymbol: String,
 )

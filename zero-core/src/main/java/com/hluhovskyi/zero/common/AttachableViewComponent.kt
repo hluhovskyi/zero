@@ -16,20 +16,31 @@ interface AttachableViewComponent : Attachable {
 }
 
 @Composable
-fun AttachableViewComponent.AttachWithView(
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+fun <T : AttachableViewComponent> T.AttachWithView(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    onAttach: (T) -> Unit = {},
+    onDispose: (T) -> Unit = {},
 ) {
     DisposableEffect(lifecycleOwner) {
         val closeable = attach()
-        onDispose { closeable.close() }
+        onAttach(this@AttachWithView)
+        onDispose {
+            onDispose(this@AttachWithView)
+            closeable.close()
+        }
     }
     viewProvider()
 }
 
 @Composable
-fun Buildable<out AttachableViewComponent>.AttachWithView(
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+fun <T : AttachableViewComponent> Buildable<out T>.AttachWithView(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    onAttach: (T) -> Unit = {},
+    onDispose: (T) -> Unit = {},
 ) {
     val component by remember(lifecycleOwner) { mutableStateOf(build()) }
-    component.AttachWithView()
+    component.AttachWithView(
+        onAttach = onAttach,
+        onDispose = onDispose,
+    )
 }

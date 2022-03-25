@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -40,12 +41,12 @@ internal class DefaultCategoriesQueryUseCase(
 
     private fun resolve(
         category: CategoryRepository.Category,
-        idToIcons: Map<Id.Known, IconRepository.Icon>,
+        idToIcons: Map<Id.Known, Icon>,
         idToColors: Map<Id.Known, ColorRepository.Color>
     ): CategoriesQueryUseCase.Category {
         val icon = idToIcons[category.iconId]
             ?: idToIcons[IconRepository.unknownCategoryIconId()]
-            ?: IconRepository.Icon.empty()
+            ?: Icon.empty()
 
         val color = idToColors[category.colorId]
             ?: idToColors[ColorRepository.unknownCategoryColorId()]

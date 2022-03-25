@@ -17,6 +17,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -42,7 +43,8 @@ abstract class ActivityComponent :
     CategoryComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
-    TransactionEditComponent.Dependencies {
+    TransactionEditComponent.Dependencies,
+    IconPickerComponent.Dependencies {
 
     override fun attach(): Closeable = Closeables.empty()
 
@@ -52,6 +54,7 @@ abstract class ActivityComponent :
     abstract val categoryEditComponentBuilder: CategoryEditComponent.Builder
     abstract val transactionComponentBuilder: TransactionComponent.Builder
     abstract val transactionEditComponentBuilder: TransactionEditComponent.Builder
+    abstract val iconPickerComponentBuilder: IconPickerComponent.Builder
 
     interface Dependencies {
 
@@ -124,7 +127,7 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun categoryEditComponentBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
         ): CategoryEditComponent.Builder = CategoryEditComponent.builder(component)
 
         @Provides
@@ -138,6 +141,12 @@ abstract class ActivityComponent :
         fun transactionComponentBuilder(
             component: ActivityComponent,
         ): TransactionComponent.Builder = TransactionComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun iconPickerComponentBuilder(
+            component: ActivityComponent,
+        ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
     }
 }
 
@@ -157,10 +166,10 @@ private object MainActivityModule {
     fun viewProvider(
         component: ActivityComponent,
         viewModel: MainActivityViewModel,
-        imageLoader: ImageLoader
+        imageLoader: ImageLoader,
     ): ViewProvider = MainActivityViewProvider(
         activityComponent = component,
         viewModel = viewModel,
-        imageLoader = imageLoader
+        imageLoader = imageLoader,
     )
 }

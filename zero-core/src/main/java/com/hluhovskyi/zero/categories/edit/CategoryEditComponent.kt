@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
@@ -18,12 +20,15 @@ private annotation class CategoryEditScope
 )
 abstract class CategoryEditComponent : AttachableViewComponent {
 
+    abstract val categoryEditIconUseCase: CategoryEditIconUseCase
     internal abstract val viewModel: CategoryEditViewModel
 
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
+        val imageLoader: ImageLoader
 
+        val categoryRepository: CategoryRepository
     }
 
     companion object {
@@ -43,14 +48,26 @@ abstract class CategoryEditComponent : AttachableViewComponent {
 
         @Provides
         @CategoryEditScope
-        fun viewModel(): CategoryEditViewModel = DefaultCategoryEditViewModel()
+        fun categoryEditIconUseCase(): CategoryEditIconUseCase = DefaultCategoryEditIconUseCase()
+
+        @Provides
+        @CategoryEditScope
+        fun viewModel(
+            categoryRepository: CategoryRepository,
+            categoryEditIconUseCase: CategoryEditIconUseCase,
+        ): CategoryEditViewModel = DefaultCategoryEditViewModel(
+            categoryRepository = categoryRepository,
+            categoryEditIconUseCase = categoryEditIconUseCase,
+        )
 
         @Provides
         @CategoryEditScope
         fun viewProvider(
-            viewModel: CategoryEditViewModel
+            viewModel: CategoryEditViewModel,
+            imageLoader: ImageLoader,
         ): ViewProvider = CategoriesEditViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
+            imageLoader = imageLoader
         )
     }
 }

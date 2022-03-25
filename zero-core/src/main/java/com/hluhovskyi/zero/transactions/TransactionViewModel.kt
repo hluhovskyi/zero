@@ -19,12 +19,12 @@ interface TransactionViewModel
 
     sealed interface TransactionItem {
 
-        abstract val id: Id.Known
+        val id: Id.Known
 
         data class Expense(
             override val id: Id.Known,
             val amount: Amount,
-            val currencySymbol: Char,
+            val currencySymbol: String,
             val accountName: String,
             val categoryName: String,
             val categoryColor: Color,
@@ -43,14 +43,14 @@ interface TransactionViewModel
             val amount: Amount,
             val accountName: String,
             val targetAccountName: String
-        ): TransactionItem
+        ) : TransactionItem
     }
 
     sealed interface Conversion {
 
         data class WithAmount(
             val amount: Amount,
-            val currencySymbol: Char?
+            val currencySymbol: String,
         ) : Conversion
 
         object None : Conversion

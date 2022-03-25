@@ -19,7 +19,7 @@ internal fun TransactionEditCurrencySelect(
         label = {
             Text(text = "Currency")
         },
-        nameMapping = { it.name },
+        nameMapping = { "${it.currencySymbol} - ${it.name}" },
         selectedItem = selectedCurrency,
         onItemSelected = onCurrencySelected
     )
