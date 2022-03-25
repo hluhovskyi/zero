@@ -1,11 +1,11 @@
 package com.hluhovskyi.zero.categories.edit
 
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Color
 import com.hluhovskyi.zero.common.Image
 
 interface CategoryEditViewModel
-    : AttachableStateViewModel<CategoryEditViewModel.Action, CategoryEditViewModel.State> {
+    : AttachableActionStateModel<CategoryEditViewModel.Action, CategoryEditViewModel.State> {
 
     sealed interface Action {
         data class ChangeName(val name: String) : Action

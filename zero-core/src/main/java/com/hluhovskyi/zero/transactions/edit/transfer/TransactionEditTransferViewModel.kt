@@ -1,10 +1,10 @@
 package com.hluhovskyi.zero.transactions.edit.transfer
 
-import com.hluhovskyi.zero.common.StateViewModel
+import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 
 interface TransactionEditTransferViewModel
-    : StateViewModel<TransactionEditTransferViewModel.Action, TransactionEditTransferViewModel.State> {
+    : ActionStateModel<TransactionEditTransferViewModel.Action, TransactionEditTransferViewModel.State> {
 
     sealed interface Action {
         data class SelectAccount(val account: TransactionEditAccount) : Action

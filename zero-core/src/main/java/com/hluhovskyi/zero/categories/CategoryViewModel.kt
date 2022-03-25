@@ -1,11 +1,11 @@
 package com.hluhovskyi.zero.categories
 
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
 interface CategoryViewModel
-    : AttachableStateViewModel<CategoryViewModel.Action, CategoryViewModel.State> {
+    : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
 
     sealed interface Action {
 

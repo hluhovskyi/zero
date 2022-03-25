@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -20,7 +21,6 @@ private annotation class CategoryEditScope
 )
 abstract class CategoryEditComponent : AttachableViewComponent {
 
-    abstract val categoryEditIconUseCase: CategoryEditIconUseCase
     internal abstract val viewModel: CategoryEditViewModel
 
     override fun attach(): Closeable = viewModel.attach()
@@ -35,20 +35,20 @@ abstract class CategoryEditComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryEditComponent.builder()
             .dependencies(dependencies)
+            .categoryEditIconUseCase(CategoryEditIconUseCase.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<CategoryEditComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun categoryEditIconUseCase(useCase: CategoryEditIconUseCase): Builder
     }
 
     @dagger.Module
     object Module {
-
-        @Provides
-        @CategoryEditScope
-        fun categoryEditIconUseCase(): CategoryEditIconUseCase = DefaultCategoryEditIconUseCase()
 
         @Provides
         @CategoryEditScope

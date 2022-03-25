@@ -1,9 +1,9 @@
 package com.hluhovskyi.zero.transactions.edit
 
-import com.hluhovskyi.zero.common.StateViewModel
+import com.hluhovskyi.zero.common.ActionStateModel
 
 interface TransactionEditViewModel
-    : StateViewModel<TransactionEditViewModel.Action, TransactionEditViewModel.State> {
+    : ActionStateModel<TransactionEditViewModel.Action, TransactionEditViewModel.State> {
 
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action

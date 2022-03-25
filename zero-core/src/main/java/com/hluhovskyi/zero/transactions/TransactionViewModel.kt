@@ -1,13 +1,13 @@
 package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.common.Amount
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Color
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
 interface TransactionViewModel
-    : AttachableStateViewModel<TransactionViewModel.Action, TransactionViewModel.State> {
+    : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
 
     sealed class Action {
 

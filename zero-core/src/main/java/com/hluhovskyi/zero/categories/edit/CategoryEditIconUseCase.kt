@@ -1,13 +1,13 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
-import com.hluhovskyi.zero.common.StateViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 interface CategoryEditIconUseCase
-    : StateViewModel<CategoryEditIconUseCase.Action, CategoryEditIconUseCase.State> {
+    : ActionStateModel<CategoryEditIconUseCase.Action, CategoryEditIconUseCase.State> {
 
     sealed interface Action {
         object Request : Action
@@ -15,8 +15,6 @@ interface CategoryEditIconUseCase
     }
 
     sealed interface State {
-        object None : State
-        object Request : State
         data class Picked(val icon: Icon) : State
     }
 

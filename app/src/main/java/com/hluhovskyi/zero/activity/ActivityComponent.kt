@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
+import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -38,6 +39,7 @@ private annotation class ActivityScope
 )
 abstract class ActivityComponent :
     AttachableViewComponent,
+    MainActivityScreenComponent.Dependencies,
     AccountComponent.Dependencies,
     AccountEditComponent.Dependencies,
     CategoryComponent.Dependencies,
@@ -47,14 +49,6 @@ abstract class ActivityComponent :
     IconPickerComponent.Dependencies {
 
     override fun attach(): Closeable = Closeables.empty()
-
-    abstract val accountComponentBuilder: AccountComponent.Builder
-    abstract val accountEditComponentBuilder: AccountEditComponent.Builder
-    abstract val categoryComponentBuilder: CategoryComponent.Builder
-    abstract val categoryEditComponentBuilder: CategoryEditComponent.Builder
-    abstract val transactionComponentBuilder: TransactionComponent.Builder
-    abstract val transactionEditComponentBuilder: TransactionEditComponent.Builder
-    abstract val iconPickerComponentBuilder: IconPickerComponent.Builder
 
     interface Dependencies {
 
@@ -164,12 +158,18 @@ private object MainActivityModule {
     @Provides
     @ActivityScope
     fun viewProvider(
-        component: ActivityComponent,
         viewModel: MainActivityViewModel,
         imageLoader: ImageLoader,
+        screenComponent: MainActivityScreenComponent.Builder,
     ): ViewProvider = MainActivityViewProvider(
-        activityComponent = component,
         viewModel = viewModel,
         imageLoader = imageLoader,
+        screenComponent = screenComponent
     )
+
+    @Provides
+    @ActivityScope
+    fun mainActivityScreenComponentBuilder(
+        component: ActivityComponent,
+    ): MainActivityScreenComponent.Builder = MainActivityScreenComponent.builder(component)
 }

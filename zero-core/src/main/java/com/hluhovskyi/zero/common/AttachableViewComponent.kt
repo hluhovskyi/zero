@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.common
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,10 +22,12 @@ fun <T : AttachableViewComponent> T.AttachWithView(
     onAttach: (T) -> Unit = {},
     onDispose: (T) -> Unit = {},
 ) {
+    val tag = this::class.simpleName
     DisposableEffect(lifecycleOwner) {
         val closeable = attach()
         onAttach(this@AttachWithView)
         onDispose {
+            Log.d("AttachWithView", "dispose $tag")
             onDispose(this@AttachWithView)
             closeable.close()
         }

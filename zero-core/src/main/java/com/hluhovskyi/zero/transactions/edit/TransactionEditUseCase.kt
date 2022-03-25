@@ -1,13 +1,13 @@
 package com.hluhovskyi.zero.transactions.edit
 
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Closeables
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.io.Closeable
 
 interface TransactionEditUseCase :
-    AttachableStateViewModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
+    AttachableActionStateModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
 
     sealed interface Action {
         data class SwitchTransaction(val type: TransactionEditType) : Action

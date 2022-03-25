@@ -1,9 +1,9 @@
 package com.hluhovskyi.zero.icons
 
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 
 interface IconPickerViewModel
-    : AttachableStateViewModel<IconPickerViewModel.Action, IconPickerViewModel.State> {
+    : AttachableActionStateModel<IconPickerViewModel.Action, IconPickerViewModel.State> {
 
     sealed interface Action {
         data class SelectIcon(val icon: Icon) : Action

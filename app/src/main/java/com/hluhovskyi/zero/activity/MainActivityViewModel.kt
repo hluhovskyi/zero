@@ -1,9 +1,10 @@
 package com.hluhovskyi.zero.activity
 
-import com.hluhovskyi.zero.common.StateViewModel
+import com.hluhovskyi.zero.activity.screens.Destination
+import com.hluhovskyi.zero.common.ActionStateModel
 
 internal interface MainActivityViewModel
-    : StateViewModel<MainActivityViewModel.Action, MainActivityViewModel.State> {
+    : ActionStateModel<MainActivityViewModel.Action, MainActivityViewModel.State> {
 
     sealed interface Action {
         data class BottomNavigationItemSelect(val item: BottomNavigation.Item) : Action

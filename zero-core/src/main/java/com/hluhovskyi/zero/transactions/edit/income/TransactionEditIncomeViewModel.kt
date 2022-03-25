@@ -1,12 +1,12 @@
 package com.hluhovskyi.zero.transactions.edit.income
 
-import com.hluhovskyi.zero.common.StateViewModel
+import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrency
 
 interface TransactionEditIncomeViewModel
-    : StateViewModel<TransactionEditIncomeViewModel.Action, TransactionEditIncomeViewModel.State> {
+    : ActionStateModel<TransactionEditIncomeViewModel.Action, TransactionEditIncomeViewModel.State> {
 
     sealed interface Action {
         data class SelectAccount(val account: TransactionEditAccount) : Action

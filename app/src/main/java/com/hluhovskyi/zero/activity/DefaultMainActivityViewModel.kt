@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.activity
 
+import com.hluhovskyi.zero.activity.screens.Destination
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow

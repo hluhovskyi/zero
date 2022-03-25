@@ -1,9 +1,9 @@
 package com.hluhovskyi.zero.accounts
 
-import com.hluhovskyi.zero.common.AttachableStateViewModel
+import com.hluhovskyi.zero.common.AttachableActionStateModel
 
 interface AccountViewModel
-    : AttachableStateViewModel<AccountViewModel.Action, AccountViewModel.State> {
+    : AttachableActionStateModel<AccountViewModel.Action, AccountViewModel.State> {
 
     sealed interface Action {
 
