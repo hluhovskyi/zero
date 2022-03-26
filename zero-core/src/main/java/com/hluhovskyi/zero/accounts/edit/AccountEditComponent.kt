@@ -15,6 +15,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class AccountEditScope
 
+private const val TAG = "AccountEditComponent"
+
 @AccountEditScope
 @dagger.Component(
     modules = [AccountEditComponent.Module::class],
@@ -24,6 +26,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
     internal abstract val viewModel: AccountEditViewModel
 
+    override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
@@ -64,7 +67,6 @@ abstract class AccountEditComponent : AttachableViewComponent {
         @Provides
         @AccountEditScope
         fun viewModel(
-            idGenerator: IdGenerator,
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
             onAccountSavedHandler: OnAccountSavedHandler,

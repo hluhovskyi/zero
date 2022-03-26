@@ -14,6 +14,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class CategoryScope
 
+private const val TAG = "CategoryComponent"
+
 @CategoryScope
 @dagger.Component(
     dependencies = [CategoryComponent.Dependencies::class],
@@ -23,6 +25,7 @@ abstract class CategoryComponent : AttachableViewComponent {
 
     internal abstract val viewModel: CategoryViewModel
 
+    override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {

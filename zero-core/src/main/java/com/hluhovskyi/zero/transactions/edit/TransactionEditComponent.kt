@@ -3,14 +3,13 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
-import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.currencies.CurrencyRepository
-import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
 import com.hluhovskyi.zero.transactions.edit.income.TransactionEditIncomeComponent
@@ -37,6 +36,8 @@ abstract class TransactionEditComponent : AttachableViewComponent,
     TransactionEditTransferComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
+
+    override val tag: String = TAG
     override fun attach(): Closeable = useCase.attach()
 
     interface Dependencies {
@@ -110,12 +111,13 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             viewModel: TransactionEditViewModel,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
-            transferComponentBuilder: TransactionEditTransferComponent.Builder
+            transferComponentBuilder: TransactionEditTransferComponent.Builder,
+            logger: Logger
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
-            expenseComponent = expenseComponentBuilder,
-            incomeComponent = incomeComponentBuilder,
-            transferComponent = transferComponentBuilder
+            expenseComponent = expenseComponentBuilder.logging(logger),
+            incomeComponent = incomeComponentBuilder.logging(logger),
+            transferComponent = transferComponentBuilder.logging(logger),
         )
 
         @Provides

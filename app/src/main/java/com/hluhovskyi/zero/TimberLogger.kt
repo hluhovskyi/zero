@@ -3,16 +3,16 @@ package com.hluhovskyi.zero
 import com.hluhovskyi.zero.common.Logger
 import timber.log.Timber
 
-object TimberLogger : Logger {
-    override fun withTag(tag: String): Logger.AttributedLogger =
-        TaggedAttributedLogger(tag)
+class TimberLogger(private val tag: String = "") : Logger {
 
-    private class TaggedAttributedLogger(
-        private val tag: String
-    ) : Logger.AttributedLogger {
+    override fun withTag(tag: String): Logger = TimberLogger(this.tag + "." + tag)
 
-        override fun log(priority: Logger.Priority, message: String, throwable: Throwable?) {
-            Timber.tag(tag).log(priority.value, throwable, message)
+    override fun log(priority: Logger.Priority, message: String, throwable: Throwable?) {
+        val tree = if (tag.isNotBlank()) {
+            Timber.tag(tag)
+        } else {
+            Timber
         }
+        tree.log(priority.value, throwable, message)
     }
 }

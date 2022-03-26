@@ -75,7 +75,7 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun logger(): Logger = TimberLogger
+        fun logger(): Logger = TimberLogger()
 
         @Provides
         @ApplicationScope

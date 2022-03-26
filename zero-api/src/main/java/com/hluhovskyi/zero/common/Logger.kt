@@ -2,12 +2,9 @@ package com.hluhovskyi.zero.common
 
 interface Logger {
 
-    fun withTag(tag: String): AttributedLogger
+    fun withTag(tag: String): Logger
 
-    interface AttributedLogger {
-
-        fun log(priority: Priority, message: String, throwable: Throwable? = null)
-    }
+    fun log(priority: Priority, message: String, throwable: Throwable? = null)
 
     enum class Priority(val value: Int) {
         Verbose(2),
@@ -19,14 +16,11 @@ interface Logger {
     }
 
     object Noop : Logger {
-        override fun withTag(tag: String): AttributedLogger = NoopAttributedLogger
-
-        private object NoopAttributedLogger : AttributedLogger {
-            override fun log(priority: Priority, message: String, throwable: Throwable?) = Unit
-        }
+        override fun withTag(tag: String): Logger = this
+        override fun log(priority: Priority, message: String, throwable: Throwable?) = Unit
     }
 }
 
-fun Logger.AttributedLogger.d(message: String) {
+fun Logger.d(message: String) {
     log(Logger.Priority.Debug, message)
 }

@@ -15,6 +15,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class TransactionEditExpenseScope
 
+private const val TAG = "TransactionEditExpenseComponent"
+
 @TransactionEditExpenseScope
 @dagger.Component(
     dependencies = [TransactionEditExpenseComponent.Dependencies::class],
@@ -22,6 +24,7 @@ private annotation class TransactionEditExpenseScope
 )
 abstract class TransactionEditExpenseComponent : AttachableViewComponent {
 
+    override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
 
     interface Dependencies {

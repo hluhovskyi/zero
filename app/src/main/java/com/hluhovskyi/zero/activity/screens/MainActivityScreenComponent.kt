@@ -9,7 +9,9 @@ import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
@@ -23,6 +25,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class MainActivityScreenScope
 
+private const val TAG = "MainActivityScreenComponent"
+
 /**
  * Component which is responsible for screens rendering, navigation and communication between ones.
  * All business-logic dependencies of screens should be satisfied before providing to this component.
@@ -34,9 +38,12 @@ private annotation class MainActivityScreenScope
 )
 internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
+    override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
 
     interface Dependencies {
+        val logger: Logger
+
         val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
 
@@ -98,11 +105,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionNavigationEntry(
+            component: TransactionComponent.Builder,
             navigator: Navigator,
-            component: TransactionComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destination.Transaction.All) {
             TransactionScreen(
-                component = component,
+                component = component.logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destination.Transaction.Edit) }
             )
         }
@@ -111,24 +119,27 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
+            componentBuilder: TransactionEditComponent.Builder,
             navigator: Navigator,
-            componentBuilder: TransactionEditComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(
             destination = Destination.Transaction.Edit,
             attachableViewComponentBuilder = componentBuilder
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destination.Category.All) }
+                .logging(logger)
         )
 
         @Provides
         @IntoSet
         @MainActivityScreenScope
         fun categoryNavigationEntry(
+            componentBuilder: CategoryComponent.Builder,
             navigator: Navigator,
-            componentBuilder: CategoryComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destination.Category.All) {
             CategoriesScreen(
-                component = componentBuilder,
+                component = componentBuilder.logging(logger),
                 onCategoriesEdit = { navigator.navigateTo(Destination.Category.Edit) }
             )
         }
@@ -137,23 +148,26 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun categoryEditNavigationEntry(
+            componentBuilder: CategoryEditComponent.Builder,
             categoryEditIconUseCase: CategoryEditIconUseCase,
-            componentBuilder: CategoryEditComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(
             destination = Destination.Category.Edit,
             attachableViewComponentBuilder = componentBuilder
                 .categoryEditIconUseCase(categoryEditIconUseCase)
+                .logging(logger)
         )
 
         @Provides
         @IntoSet
         @MainActivityScreenScope
         fun accountNavigationEntry(
+            componentBuilder: AccountComponent.Builder,
             navigator: Navigator,
-            componentBuilder: AccountComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destination.Account.All) {
             AccountsScreen(
-                component = componentBuilder,
+                component = componentBuilder.logging(logger),
                 onAccountEdit = { navigator.navigateTo(Destination.Account.Edit) }
             )
         }
@@ -162,11 +176,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun accountEditNavigationEntry(
+            componentBuilder: AccountEditComponent.Builder,
             navigator: Navigator,
-            componentBuilder: AccountEditComponent.Builder
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destination.Account.Edit) {
             AccountsEditScreen(
-                component = componentBuilder.onAccountSavedHandler { navigator.back() }
+                component = componentBuilder
+                    .onAccountSavedHandler { navigator.back() }
+                    .logging(logger)
             )
         }
 
@@ -176,6 +193,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun iconPickerNavigationEntry(
             componentBuilder: IconPickerComponent.Builder,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            logger: Logger,
         ): NavigatorEntry = navigationEntryOf(
             destination = Destination.Icon.Picker,
             attachableViewComponentBuilder = componentBuilder
@@ -189,6 +207,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                         )
                     )
                 }
+                .logging(logger)
         )
     }
 }

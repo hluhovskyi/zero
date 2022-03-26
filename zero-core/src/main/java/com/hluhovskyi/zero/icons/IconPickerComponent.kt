@@ -13,6 +13,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class IconPickerScope
 
+private const val TAG = "IconPickerComponent"
+
 @IconPickerScope
 @dagger.Component(
     dependencies = [IconPickerComponent.Dependencies::class],
@@ -22,6 +24,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
 
     internal abstract val viewModel: IconPickerViewModel
 
+    override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {

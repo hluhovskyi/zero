@@ -126,7 +126,7 @@ fun TransactionExpenseView(
                     val rate = item.conversion.amount.value.toPlainString()
                     Text(
                         fontSize = 14.sp,
-                        text = rate + item.conversion.currencySymbol?.toString().orEmpty(),
+                        text = rate + item.conversion.currencySymbol,
                     )
                 }
             }

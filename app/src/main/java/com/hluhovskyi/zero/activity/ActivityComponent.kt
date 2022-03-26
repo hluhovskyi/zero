@@ -32,6 +32,8 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class ActivityScope
 
+private const val TAG = "ActivityComponent"
+
 @ActivityScope
 @dagger.Component(
     modules = [ActivityComponent.Module::class],
@@ -48,6 +50,7 @@ abstract class ActivityComponent :
     TransactionEditComponent.Dependencies,
     IconPickerComponent.Dependencies {
 
+    override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
 
     interface Dependencies {
