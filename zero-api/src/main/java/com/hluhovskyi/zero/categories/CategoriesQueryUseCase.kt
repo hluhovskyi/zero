@@ -1,6 +1,6 @@
 package com.hluhovskyi.zero.categories
 
-import com.hluhovskyi.zero.common.Color
+import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Identifiable
 import com.hluhovskyi.zero.common.Image
@@ -14,6 +14,6 @@ interface CategoriesQueryUseCase {
         override val id: Id.Known,
         val name: String,
         val icon: Image,
-        val color: Color
+        val color: ColorValue
     ) : Identifiable
 }

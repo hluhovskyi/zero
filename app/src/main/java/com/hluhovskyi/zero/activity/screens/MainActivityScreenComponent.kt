@@ -9,8 +9,10 @@ import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.activity.navigation.back
 import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.categories.CategoryComponent
+import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
+import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
@@ -63,6 +65,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val accountEditComponentBuilder: AccountEditComponent.Builder
 
         val iconPickerComponentBuilder: IconPickerComponent.Builder
+        val colorPickerComponentBuilder: ColorPickerComponent.Builder
     }
 
     companion object {
@@ -122,6 +125,18 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         )
 
         @Provides
+        @MainActivityScreenScope
+        fun categoryEditColorUseCase(
+            navigator: Navigator,
+            idGenerator: IdGenerator,
+            logger: Logger,
+        ): CategoryEditColorUseCase = DefaultCategoryEditColorUseCase(
+            navigator = navigator,
+            requestIdGenerator = idGenerator,
+            logger
+        )
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionNavigationEntry(
@@ -170,11 +185,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun categoryEditNavigationEntry(
             componentBuilder: CategoryEditComponent.Builder,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
+            navigator: Navigator,
         ): NavigatorEntry = navigationEntryOf(
             destination = Destinations.Category.Edit,
             attachableViewComponentBuilder = componentBuilder
                 .categoryEditIconUseCase(categoryEditIconUseCase)
+                .categoryEditColorUseCase(categoryEditColorUseCase)
+                .onCategorySavedHandler { navigator.back() }
                 .logging(logger)
         )
 
@@ -223,6 +242,29 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             icon = CategoryEditIconUseCase.Icon(
                                 id = icon.id,
                                 image = icon.image
+                            )
+                        )
+                    )
+                }
+                .logging(logger)
+        )
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun colorPickerNavigationEntry(
+            componentBuilder: ColorPickerComponent.Builder,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
+            logger: Logger,
+        ): NavigatorEntry = navigationEntryOf(
+            destination = Destinations.Color.Picker,
+            attachableViewComponentBuilder = componentBuilder
+                .onColorSelectedHandler { color ->
+                    categoryEditColorUseCase.perform(
+                        CategoryEditColorUseCase.Action.Pick(
+                            color = CategoryEditColorUseCase.Color(
+                                id = color.id,
+                                color = color.value,
                             )
                         )
                     )

@@ -1,17 +1,22 @@
 package com.hluhovskyi.zero.colors
 
-import androidx.compose.ui.graphics.Color
+import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.castingFlowOf
 import com.hluhovskyi.zero.common.coroutines.castingFlowOfNonNull
 import kotlinx.coroutines.flow.Flow
-import com.hluhovskyi.zero.common.Color as ColorValue
+import androidx.compose.ui.graphics.Color as ComposeColor
 
 internal class PredefinedMaterialColorRepository : ColorRepository {
 
     private val colors = mapOf(
-        color(id = "blue", hex = Color.Blue.value),
-        color(id = "red", hex = Color.Red.value),
+        color(
+            id = ColorRepository.unknownCategoryColorId().value,
+            hex = ComposeColor.Gray.value
+        ),
+
+        color(id = "blue", hex = ComposeColor.Blue.value),
+        color(id = "red", hex = ComposeColor.Red.value),
     )
 
     override fun <T> query(criteria: ColorRepository.Criteria<T>): Flow<T> =
@@ -21,9 +26,9 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
         }
 
     private fun color(id: String, hex: ULong) = Id(id).let { knownId ->
-        knownId to ColorRepository.Color(
+        knownId to Color(
             id = knownId,
-            color = ColorValue(hex = hex)
+            value = ColorValue(hex = hex)
         )
     }
 }

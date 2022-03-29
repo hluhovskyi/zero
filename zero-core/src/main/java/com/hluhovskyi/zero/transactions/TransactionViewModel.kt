@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
-import com.hluhovskyi.zero.common.Color
+import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
@@ -27,7 +27,7 @@ interface TransactionViewModel
             val currencySymbol: String,
             val accountName: String,
             val categoryName: String,
-            val categoryColor: Color,
+            val categoryColor: ColorValue,
             val categoryIcon: Image,
             val conversion: Conversion
         ) : TransactionItem

@@ -24,4 +24,12 @@ internal object Destinations {
             }
         }
     }
+
+    sealed interface Color : Destination {
+        object Picker : Color, Destination by destinationOf("colors/picker", RequestId) {
+            object RequestId : Argument<String> by stringOptionalValueOf("requestId") {
+                override fun toString(): String = "RequestId"
+            }
+        }
+    }
 }

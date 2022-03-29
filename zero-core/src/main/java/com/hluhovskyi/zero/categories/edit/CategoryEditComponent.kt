@@ -2,9 +2,11 @@ package com.hluhovskyi.zero.categories.edit
 
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.icons.IconRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -32,6 +34,8 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         val imageLoader: ImageLoader
 
         val categoryRepository: CategoryRepository
+        val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -39,6 +43,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryEditComponent.builder()
             .dependencies(dependencies)
             .categoryEditIconUseCase(CategoryEditIconUseCase.Noop)
+            .categoryEditColorUseCase(CategoryEditColorUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -48,6 +53,12 @@ abstract class CategoryEditComponent : AttachableViewComponent {
 
         @BindsInstance
         fun categoryEditIconUseCase(useCase: CategoryEditIconUseCase): Builder
+
+        @BindsInstance
+        fun categoryEditColorUseCase(useCase: CategoryEditColorUseCase): Builder
+
+        @BindsInstance
+        fun onCategorySavedHandler(handler: OnCategorySavedHandler): Builder
     }
 
     @dagger.Module
@@ -57,10 +68,18 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         @CategoryEditScope
         fun viewModel(
             categoryRepository: CategoryRepository,
+            iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
+            onCategorySavedHandler: OnCategorySavedHandler,
         ): CategoryEditViewModel = DefaultCategoryEditViewModel(
             categoryRepository = categoryRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
             categoryEditIconUseCase = categoryEditIconUseCase,
+            categoryEditColorUseCase = categoryEditColorUseCase,
+            onCategorySavedHandler = onCategorySavedHandler
         )
 
         @Provides

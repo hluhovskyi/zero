@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
+import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -49,7 +50,8 @@ abstract class ActivityComponent :
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
-    IconPickerComponent.Dependencies {
+    IconPickerComponent.Dependencies,
+    ColorPickerComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -146,6 +148,12 @@ abstract class ActivityComponent :
         fun iconPickerComponentBuilder(
             component: ActivityComponent,
         ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun colorPickerComponentBuilder(
+            component: ActivityComponent
+        ): ColorPickerComponent.Builder = ColorPickerComponent.builder(component)
     }
 }
 

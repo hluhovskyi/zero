@@ -1,10 +1,12 @@
 package com.hluhovskyi.zero.categories.edit
 
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.Color
+import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -18,9 +20,12 @@ import java.io.Closeable
 
 internal class DefaultCategoryEditViewModel(
     private val categoryRepository: CategoryRepository,
+    private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     private val categoryEditIconUseCase: CategoryEditIconUseCase,
+    private val categoryEditColorUseCase: CategoryEditColorUseCase,
+    private val onCategorySavedHandler: OnCategorySavedHandler,
     private val ioCoroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
-    private val mainCoroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.Main),
 ) : CategoryEditViewModel {
 
     private val mutableState = MutableStateFlow(CompositeState())
@@ -43,7 +48,8 @@ internal class DefaultCategoryEditViewModel(
                 }
             is CategoryEditViewModel.Action.SelectIcon ->
                 categoryEditIconUseCase.perform(CategoryEditIconUseCase.Action.Request)
-            is CategoryEditViewModel.Action.SelectColor -> TODO()
+            is CategoryEditViewModel.Action.SelectColor ->
+                categoryEditColorUseCase.perform(CategoryEditColorUseCase.Action.Request)
             is CategoryEditViewModel.Action.Save -> ioCoroutineScope.launch {
                 val state = mutableState.value
                 categoryRepository.insert(
@@ -54,22 +60,64 @@ internal class DefaultCategoryEditViewModel(
                         colorId = state.colorId,
                     )
                 )
+                launch(context = Dispatchers.Main) {
+                    onCategorySavedHandler.onSaved()
+                }
             }
         }
     }
 
     override fun attach(): Closeable = Closeables.of {
-        mainCoroutineScope.launch {
-            categoryEditIconUseCase.state
-                .filterIsInstance<CategoryEditIconUseCase.State.Picked>()
-                .collectLatest { iconState ->
-                    mutableState.update { state ->
-                        state.copy(
-                            iconId = iconState.icon.id,
-                            icon = iconState.icon.image,
-                        )
+        ioCoroutineScope.launch {
+            launch(context = Dispatchers.Main) {
+                categoryEditIconUseCase.state
+                    .filterIsInstance<CategoryEditIconUseCase.State.Picked>()
+                    .collectLatest { iconState ->
+                        mutableState.update { state ->
+                            state.copy(
+                                iconId = iconState.icon.id,
+                                icon = iconState.icon.image,
+                            )
+                        }
                     }
-                }
+            }
+
+            launch(context = Dispatchers.Main) {
+                categoryEditColorUseCase.state
+                    .filterIsInstance<CategoryEditColorUseCase.State.Picked>()
+                    .collectLatest { colorState ->
+                        mutableState.update { state ->
+                            state.copy(
+                                colorId = colorState.color.id,
+                                color = colorState.color.color,
+                            )
+                        }
+                    }
+            }
+
+            launch {
+                iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
+                    .collectLatest { icon ->
+                        mutableState.update { state ->
+                            state.copy(
+                                iconId = icon.id,
+                                icon = icon.image
+                            )
+                        }
+                    }
+            }
+
+            launch {
+                colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
+                    .collectLatest { color ->
+                        mutableState.update { state ->
+                            state.copy(
+                                colorId = color.id,
+                                color = color.value
+                            )
+                        }
+                    }
+            }
         }
     }
 
@@ -78,6 +126,6 @@ internal class DefaultCategoryEditViewModel(
         val iconId: Id = Id.Unknown,
         val icon: Image = Image.empty(),
         val colorId: Id = Id.Unknown,
-        val color: Color = Color.unspecified(),
+        val color: ColorValue = ColorValue.unspecified(),
     )
 }

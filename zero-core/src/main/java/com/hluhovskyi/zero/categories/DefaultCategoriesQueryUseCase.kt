@@ -1,7 +1,8 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorRepository
-import com.hluhovskyi.zero.common.Color
+import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
@@ -42,7 +43,7 @@ internal class DefaultCategoriesQueryUseCase(
     private fun resolve(
         category: CategoryRepository.Category,
         idToIcons: Map<Id.Known, Icon>,
-        idToColors: Map<Id.Known, ColorRepository.Color>
+        idToColors: Map<Id.Known, Color>
     ): CategoriesQueryUseCase.Category {
         val icon = idToIcons[category.iconId]
             ?: idToIcons[IconRepository.unknownCategoryIconId()]
@@ -55,7 +56,7 @@ internal class DefaultCategoriesQueryUseCase(
             id = category.id,
             name = category.name,
             icon = icon.image,
-            color = color?.color ?: Color.unspecified()
+            color = color?.value ?: ColorValue.unspecified()
         )
     }
 }
