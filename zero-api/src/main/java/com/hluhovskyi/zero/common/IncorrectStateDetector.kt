@@ -2,6 +2,8 @@ package com.hluhovskyi.zero.common
 
 interface IncorrectStateDetector {
 
+    fun assert(message: String)
+
     fun <T> requireNonNull(
         value: T?,
         message: String? = null,
@@ -21,6 +23,10 @@ interface IncorrectStateDetector {
 }
 
 private object IgnoreOnIncorrectStateDetector : IncorrectStateDetector {
+
+    override fun assert(message: String) {
+
+    }
 
     override fun <T> requireNonNull(value: T?, message: String?, block: (T) -> Unit) {
         if (value != null) {

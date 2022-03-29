@@ -5,10 +5,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.hluhovskyi.zero.activity.navigation.Destination
+import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class MainActivityScreenViewProvider(
     private val navController: NavHostController,
+    private val navigator: Navigator,
     private val startDestination: Destination,
     private val navigationEntries: Collection<NavigatorEntry>,
 ) : ViewProvider {
@@ -21,7 +24,7 @@ internal class MainActivityScreenViewProvider(
         ) {
             navigationEntries.forEach { entry ->
                 composable(
-                    route = entry.destination.routeWithPlaceholders(entry.destination.arguments),
+                    route = navigator.routeWithPlaceholders(entry.destination),
                     arguments = entry.destination.arguments.map { argument ->
                         navArgument(name = argument.key) {
                             nullable = argument.optional

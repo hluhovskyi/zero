@@ -15,6 +15,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.IdGenerator
+import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -57,6 +58,7 @@ abstract class ActivityComponent :
 
         val imageLoader: ImageLoader
         val androidUriResourceFactory: AndroidUriResourceFactory
+        val incorrectStateDetector: IncorrectStateDetector
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
 

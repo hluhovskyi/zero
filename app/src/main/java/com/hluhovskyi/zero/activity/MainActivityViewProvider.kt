@@ -12,7 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.hluhovskyi.zero.ImageLoader
-import com.hluhovskyi.zero.activity.screens.Destination
+import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.MainBottomNavigation
 import com.hluhovskyi.zero.common.AttachWithView
@@ -34,7 +34,7 @@ internal class MainActivityViewProvider(
             ) {
                 val state by viewModel.state.collectAsState(
                     initial = MainActivityViewModel.State(
-                        currentDestination = Destination.Transaction.All,
+                        currentDestination = Destinations.Transaction.All,
                         bottomNavigation = BottomNavigation.None
                     )
                 )

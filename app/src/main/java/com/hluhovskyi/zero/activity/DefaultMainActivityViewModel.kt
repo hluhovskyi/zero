@@ -1,6 +1,6 @@
 package com.hluhovskyi.zero.activity
 
-import com.hluhovskyi.zero.activity.screens.Destination
+import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +18,7 @@ internal class DefaultMainActivityViewModel(
                 uri = androidUriResourceFactory.drawable("ic_florist_24"),
                 description = "Transaction icon"
             ),
-            destination = Destination.Transaction.All
+            destination = Destinations.Transaction.All
         ),
         BottomNavigation.Item(
             name = "Categories",
@@ -26,7 +26,7 @@ internal class DefaultMainActivityViewModel(
                 uri = androidUriResourceFactory.drawable("ic_fastfood_24"),
                 description = "Category icon"
             ),
-            destination = Destination.Category.All
+            destination = Destinations.Category.All
         ),
         BottomNavigation.Item(
             name = "Accounts",
@@ -34,13 +34,13 @@ internal class DefaultMainActivityViewModel(
                 uri = androidUriResourceFactory.drawable("ic_fastfood_24"),
                 description = "Accounts icon"
             ),
-            destination = Destination.Account.All
+            destination = Destinations.Account.All
         )
     )
 
     private val mutableState = MutableStateFlow(
         MainActivityViewModel.State(
-            currentDestination = Destination.Transaction.All,
+            currentDestination = Destinations.Transaction.All,
             bottomNavigation = BottomNavigation.WithItems(bottomNavigationItems)
         )
     )

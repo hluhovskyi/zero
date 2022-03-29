@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.activity
 
-import com.hluhovskyi.zero.activity.screens.Destination
+import com.hluhovskyi.zero.activity.navigation.Destination
+import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.common.ActionStateModel
 
 internal interface MainActivityViewModel
@@ -11,7 +12,7 @@ internal interface MainActivityViewModel
     }
 
     data class State(
-        val currentDestination: Destination = Destination.Transaction.All,
+        val currentDestination: Destination = Destinations.Transaction.All,
         val bottomNavigation: BottomNavigation = BottomNavigation.None
     )
 }

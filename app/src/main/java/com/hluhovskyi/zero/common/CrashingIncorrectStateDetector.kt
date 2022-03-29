@@ -1,8 +1,10 @@
 package com.hluhovskyi.zero.common
 
-import java.lang.IllegalStateException
-
 internal object CrashingIncorrectStateDetector : IncorrectStateDetector {
+
+    override fun assert(message: String) {
+        throw IllegalStateException(message)
+    }
 
     override fun <T> requireNonNull(value: T?, message: String?, block: (T) -> Unit) {
         if (value == null) {

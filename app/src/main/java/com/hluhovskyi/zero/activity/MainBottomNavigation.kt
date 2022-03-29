@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.activity.BottomNavigation
+import com.hluhovskyi.zero.activity.navigation.Destination
 
 @Composable
 internal fun MainBottomNavigation(
