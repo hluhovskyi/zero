@@ -11,6 +11,8 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.RoomConfigurationRepository
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
@@ -42,6 +44,7 @@ interface DatabaseComponent {
     val accountRepository: AccountRepository
     val transactionRepository: TransactionRepository
     val categoryRepository: CategoryRepository
+    val configurationRepository: ConfigurationRepository
 
     interface Dependencies {
 
@@ -145,6 +148,18 @@ interface DatabaseComponent {
             currentUserId = currentUserId,
             idGenerator = idGenerator,
             clock = clock,
+            incorrectStateDetector = incorrectStateDetector,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun configurationRepository(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            incorrectStateDetector: IncorrectStateDetector,
+        ): ConfigurationRepository = RoomConfigurationRepository(
+            configurationRoom = { database.get().configuration() },
+            currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
         )
     }
