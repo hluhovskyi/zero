@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.PredefinedMaterialColorRepository
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
+import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.CrashingIncorrectStateDetector
 import com.hluhovskyi.zero.common.DefaultAndroidUriResourceFactory
 import com.hluhovskyi.zero.common.IdGenerator
@@ -24,20 +25,14 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
-import com.hluhovskyi.zero.resource.CompositeResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolver
-import com.hluhovskyi.zero.resource.UriRequest
-import com.hluhovskyi.zero.resource.UriResourceResolver
+import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import javax.inject.Provider
 import javax.inject.Scope
 
@@ -53,6 +48,7 @@ private annotation class ApplicationScope
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     DatabaseComponent.Dependencies,
+    ResourceResolverComponent.Dependencies,
     ZenMoneyImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
@@ -68,18 +64,15 @@ abstract class ApplicationComponent :
     }
 
     @dagger.Component.Builder
-    interface Builder {
+    interface Builder : Buildable<ApplicationComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        fun build(): ApplicationComponent
     }
 
     @dagger.Module(
         includes = [
             DatabaseModule::class,
             ImportModule::class,
-            ResourceResolverModule::class,
         ]
     )
     object Module {
@@ -121,6 +114,14 @@ abstract class ApplicationComponent :
         fun imageLoader(
             context: Context
         ): ImageLoader = ImageLoader.factory(context).create()
+
+        @Provides
+        @ApplicationScope
+        fun resourceResolver(
+            component: ApplicationComponent
+        ): ResourceResolver = ResourceResolverComponent.builder(component)
+            .build()
+            .resourceResolver
 
         @Provides
         @ApplicationScope
@@ -219,7 +220,6 @@ private object DatabaseModule {
     @ApplicationScope
     fun categoryRepository(
         databaseComponent: DatabaseComponent,
-        zenMoneyImportComponent: ZenMoneyImportComponent.Builder
     ): CategoryRepository = databaseComponent.categoryRepository
 }
 
@@ -231,36 +231,6 @@ private object ImportModule {
     fun zenMoneyImportComponent(
         component: ApplicationComponent,
         androidUriResourceFactory: AndroidUriResourceFactory,
-        context: Context,
     ): ZenMoneyImportComponent.Builder = ZenMoneyImportComponent.builder(component)
-        .also { builder ->
-            CoroutineScope(context = Dispatchers.IO).launch {
-                builder
-                    .importFileUri(androidUriResourceFactory.raw("zenmoney"))
-                    .build()
-                    .categoryRepository
-                    .query(CategoryRepository.Criteria.All())
-                    .collect()
-            }
-        }
-}
-
-@dagger.Module
-private object ResourceResolverModule {
-
-    @Provides
-    @ApplicationScope
-    fun uriResourceResolver(
-        context: Context
-    ): UriResourceResolver = UriResourceResolver(context)
-
-    @Provides
-    @ApplicationScope
-    fun compositeResourceResolver(
-        uriResourceResolver: UriResourceResolver
-    ): ResourceResolver = CompositeResourceResolver(
-        mapOf(
-            UriRequest::class to uriResourceResolver,
-        )
-    )
+        .importFileUri(androidUriResourceFactory.raw("zenmoney"))
 }
