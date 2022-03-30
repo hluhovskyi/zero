@@ -32,4 +32,6 @@ internal object Destinations {
             }
         }
     }
+
+    object Settings : Destination by destinationOf("settings")
 }
