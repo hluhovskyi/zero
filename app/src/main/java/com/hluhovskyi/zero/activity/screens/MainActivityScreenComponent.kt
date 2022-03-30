@@ -8,11 +8,13 @@ import com.hluhovskyi.zero.activity.navigation.NavControllerNavigator
 import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.activity.navigation.back
 import com.hluhovskyi.zero.activity.navigation.navigateTo
+import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
 import com.hluhovskyi.zero.colors.ColorPickerComponent
+import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
@@ -54,6 +56,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val idGenerator: IdGenerator
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
+
+        val bottomBarComponentBuilder: BottomBarComponent.Builder
 
         val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
@@ -105,11 +109,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navHostController: NavHostController,
             navigator: Navigator,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
+            bottomBarComponent: BottomBarComponent.Builder
         ): ViewProvider = MainActivityScreenViewProvider(
             navController = navHostController,
             navigator = navigator,
             startDestination = Destinations.Transaction.All,
-            navigationEntries = navigationEntries
+            navigationEntries = navigationEntries,
+            bottomBar = { bottomBarComponent.navigator(navigator).AttachWithView() }
         )
 
         @Provides
