@@ -7,6 +7,8 @@ import com.hluhovskyi.zero.accounts.AccountEntity
 import com.hluhovskyi.zero.accounts.AccountRoom
 import com.hluhovskyi.zero.categories.CategoryEntity
 import com.hluhovskyi.zero.categories.CategoryRoom
+import com.hluhovskyi.zero.config.ConfigurationEntity
+import com.hluhovskyi.zero.config.ConfigurationRoom
 import com.hluhovskyi.zero.transactions.TransactionEntity
 import com.hluhovskyi.zero.transactions.TransactionRoom
 import com.hluhovskyi.zero.users.CurrentUserEntity
@@ -20,6 +22,7 @@ private const val MAIN_DATABASE_VERSION = 1
         AccountEntity::class,
         TransactionEntity::class,
         CategoryEntity::class,
+        ConfigurationEntity::class,
     ],
     version = MAIN_DATABASE_VERSION
 )
@@ -39,4 +42,6 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun transaction(): TransactionRoom
 
     abstract fun category(): CategoryRoom
+
+    abstract fun configuration(): ConfigurationRoom
 }
