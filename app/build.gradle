@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":zero-database"))
     implementation(project(":zero-core"))
     implementation(project(":zero-image-loading"))
+    implementation(project(":zero-zenmoney"))
 
     implementation deps.android.compose.navigation
 
