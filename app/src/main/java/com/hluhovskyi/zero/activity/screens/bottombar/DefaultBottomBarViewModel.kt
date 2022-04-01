@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.Navigator
-import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
@@ -33,8 +32,17 @@ internal class DefaultBottomBarViewModel(
             id = transactionsId,
             name = "Transactions",
             icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_florist_24"),
+                uri = androidUriResourceFactory.drawable("ic_transactions_24"),
                 description = "Transaction icon"
+            ),
+            selected = false
+        ),
+        BottomBarViewModel.Item(
+            id = accountsId,
+            name = "Accounts",
+            icon = Image(
+                uri = androidUriResourceFactory.drawable("ic_accounts_24"),
+                description = "Accounts icon"
             ),
             selected = false
         ),
@@ -42,19 +50,10 @@ internal class DefaultBottomBarViewModel(
             id = categoriesId,
             name = "Categories",
             icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_fastfood_24"),
+                uri = androidUriResourceFactory.drawable("ic_categories_24"),
                 description = "Category icon"
             ),
             selected = false,
-        ),
-        BottomBarViewModel.Item(
-            id = accountsId,
-            name = "Accounts",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_fastfood_24"),
-                description = "Accounts icon"
-            ),
-            selected = false
         ),
         BottomBarViewModel.Item(
             id = settingsId,
@@ -83,7 +82,15 @@ internal class DefaultBottomBarViewModel(
                     else -> null
                 }
 
-                destination?.let(navigator::navigateTo)
+                destination?.let {
+                    navigator.perform(
+                        Navigator.Action.NavigateTo(
+                            destination = it,
+                            clearBackStack = true,
+                            arguments = emptyList(),
+                        )
+                    )
+                }
             }
         }
     }

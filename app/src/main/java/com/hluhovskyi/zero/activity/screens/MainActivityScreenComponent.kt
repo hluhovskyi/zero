@@ -24,6 +24,8 @@ import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.icons.IconPickerComponent
+import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import dagger.BindsInstance
@@ -70,6 +72,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val iconPickerComponentBuilder: IconPickerComponent.Builder
         val colorPickerComponentBuilder: ColorPickerComponent.Builder
+
+        val settingsComponentBuilder: SettingsComponent.Builder
+        val importComponentBuilder: ImportComponent.Builder
     }
 
     companion object {
@@ -276,6 +281,31 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     )
                 }
                 .logging(logger)
+        )
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun settingsNavigationEntry(
+            componentBuilder: SettingsComponent.Builder,
+            logger: Logger,
+            navigator: Navigator,
+        ): NavigatorEntry = navigationEntryOf(
+            destination = Destinations.Settings,
+            attachableViewComponentBuilder = componentBuilder
+                .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                .logging(logger)
+        )
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun importNavigationEntry(
+            componentBuilder: ImportComponent.Builder,
+            logger: Logger
+        ): NavigatorEntry = navigationEntryOf(
+            destination = Destinations.Import,
+            attachableViewComponentBuilder = componentBuilder.logging(logger)
         )
     }
 }

@@ -1,12 +1,9 @@
-package com.hluhovskyi.zero
+package com.hluhovskyi.zero.imports
 
-import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
-import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.resource.ResourceResolver
-import dagger.BindsInstance
 import dagger.Provides
 import javax.inject.Scope
 
@@ -21,7 +18,7 @@ private annotation class ZenMoneyImportScope
 )
 abstract class ZenMoneyImportComponent {
 
-    abstract val categoryRepository: CategoryRepository
+    abstract val importSourceUseCase: ImportSourceUseCase
 
     interface Dependencies {
         val idGenerator: IdGenerator
@@ -39,9 +36,6 @@ abstract class ZenMoneyImportComponent {
     interface Builder : Buildable<ZenMoneyImportComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun importFileUri(uri: Uri): Builder
     }
 
     @dagger.Module
@@ -49,16 +43,14 @@ abstract class ZenMoneyImportComponent {
 
         @Provides
         @ZenMoneyImportScope
-        fun categoryRepository(
-            importUri: Uri,
+        fun importSourceUseCase(
             idGenerator: IdGenerator,
             logger: Logger,
             resolver: ResourceResolver
-        ): CategoryRepository = CsvCategoryRepository(
-            importUri = importUri,
+        ): ImportSourceUseCase = ZenMoneyImportSourceUseCase(
+            resourceResolver = resolver,
             idGenerator = idGenerator,
             logger = logger,
-            resourceResolver = resolver
         )
     }
 }
