@@ -11,6 +11,7 @@ internal interface Navigator : ActionStateModel<Navigator.Action, Navigator.Stat
 
         data class NavigateTo(
             val destination: Destination,
+            val clearBackStack: Boolean = false,
             val arguments: List<ArgumentValue<*>>,
         ) : Action
     }

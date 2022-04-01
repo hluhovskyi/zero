@@ -23,6 +23,9 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.imports.ImportSourceUseCase
+import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
@@ -53,7 +56,9 @@ abstract class ActivityComponent :
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
     IconPickerComponent.Dependencies,
-    ColorPickerComponent.Dependencies {
+    ColorPickerComponent.Dependencies,
+    SettingsComponent.Dependencies,
+    ImportComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -65,6 +70,7 @@ abstract class ActivityComponent :
         val incorrectStateDetector: IncorrectStateDetector
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
+        val importSourceUseCase: ImportSourceUseCase
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -156,6 +162,20 @@ abstract class ActivityComponent :
         fun colorPickerComponentBuilder(
             component: ActivityComponent
         ): ColorPickerComponent.Builder = ColorPickerComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun settingsComponentBuilder(
+            component: ActivityComponent
+        ): SettingsComponent.Builder = SettingsComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun importComponentBuilder(
+            component: ActivityComponent,
+            importSourceUseCase: ImportSourceUseCase,
+        ): ImportComponent.Builder = ImportComponent.builder(component)
+            .importSourceUseCase(importSourceUseCase)
     }
 }
 

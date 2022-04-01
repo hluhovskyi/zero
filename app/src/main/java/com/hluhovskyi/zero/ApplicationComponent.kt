@@ -25,6 +25,9 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
+import com.hluhovskyi.zero.imports.ImportSourceUseCase
+import com.hluhovskyi.zero.imports.ZenMoneyImportComponent
+import com.hluhovskyi.zero.imports.lazy
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -230,7 +233,9 @@ private object ImportModule {
     @ApplicationScope
     fun zenMoneyImportComponent(
         component: ApplicationComponent,
-        androidUriResourceFactory: AndroidUriResourceFactory,
-    ): ZenMoneyImportComponent.Builder = ZenMoneyImportComponent.builder(component)
-        .importFileUri(androidUriResourceFactory.raw("zenmoney"))
+    ): ImportSourceUseCase = {
+        ZenMoneyImportComponent.builder(component)
+            .build()
+            .importSourceUseCase
+    }.lazy()
 }

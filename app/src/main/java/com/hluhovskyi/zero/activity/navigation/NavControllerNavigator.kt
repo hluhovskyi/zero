@@ -25,8 +25,13 @@ internal class NavControllerNavigator(
                 navController.popBackStack()
             }
             is Navigator.Action.NavigateTo -> {
-                navController.navigate(action.destination.routeWith(action.arguments)) {
-
+                val route = action.destination.routeWith(action.arguments)
+                navController.navigate(route) {
+                    if (action.clearBackStack) {
+                        navController.graph.startDestinationRoute?.let { startRoute ->
+                            popUpTo(startRoute)
+                        }
+                    }
                 }
             }
         }

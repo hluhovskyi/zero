@@ -34,4 +34,5 @@ internal object Destinations {
     }
 
     object Settings : Destination by destinationOf("settings")
+    object Import : Destination by destinationOf("import")
 }
