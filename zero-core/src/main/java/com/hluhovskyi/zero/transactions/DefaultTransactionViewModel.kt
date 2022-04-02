@@ -104,11 +104,20 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionRepository.Transaction.Income -> {
+                val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
+                val currency = idToCurrencies[transaction.currencyId] ?: return null
+
                 TransactionViewModel.Item.Transaction.Income(
                     id = transaction.id,
                     amount = transaction.amount,
-                    accountName = account.name
+                    accountName = account.name,
+                    currencySymbol = currency.symbol,
+                    categoryName = category.name,
+                    categoryColor = category.color,
+                    categoryIcon = category.icon,
+                    // TODO:
+                    conversion = TransactionViewModel.Conversion.None
                 )
             }
 

@@ -43,7 +43,12 @@ interface TransactionViewModel
             data class Income(
                 override val id: Id.Known,
                 val amount: Amount,
+                val currencySymbol: String,
                 val accountName: String,
+                val categoryName: String,
+                val categoryColor: ColorValue,
+                val categoryIcon: Image,
+                val conversion: Conversion,
             ) : Transaction
 
             data class Transfer(

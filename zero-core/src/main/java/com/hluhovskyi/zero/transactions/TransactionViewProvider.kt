@@ -1,40 +1,40 @@
 package com.hluhovskyi.zero.transactions
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.toCompose
+import com.hluhovskyi.zero.transaction.TransactionExpenseView
+import com.hluhovskyi.zero.transaction.TransactionIncomeView
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
-    private val imageLoader: ImageLoader
+    private val imageLoader: ImageLoader,
+    private val amountFormatter: AmountFormatter,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
         TransactionView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
+            amountFormatter = amountFormatter,
         )
     }
 }
@@ -42,7 +42,8 @@ internal class TransactionViewProvider(
 @Composable
 private fun TransactionView(
     viewModel: TransactionViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
 
@@ -53,7 +54,7 @@ private fun TransactionView(
             .fillMaxWidth()
             .clickable { }
             .padding(
-                horizontal = 16.dp,
+                horizontal = 12.dp,
                 vertical = 12.dp
             )
 
@@ -61,18 +62,33 @@ private fun TransactionView(
             when (transaction) {
                 is TransactionViewModel.Item.Transaction.Expense ->
                     TransactionExpenseView(
-                        item = transaction,
-                        imageLoader = imageLoader,
-                        modifier = transactionModifier
+                        modifier = transactionModifier,
+                        categoryColor = transaction.categoryColor,
+                        categoryName = transaction.categoryName,
+                        amount = amountFormatter.format(
+                            amount = transaction.amount,
+                            currencySymbol = transaction.currencySymbol
+                        ),
+                        accountName = transaction.accountName,
+                        convertedAmount = transaction.conversion.format(amountFormatter),
+                        icon = transaction.categoryIcon.toComposable(imageLoader),
                     )
-                is TransactionViewModel.Item.Transaction.Transfer -> {
-                    TransactionTransferView(
-                        item = transaction,
-                        modifier = transactionModifier
-                    )
-                }
                 is TransactionViewModel.Item.Transaction.Income -> {
                     TransactionIncomeView(
+                        modifier = transactionModifier,
+                        categoryColor = transaction.categoryColor,
+                        categoryName = transaction.categoryName,
+                        amount = amountFormatter.format(
+                            amount = transaction.amount,
+                            currencySymbol = transaction.currencySymbol,
+                        ),
+                        accountName = transaction.accountName,
+                        convertedAmount = transaction.conversion.format(amountFormatter),
+                        icon = transaction.categoryIcon.toComposable(imageLoader),
+                    )
+                }
+                is TransactionViewModel.Item.Transaction.Transfer -> {
+                    TransactionTransferView(
                         item = transaction,
                         modifier = transactionModifier
                     )
@@ -82,57 +98,26 @@ private fun TransactionView(
     }
 }
 
-@Composable
-fun TransactionExpenseView(
-    modifier: Modifier,
-    item: TransactionViewModel.Item.Transaction.Expense,
-    imageLoader: ImageLoader
-) {
-    Row(modifier = modifier) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .background(item.categoryColor.toCompose(), shape = CircleShape)
-                    .padding(10.dp)
-            ) {
-                imageLoader.View(
-                    image = item.categoryIcon,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        Column(
-            modifier = Modifier.padding(start = 16.dp)
-        ) {
-            Row {
-                Text(
-                    text = item.categoryName,
-                    fontSize = 18.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    text = "-${item.amount.value.toPlainString()}${item.currencySymbol}"
-                )
-            }
-            Row {
-                Text(
-                    fontSize = 14.sp,
-                    text = item.accountName,
-                    modifier = Modifier.weight(1f),
-                )
-                if (item.conversion is TransactionViewModel.Conversion.WithAmount) {
-                    val rate = item.conversion.amount.value.toPlainString()
-                    Text(
-                        fontSize = 14.sp,
-                        text = rate + item.conversion.currencySymbol,
-                    )
-                }
-            }
-        }
-    }
+private fun TransactionViewModel.Conversion.format(
+    amountFormatter: AmountFormatter
+): String? = if (this is TransactionViewModel.Conversion.WithAmount) {
+    amountFormatter.format(
+        amount = amount,
+        currencySymbol = currencySymbol,
+    )
+} else {
+    null
 }
+
+private fun Image.toComposable(
+    imageLoader: ImageLoader
+): @Composable () -> Unit = {
+    imageLoader.View(
+        image = this,
+        modifier = Modifier.sizeIn(24.dp),
+    )
+}
+
 
 @Composable
 fun TransactionTransferView(
@@ -149,26 +134,6 @@ fun TransactionTransferView(
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             text = "-${item.amount.value.toPlainString()}"
-        )
-    }
-}
-
-@Composable
-fun TransactionIncomeView(
-    modifier: Modifier,
-    item: TransactionViewModel.Item.Transaction.Income
-) {
-    Row(modifier = modifier) {
-        Text(
-            text = item.accountName,
-            fontSize = 18.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Green,
-            text = "+${item.amount.value.toPlainString()}"
         )
     }
 }

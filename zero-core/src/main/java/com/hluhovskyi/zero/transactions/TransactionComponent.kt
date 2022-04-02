@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.transactions
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
@@ -31,6 +32,7 @@ abstract class TransactionComponent : AttachableViewComponent {
 
     interface Dependencies {
         val imageLoader: ImageLoader
+        val amountFormatter: AmountFormatter
 
         val transactionRepository: TransactionRepository
         val accountRepository: AccountRepository
@@ -72,9 +74,11 @@ abstract class TransactionComponent : AttachableViewComponent {
         fun viewProvider(
             viewModel: TransactionViewModel,
             imageLoader: ImageLoader,
+            amountFormatter: AmountFormatter,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
+            amountFormatter = amountFormatter,
         )
     }
 }

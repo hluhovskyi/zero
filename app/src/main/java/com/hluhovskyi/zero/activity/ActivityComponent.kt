@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -68,6 +69,7 @@ abstract class ActivityComponent :
 
         val clock: Clock
         val imageLoader: ImageLoader
+        val amountFormatter: AmountFormatter
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector
 
