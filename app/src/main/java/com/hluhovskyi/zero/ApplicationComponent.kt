@@ -8,9 +8,11 @@ import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.PredefinedMaterialColorRepository
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.CrashingIncorrectStateDetector
+import com.hluhovskyi.zero.common.DefaultAmountFormatter
 import com.hluhovskyi.zero.common.DefaultAndroidUriResourceFactory
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -105,6 +107,10 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun zoneProvider(): ZoneProvider = SystemZoneProvider
+
+        @Provides
+        @ApplicationScope
+        fun amountFormatter(): AmountFormatter = DefaultAmountFormatter()
 
         @Provides
         @ApplicationScope
