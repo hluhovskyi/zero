@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.accounts
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
+import com.hluhovskyi.zero.common.requireCurrentUserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
@@ -33,16 +34,22 @@ internal class RoomAccountRepository(
         }
 
     override suspend fun insert(account: AccountRepository.AccountInsert) {
-        incorrectStateDetector.asyncRequireNonNull(
-            value = currentUserId.firstOrNull(),
-            message = "Current user id is empty"
-        ) { userId ->
-            accountRoom().insert(AccountEntity(
-                id = idGenerator(),
-                userId = userId,
-                currencyId = account.currencyId,
-                name = account.name
-            ))
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            accountRoom().insert(account.toEntity(userId))
         }
     }
+
+    override suspend fun insert(accounts: List<AccountRepository.AccountInsert>) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            accountRoom().insert(accounts.map { it.toEntity(userId) })
+        }
+    }
+
+    private fun AccountRepository.AccountInsert.toEntity(userId: Id.Known): AccountEntity =
+        AccountEntity(
+            id = (id as? Id.Known) ?: idGenerator(),
+            userId = userId,
+            currencyId = currencyId,
+            name = name
+        )
 }

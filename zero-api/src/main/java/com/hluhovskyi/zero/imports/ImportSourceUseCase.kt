@@ -13,6 +13,7 @@ interface ImportSourceUseCase {
     data class Result(
         val accounts: List<ImportAccount> = emptyList(),
         val categories: List<ImportCategory> = emptyList(),
+        val transactions: List<ImportTransaction> = emptyList(),
     ) {
 
         companion object {

@@ -23,7 +23,10 @@ interface CategoryRepository {
 
     suspend fun insert(category: CategoryInsert)
 
+    suspend fun insert(categories: List<CategoryInsert>)
+
     data class CategoryInsert(
+        val id: Id = Id.Unknown,
         val parentCategoryId: Id,
         val name: String,
         val iconId: Id,
@@ -33,5 +36,6 @@ interface CategoryRepository {
     object Noop : CategoryRepository {
         override fun query(criteria: Criteria): Flow<List<Category>> = flowOf(emptyList())
         override suspend fun insert(category: CategoryInsert) = Unit
+        override suspend fun insert(categories: List<CategoryInsert>) = Unit
     }
 }

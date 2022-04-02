@@ -12,6 +12,10 @@ interface Amount {
 
     operator fun minus(amount: Amount): Amount
 
+    operator fun compareTo(value: Amount): Int
+
+    operator fun compareTo(value: Long): Int
+
     companion object {
 
         private val ZERO = ValueAmount(BigDecimal.ZERO)
@@ -33,4 +37,8 @@ private class ValueAmount(override val value: BigDecimal) : Amount {
     override fun plus(amount: Amount): Amount = ValueAmount(value + amount.value)
 
     override fun minus(amount: Amount): Amount = ValueAmount(value - amount.value)
+
+    override fun compareTo(value: Amount): Int = this.value.compareTo(value.value)
+
+    override fun compareTo(value: Long): Int = this.value.toLong().compareTo(value)
 }
