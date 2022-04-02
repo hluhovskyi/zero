@@ -14,6 +14,7 @@ internal class DefaultImportViewModel(
                 is ImportUseCase.State.FilePicker -> ImportViewModel.Step.FilePicker
                 is ImportUseCase.State.AccountsPicker -> ImportViewModel.Step.AccountsPicker
                 is ImportUseCase.State.CategoriesPicker -> ImportViewModel.Step.CategoriesPicker
+                is ImportUseCase.State.TransactionsPreview -> ImportViewModel.Step.TransactionsPreview
             }
 
             ImportViewModel.State(step)

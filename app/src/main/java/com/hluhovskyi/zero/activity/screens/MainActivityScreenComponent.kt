@@ -302,10 +302,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun importNavigationEntry(
             componentBuilder: ImportComponent.Builder,
-            logger: Logger
+            logger: Logger,
+            navigator: Navigator,
         ): NavigatorEntry = navigationEntryOf(
             destination = Destinations.Import,
-            attachableViewComponentBuilder = componentBuilder.logging(logger)
+            attachableViewComponentBuilder = componentBuilder
+                .onImportFinishedHandler { navigator.back() }
+                .logging(logger)
         )
     }
 }

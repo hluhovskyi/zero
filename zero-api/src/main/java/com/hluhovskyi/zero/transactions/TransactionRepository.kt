@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import java.time.LocalDateTime
 
 interface TransactionRepository {
 
@@ -12,7 +13,7 @@ interface TransactionRepository {
 
     sealed interface Criteria {
 
-        class All(val trigger: Trigger = Trigger.LoadAll): Criteria
+        class All(val trigger: Trigger = Trigger.LoadAll) : Criteria
     }
 
     sealed interface Trigger {
@@ -22,18 +23,22 @@ interface TransactionRepository {
 
     suspend fun insert(transaction: Transaction)
 
+    suspend fun insert(transactions: List<Transaction>)
+
     sealed interface Transaction {
 
         val id: Id.Known
         val amount: Amount
         val currencyId: Id.Known
         val accountId: Id.Known
+        val dateTime: LocalDateTime
 
         data class Expense(
             override val id: Id.Known,
             override val amount: Amount,
             override val accountId: Id.Known,
             override val currencyId: Id.Known,
+            override val dateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -43,6 +48,7 @@ interface TransactionRepository {
             override val amount: Amount,
             override val accountId: Id.Known,
             override val currencyId: Id.Known,
+            override val dateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -52,6 +58,7 @@ interface TransactionRepository {
             override val amount: Amount,
             override val currencyId: Id.Known,
             override val accountId: Id.Known,
+            override val dateTime: LocalDateTime,
             val targetAccount: Id.Known,
             val targetAmount: Amount
         ) : Transaction
@@ -60,5 +67,6 @@ interface TransactionRepository {
     object Noop : TransactionRepository {
         override fun query(criteria: Criteria): Flow<List<Transaction>> = flowOf(emptyList())
         override suspend fun insert(transaction: Transaction) = Unit
+        override suspend fun insert(transactions: List<Transaction>) = Unit
     }
 }

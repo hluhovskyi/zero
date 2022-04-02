@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
@@ -42,6 +43,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
     interface Dependencies {
         val idGenerator: IdGenerator
+        val clock: Clock
         val logger: Logger
         val imageLoader: ImageLoader
 
@@ -85,7 +87,8 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             idGenerator: IdGenerator,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
-            logger: Logger
+            clock: Clock,
+            logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
@@ -94,6 +97,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             idGenerator = idGenerator,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
+            clock = clock,
             logger = logger
         )
 

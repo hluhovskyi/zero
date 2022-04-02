@@ -20,6 +20,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
@@ -65,6 +66,7 @@ abstract class ActivityComponent :
 
     interface Dependencies {
 
+        val clock: Clock
         val imageLoader: ImageLoader
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector

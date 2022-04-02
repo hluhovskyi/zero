@@ -49,32 +49,32 @@ private fun TransactionView(
     LazyColumn(
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        items(state.transactions) { transaction ->
-            val modifier = Modifier
-                .fillMaxWidth()
-                .clickable { }
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+        val transactionModifier = Modifier
+            .fillMaxWidth()
+            .clickable { }
+            .padding(
+                horizontal = 16.dp,
+                vertical = 12.dp
+            )
 
+        items(state.transactions) { transaction ->
             when (transaction) {
-                is TransactionViewModel.TransactionItem.Expense ->
+                is TransactionViewModel.Item.Transaction.Expense ->
                     TransactionExpenseView(
                         item = transaction,
                         imageLoader = imageLoader,
-                        modifier = modifier
+                        modifier = transactionModifier
                     )
-                is TransactionViewModel.TransactionItem.Transfer -> {
+                is TransactionViewModel.Item.Transaction.Transfer -> {
                     TransactionTransferView(
                         item = transaction,
-                        modifier = modifier
+                        modifier = transactionModifier
                     )
                 }
-                is TransactionViewModel.TransactionItem.Income -> {
+                is TransactionViewModel.Item.Transaction.Income -> {
                     TransactionIncomeView(
                         item = transaction,
-                        modifier = modifier
+                        modifier = transactionModifier
                     )
                 }
             }
@@ -85,7 +85,7 @@ private fun TransactionView(
 @Composable
 fun TransactionExpenseView(
     modifier: Modifier,
-    item: TransactionViewModel.TransactionItem.Expense,
+    item: TransactionViewModel.Item.Transaction.Expense,
     imageLoader: ImageLoader
 ) {
     Row(modifier = modifier) {
@@ -137,7 +137,7 @@ fun TransactionExpenseView(
 @Composable
 fun TransactionTransferView(
     modifier: Modifier,
-    item: TransactionViewModel.TransactionItem.Transfer
+    item: TransactionViewModel.Item.Transaction.Transfer
 ) {
     Row(modifier = modifier) {
         Text(
@@ -156,7 +156,7 @@ fun TransactionTransferView(
 @Composable
 fun TransactionIncomeView(
     modifier: Modifier,
-    item: TransactionViewModel.TransactionItem.Income
+    item: TransactionViewModel.Item.Transaction.Income
 ) {
     Row(modifier = modifier) {
         Text(

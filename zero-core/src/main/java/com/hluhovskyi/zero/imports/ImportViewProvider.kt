@@ -12,6 +12,8 @@ internal class ImportViewProvider(
     private val viewModel: ImportViewModel,
     private val filePicker: Buildable<out AttachableViewComponent>,
     private val accountPicker: Buildable<out AttachableViewComponent>,
+    private val categoriesPicker: Buildable<out AttachableViewComponent>,
+    private val transactionsPreview: Buildable<out AttachableViewComponent>,
 ) : ViewProvider {
 
     @Composable
@@ -20,6 +22,8 @@ internal class ImportViewProvider(
             viewModel = viewModel,
             filePicker = filePicker,
             accountPicker = accountPicker,
+            categoriesPicker = categoriesPicker,
+            transactionsPreview = transactionsPreview,
         )
     }
 }
@@ -29,6 +33,8 @@ private fun ImportView(
     viewModel: ImportViewModel,
     filePicker: Buildable<out AttachableViewComponent>,
     accountPicker: Buildable<out AttachableViewComponent>,
+    categoriesPicker: Buildable<out AttachableViewComponent>,
+    transactionsPreview: Buildable<out AttachableViewComponent>,
 ) {
     val state by viewModel.state.collectAsState(initial = ImportViewModel.State())
     when (state.step) {
@@ -38,6 +44,11 @@ private fun ImportView(
         ImportViewModel.Step.AccountsPicker -> {
             accountPicker.AttachWithView()
         }
-        ImportViewModel.Step.CategoriesPicker -> TODO()
+        ImportViewModel.Step.CategoriesPicker -> {
+            categoriesPicker.AttachWithView()
+        }
+        ImportViewModel.Step.TransactionsPreview -> {
+            transactionsPreview.AttachWithView()
+        }
     }
 }

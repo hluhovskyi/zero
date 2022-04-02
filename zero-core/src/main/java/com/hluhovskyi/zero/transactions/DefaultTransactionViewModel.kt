@@ -76,14 +76,14 @@ internal class DefaultTransactionViewModel(
         idToCategories: Map<Id.Known, CategoriesQueryUseCase.Category>,
         idToAccounts: Map<Id.Known, AccountRepository.Account>,
         idToCurrencies: Map<Id.Known, Currency>,
-    ): TransactionViewModel.TransactionItem? {
+    ): TransactionViewModel.Item.Transaction? {
         return when (transaction) {
             is TransactionRepository.Transaction.Expense -> {
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
 
-                TransactionViewModel.TransactionItem.Expense(
+                TransactionViewModel.Item.Transaction.Expense(
                     id = transaction.id,
                     amount = transaction.amount,
                     conversion = if (transaction.currencyId != account.currencyId) {
@@ -105,7 +105,7 @@ internal class DefaultTransactionViewModel(
 
             is TransactionRepository.Transaction.Income -> {
                 val account = idToAccounts[transaction.accountId] ?: return null
-                TransactionViewModel.TransactionItem.Income(
+                TransactionViewModel.Item.Transaction.Income(
                     id = transaction.id,
                     amount = transaction.amount,
                     accountName = account.name
@@ -116,7 +116,7 @@ internal class DefaultTransactionViewModel(
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val targetAccount = idToAccounts[transaction.targetAccount] ?: return null
 
-                TransactionViewModel.TransactionItem.Transfer(
+                TransactionViewModel.Item.Transaction.Transfer(
                     id = transaction.id,
                     amount = transaction.amount,
                     accountName = account.name,

@@ -22,7 +22,10 @@ interface AccountRepository {
 
     suspend fun insert(account: AccountInsert)
 
+    suspend fun insert(accounts: List<AccountInsert>)
+
     data class AccountInsert(
+        val id: Id = Id.Unknown,
         val name: String,
         val currencyId: Id.Known
     )
@@ -30,5 +33,6 @@ interface AccountRepository {
     object Noop : AccountRepository {
         override fun query(criteria: Criteria): Flow<List<Account>> = flowOf(emptyList())
         override suspend fun insert(account: AccountInsert) = Unit
+        override suspend fun insert(accounts: List<AccountInsert>) = Unit
     }
 }

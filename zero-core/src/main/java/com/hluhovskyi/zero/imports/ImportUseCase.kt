@@ -13,12 +13,14 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         data class SelectFile(val uri: Uri.NonEmpty) : Action
         data class SelectAccounts(val accountIds: List<Id.Known>) : Action
         data class SelectCategories(val categoryIds: List<Id.Known>) : Action
+        object SubmitTransactions : Action
     }
 
     sealed interface State {
         object FilePicker : State
         data class AccountsPicker(val accounts: List<ImportAccount>) : State
         data class CategoriesPicker(val categories: List<ImportCategory>) : State
+        data class TransactionsPreview(val transactions: List<ImportTransaction>) : State
     }
 
     object Noop : ImportUseCase {

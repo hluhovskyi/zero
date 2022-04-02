@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 
@@ -18,4 +19,9 @@ internal interface TransactionRoom {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
+
+    @Transaction
+    suspend fun insert(entities: List<TransactionEntity>) {
+        entities.forEach { insert(it) }
+    }
 }

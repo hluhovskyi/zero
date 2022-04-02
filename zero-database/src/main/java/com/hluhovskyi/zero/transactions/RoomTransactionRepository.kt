@@ -6,10 +6,10 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.RateEntity
+import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
@@ -35,6 +35,7 @@ internal class RoomTransactionRepository(
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
                                 currencyId = entity.currencyId,
+                                dateTime = entity.enteredDateTime,
                                 categoryId = categoryId,
                                 rate = entity.rate.convert()
                             )
@@ -48,6 +49,7 @@ internal class RoomTransactionRepository(
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
                                 currencyId = entity.currencyId,
+                                dateTime = entity.enteredDateTime,
                                 categoryId = categoryId,
                                 rate = entity.rate.convert()
                             )
@@ -60,6 +62,7 @@ internal class RoomTransactionRepository(
                                 amount = entity.amount.convert(),
                                 accountId = entity.accountId,
                                 currencyId = entity.currencyId,
+                                dateTime = entity.enteredDateTime,
                                 targetAccount = Id.Known(targetAccount),
                                 targetAmount = entity.targetAmount.convert()
                             )
@@ -70,63 +73,68 @@ internal class RoomTransactionRepository(
     }
 
     override suspend fun insert(transaction: TransactionRepository.Transaction) {
-        incorrectStateDetector.asyncRequireNonNull(
-            value = currentUserId.firstOrNull(),
-            message = "Current user id is empty"
-        ) { userId ->
-            val entity = when (transaction) {
-                is TransactionRepository.Transaction.Expense -> TransactionEntity(
-                    id = transaction.id,
-                    userId = userId,
-                    type = TransactionEntity.Type.EXPENSE,
-                    currencyId = transaction.currencyId,
-                    accountId = transaction.accountId,
-                    categoryId = transaction.categoryId.value,
-                    amount = transaction.amount.convert(),
-                    rate = transaction.rate.convert(),
-                    targetAccount = null,
-                    targetAmount = AmountEntity.empty(),
-                    enteredDateTime = clock.localDateTime(),
-                    creationDateTime = clock.localDateTime(),
-                    updatedDateTime = clock.localDateTime(),
-                )
-
-                is TransactionRepository.Transaction.Income -> TransactionEntity(
-                    id = transaction.id,
-                    userId = userId,
-                    type = TransactionEntity.Type.INCOME,
-                    currencyId = transaction.currencyId,
-                    accountId = transaction.accountId,
-                    categoryId = transaction.categoryId.value,
-                    amount = transaction.amount.convert(),
-                    rate = transaction.rate.convert(),
-                    targetAccount = null,
-                    targetAmount = AmountEntity.empty(),
-                    enteredDateTime = clock.localDateTime(),
-                    creationDateTime = clock.localDateTime(),
-                    updatedDateTime = clock.localDateTime(),
-                )
-
-                is TransactionRepository.Transaction.Transfer -> TransactionEntity(
-                    id = transaction.id,
-                    userId = userId,
-                    type = TransactionEntity.Type.TRANSFER,
-                    currencyId = transaction.currencyId,
-                    accountId = transaction.accountId,
-                    categoryId = null,
-                    amount = transaction.amount.convert(),
-                    rate = RateEntity.empty(),
-                    targetAccount = transaction.targetAccount.value,
-                    targetAmount = transaction.targetAmount.convert(),
-                    enteredDateTime = clock.localDateTime(),
-                    creationDateTime = clock.localDateTime(),
-                    updatedDateTime = clock.localDateTime(),
-                )
-            }
-
-            transactionRoom().insert(entity)
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            transactionRoom().insert(transaction.toEntity(userId))
         }
     }
+
+    override suspend fun insert(transactions: List<TransactionRepository.Transaction>) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            transactionRoom().insert(transactions.map { it.toEntity(userId) })
+        }
+    }
+
+    private fun TransactionRepository.Transaction.toEntity(userId: Id.Known): TransactionEntity =
+        when (this) {
+            is TransactionRepository.Transaction.Expense -> TransactionEntity(
+                id = id,
+                userId = userId,
+                type = TransactionEntity.Type.EXPENSE,
+                currencyId = currencyId,
+                accountId = accountId,
+                categoryId = categoryId.value,
+                amount = amount.convert(),
+                rate = rate.convert(),
+                targetAccount = null,
+                targetAmount = AmountEntity.empty(),
+                enteredDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(),
+                updatedDateTime = clock.localDateTime(),
+            )
+
+            is TransactionRepository.Transaction.Income -> TransactionEntity(
+                id = id,
+                userId = userId,
+                type = TransactionEntity.Type.INCOME,
+                currencyId = currencyId,
+                accountId = accountId,
+                categoryId = categoryId.value,
+                amount = amount.convert(),
+                rate = rate.convert(),
+                targetAccount = null,
+                targetAmount = AmountEntity.empty(),
+                enteredDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(),
+                updatedDateTime = clock.localDateTime(),
+            )
+
+            is TransactionRepository.Transaction.Transfer -> TransactionEntity(
+                id = id,
+                userId = userId,
+                type = TransactionEntity.Type.TRANSFER,
+                currencyId = currencyId,
+                accountId = accountId,
+                categoryId = null,
+                amount = amount.convert(),
+                rate = RateEntity.empty(),
+                targetAccount = targetAccount.value,
+                targetAmount = targetAmount.convert(),
+                enteredDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(),
+                updatedDateTime = clock.localDateTime(),
+            )
+        }
+
 
     private fun AmountEntity.convert(): Amount = Amount(value)
 

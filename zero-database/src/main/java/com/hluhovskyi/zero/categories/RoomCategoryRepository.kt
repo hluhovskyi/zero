@@ -41,17 +41,24 @@ internal class RoomCategoryRepository(
 
     override suspend fun insert(category: CategoryRepository.CategoryInsert) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
-            categoryRoom().insert(
-                CategoryEntity(
-                    id = idGenerator(),
-                    userId = userId,
-                    name = category.name,
-                    iconId = category.iconId.valueOrNull(),
-                    colorId = category.colorId.valueOrNull(),
-                    creationDateTime = clock.localDateTime(),
-                    updatedDateTime = clock.localDateTime(),
-                )
-            )
+            categoryRoom().insert(category.toEntity(userId))
         }
     }
+
+    override suspend fun insert(categories: List<CategoryRepository.CategoryInsert>) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            categoryRoom().insert(categories.map { it.toEntity(userId) })
+        }
+    }
+
+    private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity =
+        CategoryEntity(
+            id = (id as? Id.Known) ?: idGenerator(),
+            userId = userId,
+            name = name,
+            iconId = iconId.valueOrNull(),
+            colorId = colorId.valueOrNull(),
+            creationDateTime = clock.localDateTime(),
+            updatedDateTime = clock.localDateTime(),
+        )
 }

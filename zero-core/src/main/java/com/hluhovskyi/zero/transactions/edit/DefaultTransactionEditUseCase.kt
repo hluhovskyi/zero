@@ -8,6 +8,8 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +32,7 @@ internal class DefaultTransactionEditUseCase(
     private val idGenerator: IdGenerator,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
+    private val clock: Clock,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
 ) : TransactionEditUseCase {
@@ -128,6 +131,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 categoryId = category.id,
+                                dateTime = clock.localDateTime(),
                                 rate = Rate(state.amount.toBigDecimalOrNull())
                             )
                         }
@@ -142,6 +146,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 categoryId = category.id,
+                                dateTime = clock.localDateTime(),
                                 rate = Rate(state.amount.toBigDecimalOrNull())
                             )
                         }
@@ -156,6 +161,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 targetAccount = targetAccount.id,
+                                dateTime = clock.localDateTime(),
                                 targetAmount = Amount(state.amount.toBigDecimalOrNull())
                             )
                         }

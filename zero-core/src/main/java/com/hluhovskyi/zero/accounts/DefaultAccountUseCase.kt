@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
+import android.util.Log
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -51,7 +52,11 @@ internal class DefaultAccountUseCase(
                         balance - transaction.amount
                     }
                     balances.compute(transaction.targetAccount) { balance ->
-                        balance + transaction.amount
+                        (balance + transaction.targetAmount).also {
+                            if (transaction.targetAccount == Id("d8c1bfc9-8d2b-4148-91fd-fd8714f6249e")) {
+                                Log.d("GOVNO", "balance=${balance.value}, amount=+${transaction.targetAmount.value}, result=${it.value}")
+                            }
+                        }
                     }
                 }
             }

@@ -1,10 +1,15 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.accounts.ImportAccountPickerComponent
+import com.hluhovskyi.zero.imports.categories.ImportCategoriesPickerComponent
 import com.hluhovskyi.zero.imports.filepicker.ImportFilePickerComponent
+import com.hluhovskyi.zero.imports.transactions.ImportTransactionPreviewComponent
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -23,7 +28,9 @@ private const val TAG = "ImportComponent"
 )
 abstract class ImportComponent : AttachableViewComponent,
     ImportFilePickerComponent.Dependencies,
-    ImportAccountPickerComponent.Dependencies {
+    ImportCategoriesPickerComponent.Dependencies,
+    ImportAccountPickerComponent.Dependencies,
+    ImportTransactionPreviewComponent.Dependencies {
 
     override val tag: String = TAG
 
@@ -31,7 +38,9 @@ abstract class ImportComponent : AttachableViewComponent,
     override fun attach(): Closeable = useCase.attach()
 
     interface Dependencies {
-
+        val accountRepository: AccountRepository
+        val categoryRepository: CategoryRepository
+        val transactionRepository: TransactionRepository
     }
 
     companion object {
@@ -39,6 +48,7 @@ abstract class ImportComponent : AttachableViewComponent,
         fun builder(dependencies: Dependencies): Builder = DaggerImportComponent.builder()
             .dependencies(dependencies)
             .importSourceUseCase(ImportSourceUseCase.Noop)
+            .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -48,6 +58,9 @@ abstract class ImportComponent : AttachableViewComponent,
 
         @BindsInstance
         fun importSourceUseCase(importSourceUseCase: ImportSourceUseCase): Builder
+
+        @BindsInstance
+        fun onImportFinishedHandler(handler: OnImportFinishedHandler): Builder
     }
 
     @dagger.Module
@@ -56,9 +69,17 @@ abstract class ImportComponent : AttachableViewComponent,
         @Provides
         @ImportScope
         fun useCase(
-            importSourceUseCase: ImportSourceUseCase
+            importSourceUseCase: ImportSourceUseCase,
+            accountRepository: AccountRepository,
+            categoryRepository: CategoryRepository,
+            transactionRepository: TransactionRepository,
+            onImportFinishedHandler: OnImportFinishedHandler,
         ): ImportUseCase = DefaultImportUseCase(
-            importSourceUseCase = importSourceUseCase
+            importSourceUseCase = importSourceUseCase,
+            accountRepository = accountRepository,
+            categoryRepository = categoryRepository,
+            transactionRepository = transactionRepository,
+            onImportFinishedHandler = onImportFinishedHandler,
         )
 
         @Provides
@@ -87,14 +108,34 @@ abstract class ImportComponent : AttachableViewComponent,
 
         @Provides
         @ImportScope
+        internal fun categoryPickerComponentBuilder(
+            component: ImportComponent,
+            importUseCase: ImportUseCase,
+        ): ImportCategoriesPickerComponent.Builder = ImportCategoriesPickerComponent.builder(component)
+            .importUseCase(importUseCase)
+
+        @Provides
+        @ImportScope
+        internal fun transactionsPreviewComponentBuilder(
+            component: ImportComponent,
+            importUseCase: ImportUseCase,
+        ): ImportTransactionPreviewComponent.Builder = ImportTransactionPreviewComponent.builder(component)
+            .importUseCase(importUseCase)
+
+        @Provides
+        @ImportScope
         internal fun viewProvider(
             viewModel: ImportViewModel,
             filePickerComponentBuilder: ImportFilePickerComponent.Builder,
             accountPickerComponentBuilder: ImportAccountPickerComponent.Builder,
+            categoriesPickerComponentBuilder: ImportCategoriesPickerComponent.Builder,
+            transactionsPreviewComponentBuilder: ImportTransactionPreviewComponent.Builder,
         ): ViewProvider = ImportViewProvider(
             viewModel = viewModel,
             filePicker = filePickerComponentBuilder,
-            accountPicker = accountPickerComponentBuilder
+            accountPicker = accountPickerComponentBuilder,
+            categoriesPicker = categoriesPickerComponentBuilder,
+            transactionsPreview = transactionsPreviewComponentBuilder,
         )
     }
 }

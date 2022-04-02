@@ -11,6 +11,7 @@ interface ImportViewModel : StateModel<ImportViewModel.State> {
     enum class Step {
         FilePicker,
         AccountsPicker,
-        CategoriesPicker
+        CategoriesPicker,
+        TransactionsPreview,
     }
 }
