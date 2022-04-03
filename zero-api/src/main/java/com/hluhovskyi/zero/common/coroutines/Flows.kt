@@ -23,3 +23,6 @@ fun <T> Flow<List<T>>.onEmptyReturnEmptyList(): Flow<List<T>> =
 
 fun <T : Identifiable> Flow<List<T>>.associateById(): Flow<Map<Id.Known, T>> =
     map { list -> list.associateBy { it.id } }
+
+@Suppress("unchecked_cast")
+fun <T, R> Flow<T>.uncheckedCast(): Flow<R> = this as Flow<R>

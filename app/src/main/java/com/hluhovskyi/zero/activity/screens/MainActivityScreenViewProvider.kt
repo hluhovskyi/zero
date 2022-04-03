@@ -8,8 +8,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.hluhovskyi.zero.activity.navigation.BundleArguments
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.Navigator
+import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class MainActivityScreenViewProvider(
@@ -37,7 +39,12 @@ internal class MainActivityScreenViewProvider(
                             }
                         }
                     ) {
-                        entry.view.invoke()
+                        entry.view.invoke(
+                            BundleArguments(
+                                bundle = it.arguments,
+                                destination = entry.destination
+                            )
+                        )
                     }
                 }
             }

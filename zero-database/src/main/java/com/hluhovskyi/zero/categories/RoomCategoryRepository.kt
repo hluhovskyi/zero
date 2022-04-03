@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.categories
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
+import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
@@ -20,23 +21,23 @@ internal class RoomCategoryRepository(
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : CategoryRepository {
 
-    override fun query(criteria: CategoryRepository.Criteria): Flow<List<CategoryRepository.Category>> =
+    override fun <T> query(criteria: CategoryRepository.Criteria<T>): Flow<T> =
         when (criteria) {
             is CategoryRepository.Criteria.All -> currentUserId.take(1)
                 .flatMapConcat { userId ->
                     categoryRoom().selectByUserId(userId)
                         .map { categories ->
-                            categories.map { category ->
-                                CategoryRepository.Category(
-                                    id = category.id,
-                                    parentCategoryId = Id.Unknown,
-                                    name = category.name,
-                                    colorId = Id(category.colorId),
-                                    iconId = Id(category.iconId),
-                                )
-                            }
+                            categories.map { category -> category.toRepositoryModel() }
                         }
                 }
+                .uncheckedCast()
+
+            is CategoryRepository.Criteria.ById -> currentUserId.take(1)
+                .flatMapConcat { userId ->
+                    categoryRoom().selectById(id = criteria.categoryId, userId = userId)
+                        .map { it.toRepositoryModel() }
+                }
+                .uncheckedCast()
         }
 
     override suspend fun insert(category: CategoryRepository.CategoryInsert) {
@@ -50,6 +51,16 @@ internal class RoomCategoryRepository(
             categoryRoom().insert(categories.map { it.toEntity(userId) })
         }
     }
+
+    private fun CategoryEntity.toRepositoryModel(): CategoryRepository.Category =
+        CategoryRepository.Category(
+            id = id,
+            // TODO: Handle parent category
+            parentCategoryId = Id.Unknown,
+            name = name,
+            colorId = Id(colorId),
+            iconId = Id(iconId),
+        )
 
     private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity =
         CategoryEntity(

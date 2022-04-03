@@ -4,13 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.hluhovskyi.zero.common.AttachWithView
+import com.hluhovskyi.zero.common.AttachableViewComponent
+import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.requireApplicationComponent
 
 class MainActivity : ComponentActivity() {
 
-    private val activityComponent: ActivityComponent by lazy {
-        application.requireApplicationComponent()
-            .activityComponentBuilder
+    private val activityComponent: AttachableViewComponent by lazy {
+        val applicationComponent = application.requireApplicationComponent()
+
+        applicationComponent.activityComponentBuilder
+            .logging(applicationComponent.logger)
             .build()
     }
 

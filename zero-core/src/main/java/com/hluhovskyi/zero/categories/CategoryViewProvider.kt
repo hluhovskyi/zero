@@ -46,13 +46,14 @@ private fun CategoryView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {  }
+                    .clickable { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 imageLoader.View(
                     image = category.icon,
-                    modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
+                    modifier = Modifier
+                        .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
                         .aspectRatio(1f),
                     scale = ImageLoader.Scale.Crop
                 )

@@ -13,6 +13,7 @@ import java.io.Closeable
 
 internal class DefaultCategoryViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
+    private val onCategorySelectedHandler: OnCategorySelectedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : CategoryViewModel {
 
@@ -20,6 +21,11 @@ internal class DefaultCategoryViewModel(
     override val state: Flow<CategoryViewModel.State> = mutableState
 
     override fun perform(action: CategoryViewModel.Action) {
+        when (action) {
+            is CategoryViewModel.Action.SelectCategory -> coroutineScope.launch(context = Dispatchers.Main) {
+                onCategorySelectedHandler.onSelected(action.category.id)
+            }
+        }
     }
 
     override fun attach(): Closeable = Closeables.of {

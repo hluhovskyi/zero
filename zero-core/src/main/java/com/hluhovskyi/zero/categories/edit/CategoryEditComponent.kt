@@ -5,12 +5,18 @@ import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.icons.IconRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
+import javax.inject.Qualifier
 import javax.inject.Scope
+
+@Qualifier
+@Retention(AnnotationRetention.SOURCE)
+private annotation class CategoryEditId
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -52,6 +58,9 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
+        fun categoryId(@CategoryEditId categoryId: Id): Builder
+
+        @BindsInstance
         fun categoryEditIconUseCase(useCase: CategoryEditIconUseCase): Builder
 
         @BindsInstance
@@ -67,6 +76,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         @Provides
         @CategoryEditScope
         fun viewModel(
+            @CategoryEditId categoryId: Id,
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
@@ -74,6 +84,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             categoryEditColorUseCase: CategoryEditColorUseCase,
             onCategorySavedHandler: OnCategorySavedHandler,
         ): CategoryEditViewModel = DefaultCategoryEditViewModel(
+            categoryId = categoryId,
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,

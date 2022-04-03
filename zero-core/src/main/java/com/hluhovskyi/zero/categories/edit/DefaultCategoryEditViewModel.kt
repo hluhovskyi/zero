@@ -12,13 +12,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultCategoryEditViewModel(
+    private val categoryId: Id,
     private val categoryRepository: CategoryRepository,
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
@@ -54,6 +57,7 @@ internal class DefaultCategoryEditViewModel(
                 val state = mutableState.value
                 categoryRepository.insert(
                     CategoryRepository.CategoryInsert(
+                        id = categoryId,
                         parentCategoryId = Id.Unknown,
                         name = state.name,
                         iconId = state.iconId,
@@ -69,6 +73,33 @@ internal class DefaultCategoryEditViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         ioCoroutineScope.launch {
+            if (categoryId is Id.Known) {
+                launch {
+                    val category = categoryRepository.query(CategoryRepository.Criteria.ById(categoryId)).firstOrNull()
+                    // TODO: Handle incorrect state in case of null
+                    if (category != null) {
+                        val colorId = (category.colorId as? Id.Known) ?: ColorRepository.unknownCategoryColorId()
+                        val iconId = (category.iconId as? Id.Known) ?: IconRepository.unknownCategoryIconId()
+
+                        combine(
+                            colorRepository.query(ColorRepository.Criteria.ById(colorId)),
+                            iconRepository.query(IconRepository.Criteria.ById(iconId)),
+                        ) { color, icon -> color to icon }
+                            .collectLatest { (color, icon) ->
+                                mutableState.update { state ->
+                                    state.copy(
+                                        name = category.name,
+                                        iconId = icon.id,
+                                        icon = icon.image,
+                                        colorId = color.id,
+                                        color = color.value,
+                                    )
+                                }
+                            }
+                    }
+                }
+            }
+
             launch(context = Dispatchers.Main) {
                 categoryEditIconUseCase.state
                     .filterIsInstance<CategoryEditIconUseCase.State.Picked>()
