@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.common
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -37,13 +38,14 @@ fun <T : AttachableViewComponent> T.AttachWithView(
 
 @Composable
 fun <Component : AttachableViewComponent> Buildable<out Component>.AttachWithView() {
-    AttachAndRetainWithView()
+    val component = remember { build() }
+    component.AttachAndRetainWithView()
 }
 
 @Composable
-private fun <Component : AttachableViewComponent> Buildable<out Component>.AttachAndRetainWithView(
+private fun <Component : AttachableViewComponent> Component.AttachAndRetainWithView(
     holder: ComponentHolderViewModel<Component> = viewModel(
-        key = hashCode().toString(),
+        key = this.tag,
         factory = ComponentHolderViewModel.Factory(this)
     ),
 ) {
@@ -51,15 +53,12 @@ private fun <Component : AttachableViewComponent> Buildable<out Component>.Attac
 }
 
 private class ComponentHolderViewModel<T : AttachableViewComponent>(
-    val builder: Buildable<out T>
+    private val componentInput: T
 ) : ViewModel() {
 
     private val closeable = AtomicReference<Closeable>(Closeables.empty())
-    private val lazyComponent: Lazy<T> = lazy {
-        builder.build()
-    }
 
-    val component: T = lazyComponent.value.also {
+    val component: T = componentInput.also {
         closeable.set(it.attach())
     }
 
@@ -68,7 +67,7 @@ private class ComponentHolderViewModel<T : AttachableViewComponent>(
     }
 
     class Factory<Component : AttachableViewComponent>(
-        val component: Buildable<out Component>
+        val component: Component
     ) : ViewModelProvider.Factory {
 
         @Suppress("unchecked_cast")
@@ -86,7 +85,7 @@ private class LoggingAttachableViewComponent(
 
     override fun build(): AttachableViewComponent {
         val component = delegate.build()
-        logger.d("build [${component.tag}]")
+        logger.d("[${component.tag}] build")
         return LoggingComponent(
             delegate = component,
             logger = logger,
@@ -101,13 +100,13 @@ private class LoggingAttachableViewComponent(
         override val tag: String = delegate.tag
 
         override val viewProvider: ViewProvider = delegate.viewProvider
-            .also { logger.d("viewProvider [$tag]") }
+            .also { logger.d("[$tag] viewProvider") }
 
         override fun attach(): Closeable {
-            logger.d("attach [$tag]")
+            logger.d("[$tag] attach")
             val closeable = delegate.attach()
             return Closeables.from {
-                logger.d("close [$tag]")
+                logger.d("[$tag] close")
                 closeable.close()
             }
         }

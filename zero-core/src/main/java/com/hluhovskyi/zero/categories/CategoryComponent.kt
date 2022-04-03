@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.icons.IconRepository
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -48,12 +49,16 @@ abstract class CategoryComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
+            .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<CategoryComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun onCategorySelectedHandler(handler: OnCategorySelectedHandler): Builder
     }
 
     @dagger.Module
@@ -62,9 +67,11 @@ abstract class CategoryComponent : AttachableViewComponent {
         @Provides
         @CategoryScope
         fun viewModel(
-            categoriesQueryUseCase: CategoriesQueryUseCase
+            categoriesQueryUseCase: CategoriesQueryUseCase,
+            onCategorySelectedHandler: OnCategorySelectedHandler,
         ): CategoryViewModel = DefaultCategoryViewModel(
-            categoriesQueryUseCase
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            onCategorySelectedHandler = onCategorySelectedHandler,
         )
 
         @Provides

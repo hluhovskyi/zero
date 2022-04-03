@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity.navigation
 import androidx.navigation.NavController
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
+import com.hluhovskyi.zero.common.d
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -20,16 +21,21 @@ internal class NavControllerNavigator(
     private val logger = logger.withTag(TAG)
 
     override fun perform(action: Navigator.Action) {
+        logger.d("perform, action=$action")
         when (action) {
             is Navigator.Action.Back -> {
                 navController.popBackStack()
             }
             is Navigator.Action.NavigateTo -> {
                 val route = action.destination.routeWith(action.arguments)
-                navController.navigate(route) {
-                    if (action.clearBackStack) {
-                        navController.graph.startDestinationRoute?.let { startRoute ->
-                            popUpTo(startRoute)
+                if (action.clearBackStack && route == navController.graph.startDestinationRoute) {
+                    navController.popBackStack(route, false)
+                } else {
+                    navController.navigate(route) {
+                        if (action.clearBackStack) {
+                            navController.graph.startDestinationRoute?.let { startRoute ->
+                                popUpTo(startRoute)
+                            }
                         }
                     }
                 }
@@ -46,7 +52,8 @@ internal class NavControllerNavigator(
                     ),
                     arguments = backStack.arguments?.let { bundle ->
                         bundle.keySet().mapNotNull { key ->
-                            val value = bundle.getString(key, null)
+                            // TODO: handle non string as well
+                            val value = bundle.get(key) as? String
                             if (value != null) {
                                 stringValueOf(key).withValue(value)
                             } else {
@@ -112,6 +119,13 @@ internal class NavControllerNavigator(
             newRoute += '?'
             optionalValues.forEach { value ->
                 newRoute += "${value.argument.key}=${value.value}"
+            }
+        }
+
+        val requiredValues = values.filter { !it.argument.optional }
+        if (requiredValues.isNotEmpty()) {
+            requiredValues.forEach { value ->
+                newRoute = newRoute.replace("{${value.argument.key}}", value.value.toString())
             }
         }
 

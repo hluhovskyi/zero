@@ -13,8 +13,13 @@ interface CategoryRoom {
 
     fun selectByUserId(userId: Id.Known): Flow<List<CategoryEntity>> = selectByUserId(userId.value)
 
+    fun selectById(id: Id.Known, userId: Id.Known): Flow<CategoryEntity> = selectById(id.value, userId.value)
+
     @Query("SELECT * FROM CategoryEntity WHERE userId=:userId")
     fun selectByUserId(userId: String): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM CategoryEntity WHERE userId=:userId AND id=:id LIMIT 1")
+    fun selectById(id: String, userId: String): Flow<CategoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: CategoryEntity)

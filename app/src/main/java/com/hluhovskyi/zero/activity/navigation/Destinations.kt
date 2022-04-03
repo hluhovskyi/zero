@@ -15,13 +15,17 @@ internal object Destinations {
     sealed interface Category : Destination {
         object All : Category, Destination by destinationOf("categories")
         object Edit : Category, Destination by destinationOf("categories/edit")
+
+        sealed interface Item : Category {
+            object Edit : Item, Destination by destinationOf("categories/{categoryId}/edit", CategoryId) {
+                object CategoryId : Argument<String> by stringValueOf("categoryId")
+            }
+        }
     }
 
     sealed interface Icon : Destination {
         object Picker : Icon, Destination by destinationOf("icons/picker", RequestId) {
-            object RequestId : Argument<String> by stringOptionalValueOf("requestId") {
-                override fun toString(): String = "RequestId"
-            }
+            object RequestId : Argument<String> by stringOptionalValueOf("requestId")
         }
     }
 

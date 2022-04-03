@@ -8,7 +8,7 @@ interface CategoryViewModel
     : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
 
     sealed interface Action {
-
+        data class SelectCategory(val category: CategoryItem) : Action
     }
 
     data class State(

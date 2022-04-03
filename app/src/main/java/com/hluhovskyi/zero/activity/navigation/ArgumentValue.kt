@@ -1,12 +1,12 @@
 package com.hluhovskyi.zero.activity.navigation
 
-interface ArgumentValue<Type> {
+interface ArgumentValue<Type : Any> {
     val argument: Argument<Type>
     val value: Type
 }
 
 @Suppress("unchecked_cast")
-internal inline fun <reified T> Argument<T>.withValue(value: T): ArgumentValue<T> {
+internal inline fun <reified T : Any> Argument<T>.withValue(value: T): ArgumentValue<T> {
     return when (T::class) {
         String::class -> StringArgumentValue(
             argument = this as Argument<String>,

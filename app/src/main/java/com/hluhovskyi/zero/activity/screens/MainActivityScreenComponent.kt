@@ -6,8 +6,13 @@ import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.NavControllerNavigator
 import com.hluhovskyi.zero.activity.navigation.Navigator
+import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.activity.navigation.back
+import com.hluhovskyi.zero.activity.navigation.composableNavigationEntryOf
+import com.hluhovskyi.zero.activity.navigation.get
 import com.hluhovskyi.zero.activity.navigation.navigateTo
+import com.hluhovskyi.zero.activity.navigation.navigationEntryOf
+import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
@@ -18,6 +23,7 @@ import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
@@ -113,6 +119,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun viewProvider(
             navHostController: NavHostController,
             navigator: Navigator,
+            logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
             bottomBarComponent: BottomBarComponent.Builder
         ): ViewProvider = MainActivityScreenViewProvider(
@@ -120,7 +127,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigator = navigator,
             startDestination = Destinations.Transaction.All,
             navigationEntries = navigationEntries,
-            bottomBar = { bottomBarComponent.navigator(navigator).AttachWithView() }
+            bottomBar = {
+                bottomBarComponent.navigator(navigator)
+                    .logging(logger)
+                    .AttachWithView()
+            }
         )
 
         @Provides
@@ -154,7 +165,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             component: TransactionComponent.Builder,
             navigator: Navigator,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Transaction.All) {
+        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Transaction.All) {
             TransactionScreen(
                 component = component.logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) }
@@ -168,13 +179,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: TransactionEditComponent.Builder,
             navigator: Navigator,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Transaction.Edit,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Transaction.Edit) {
+            componentBuilder
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .logging(logger)
-        )
+        }
 
         @Provides
         @IntoSet
@@ -183,9 +193,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: CategoryComponent.Builder,
             navigator: Navigator,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Category.All) {
+        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Category.All) {
             CategoriesScreen(
-                component = componentBuilder.logging(logger),
+                component = componentBuilder
+                    .onCategorySelectedHandler { categoryId ->
+                        navigator.navigateTo(
+                            Destinations.Category.Item.Edit,
+                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId.value)
+                        )
+                    }
+                    .logging(logger),
                 onCategoriesEdit = { navigator.navigateTo(Destinations.Category.Edit) }
             )
         }
@@ -199,14 +216,32 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
             navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Category.Edit,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Category.Edit) {
+            componentBuilder
+                .categoryId(Id.Unknown)
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
                 .logging(logger)
-        )
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun categoryEditItemNavigationEntry(
+            componentBuilder: CategoryEditComponent.Builder,
+            categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
+            logger: Logger,
+            navigator: Navigator,
+        ): NavigatorEntry = navigationEntryOf(Destinations.Category.Item.Edit) { arguments ->
+            componentBuilder
+                .categoryId(Id(arguments[Destinations.Category.Item.Edit.CategoryId].value))
+                .categoryEditIconUseCase(categoryEditIconUseCase)
+                .categoryEditColorUseCase(categoryEditColorUseCase)
+                .onCategorySavedHandler { navigator.back() }
+                .logging(logger)
+        }
 
         @Provides
         @IntoSet
@@ -215,7 +250,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: AccountComponent.Builder,
             navigator: Navigator,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Account.All) {
+        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Account.All) {
             AccountsScreen(
                 component = componentBuilder.logging(logger),
                 onAccountEdit = { navigator.navigateTo(Destinations.Account.Edit) }
@@ -230,11 +265,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigator: Navigator,
             logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destinations.Account.Edit) {
-            AccountsEditScreen(
-                component = componentBuilder
-                    .onAccountSavedHandler { navigator.back() }
-                    .logging(logger)
-            )
+            componentBuilder
+                .onAccountSavedHandler { navigator.back() }
+                .logging(logger)
         }
 
         @Provides
@@ -244,9 +277,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: IconPickerComponent.Builder,
             categoryEditIconUseCase: CategoryEditIconUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Icon.Picker,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Icon.Picker) {
+            componentBuilder
                 .onIconSelectedHandler { icon ->
                     categoryEditIconUseCase.perform(
                         CategoryEditIconUseCase.Action.Pick(
@@ -258,7 +290,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     )
                 }
                 .logging(logger)
-        )
+        }
 
         @Provides
         @IntoSet
@@ -267,9 +299,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: ColorPickerComponent.Builder,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Color.Picker,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Color.Picker) {
+            componentBuilder
                 .onColorSelectedHandler { color ->
                     categoryEditColorUseCase.perform(
                         CategoryEditColorUseCase.Action.Pick(
@@ -281,7 +312,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     )
                 }
                 .logging(logger)
-        )
+        }
 
         @Provides
         @IntoSet
@@ -290,12 +321,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: SettingsComponent.Builder,
             logger: Logger,
             navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Settings,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Settings) {
+            componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .logging(logger)
-        )
+        }
 
         @Provides
         @IntoSet
@@ -304,11 +334,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: ImportComponent.Builder,
             logger: Logger,
             navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(
-            destination = Destinations.Import,
-            attachableViewComponentBuilder = componentBuilder
+        ): NavigatorEntry = navigationEntryOf(Destinations.Import) {
+            componentBuilder
                 .onImportFinishedHandler { navigator.back() }
                 .logging(logger)
-        )
+        }
     }
 }
