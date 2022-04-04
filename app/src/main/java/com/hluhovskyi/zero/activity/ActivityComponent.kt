@@ -17,6 +17,7 @@ import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
@@ -70,6 +71,7 @@ abstract class ActivityComponent :
         val clock: Clock
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
+        val dateFormatter: DateFormatter
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector
 

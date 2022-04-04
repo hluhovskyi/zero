@@ -12,10 +12,10 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
     private val colors = mapOf(
         color(
             id = ColorRepository.unknownCategoryColorId().value,
-            hex = ComposeColor.Gray.value
+            hex = 0xFF999999UL,
         ),
 
-        color(id = "blue", hex = ComposeColor.Blue.value),
+        color(id = "blue", hex = 0xFF1E88E5UL),
         color(id = "red", hex = ComposeColor.Red.value),
     )
 

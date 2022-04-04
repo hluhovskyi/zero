@@ -12,10 +12,12 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.CrashingIncorrectStateDetector
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.DefaultAmountFormatter
 import com.hluhovskyi.zero.common.DefaultAndroidUriResourceFactory
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
+import com.hluhovskyi.zero.common.LocaleBasedDateFormatter
 import com.hluhovskyi.zero.common.LocaleProvider
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.SystemLocaleProvider
@@ -111,6 +113,16 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun amountFormatter(): AmountFormatter = DefaultAmountFormatter()
+
+        @Provides
+        @ApplicationScope
+        fun dateFormatter(
+            localeProvider: LocaleProvider,
+            clock: Clock,
+        ): DateFormatter = LocaleBasedDateFormatter(
+            localeProvider = localeProvider,
+            clock = clock,
+        )
 
         @Provides
         @ApplicationScope

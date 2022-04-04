@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface TransactionViewModel
     : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
@@ -23,14 +24,17 @@ interface TransactionViewModel
         data class Summary(
             val date: LocalDate,
             val total: Amount,
+            val currencySymbol: String,
         ) : Item
 
         sealed interface Transaction : Item {
 
             val id: Id.Known
+            val date: LocalDateTime
 
             data class Expense(
                 override val id: Id.Known,
+                override val date: LocalDateTime,
                 val amount: Amount,
                 val currencySymbol: String,
                 val accountName: String,
@@ -42,6 +46,7 @@ interface TransactionViewModel
 
             data class Income(
                 override val id: Id.Known,
+                override val date: LocalDateTime,
                 val amount: Amount,
                 val currencySymbol: String,
                 val accountName: String,
@@ -53,9 +58,11 @@ interface TransactionViewModel
 
             data class Transfer(
                 override val id: Id.Known,
+                override val date: LocalDateTime,
                 val amount: Amount,
                 val accountName: String,
-                val targetAccountName: String
+                val targetAccountName: String,
+                val targetAmount: Amount,
             ) : Transaction
         }
     }

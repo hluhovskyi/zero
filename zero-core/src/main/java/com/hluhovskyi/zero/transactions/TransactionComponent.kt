@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.Provides
@@ -33,6 +34,7 @@ abstract class TransactionComponent : AttachableViewComponent {
     interface Dependencies {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
+        val dateFormatter: DateFormatter
 
         val transactionRepository: TransactionRepository
         val accountRepository: AccountRepository
@@ -75,10 +77,12 @@ abstract class TransactionComponent : AttachableViewComponent {
             viewModel: TransactionViewModel,
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
+            dateFormatter: DateFormatter,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
+            dateFormatter = dateFormatter,
         )
     }
 }

@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.flow.onStart
 
 internal class DefaultAccountUseCase(
@@ -19,7 +20,7 @@ internal class DefaultAccountUseCase(
             .map { transactions ->
                 transactions.calculateBalance()
             }
-            .onStart { emit(emptyMap()) }
+            .onEmpty { emit(emptyMap()) }
     ) { accounts, accountIdToBalance ->
         accounts.map { account ->
             Account(

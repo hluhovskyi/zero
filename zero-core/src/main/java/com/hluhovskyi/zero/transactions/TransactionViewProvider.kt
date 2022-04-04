@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.transactions
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,11 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
@@ -27,6 +29,7 @@ internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
     private val imageLoader: ImageLoader,
     private val amountFormatter: AmountFormatter,
+    private val dateFormatter: DateFormatter,
 ) : ViewProvider {
 
     @Composable
@@ -35,6 +38,7 @@ internal class TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
+            dateFormatter = dateFormatter,
         )
     }
 }
@@ -44,12 +48,11 @@ private fun TransactionView(
     viewModel: TransactionViewModel,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
+    dateFormatter: DateFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
 
-    LazyColumn(
-        contentPadding = PaddingValues(vertical = 8.dp)
-    ) {
+    LazyColumn {
         val transactionModifier = Modifier
             .fillMaxWidth()
             .clickable { }
@@ -60,6 +63,29 @@ private fun TransactionView(
 
         items(state.transactions) { transaction ->
             when (transaction) {
+                is TransactionViewModel.Item.Summary -> {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0x33EEEEEE))
+                            .padding(
+                                vertical = 8.dp,
+                                horizontal = 12.dp
+                            )
+                    ) {
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = dateFormatter.format(transaction)
+                        )
+                        Text(
+                            text = amountFormatter.format(
+                                amount = transaction.total,
+                                currencySymbol = transaction.currencySymbol
+                            ),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
                 is TransactionViewModel.Item.Transaction.Expense ->
                     TransactionExpenseView(
                         modifier = transactionModifier,
@@ -108,6 +134,15 @@ private fun TransactionViewModel.Conversion.format(
 } else {
     null
 }
+
+private fun DateFormatter.format(
+    transaction: TransactionViewModel.Item.Summary
+): String = format(
+    date = transaction.date,
+    dayConfig = DateFormatter.DayConfig.WithoutZero,
+    monthConfig = DateFormatter.MonthConfig.Readable,
+    yearConfig = DateFormatter.YearConfig.SkipCurrent,
+)
 
 private fun Image.toComposable(
     imageLoader: ImageLoader
