@@ -97,7 +97,7 @@ internal class RoomTransactionRepository(
                 rate = rate.convert(),
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
-                enteredDateTime = clock.localDateTime(),
+                enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
                 updatedDateTime = clock.localDateTime(),
             )
@@ -113,7 +113,7 @@ internal class RoomTransactionRepository(
                 rate = rate.convert(),
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
-                enteredDateTime = clock.localDateTime(),
+                enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
                 updatedDateTime = clock.localDateTime(),
             )
@@ -129,7 +129,7 @@ internal class RoomTransactionRepository(
                 rate = RateEntity.empty(),
                 targetAccount = targetAccount.value,
                 targetAmount = targetAmount.convert(),
-                enteredDateTime = clock.localDateTime(),
+                enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
                 updatedDateTime = clock.localDateTime(),
             )

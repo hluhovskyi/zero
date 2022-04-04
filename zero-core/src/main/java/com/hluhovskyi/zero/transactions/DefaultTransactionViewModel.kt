@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
@@ -53,14 +54,35 @@ internal class DefaultTransactionViewModel(
                     .onEmptyReturnEmptyList()
                     .associateById(),
             ) { transactions, idToCategories, idToAccounts, idToCurrencies ->
-                transactions.mapNotNull { transaction ->
-                    resolve(
-                        transaction = transaction,
-                        idToAccounts = idToAccounts,
-                        idToCategories = idToCategories,
-                        idToCurrencies = idToCurrencies,
-                    )
-                }
+                transactions
+                    .mapNotNull { transaction ->
+                        resolve(
+                            transaction = transaction,
+                            idToAccounts = idToAccounts,
+                            idToCategories = idToCategories,
+                            idToCurrencies = idToCurrencies,
+                        )
+                    }
+                    .groupBy { it.date.toLocalDate() }
+                    .flatMap { (date, transactions) ->
+                        // TODO: Handle different currencies
+                        val amount: Amount = transactions.fold(Amount.zero()) { amount, transaction ->
+                            when (transaction) {
+                                is TransactionViewModel.Item.Transaction.Expense -> amount - transaction.amount
+                                is TransactionViewModel.Item.Transaction.Income -> amount + transaction.amount
+                                is TransactionViewModel.Item.Transaction.Transfer -> amount - transaction.amount + transaction.targetAmount
+                            }
+                        }
+
+                        listOf(
+                            TransactionViewModel.Item.Summary(
+                                date = date,
+                                total = amount,
+                                // TODO: Replace with primary
+                                currencySymbol = "$"
+                            )
+                        ) + transactions
+                    }
             }.collectLatest { items ->
                 mutableState.update { state ->
                     state.copy(
@@ -85,6 +107,7 @@ internal class DefaultTransactionViewModel(
 
                 TransactionViewModel.Item.Transaction.Expense(
                     id = transaction.id,
+                    date = transaction.dateTime,
                     amount = transaction.amount,
                     conversion = if (transaction.currencyId != account.currencyId) {
                         val symbol = idToCurrencies[account.currencyId]?.symbol
@@ -110,6 +133,7 @@ internal class DefaultTransactionViewModel(
 
                 TransactionViewModel.Item.Transaction.Income(
                     id = transaction.id,
+                    date = transaction.dateTime,
                     amount = transaction.amount,
                     accountName = account.name,
                     currencySymbol = currency.symbol,
@@ -127,9 +151,11 @@ internal class DefaultTransactionViewModel(
 
                 TransactionViewModel.Item.Transaction.Transfer(
                     id = transaction.id,
+                    date = transaction.dateTime,
                     amount = transaction.amount,
                     accountName = account.name,
-                    targetAccountName = targetAccount.name
+                    targetAccountName = targetAccount.name,
+                    targetAmount = transaction.targetAmount,
                 )
             }
         }

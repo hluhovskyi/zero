@@ -114,6 +114,7 @@ internal class DefaultImportUseCase(
                     }
                 }.invokeOnCompletion { throwable ->
                     if (throwable != null) {
+                        // TODO: Actually, doesn't work
                         coroutineScope.launch(context = Dispatchers.Main) {
                             onImportFinishedHandler.onFinished()
                         }
