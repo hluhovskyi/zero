@@ -157,10 +157,12 @@ interface DatabaseComponent {
             database: Provider<MainDatabase>,
             @CurrentUserId currentUserId: Flow<Id.Known>,
             incorrectStateDetector: IncorrectStateDetector,
+            logger: Logger,
         ): ConfigurationRepository = RoomConfigurationRepository(
             configurationRoom = { database.get().configuration() },
             currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
+            logger = logger,
         )
     }
 }

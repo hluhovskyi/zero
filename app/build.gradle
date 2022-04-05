@@ -57,6 +57,8 @@ dependencies {
     implementation(project(":zero-image-loading"))
     implementation(project(":zero-zenmoney"))
 
+    implementation deps.kotlin.serialization
+
     implementation deps.android.compose.navigation
 
     implementation deps.javax.inject

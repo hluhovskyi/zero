@@ -51,7 +51,7 @@ internal class DefaultTransactionEditUseCase(
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
-                    rate = state.amount
+                    rate = state.rate
                 )
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
                     accounts = state.accounts,
@@ -61,7 +61,7 @@ internal class DefaultTransactionEditUseCase(
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
-                    rate = state.amount
+                    rate = state.rate
                 )
                 TransactionEditType.TRANSFER -> TransactionEditUseCase.State.Transfer(
                     accounts = state.accounts,
@@ -132,7 +132,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = currency.id,
                                 categoryId = category.id,
                                 dateTime = clock.localDateTime(),
-                                rate = Rate(state.amount.toBigDecimalOrNull())
+                                rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
                         TransactionEditType.INCOME -> {
@@ -147,7 +147,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = currency.id,
                                 categoryId = category.id,
                                 dateTime = clock.localDateTime(),
-                                rate = Rate(state.amount.toBigDecimalOrNull())
+                                rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
                         TransactionEditType.TRANSFER -> {

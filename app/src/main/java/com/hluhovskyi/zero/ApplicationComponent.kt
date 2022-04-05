@@ -25,8 +25,15 @@ import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.SystemZoneProvider
 import com.hluhovskyi.zero.common.time.ZoneBasedClock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyLoader
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
+import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
+import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportSourceUseCase
@@ -154,10 +161,52 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun currencyRepository(
-            localeProvider: LocaleProvider
+        internal fun currencyLoader(
+            resourceResolver: ResourceResolver,
+            androidUriResourceFactory: AndroidUriResourceFactory,
+            localeProvider: LocaleProvider,
+            logger: Logger,
+        ): CurrencyLoader = PredefinedCurrencyLoader(
+            resourceResolver = resourceResolver,
+            androidUriResourceFactory = androidUriResourceFactory,
+            localeProvider = localeProvider,
+            logger = logger,
+        )
+
+        @Provides
+        @ApplicationScope
+        internal fun currencyRepository(
+            localeProvider: LocaleProvider,
+            currencyLoader: CurrencyLoader,
         ): CurrencyRepository = JavaCurrencyRepository(
-            localeProvider = localeProvider
+            localeProvider = localeProvider,
+            currencyLoader = currencyLoader,
+        )
+
+        @Provides
+        @ApplicationScope
+        fun currencyPrimaryUseCase(
+            configurationRepository: ConfigurationRepository,
+            currencyRepository: CurrencyRepository,
+            localeProvider: LocaleProvider,
+            logger: Logger,
+        ): CurrencyPrimaryUseCase = LocaleBasedCurrencyPrimaryUseCase(
+            configurationRepository = configurationRepository,
+            currencyRepository = currencyRepository,
+            localeProvider = localeProvider,
+            logger = logger,
+        )
+
+        @Provides
+        @ApplicationScope
+        internal fun currencyConvertUseCase(
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            currencyLoader: CurrencyLoader,
+            incorrectStateDetector: IncorrectStateDetector,
+        ): CurrencyConvertUseCase = PredefinedCurrencyConvertUseCase(
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
+            currencyLoader = currencyLoader,
+            incorrectStateDetector = incorrectStateDetector,
         )
 
         @Provides
@@ -242,6 +291,12 @@ private object DatabaseModule {
     fun categoryRepository(
         databaseComponent: DatabaseComponent,
     ): CategoryRepository = databaseComponent.categoryRepository
+
+    @Provides
+    @ApplicationScope
+    fun configurationRepository(
+        databaseComponent: DatabaseComponent
+    ): ConfigurationRepository = databaseComponent.configurationRepository
 }
 
 @dagger.Module

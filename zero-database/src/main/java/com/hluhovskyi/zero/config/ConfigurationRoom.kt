@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ConfigurationRoom {
 
-    @Query("SELECT * FROM ConfigurationEntity WHERE name=:name LIMIT 1")
-    fun observe(name: String): Flow<ConfigurationEntity>
+    @Query("SELECT * FROM ConfigurationEntity WHERE scope=:scope AND name=:name LIMIT 1")
+    fun observe(scope: String, name: String): Flow<ConfigurationEntity?>
 
-    @Query("SELECT * FROM ConfigurationEntity WHERE name=:name LIMIT 1")
-    fun get(name: String): ConfigurationEntity
+    @Query("SELECT * FROM ConfigurationEntity WHERE scope=:scope AND name=:name LIMIT 1")
+    fun get(scope: String, name: String): ConfigurationEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(configuration: ConfigurationEntity)

@@ -13,21 +13,21 @@ internal class PredefinedIconRepository(
 
     private val icons: Map<Id.Known, Icon> = mapOf(
         iconOf(
-            id = IconRepository.unknownCategoryIconId().value,
+            id = IconRepository.unknownCategoryIconId(),
             resourceName = "ic_unknown_category_24",
             description = "Unknown"
         ),
 
-        iconOf(id = "flowers", resourceName = "ic_florist_24", description = "Flowers"),
-        iconOf(id = "grocery", resourceName = "ic_grocery_store_24", description = "Grocery"),
-        iconOf(id = "fastfood", resourceName = "ic_fastfood_24", description = "Fast food"),
-        iconOf(id = "car", resourceName = "ic_car_24", description = "Car"),
-        iconOf(id = "car_repair", resourceName = "ic_car_repair_24", description = "Car repair"),
-        iconOf(id = "diamond", resourceName = "ic_diamond_24", description = "Diamond"),
-        iconOf(id = "game_controller", resourceName = "ic_game_controller_24", description = "Game controller"),
-        iconOf(id = "book", resourceName = "ic_book_24", description = "Book"),
-        iconOf(id = "movie", resourceName = "ic_movie_24", description = "Movie"),
-        iconOf(id = "beach", resourceName = "ic_beach_24", description = "Beach"),
+        iconOf(id = KnownIconIds.flowers, resourceName = "ic_florist_24", description = "Flowers"),
+        iconOf(id = KnownIconIds.grocery, resourceName = "ic_grocery_store_24", description = "Grocery"),
+        iconOf(id = KnownIconIds.fastfood, resourceName = "ic_fastfood_24", description = "Fast food"),
+        iconOf(id = KnownIconIds.car, resourceName = "ic_car_24", description = "Car"),
+        iconOf(id = KnownIconIds.carRepair, resourceName = "ic_car_repair_24", description = "Car repair"),
+        iconOf(id = KnownIconIds.diamond, resourceName = "ic_diamond_24", description = "Diamond"),
+        iconOf(id = KnownIconIds.gameController, resourceName = "ic_game_controller_24", description = "Game controller"),
+        iconOf(id = KnownIconIds.book, resourceName = "ic_book_24", description = "Book"),
+        iconOf(id = KnownIconIds.movie, resourceName = "ic_movie_24", description = "Movie"),
+        iconOf(id = KnownIconIds.beach, resourceName = "ic_beach_24", description = "Beach"),
         // TODO: Add more starting from Відсотки і кешбек
     )
 
@@ -38,16 +38,14 @@ internal class PredefinedIconRepository(
         }
 
     private fun iconOf(
-        id: String,
+        id: Id.Known,
         resourceName: String,
         description: String
-    ) = Id(id).let { knownId ->
-        knownId to Icon(
-            id = knownId,
-            image = Image(
-                uri = androidUriResourceFactory.drawable(resourceName),
-                description = description
-            )
+    ) = id to Icon(
+        id = id,
+        image = Image(
+            uri = androidUriResourceFactory.drawable(resourceName),
+            description = description
         )
-    }
+    )
 }

@@ -6,6 +6,10 @@ internal object CrashingIncorrectStateDetector : IncorrectStateDetector {
         throw IllegalStateException(message)
     }
 
+    override fun <T> assertOrValue(message: String, value: T): T {
+        throw IllegalStateException(message)
+    }
+
     override fun <T> requireNonNull(value: T?, message: String?, block: (T) -> Unit) {
         if (value == null) {
             assertNull(value)

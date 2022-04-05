@@ -9,7 +9,7 @@ interface SettingsViewModel
         object Import : Action
     }
 
-    interface State {
-
-    }
+    data class State(
+        val selectedCurrency: String = ""
+    )
 }

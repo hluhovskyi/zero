@@ -24,3 +24,9 @@ fun Id.valueOrNull(): String? = if (this is Id.Known) {
 } else {
     null
 }
+
+fun Id.valueOrEmpty(): String = if (this is Id.Known) {
+    value
+} else {
+    ""
+}

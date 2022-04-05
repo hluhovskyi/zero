@@ -9,6 +9,8 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,8 @@ internal class DefaultTransactionViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
+    private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+    private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : TransactionViewModel {
 
@@ -54,6 +58,7 @@ internal class DefaultTransactionViewModel(
                     .onEmptyReturnEmptyList()
                     .associateById(),
             ) { transactions, idToCategories, idToAccounts, idToCurrencies ->
+                val primaryCurrency = currencyPrimaryUseCase.getPrimaryCurrency()
                 transactions
                     .mapNotNull { transaction ->
                         resolve(
@@ -65,12 +70,39 @@ internal class DefaultTransactionViewModel(
                     }
                     .groupBy { it.date.toLocalDate() }
                     .flatMap { (date, transactions) ->
-                        // TODO: Handle different currencies
                         val amount: Amount = transactions.fold(Amount.zero()) { amount, transaction ->
                             when (transaction) {
-                                is TransactionViewModel.Item.Transaction.Expense -> amount - transaction.amount
-                                is TransactionViewModel.Item.Transaction.Income -> amount + transaction.amount
-                                is TransactionViewModel.Item.Transaction.Transfer -> amount - transaction.amount + transaction.targetAmount
+                                is TransactionViewModel.Item.Transaction.Expense -> {
+                                    amount - if (transaction.conversion is TransactionViewModel.Conversion.WithAmount &&
+                                        transaction.conversion.currencyId == primaryCurrency.id
+                                    ) {
+                                        transaction.conversion.amount
+                                    } else {
+                                        currencyConvertUseCase.convertToPrimary(
+                                            transaction.amount,
+                                            transaction.currencyId
+                                        )
+                                    }
+                                }
+                                is TransactionViewModel.Item.Transaction.Income -> {
+                                    amount + if (transaction.conversion is TransactionViewModel.Conversion.WithAmount &&
+                                        transaction.conversion.currencyId == primaryCurrency.id
+                                    ) {
+                                        transaction.conversion.amount
+                                    } else {
+                                        currencyConvertUseCase.convertToPrimary(
+                                            transaction.amount,
+                                            transaction.currencyId
+                                        )
+                                    }
+                                }
+                                is TransactionViewModel.Item.Transaction.Transfer -> amount - currencyConvertUseCase.convertToPrimary(
+                                    transaction.amount,
+                                    transaction.currencyId
+                                ) + currencyConvertUseCase.convertToPrimary(
+                                    transaction.targetAmount,
+                                    transaction.targetCurrencyId
+                                )
                             }
                         }
 
@@ -78,8 +110,7 @@ internal class DefaultTransactionViewModel(
                             TransactionViewModel.Item.Summary(
                                 date = date,
                                 total = amount,
-                                // TODO: Replace with primary
-                                currencySymbol = "$"
+                                currencySymbol = primaryCurrency.symbol,
                             )
                         ) + transactions
                     }
@@ -109,10 +140,12 @@ internal class DefaultTransactionViewModel(
                     id = transaction.id,
                     date = transaction.dateTime,
                     amount = transaction.amount,
+                    currencyId = transaction.currencyId,
                     conversion = if (transaction.currencyId != account.currencyId) {
                         val symbol = idToCurrencies[account.currencyId]?.symbol
                         TransactionViewModel.Conversion.WithAmount(
                             amount = transaction.amount.withRate(transaction.rate),
+                            currencyId = account.currencyId,
                             currencySymbol = symbol.orEmpty()
                         )
                     } else {
@@ -137,25 +170,40 @@ internal class DefaultTransactionViewModel(
                     amount = transaction.amount,
                     accountName = account.name,
                     currencySymbol = currency.symbol,
+                    currencyId = transaction.currencyId,
                     categoryName = category.name,
                     categoryColor = category.color,
                     categoryIcon = category.icon,
-                    // TODO:
-                    conversion = TransactionViewModel.Conversion.None
+                    conversion = if (transaction.currencyId != account.currencyId) {
+                        val symbol = idToCurrencies[account.currencyId]?.symbol
+                        TransactionViewModel.Conversion.WithAmount(
+                            amount = transaction.amount.withRate(transaction.rate),
+                            currencyId = account.currencyId,
+                            currencySymbol = symbol.orEmpty()
+                        )
+                    } else {
+                        TransactionViewModel.Conversion.None
+                    },
                 )
             }
 
             is TransactionRepository.Transaction.Transfer -> {
                 val account = idToAccounts[transaction.accountId] ?: return null
+                val currency = idToCurrencies[transaction.currencyId] ?: return null
                 val targetAccount = idToAccounts[transaction.targetAccount] ?: return null
+                val targetCurrency = idToCurrencies[targetAccount.currencyId] ?: return null
 
                 TransactionViewModel.Item.Transaction.Transfer(
                     id = transaction.id,
                     date = transaction.dateTime,
                     amount = transaction.amount,
                     accountName = account.name,
+                    currencyId = transaction.currencyId,
+                    currencySymbol = currency.symbol,
                     targetAccountName = targetAccount.name,
                     targetAmount = transaction.targetAmount,
+                    targetCurrencyId = targetCurrency.id,
+                    targetCurrencySymbol = targetCurrency.symbol,
                 )
             }
         }
