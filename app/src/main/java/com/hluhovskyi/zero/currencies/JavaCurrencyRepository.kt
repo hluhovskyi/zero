@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.currencies
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.LocaleProvider
+import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.util.Currency as JavaCurrency
@@ -15,23 +16,28 @@ internal class JavaCurrencyRepository(
             else -> currency
         }
     },
-    private val allowedCurrencies: Set<String> = setOf("UAH", "USD", "EUR")
+    private val currencyLoader: CurrencyLoader,
 ) : CurrencyRepository {
 
     private val currencies = lazy {
         JavaCurrency.getAvailableCurrencies()
-            .filter { currency -> currency.currencyCode in allowedCurrencies }
-            .map { currency ->
-                Currency(
-                    id = Id(currency.currencyCode),
-                    name = currency.getDisplayName(localeProvider.locale()),
-                    symbol = currency.getSymbol(localeProvider.locale())
-                )
-            }
+            .asSequence()
+            .map { currency -> currency.toCurrency(localeProvider.locale()) }
             .map(currencyTransformer)
             .sortedBy { currency -> currency.name }
+            .associateBy { it.id }
     }
 
-    override fun query(criteria: CurrencyRepository.Criteria): Flow<List<Currency>> =
-        flow { emit(currencies.value) }
+    override fun <T> query(criteria: CurrencyRepository.Criteria<T>): Flow<T> =
+        when (criteria) {
+            is CurrencyRepository.Criteria.All -> flow {
+                val availableCurrencies = currencyLoader.availableCurrencies()
+
+                emit(currencies.value
+                    .mapNotNull { (id, currency) -> currency.takeIf { id in availableCurrencies } }
+                    .toList()
+                )
+            }.uncheckedCast()
+            is CurrencyRepository.Criteria.ById -> flow { currencies.value[criteria.id]?.let { emit(it) } }.uncheckedCast()
+        }
 }

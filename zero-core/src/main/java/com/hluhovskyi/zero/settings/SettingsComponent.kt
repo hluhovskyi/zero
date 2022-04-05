@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.settings
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -27,7 +28,7 @@ abstract class SettingsComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
-
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
     }
 
     companion object {
@@ -51,9 +52,11 @@ abstract class SettingsComponent : AttachableViewComponent {
         @Provides
         @SettingsScope
         fun viewModel(
-            onImportSelected: OnImportSelectedHandler
+            onImportSelected: OnImportSelectedHandler,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
-            onImportSelected = onImportSelected
+            onImportSelected = onImportSelected,
+            currencyPrimaryUseCase = currencyPrimaryUseCase
         )
 
         @Provides

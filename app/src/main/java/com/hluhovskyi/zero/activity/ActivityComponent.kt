@@ -23,6 +23,8 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
@@ -77,6 +79,8 @@ abstract class ActivityComponent :
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val importSourceUseCase: ImportSourceUseCase
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
+        val currencyConvertUseCase: CurrencyConvertUseCase
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository

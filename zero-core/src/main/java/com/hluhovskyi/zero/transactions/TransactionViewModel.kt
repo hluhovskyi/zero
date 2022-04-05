@@ -36,6 +36,7 @@ interface TransactionViewModel
                 override val id: Id.Known,
                 override val date: LocalDateTime,
                 val amount: Amount,
+                val currencyId: Id.Known,
                 val currencySymbol: String,
                 val accountName: String,
                 val categoryName: String,
@@ -48,6 +49,7 @@ interface TransactionViewModel
                 override val id: Id.Known,
                 override val date: LocalDateTime,
                 val amount: Amount,
+                val currencyId: Id.Known,
                 val currencySymbol: String,
                 val accountName: String,
                 val categoryName: String,
@@ -61,8 +63,12 @@ interface TransactionViewModel
                 override val date: LocalDateTime,
                 val amount: Amount,
                 val accountName: String,
+                val currencyId: Id.Known,
+                val currencySymbol: String,
                 val targetAccountName: String,
                 val targetAmount: Amount,
+                val targetCurrencyId: Id.Known,
+                val targetCurrencySymbol: String,
             ) : Transaction
         }
     }
@@ -71,6 +77,7 @@ interface TransactionViewModel
 
         data class WithAmount(
             val amount: Amount,
+            val currencyId: Id.Known,
             val currencySymbol: String,
         ) : Conversion
 

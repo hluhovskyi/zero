@@ -8,6 +8,8 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.Provides
 import java.io.Closeable
@@ -40,6 +42,8 @@ abstract class TransactionComponent : AttachableViewComponent {
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
         val categoriesQueryUseCase: CategoriesQueryUseCase
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
+        val currencyConvertUseCase: CurrencyConvertUseCase
     }
 
     companion object {
@@ -64,11 +68,15 @@ abstract class TransactionComponent : AttachableViewComponent {
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            currencyConvertUseCase: CurrencyConvertUseCase,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
-            categoriesQueryUseCase = categoriesQueryUseCase
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
+            currencyConvertUseCase = currencyConvertUseCase,
         )
 
         @Provides

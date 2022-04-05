@@ -1,19 +1,23 @@
 package com.hluhovskyi.zero.currencies
 
 import com.hluhovskyi.zero.common.Currency
+import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 
 interface CurrencyRepository {
 
-    fun query(criteria: Criteria): Flow<List<Currency>>
+    fun <T> query(criteria: Criteria<T>): Flow<T>
 
-    sealed interface Criteria {
+    sealed interface Criteria<T> {
 
-        class All : Criteria
+        class All : Criteria<List<Currency>>
+
+        data class ById(val id: Id.Known): Criteria<Currency>
     }
 
     object Noop : CurrencyRepository {
-        override fun query(criteria: Criteria): Flow<List<Currency>> = flowOf(emptyList())
+        override fun <T> query(criteria: Criteria<T>): Flow<T> = emptyFlow()
     }
 }

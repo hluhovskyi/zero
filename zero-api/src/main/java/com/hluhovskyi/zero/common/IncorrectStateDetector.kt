@@ -4,6 +4,11 @@ interface IncorrectStateDetector {
 
     fun assert(message: String)
 
+    fun <T> assertOrValue(
+        message: String,
+        value: T
+    ): T
+
     fun <T> requireNonNull(
         value: T?,
         message: String? = null,
@@ -27,6 +32,8 @@ private object IgnoreOnIncorrectStateDetector : IncorrectStateDetector {
     override fun assert(message: String) {
 
     }
+
+    override fun <T> assertOrValue(message: String, value: T): T = value
 
     override fun <T> requireNonNull(value: T?, message: String?, block: (T) -> Unit) {
         if (value != null) {

@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.common.ColorValue
@@ -98,23 +100,22 @@ fun TransactionView(
             Row {
                 Text(
                     text = categoryName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
                     fontSize = 18.sp,
                     color = amountColor.toCompose(),
-                    fontWeight = FontWeight.Bold,
                     text = amount
                 )
             }
             Row {
-                Text(
-                    fontSize = 14.sp,
-                    text = accountName,
-                    modifier = Modifier.weight(1f),
-                )
+                CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+                    Text(
+                        text = accountName,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
                 convertedAmount?.let {
                     Text(
                         fontSize = 14.sp,
