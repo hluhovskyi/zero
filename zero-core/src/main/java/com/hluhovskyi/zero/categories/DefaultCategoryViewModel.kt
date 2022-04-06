@@ -36,7 +36,8 @@ internal class DefaultCategoryViewModel(
                         CategoryViewModel.CategoryItem(
                             id = category.id,
                             name = category.name,
-                            icon = category.icon
+                            icon = category.icon,
+                            color = category.color,
                         )
                     }
                 }
