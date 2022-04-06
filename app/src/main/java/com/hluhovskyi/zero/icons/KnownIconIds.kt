@@ -3,6 +3,10 @@ package com.hluhovskyi.zero.icons
 import com.hluhovskyi.zero.common.Id
 
 internal object KnownIconIds {
+    val cash: Id.Known = Id("cash")
+    val bank: Id.Known = Id("bank")
+    val creditCard: Id.Known = Id("credit_card")
+
     val flowers: Id.Known = Id("flowers")
     val grocery: Id.Known = Id("grocery")
     val fastfood: Id.Known = Id("fastfood")

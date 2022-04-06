@@ -2,16 +2,22 @@ package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.associateById
+import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
+import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEmpty
-import kotlinx.coroutines.flow.onStart
 
 internal class DefaultAccountUseCase(
     accountRepository: AccountRepository,
     transactionRepository: TransactionRepository,
+    currencyRepository: CurrencyRepository,
+    iconRepository: IconRepository,
 ) : AccountUseCase {
 
     override val accounts: Flow<List<Account>> = combine(
@@ -20,13 +26,21 @@ internal class DefaultAccountUseCase(
             .map { transactions ->
                 transactions.calculateBalance()
             }
-            .onEmpty { emit(emptyMap()) }
-    ) { accounts, accountIdToBalance ->
+            .onEmpty { emit(emptyMap()) },
+        currencyRepository.query(CurrencyRepository.Criteria.All())
+            .onEmptyReturnEmptyList()
+            .associateById(),
+        iconRepository.query(IconRepository.Criteria.All())
+            .onEmptyReturnEmptyList()
+            .associateById(),
+    ) { accounts, accountIdToBalance, idToCurrency, idToIcon ->
         accounts.map { account ->
             Account(
                 id = account.id,
                 name = account.name,
-                balance = accountIdToBalance[account.id] ?: Amount.zero()
+                balance = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
+                currencySymbol = idToCurrency[account.currencyId]?.symbol.orEmpty(),
+                icon = idToIcon[account.iconId]?.image ?: Image.empty(),
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Identifiable
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,8 @@ interface AccountRepository {
         override val id: Id.Known,
         val name: String,
         val currencyId: Id.Known,
+        val iconId: Id.Known,
+        val initialBalance: Amount,
     ) : Identifiable
 
     suspend fun insert(account: AccountInsert)
@@ -27,7 +30,9 @@ interface AccountRepository {
     data class AccountInsert(
         val id: Id = Id.Unknown,
         val name: String,
-        val currencyId: Id.Known
+        val currencyId: Id.Known,
+        val iconId: Id.Known,
+        val initialBalance: Amount,
     )
 
     object Noop : AccountRepository {

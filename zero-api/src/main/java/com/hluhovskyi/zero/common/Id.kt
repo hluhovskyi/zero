@@ -30,3 +30,5 @@ fun Id.valueOrEmpty(): String = if (this is Id.Known) {
 } else {
     ""
 }
+
+fun List<Identifiable>.joinIdsToString(): String = '[' + joinToString { it.id.value } + ']'

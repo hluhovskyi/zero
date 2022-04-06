@@ -17,6 +17,15 @@ internal class PredefinedIconRepository(
             resourceName = "ic_unknown_category_24",
             description = "Unknown"
         ),
+        iconOf(
+            id = IconRepository.defaultAccountIconId(),
+            resourceName = "ic_cash_24",
+            description = "Cash"
+        ),
+
+        iconOf(id = KnownIconIds.cash, resourceName = "ic_cash_24", description = "Cash"),
+        iconOf(id = KnownIconIds.bank, resourceName = "ic_bank_24", description = "Bank"),
+        iconOf(id = KnownIconIds.creditCard, resourceName = "ic_credit_card_24", description = "Credit card"),
 
         iconOf(id = KnownIconIds.flowers, resourceName = "ic_florist_24", description = "Flowers"),
         iconOf(id = KnownIconIds.grocery, resourceName = "ic_grocery_store_24", description = "Grocery"),

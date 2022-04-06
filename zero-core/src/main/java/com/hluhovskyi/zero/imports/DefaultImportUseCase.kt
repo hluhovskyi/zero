@@ -2,10 +2,12 @@ package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.Uri
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +61,9 @@ internal class DefaultImportUseCase(
                             AccountRepository.AccountInsert(
                                 id = account.id,
                                 name = account.name,
-                                currencyId = account.currencyId
+                                currencyId = account.currencyId,
+                                iconId = IconRepository.defaultAccountIconId(),
+                                initialBalance = Amount.zero(),
                             )
                         }
                         accountRepository.insert(accounts)

@@ -1,10 +1,13 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -28,27 +31,25 @@ abstract class AccountComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
+        val iamgeLoader: ImageLoader
+        val amountFormatter: AmountFormatter
 
+        val accountRepository: AccountRepository
+        val transactionRepository: TransactionRepository
+        val currencyRepository: CurrencyRepository
+        val iconRepository: IconRepository
     }
 
     companion object {
 
         fun builder(dependencies: Dependencies): Builder = DaggerAccountComponent.builder()
             .dependencies(dependencies)
-            .accountRepository(AccountRepository.Noop)
-            .transactionRepository(TransactionRepository.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<AccountComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun accountRepository(accountRepository: AccountRepository): Builder
-
-        @BindsInstance
-        fun transactionRepository(transactionRepository: TransactionRepository): Builder
     }
 
     @dagger.Module
@@ -58,10 +59,14 @@ abstract class AccountComponent : AttachableViewComponent {
         @AccountScope
         fun useCase(
             accountRepository: AccountRepository,
-            transactionRepository: TransactionRepository
+            transactionRepository: TransactionRepository,
+            currencyRepository: CurrencyRepository,
+            iconRepository: IconRepository,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
+            currencyRepository = currencyRepository,
+            iconRepository = iconRepository,
         )
 
         @Provides
@@ -75,9 +80,13 @@ abstract class AccountComponent : AttachableViewComponent {
         @Provides
         @AccountScope
         fun viewProvider(
-            viewModel: AccountViewModel
+            viewModel: AccountViewModel,
+            imageLoader: ImageLoader,
+            amountFormatter: AmountFormatter,
         ): ViewProvider = AccountViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
+            imageLoader = imageLoader,
+            amountFormatter = amountFormatter,
         )
     }
 }

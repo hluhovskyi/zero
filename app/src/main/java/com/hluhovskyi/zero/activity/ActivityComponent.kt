@@ -119,23 +119,13 @@ abstract class ActivityComponent :
         @ActivityScope
         fun accountComponentBuilder(
             component: ActivityComponent,
-            accountRepository: AccountRepository,
-            transactionRepository: TransactionRepository,
         ): AccountComponent.Builder = AccountComponent.builder(component)
-            .accountRepository(accountRepository)
-            .transactionRepository(transactionRepository)
 
         @Provides
         @ActivityScope
         fun accountEditComponentBuilder(
             component: ActivityComponent,
-            idGenerator: IdGenerator,
-            currencyRepository: CurrencyRepository,
-            accountRepository: AccountRepository
         ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
-            .idGenerator(idGenerator)
-            .currencyRepository(currencyRepository)
-            .accountRepository(accountRepository)
 
         @Provides
         @ActivityScope
