@@ -47,9 +47,8 @@ private fun AccountView(
         items(state.accounts) { account ->
             Row(
                 modifier = Modifier
-                    .padding(vertical = 8.dp, horizontal = 12.dp)
-                    // TODO: Handle click
-                    .clickable { },
+                    .clickable { }
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 imageLoader.View(
