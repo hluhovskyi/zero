@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.activity.navigation
 
 import android.os.Bundle
-import kotlin.reflect.KClass
+import com.hluhovskyi.zero.common.Id
 
 internal class BundleArguments(
     private val bundle: Bundle?,
@@ -9,23 +9,35 @@ internal class BundleArguments(
 ) : NavigatorEntry.Arguments {
 
     @Suppress("unchecked_cast")
-    override fun <T : Any> get(key: Argument<T>, argumentClass: KClass<T>): ArgumentValue<T> {
+    override fun <T : Any> get(key: Argument<T>): ArgumentValue<T> {
         if (bundle == null) {
             assertMissingArguments(key)
         }
 
-        return when (argumentClass) {
+        return when (key.argumentClass) {
             String::class -> {
                 val value = bundle.getString(key.key)
                 if (!key.optional && value == null) {
                     assertMissingArguments(key)
                 }
 
-                StringArgumentValue(
-                    argument = key as Argument<String>,
+                GenericArgumentValue(
+                    argument = key,
                     // TODO: Add support for optional fallback in ArgumentValue
-                    value = value.orEmpty()
-                ) as ArgumentValue<T>
+                    value = value.orEmpty() as T
+                )
+            }
+            Id::class -> {
+                val value = bundle.getString(key.key)
+                if (!key.optional && value == null) {
+                    assertMissingArguments(key)
+                }
+
+                GenericArgumentValue(
+                    argument = key,
+                    // TODO: Add support for optional fallback in ArgumentValue
+                    value = Id(value) as T
+                )
             }
             else -> assertMissingArguments(key)
         }

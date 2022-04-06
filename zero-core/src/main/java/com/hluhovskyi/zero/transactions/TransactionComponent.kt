@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -41,6 +42,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         val transactionRepository: TransactionRepository
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
+        val iconRepository: IconRepository
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
@@ -67,6 +69,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             transactionRepository: TransactionRepository,
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
+            iconRepository: IconRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
@@ -74,6 +77,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             transactionRepository = transactionRepository,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            iconRepository = iconRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,

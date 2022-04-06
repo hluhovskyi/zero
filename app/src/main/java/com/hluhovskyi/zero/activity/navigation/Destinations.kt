@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.activity.navigation
 
+import com.hluhovskyi.zero.common.Id
+
 internal object Destinations {
 
     sealed interface Account : Destination {
@@ -10,6 +12,12 @@ internal object Destinations {
     sealed interface Transaction : Destination {
         object All : Transaction, Destination by destinationOf("transactions")
         object Edit : Transaction, Destination by destinationOf("transactions/edit")
+
+        sealed interface Item : Transaction {
+            object Edit : Item, Destination by destinationOf("transactions/{transactionId}/edit") {
+                object TransactionId : Argument<Id> by idValueOf("transactionId")
+            }
+        }
     }
 
     sealed interface Category : Destination {
@@ -18,22 +26,20 @@ internal object Destinations {
 
         sealed interface Item : Category {
             object Edit : Item, Destination by destinationOf("categories/{categoryId}/edit", CategoryId) {
-                object CategoryId : Argument<String> by stringValueOf("categoryId")
+                object CategoryId : Argument<Id> by idValueOf("categoryId")
             }
         }
     }
 
     sealed interface Icon : Destination {
         object Picker : Icon, Destination by destinationOf("icons/picker", RequestId) {
-            object RequestId : Argument<String> by stringOptionalValueOf("requestId")
+            object RequestId : Argument<Id> by idOptionalValueOf("requestId")
         }
     }
 
     sealed interface Color : Destination {
         object Picker : Color, Destination by destinationOf("colors/picker", RequestId) {
-            object RequestId : Argument<String> by stringOptionalValueOf("requestId") {
-                override fun toString(): String = "RequestId"
-            }
+            object RequestId : Argument<Id> by idOptionalValueOf("requestId")
         }
     }
 

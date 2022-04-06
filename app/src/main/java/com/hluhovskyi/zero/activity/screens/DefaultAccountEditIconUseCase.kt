@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.activity.navigation.back
 import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.activity.navigation.observeArgumentValue
 import com.hluhovskyi.zero.activity.navigation.withValue
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
@@ -30,7 +31,7 @@ internal class DefaultAccountEditIconUseCase(
 
     private val logger = inputLogger.withTag(TAG)
 
-    private var requestId = AtomicReference<String>("")
+    private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<AccountEditIconUseCase.Action.Pick>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -39,7 +40,7 @@ internal class DefaultAccountEditIconUseCase(
     override fun perform(action: AccountEditIconUseCase.Action) {
         when (action) {
             is AccountEditIconUseCase.Action.Request -> {
-                val id = requestIdGenerator().value
+                val id = requestIdGenerator()
                 requestId.set(id)
                 logger.d("perform, requestId=$requestId")
                 navigator.navigateTo(

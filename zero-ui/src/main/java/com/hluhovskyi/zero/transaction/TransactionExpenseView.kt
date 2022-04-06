@@ -27,6 +27,7 @@ fun TransactionExpenseView(
     categoryName: String,
     amount: String,
     accountName: String,
+    accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
 ) {
@@ -38,6 +39,7 @@ fun TransactionExpenseView(
         amountColor = ColorValue.unspecified(),
         amount = "-$amount",
         accountName = accountName,
+        accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
     )
@@ -50,6 +52,7 @@ fun TransactionIncomeView(
     categoryName: String,
     amount: String,
     accountName: String,
+    accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
 ) {
@@ -61,6 +64,7 @@ fun TransactionIncomeView(
         amountColor = ColorValue(Color.Green.value),
         amount = "+$amount",
         accountName = accountName,
+        accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
     )
@@ -74,6 +78,7 @@ fun TransactionView(
     amountColor: ColorValue,
     amount: String,
     accountName: String,
+    accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
 ) {
@@ -109,8 +114,11 @@ fun TransactionView(
                     text = amount
                 )
             }
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+                    accountIcon?.invoke()
                     Text(
                         text = accountName,
                         modifier = Modifier.weight(1f),

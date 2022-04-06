@@ -1,6 +1,8 @@
 package com.hluhovskyi.zero.activity.navigation
 
 import androidx.navigation.NavController
+import com.hluhovskyi.zero.activity.navigation.route.NavigationRouteResolver
+import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
@@ -14,6 +16,8 @@ private const val TAG = "NavControllerNavigator"
 internal class NavControllerNavigator(
     private val startDestination: Destination,
     private val navController: NavController,
+    private val navigationArgumentSerializer: NavigationArgumentSerializer,
+    private val navigationRouteResolver: NavigationRouteResolver,
     private val incorrectStateDetector: IncorrectStateDetector,
     logger: Logger,
 ) : Navigator {
@@ -26,8 +30,12 @@ internal class NavControllerNavigator(
             is Navigator.Action.Back -> {
                 navController.popBackStack()
             }
+
             is Navigator.Action.NavigateTo -> {
-                val route = action.destination.routeWith(action.arguments)
+                val route = navigationRouteResolver.resolve(
+                    destination = action.destination,
+                    argumentValues = action.arguments
+                )
                 if (action.clearBackStack && route == navController.graph.startDestinationRoute) {
                     navController.popBackStack(route, false)
                 } else {
@@ -72,63 +80,23 @@ internal class NavControllerNavigator(
     ): Flow<ArgumentValue<T>> = navController.currentBackStackEntryFlow
         .mapNotNull { backStack ->
             val route = backStack.destination.route
-            if (route != routeWithPlaceholders(destination)) {
+            if (route != navigationRouteResolver.resolveWithPlaceholders(destination)) {
                 return@mapNotNull null
             }
 
-            val value = backStack.arguments?.getString(argument.key)
-            if (value == null) {
+            val rawValue = backStack.arguments?.getString(argument.key)
+            if (rawValue == null && argument.optional) {
                 return@mapNotNull null
             }
 
-            when (argumentClass) {
-                String::class -> (argument as Argument<String>).withValue(value) as ArgumentValue<T>
-                else -> null
-            }
+            navigationArgumentSerializer.deserialize(
+                argument = argument,
+                rawValue = rawValue ?: incorrectStateDetector.assertOrValue(
+                    message = "Argument with key ${argument.key} is required to be provided",
+                    value = ""
+                )
+            )
         }
 
     override fun startDestination(): Destination = startDestination
-
-    override fun routeWithPlaceholders(destination: Destination): String {
-        var newRoute = destination.route
-
-        val optionalArguments = destination.arguments.filter { it.optional }
-        if (optionalArguments.isNotEmpty()) {
-            newRoute += '?'
-            optionalArguments.forEach { argument ->
-                newRoute += "${argument.key}={${argument.key}}"
-            }
-        }
-
-        return newRoute
-    }
-
-    private fun Destination.routeWith(values: List<ArgumentValue<*>>): String {
-        values.forEach { value ->
-            if (value.argument !in this.arguments) {
-                incorrectStateDetector.assert(
-                    "Argument with ${value.argument.key} isn't defined in argument list for destination $this"
-                )
-            }
-        }
-
-        var newRoute = route
-
-        val optionalValues = values.filter { it.argument.optional }
-        if (optionalValues.isNotEmpty()) {
-            newRoute += '?'
-            optionalValues.forEach { value ->
-                newRoute += "${value.argument.key}=${value.value}"
-            }
-        }
-
-        val requiredValues = values.filter { !it.argument.optional }
-        if (requiredValues.isNotEmpty()) {
-            requiredValues.forEach { value ->
-                newRoute = newRoute.replace("{${value.argument.key}}", value.value.toString())
-            }
-        }
-
-        return newRoute
-    }
 }

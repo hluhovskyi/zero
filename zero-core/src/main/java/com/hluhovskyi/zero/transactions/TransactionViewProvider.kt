@@ -5,14 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,10 +53,10 @@ private fun TransactionView(
     dateFormatter: DateFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
-
     LazyColumn {
         val transactionModifier = Modifier
             .fillMaxWidth()
+            // TODO: Handle click
             .clickable { }
             .padding(
                 horizontal = 12.dp,
@@ -96,8 +98,18 @@ private fun TransactionView(
                             currencySymbol = transaction.currencySymbol
                         ),
                         accountName = transaction.accountName,
+                        accountIcon = transaction.accountIcon.toComposable(
+                            imageLoader = imageLoader,
+                            modifier = Modifier
+                                .alpha(ContentAlpha.medium)
+                                .padding(end = 6.dp)
+                                .size(20.dp),
+                        ),
                         convertedAmount = transaction.conversion.format(amountFormatter),
-                        icon = transaction.categoryIcon.toComposable(imageLoader),
+                        icon = transaction.categoryIcon.toComposable(
+                            imageLoader = imageLoader,
+                            modifier = Modifier.size(24.dp),
+                        ),
                     )
                 is TransactionViewModel.Item.Transaction.Income -> {
                     TransactionIncomeView(
@@ -110,7 +122,10 @@ private fun TransactionView(
                         ),
                         accountName = transaction.accountName,
                         convertedAmount = transaction.conversion.format(amountFormatter),
-                        icon = transaction.categoryIcon.toComposable(imageLoader),
+                        icon = transaction.categoryIcon.toComposable(
+                            imageLoader = imageLoader,
+                            modifier = Modifier.size(24.dp),
+                        ),
                     )
                 }
                 is TransactionViewModel.Item.Transaction.Transfer -> {
@@ -145,11 +160,12 @@ private fun DateFormatter.format(
 )
 
 private fun Image.toComposable(
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier
 ): @Composable () -> Unit = {
     imageLoader.View(
         image = this,
-        modifier = Modifier.sizeIn(24.dp),
+        modifier = modifier,
     )
 }
 
