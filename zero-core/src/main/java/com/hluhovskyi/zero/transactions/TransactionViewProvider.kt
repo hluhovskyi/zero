@@ -54,15 +54,6 @@ private fun TransactionView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
     LazyColumn {
-        val transactionModifier = Modifier
-            .fillMaxWidth()
-            // TODO: Handle click
-            .clickable { }
-            .padding(
-                horizontal = 12.dp,
-                vertical = 12.dp
-            )
-
         items(state.transactions) { transaction ->
             when (transaction) {
                 is TransactionViewModel.Item.Summary -> {
@@ -88,51 +79,63 @@ private fun TransactionView(
                         )
                     }
                 }
-                is TransactionViewModel.Item.Transaction.Expense ->
-                    TransactionExpenseView(
-                        modifier = transactionModifier,
-                        categoryColor = transaction.categoryColor,
-                        categoryName = transaction.categoryName,
-                        amount = amountFormatter.format(
-                            amount = transaction.amount,
-                            currencySymbol = transaction.currencySymbol
-                        ),
-                        accountName = transaction.accountName,
-                        accountIcon = transaction.accountIcon.toComposable(
-                            imageLoader = imageLoader,
-                            modifier = Modifier
-                                .alpha(ContentAlpha.medium)
-                                .padding(end = 6.dp)
-                                .size(20.dp),
-                        ),
-                        convertedAmount = transaction.conversion.format(amountFormatter),
-                        icon = transaction.categoryIcon.toComposable(
-                            imageLoader = imageLoader,
-                            modifier = Modifier.size(24.dp),
-                        ),
-                    )
-                is TransactionViewModel.Item.Transaction.Income -> {
-                    TransactionIncomeView(
-                        modifier = transactionModifier,
-                        categoryColor = transaction.categoryColor,
-                        categoryName = transaction.categoryName,
-                        amount = amountFormatter.format(
-                            amount = transaction.amount,
-                            currencySymbol = transaction.currencySymbol,
-                        ),
-                        accountName = transaction.accountName,
-                        convertedAmount = transaction.conversion.format(amountFormatter),
-                        icon = transaction.categoryIcon.toComposable(
-                            imageLoader = imageLoader,
-                            modifier = Modifier.size(24.dp),
-                        ),
-                    )
-                }
-                is TransactionViewModel.Item.Transaction.Transfer -> {
-                    TransactionTransferView(
-                        item = transaction,
-                        modifier = transactionModifier
-                    )
+                is TransactionViewModel.Item.Transaction -> {
+                    val transactionModifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 12.dp,
+                            vertical = 12.dp
+                        )
+                        .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
+
+                    when (transaction) {
+                        is TransactionViewModel.Item.Transaction.Expense ->
+                            TransactionExpenseView(
+                                modifier = transactionModifier,
+                                categoryColor = transaction.categoryColor,
+                                categoryName = transaction.categoryName,
+                                amount = amountFormatter.format(
+                                    amount = transaction.amount,
+                                    currencySymbol = transaction.currencySymbol
+                                ),
+                                accountName = transaction.accountName,
+                                accountIcon = transaction.accountIcon.toComposable(
+                                    imageLoader = imageLoader,
+                                    modifier = Modifier
+                                        .alpha(ContentAlpha.medium)
+                                        .padding(end = 6.dp)
+                                        .size(20.dp),
+                                ),
+                                convertedAmount = transaction.conversion.format(amountFormatter),
+                                icon = transaction.categoryIcon.toComposable(
+                                    imageLoader = imageLoader,
+                                    modifier = Modifier.size(24.dp),
+                                ),
+                            )
+                        is TransactionViewModel.Item.Transaction.Income -> {
+                            TransactionIncomeView(
+                                modifier = transactionModifier,
+                                categoryColor = transaction.categoryColor,
+                                categoryName = transaction.categoryName,
+                                amount = amountFormatter.format(
+                                    amount = transaction.amount,
+                                    currencySymbol = transaction.currencySymbol,
+                                ),
+                                accountName = transaction.accountName,
+                                convertedAmount = transaction.conversion.format(amountFormatter),
+                                icon = transaction.categoryIcon.toComposable(
+                                    imageLoader = imageLoader,
+                                    modifier = Modifier.size(24.dp),
+                                ),
+                            )
+                        }
+                        is TransactionViewModel.Item.Transaction.Transfer -> {
+                            TransactionTransferView(
+                                item = transaction,
+                                modifier = transactionModifier
+                            )
+                        }
+                    }
                 }
             }
         }

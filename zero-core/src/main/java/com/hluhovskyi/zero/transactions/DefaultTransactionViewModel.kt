@@ -33,6 +33,7 @@ internal class DefaultTransactionViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
+    private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : TransactionViewModel {
 
@@ -41,7 +42,9 @@ internal class DefaultTransactionViewModel(
 
     override fun perform(action: TransactionViewModel.Action) {
         when (action) {
-
+            is TransactionViewModel.Action.SelectTransaction -> {
+                onTransactionSelectedHandler.onSelected(action.item.id)
+            }
         }
     }
 

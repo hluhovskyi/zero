@@ -11,8 +11,8 @@ import java.time.LocalDateTime
 interface TransactionViewModel
     : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
 
-    sealed class Action {
-
+    sealed interface Action {
+        data class SelectTransaction(val item: Item.Transaction) : Action
     }
 
     data class State(

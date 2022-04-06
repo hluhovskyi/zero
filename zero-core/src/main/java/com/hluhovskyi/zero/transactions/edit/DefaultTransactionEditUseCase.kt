@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.Rate
@@ -17,8 +18,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -26,6 +31,7 @@ import java.io.Closeable
 private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
+    private val transactionId: Id,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val transactionRepository: TransactionRepository,
@@ -123,6 +129,7 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.Save -> {
                 coroutineScope.launch(context = Dispatchers.IO) {
                     val state = mutableState.value
+                    val transactionId = (transactionId as? Id.Known) ?: idGenerator()
                     val transaction = when (state.transactionType) {
                         TransactionEditType.EXPENSE -> {
                             val account = state.selectedAccount ?: return@launch
@@ -130,7 +137,7 @@ internal class DefaultTransactionEditUseCase(
                             val category = state.selectedCategory ?: return@launch
 
                             TransactionRepository.Transaction.Expense(
-                                id = idGenerator(),
+                                id = transactionId,
                                 amount = Amount(state.amount.toBigDecimalOrNull()),
                                 accountId = account.id,
                                 currencyId = currency.id,
@@ -145,7 +152,7 @@ internal class DefaultTransactionEditUseCase(
                             val category = state.selectedCategory ?: return@launch
 
                             TransactionRepository.Transaction.Income(
-                                id = idGenerator(),
+                                id = transactionId,
                                 amount = Amount(state.amount.toBigDecimalOrNull()),
                                 accountId = account.id,
                                 currencyId = currency.id,
@@ -160,7 +167,7 @@ internal class DefaultTransactionEditUseCase(
                             val currency = state.selectedCurrency ?: return@launch
 
                             TransactionRepository.Transaction.Transfer(
-                                id = idGenerator(),
+                                id = transactionId,
                                 amount = Amount(state.amount.toBigDecimalOrNull()),
                                 accountId = account.id,
                                 currencyId = currency.id,
@@ -182,6 +189,72 @@ internal class DefaultTransactionEditUseCase(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            if (transactionId is Id.Known) {
+                launch {
+                    val transaction = transactionRepository.query(TransactionRepository.Criteria.ById(transactionId))
+                        .firstOrNull()
+
+                    logger.d("attach, transaction loading is finished, transactionId=${transaction?.id}")
+
+                    // TODO: Handle as incorrect state
+                    if (transaction != null) {
+                        mutableState
+                            .filter { state ->
+                                state.accounts.isNotEmpty() &&
+                                        state.categories.isNotEmpty() &&
+                                        state.currencies.isNotEmpty()
+                            }
+                            .take(1)
+                            .collect()
+
+                        logger.d("attach, required data for state is loaded")
+                        mutableState.update { state ->
+                            val accountToSelect = state.accounts.firstOrNull { it.id == transaction.accountId }
+                            val currencyToSelect = state.currencies.firstOrNull { it.id == transaction.currencyId }
+                            val partialState = state.copy(
+                                amount = transaction.amount.value.toString(),
+                                selectedCurrency = currencyToSelect ?: state.selectedCurrency,
+                                selectedAccount = accountToSelect ?: state.selectedAccount,
+                            )
+
+                            when (transaction) {
+                                is TransactionRepository.Transaction.Expense -> {
+                                    val categoryToSelect =
+                                        state.categories.firstOrNull { it.id == transaction.categoryId }
+
+                                    partialState.copy(
+                                        transactionType = TransactionEditType.EXPENSE,
+                                        selectedCategory = categoryToSelect ?: state.selectedCategory,
+                                        rate = transaction.rate.value.toString(),
+                                    )
+                                }
+
+                                is TransactionRepository.Transaction.Income -> {
+                                    val categoryToSelect =
+                                        state.categories.firstOrNull { it.id == transaction.categoryId }
+
+                                    partialState.copy(
+                                        transactionType = TransactionEditType.INCOME,
+                                        selectedCategory = categoryToSelect ?: state.selectedCategory,
+                                        rate = transaction.rate.value.toString()
+                                    )
+                                }
+
+                                is TransactionRepository.Transaction.Transfer -> {
+                                    val targetAccountToSelect =
+                                        state.accounts.firstOrNull { it.id == transaction.targetAccount }
+
+                                    partialState.copy(
+                                        transactionType = TransactionEditType.TRANSFER,
+                                        selectedTargetAccount = targetAccountToSelect,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             launch {
                 accountRepository.query(AccountRepository.Criteria.All())
                     .map { accounts ->

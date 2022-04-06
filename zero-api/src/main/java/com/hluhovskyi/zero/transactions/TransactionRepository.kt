@@ -4,16 +4,17 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.emptyFlow
 import java.time.LocalDateTime
 
 interface TransactionRepository {
 
-    fun query(criteria: Criteria): Flow<List<Transaction>>
+    fun <T> query(criteria: Criteria<T>): Flow<T>
 
-    sealed interface Criteria {
+    sealed interface Criteria<T> {
 
-        class All(val trigger: Trigger = Trigger.LoadAll) : Criteria
+        class All : Criteria<List<Transaction>>
+        data class ById(val id: Id.Known) : Criteria<Transaction>
     }
 
     sealed interface Trigger {
@@ -65,7 +66,7 @@ interface TransactionRepository {
     }
 
     object Noop : TransactionRepository {
-        override fun query(criteria: Criteria): Flow<List<Transaction>> = flowOf(emptyList())
+        override fun <T> query(criteria: Criteria<T>): Flow<T> = emptyFlow()
         override suspend fun insert(transaction: Transaction) = Unit
         override suspend fun insert(transactions: List<Transaction>) = Unit
     }

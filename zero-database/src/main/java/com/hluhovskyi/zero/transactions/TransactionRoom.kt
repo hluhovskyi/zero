@@ -17,6 +17,12 @@ internal interface TransactionRoom {
     fun selectByUserId(userId: Id.Known): Flow<List<TransactionEntity>> =
         selectByUserId(userId.value)
 
+    suspend fun selectById(transactionId: Id.Known, userId: Id.Known): TransactionEntity? =
+        selectById(transactionId.value, userId.value)
+
+    @Query("SELECT * FROM TransactionEntity WHERE id=:transactionId AND userId=:userId LIMIT 1")
+    suspend fun selectById(transactionId: String, userId: String): TransactionEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 

@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
@@ -58,6 +59,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditComponent.builder()
             .dependencies(dependencies)
+            .transactionId(Id.Unknown)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
     }
@@ -66,6 +68,9 @@ abstract class TransactionEditComponent : AttachableViewComponent,
     interface Builder : Buildable<TransactionEditComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun transactionId(transactionId: Id): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -80,6 +85,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @Provides
         @TransactionEditScope
         fun useCase(
+            transactionId: Id,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
@@ -90,6 +96,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             clock: Clock,
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
+            transactionId = transactionId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             transactionRepository = transactionRepository,
