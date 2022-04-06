@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
+import com.hluhovskyi.zero.common.joinIdsToString
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -98,7 +99,10 @@ internal class DefaultTransactionEditUseCase(
             }
             is TransactionEditUseCase.Action.SelectCurrency -> {
                 mutableState.update { state ->
-                    state.copy(selectedCurrency = action.currency)
+                    state.copy(
+                        manuallyChangedCurrency = true,
+                        selectedCurrency = action.currency,
+                    )
                 }
             }
             is TransactionEditUseCase.Action.SelectTargetAccount -> {
@@ -190,13 +194,19 @@ internal class DefaultTransactionEditUseCase(
                         }
                     }
                     .collectLatest { accounts ->
-                        logger.d("attach, accounts=$accounts")
                         mutableState.update { state ->
+                            val accountToSelect = accounts.firstOrNull()
+                            logger.d("attach, accounts=${accounts.joinIdsToString()}")
                             state.copy(
                                 accounts = accounts,
-                                selectedAccount = state.selectedAccount ?: accounts.firstOrNull(),
+                                selectedAccount = state.selectedAccount ?: accountToSelect,
                                 targetAccounts = accounts,
-                                selectedTargetAccount = state.selectedTargetAccount ?: accounts.firstOrNull()
+                                selectedTargetAccount = state.selectedTargetAccount ?: accounts.firstOrNull(),
+                                selectedCurrency = if (state.manuallyChangedCurrency) {
+                                    state.selectedCurrency
+                                } else {
+                                    accountToSelect?.let { account -> state.currencies.firstOrNull { it.id == account.currencyId } }
+                                }
                             )
                         }
                     }
@@ -215,7 +225,7 @@ internal class DefaultTransactionEditUseCase(
                         }
                     }
                     .collectLatest { categories ->
-                        logger.d("attach, categories=$categories")
+                        logger.d("attach, categories=${categories.joinIdsToString()}")
                         mutableState.update { state ->
                             state.copy(
                                 categories = categories,
@@ -246,12 +256,17 @@ internal class DefaultTransactionEditUseCase(
                         }
                     }
                     .collectLatest { currencies ->
-                        logger.d("attach, currencies=$currencies")
+                        logger.d("attach, currencies=${currencies.joinIdsToString()}")
                         mutableState.update { state ->
                             state.copy(
                                 currencies = currencies,
-                                selectedCurrency = state.selectedCurrency
-                                    ?: currencies.firstOrNull()
+                                selectedCurrency = if (state.manuallyChangedCurrency) {
+                                    state.selectedCurrency
+                                } else {
+                                    state.selectedAccount
+                                        ?.let { account -> currencies.firstOrNull { it.id == account.currencyId } }
+                                        ?: currencies.firstOrNull()
+                                },
                             )
                         }
                     }
@@ -269,6 +284,7 @@ internal class DefaultTransactionEditUseCase(
         val selectedCategory: TransactionEditCategory? = null,
         val currencies: List<TransactionEditCurrency> = emptyList(),
         val selectedCurrency: TransactionEditCurrency? = null,
+        val manuallyChangedCurrency: Boolean = false,
         val amount: String = "",
         val rate: String = "",
     )

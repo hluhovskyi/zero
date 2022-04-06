@@ -9,7 +9,7 @@ import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface AccountRoom {
+internal interface AccountRoom {
 
     @Query("SELECT * FROM AccountEntity WHERE userId=:userId")
     fun selectByUserId(userId: String): Flow<List<AccountEntity>>

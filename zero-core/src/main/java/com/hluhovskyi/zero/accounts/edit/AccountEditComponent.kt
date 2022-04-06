@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -30,17 +31,19 @@ abstract class AccountEditComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
+        val idGenerator: IdGenerator
+        val imageLoader: ImageLoader
 
+        val accountRepository: AccountRepository
+        val currencyRepository: CurrencyRepository
     }
 
     companion object {
 
         fun builder(dependencies: Dependencies): Builder = DaggerAccountEditComponent.builder()
             .dependencies(dependencies)
-            .idGenerator(IdGenerator.UUID)
-            .accountRepository(AccountRepository.Noop)
-            .currencyRepository(CurrencyRepository.Noop)
             .onAccountSavedHandler(OnAccountSavedHandler.Noop)
+            .accountEditIconUseCase(AccountEditIconUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -49,16 +52,10 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun accountRepository(accountRepository: AccountRepository): Builder
-
-        @BindsInstance
-        fun currencyRepository(currencyRepository: CurrencyRepository): Builder
-
-        @BindsInstance
-        fun idGenerator(idGenerator: IdGenerator): Builder
-
-        @BindsInstance
         fun onAccountSavedHandler(handler: OnAccountSavedHandler): Builder
+
+        @BindsInstance
+        fun accountEditIconUseCase(useCase: AccountEditIconUseCase): Builder
     }
 
     @dagger.Module
@@ -69,19 +66,23 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun viewModel(
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
+            accountEditIconUseCase: AccountEditIconUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            accountEditIconUseCase = accountEditIconUseCase,
             onAccountSavedHandler = onAccountSavedHandler,
         )
 
         @Provides
         @AccountEditScope
         fun viewProvider(
-            viewModel: AccountEditViewModel
+            viewModel: AccountEditViewModel,
+            imageLoader: ImageLoader,
         ): ViewProvider = AccountEditViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
+            imageLoader = imageLoader,
         )
     }
 }

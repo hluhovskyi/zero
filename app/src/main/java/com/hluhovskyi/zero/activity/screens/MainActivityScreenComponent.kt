@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity.screens
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
+import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.NavControllerNavigator
 import com.hluhovskyi.zero.activity.navigation.Navigator
@@ -258,14 +259,28 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
+        @MainActivityScreenScope
+        internal fun accountEditIconUseCase(
+            navigator: Navigator,
+            requestIdGenerator: IdGenerator,
+            logger: Logger,
+        ): AccountEditIconUseCase = DefaultAccountEditIconUseCase(
+            navigator = navigator,
+            requestIdGenerator = requestIdGenerator,
+            inputLogger = logger,
+        )
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun accountEditNavigationEntry(
             componentBuilder: AccountEditComponent.Builder,
             navigator: Navigator,
             logger: Logger,
+            accountEditIconUseCase: AccountEditIconUseCase,
         ): NavigatorEntry = navigationEntryOf(Destinations.Account.Edit) {
             componentBuilder
+                .accountEditIconUseCase(accountEditIconUseCase)
                 .onAccountSavedHandler { navigator.back() }
                 .logging(logger)
         }
@@ -276,10 +291,19 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun iconPickerNavigationEntry(
             componentBuilder: IconPickerComponent.Builder,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
         ): NavigatorEntry = navigationEntryOf(Destinations.Icon.Picker) {
             componentBuilder
                 .onIconSelectedHandler { icon ->
+                    accountEditIconUseCase.perform(
+                        AccountEditIconUseCase.Action.Pick(
+                            icon = AccountEditIconUseCase.Icon(
+                                id = icon.id,
+                                image = icon.image,
+                            )
+                        )
+                    )
                     categoryEditIconUseCase.perform(
                         CategoryEditIconUseCase.Action.Pick(
                             icon = CategoryEditIconUseCase.Icon(

@@ -1,11 +1,12 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
@@ -26,7 +27,9 @@ internal class RoomAccountRepository(
                                 AccountRepository.Account(
                                     id = account.id,
                                     name = account.name,
-                                    currencyId = account.currencyId
+                                    currencyId = account.currencyId,
+                                    iconId = account.iconId,
+                                    initialBalance = Amount(account.initialBalance.value)
                                 )
                             }
                         }
@@ -50,6 +53,8 @@ internal class RoomAccountRepository(
             id = (id as? Id.Known) ?: idGenerator(),
             userId = userId,
             currencyId = currencyId,
-            name = name
+            name = name,
+            iconId = iconId,
+            initialBalance = AmountEntity(initialBalance.value)
         )
 }
