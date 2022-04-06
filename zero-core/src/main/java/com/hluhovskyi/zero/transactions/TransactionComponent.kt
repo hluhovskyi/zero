@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -52,12 +53,16 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionComponent.builder()
             .dependencies(dependencies)
+            .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<TransactionComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun onTransactionSelectHandler(handler: OnTransactionSelectedHandler): Builder
     }
 
     @dagger.Module
@@ -73,6 +78,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
+            onTransactionSelectedHandler: OnTransactionSelectedHandler,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
             accountRepository = accountRepository,
@@ -81,6 +87,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             categoriesQueryUseCase = categoriesQueryUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
+            onTransactionSelectedHandler = onTransactionSelectedHandler
         )
 
         @Provides

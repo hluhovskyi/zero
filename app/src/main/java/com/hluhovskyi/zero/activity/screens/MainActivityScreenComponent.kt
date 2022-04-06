@@ -199,7 +199,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Transaction.All) {
             TransactionScreen(
-                component = component.logging(logger),
+                component = component
+                    .onTransactionSelectHandler { transactionId ->
+                        navigator.navigateTo(
+                            Destinations.Transaction.Item.Edit,
+                            Destinations.Transaction.Item.Edit.TransactionId.withValue(transactionId)
+                        )
+                    }
+                    .logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) }
             )
         }
@@ -213,6 +220,22 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Edit) {
             componentBuilder
+                .transactionId(Id.Unknown)
+                .onTransactionSavedHandler { navigator.back() }
+                .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun transactionItemEditNavigationEntry(
+            componentBuilder: TransactionEditComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
+            componentBuilder
+                .transactionId(arguments.getValue(Destinations.Transaction.Item.Edit.TransactionId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .logging(logger)
