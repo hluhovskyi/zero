@@ -4,15 +4,19 @@ import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
+import com.hluhovskyi.zero.activity.navigation.DefaultNavigatorScope
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.NavControllerNavigator
 import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
+import com.hluhovskyi.zero.activity.navigation.NavigatorScope
 import com.hluhovskyi.zero.activity.navigation.back
-import com.hluhovskyi.zero.activity.navigation.composableNavigationEntryOf
-import com.hluhovskyi.zero.activity.navigation.get
+import com.hluhovskyi.zero.activity.navigation.getValue
 import com.hluhovskyi.zero.activity.navigation.navigateTo
-import com.hluhovskyi.zero.activity.navigation.navigationEntryOf
+import com.hluhovskyi.zero.activity.navigation.route.DefaultNavigationRouteResolver
+import com.hluhovskyi.zero.activity.navigation.route.NavigationRouteResolver
+import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigationArgumentSerializer
+import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -104,15 +108,43 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @Provides
         @MainActivityScreenScope
+        fun navigationArgumentSerializer(): NavigationArgumentSerializer = CompositeNavigationArgumentSerializer()
+
+        @Provides
+        @MainActivityScreenScope
+        fun navigationRouteResolver(
+            incorrectStateDetector: IncorrectStateDetector,
+            navigationArgumentSerializer: NavigationArgumentSerializer,
+        ): NavigationRouteResolver = DefaultNavigationRouteResolver(
+            incorrectStateDetector = incorrectStateDetector,
+            navigationArgumentSerializer = navigationArgumentSerializer,
+        )
+
+        @Provides
+        @MainActivityScreenScope
         fun navigator(
             navHostController: NavHostController,
             logger: Logger,
             incorrectStateDetector: IncorrectStateDetector,
+            navigationArgumentSerializer: NavigationArgumentSerializer,
+            navigationRouteResolver: NavigationRouteResolver,
         ): Navigator = NavControllerNavigator(
             startDestination = Destinations.Transaction.All,
             navController = navHostController,
             logger = logger,
-            incorrectStateDetector = incorrectStateDetector
+            incorrectStateDetector = incorrectStateDetector,
+            navigationArgumentSerializer = navigationArgumentSerializer,
+            navigationRouteResolver = navigationRouteResolver
+        )
+
+        @Provides
+        @MainActivityScreenScope
+        fun navigatorScope(
+            navigator: Navigator,
+            navigationRouteResolver: NavigationRouteResolver,
+        ): NavigatorScope = DefaultNavigatorScope(
+            navigator = navigator,
+            navigationRouteResolver = navigationRouteResolver
         )
 
         @Provides
@@ -125,7 +157,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             bottomBarComponent: BottomBarComponent.Builder
         ): ViewProvider = MainActivityScreenViewProvider(
             navController = navHostController,
-            navigator = navigator,
             startDestination = Destinations.Transaction.All,
             navigationEntries = navigationEntries,
             bottomBar = {
@@ -164,9 +195,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun transactionNavigationEntry(
             component: TransactionComponent.Builder,
-            navigator: Navigator,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Transaction.All) {
+        ): NavigatorEntry = navigatorScope.composable(Destinations.Transaction.All) {
             TransactionScreen(
                 component = component.logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) }
@@ -178,9 +209,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
             componentBuilder: TransactionEditComponent.Builder,
-            navigator: Navigator,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Transaction.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Edit) {
             componentBuilder
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
@@ -192,15 +223,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryNavigationEntry(
             componentBuilder: CategoryComponent.Builder,
-            navigator: Navigator,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Category.All) {
+        ): NavigatorEntry = navigatorScope.composable(Destinations.Category.All) {
             CategoriesScreen(
                 component = componentBuilder
                     .onCategorySelectedHandler { categoryId ->
                         navigator.navigateTo(
                             Destinations.Category.Item.Edit,
-                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId.value)
+                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId)
                         )
                     }
                     .logging(logger),
@@ -213,11 +244,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryEditNavigationEntry(
             componentBuilder: CategoryEditComponent.Builder,
+            navigatorScope: NavigatorScope,
             categoryEditIconUseCase: CategoryEditIconUseCase,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-            navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Category.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Edit) {
             componentBuilder
                 .categoryId(Id.Unknown)
                 .categoryEditIconUseCase(categoryEditIconUseCase)
@@ -231,13 +262,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryEditItemNavigationEntry(
             componentBuilder: CategoryEditComponent.Builder,
+            navigatorScope: NavigatorScope,
             categoryEditIconUseCase: CategoryEditIconUseCase,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-            navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Category.Item.Edit) { arguments ->
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Edit) {
             componentBuilder
-                .categoryId(Id(arguments[Destinations.Category.Item.Edit.CategoryId].value))
+                .categoryId(arguments.getValue(Destinations.Category.Item.Edit.CategoryId))
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
@@ -249,9 +280,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun accountNavigationEntry(
             componentBuilder: AccountComponent.Builder,
-            navigator: Navigator,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = composableNavigationEntryOf(Destinations.Account.All) {
+        ): NavigatorEntry = navigatorScope.composable(Destinations.Account.All) {
             AccountsScreen(
                 component = componentBuilder.logging(logger),
                 onAccountEdit = { navigator.navigateTo(Destinations.Account.Edit) }
@@ -275,10 +306,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun accountEditNavigationEntry(
             componentBuilder: AccountEditComponent.Builder,
-            navigator: Navigator,
+            navigatorScope: NavigatorScope,
             logger: Logger,
             accountEditIconUseCase: AccountEditIconUseCase,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Account.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Edit) {
             componentBuilder
                 .accountEditIconUseCase(accountEditIconUseCase)
                 .onAccountSavedHandler { navigator.back() }
@@ -290,10 +321,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun iconPickerNavigationEntry(
             componentBuilder: IconPickerComponent.Builder,
+            navigatorScope: NavigatorScope,
             categoryEditIconUseCase: CategoryEditIconUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Icon.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Icon.Picker) {
             componentBuilder
                 .onIconSelectedHandler { icon ->
                     accountEditIconUseCase.perform(
@@ -321,9 +353,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun colorPickerNavigationEntry(
             componentBuilder: ColorPickerComponent.Builder,
+            navigatorScope: NavigatorScope,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Color.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Color.Picker) {
             componentBuilder
                 .onColorSelectedHandler { color ->
                     categoryEditColorUseCase.perform(
@@ -343,9 +376,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun settingsNavigationEntry(
             componentBuilder: SettingsComponent.Builder,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-            navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Settings) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Settings) {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .logging(logger)
@@ -356,9 +389,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun importNavigationEntry(
             componentBuilder: ImportComponent.Builder,
+            navigatorScope: NavigatorScope,
             logger: Logger,
-            navigator: Navigator,
-        ): NavigatorEntry = navigationEntryOf(Destinations.Import) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Import) {
             componentBuilder
                 .onImportFinishedHandler { navigator.back() }
                 .logging(logger)

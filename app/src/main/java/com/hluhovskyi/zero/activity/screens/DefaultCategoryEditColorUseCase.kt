@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.activity.navigation.observeArgumentValue
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
@@ -30,7 +31,7 @@ internal class DefaultCategoryEditColorUseCase(
 
     private val logger = inputLogger.withTag(TAG)
 
-    private var requestId = AtomicReference<String>("")
+    private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<CategoryEditColorUseCase.Action.Pick>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -39,7 +40,7 @@ internal class DefaultCategoryEditColorUseCase(
     override fun perform(action: CategoryEditColorUseCase.Action) {
         when (action) {
             is CategoryEditColorUseCase.Action.Request -> {
-                val id = requestIdGenerator().value
+                val id = requestIdGenerator()
                 requestId.set(id)
                 logger.d("perform, requestId=$requestId")
                 navigator.navigateTo(

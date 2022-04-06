@@ -28,8 +28,6 @@ internal interface Navigator : ActionStateModel<Navigator.Action, Navigator.Stat
     ): Flow<ArgumentValue<T>>
 
     fun startDestination(): Destination
-
-    fun routeWithPlaceholders(destination: Destination): String
 }
 
 internal inline fun <reified T : Any> Navigator.observeArgumentValue(

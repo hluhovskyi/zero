@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.activity.navigation.observeArgumentValue
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
@@ -14,12 +15,10 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import java.util.concurrent.atomic.AtomicReference
 
 private const val TAG = "DefaultCategoryEditIconUseCase"
@@ -32,7 +31,7 @@ internal class DefaultCategoryEditIconUseCase(
 
     private val logger = inputLogger.withTag(TAG)
 
-    private var requestId = AtomicReference<String>("")
+    private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<CategoryEditIconUseCase.Action.Pick>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -41,7 +40,7 @@ internal class DefaultCategoryEditIconUseCase(
     override fun perform(action: CategoryEditIconUseCase.Action) {
         when (action) {
             is CategoryEditIconUseCase.Action.Request -> {
-                val id = requestIdGenerator().value
+                val id = requestIdGenerator()
                 requestId.set(id)
                 logger.d("perform, requestId=$requestId")
                 navigator.navigateTo(

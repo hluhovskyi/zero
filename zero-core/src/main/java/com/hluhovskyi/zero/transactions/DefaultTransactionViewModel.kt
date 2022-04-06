@@ -6,12 +6,15 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.Icon
+import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +29,7 @@ internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
+    private val iconRepository: IconRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
@@ -57,7 +61,10 @@ internal class DefaultTransactionViewModel(
                 currencyRepository.query(CurrencyRepository.Criteria.All())
                     .onEmptyReturnEmptyList()
                     .associateById(),
-            ) { transactions, idToCategories, idToAccounts, idToCurrencies ->
+                iconRepository.query(IconRepository.Criteria.All())
+                    .onEmptyReturnEmptyList()
+                    .associateById(),
+            ) { transactions, idToCategories, idToAccounts, idToCurrencies, idToIcons ->
                 val primaryCurrency = currencyPrimaryUseCase.getPrimaryCurrency()
                 transactions
                     .mapNotNull { transaction ->
@@ -66,6 +73,7 @@ internal class DefaultTransactionViewModel(
                             idToAccounts = idToAccounts,
                             idToCategories = idToCategories,
                             idToCurrencies = idToCurrencies,
+                            idToIcons = idToIcons,
                         )
                     }
                     .groupBy { it.date.toLocalDate() }
@@ -129,6 +137,7 @@ internal class DefaultTransactionViewModel(
         idToCategories: Map<Id.Known, CategoriesQueryUseCase.Category>,
         idToAccounts: Map<Id.Known, AccountRepository.Account>,
         idToCurrencies: Map<Id.Known, Currency>,
+        idToIcons: Map<Id.Known, Icon>,
     ): TransactionViewModel.Item.Transaction? {
         return when (transaction) {
             is TransactionRepository.Transaction.Expense -> {
@@ -153,6 +162,7 @@ internal class DefaultTransactionViewModel(
                     },
                     currencySymbol = currency.symbol,
                     accountName = account.name,
+                    accountIcon = idToIcons[account.iconId]?.image ?: Image.empty(),
                     categoryName = category.name,
                     categoryColor = category.color,
                     categoryIcon = category.icon,
@@ -169,6 +179,7 @@ internal class DefaultTransactionViewModel(
                     date = transaction.dateTime,
                     amount = transaction.amount,
                     accountName = account.name,
+                    accountIcon = idToIcons[account.iconId]?.image ?: Image.empty(),
                     currencySymbol = currency.symbol,
                     currencyId = transaction.currencyId,
                     categoryName = category.name,
