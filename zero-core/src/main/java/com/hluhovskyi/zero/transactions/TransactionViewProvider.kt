@@ -82,11 +82,11 @@ private fun TransactionView(
                 is TransactionViewModel.Item.Transaction -> {
                     val transactionModifier = Modifier
                         .fillMaxWidth()
+                        .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
                         .padding(
                             horizontal = 12.dp,
                             vertical = 12.dp
                         )
-                        .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
 
                     when (transaction) {
                         is TransactionViewModel.Item.Transaction.Expense ->

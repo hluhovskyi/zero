@@ -22,6 +22,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -34,6 +35,7 @@ import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
+import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -60,6 +62,7 @@ abstract class ActivityComponent :
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
+    TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
     SettingsComponent.Dependencies,
@@ -70,6 +73,7 @@ abstract class ActivityComponent :
 
     interface Dependencies {
 
+        val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
@@ -176,6 +180,12 @@ abstract class ActivityComponent :
             importSourceUseCase: ImportSourceUseCase,
         ): ImportComponent.Builder = ImportComponent.builder(component)
             .importSourceUseCase(importSourceUseCase)
+
+        @Provides
+        @ActivityScope
+        fun transactionPreviewBuilder(
+            component: ActivityComponent
+        ): TransactionPreviewComponent.Builder = TransactionPreviewComponent.builder(component)
     }
 }
 

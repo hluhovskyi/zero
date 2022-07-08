@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
+import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
+import java.time.LocalDateTime
 
 private const val TAG = "DefaultTransactionEditUseCase"
 
@@ -40,6 +42,7 @@ internal class DefaultTransactionEditUseCase(
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val clock: Clock,
+    private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
 ) : TransactionEditUseCase {
@@ -130,6 +133,7 @@ internal class DefaultTransactionEditUseCase(
                 coroutineScope.launch(context = Dispatchers.IO) {
                     val state = mutableState.value
                     val transactionId = (transactionId as? Id.Known) ?: idGenerator()
+                    val dateTime = state.localDateTime ?: clock.localDateTime()
                     val transaction = when (state.transactionType) {
                         TransactionEditType.EXPENSE -> {
                             val account = state.selectedAccount ?: return@launch
@@ -142,7 +146,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 categoryId = category.id,
-                                dateTime = clock.localDateTime(),
+                                dateTime = dateTime,
                                 rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
@@ -157,7 +161,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 categoryId = category.id,
-                                dateTime = clock.localDateTime(),
+                                dateTime = dateTime,
                                 rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
@@ -172,7 +176,7 @@ internal class DefaultTransactionEditUseCase(
                                 accountId = account.id,
                                 currencyId = currency.id,
                                 targetAccount = targetAccount.id,
-                                dateTime = clock.localDateTime(),
+                                dateTime = dateTime,
                                 targetAmount = Amount(state.amount.toBigDecimalOrNull())
                             )
                         }
@@ -191,13 +195,13 @@ internal class DefaultTransactionEditUseCase(
         coroutineScope.launch {
             if (transactionId is Id.Known) {
                 launch {
-                    val transaction = transactionRepository.query(TransactionRepository.Criteria.ById(transactionId))
-                        .firstOrNull()
+                    incorrectStateDetector.asyncRequireNonNull(
+                        value = transactionRepository.query(TransactionRepository.Criteria.ById(transactionId))
+                            .firstOrNull(),
+                        message = "Transaction is not resolved with transactionId=$transactionId",
+                    ) { transaction ->
+                        logger.d("attach, transaction loading is finished, transactionId=${transaction.id}")
 
-                    logger.d("attach, transaction loading is finished, transactionId=${transaction?.id}")
-
-                    // TODO: Handle as incorrect state
-                    if (transaction != null) {
                         mutableState
                             .filter { state ->
                                 state.accounts.isNotEmpty() &&
@@ -215,6 +219,7 @@ internal class DefaultTransactionEditUseCase(
                                 amount = transaction.amount.value.toString(),
                                 selectedCurrency = currencyToSelect ?: state.selectedCurrency,
                                 selectedAccount = accountToSelect ?: state.selectedAccount,
+                                localDateTime = transaction.dateTime,
                             )
 
                             when (transaction) {
@@ -357,6 +362,7 @@ internal class DefaultTransactionEditUseCase(
         val selectedCategory: TransactionEditCategory? = null,
         val currencies: List<TransactionEditCurrency> = emptyList(),
         val selectedCurrency: TransactionEditCurrency? = null,
+        val localDateTime: LocalDateTime? = null,
         val manuallyChangedCurrency: Boolean = false,
         val amount: String = "",
         val rate: String = "",

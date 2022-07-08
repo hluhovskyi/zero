@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapNotNull
 
 internal class DefaultCategoriesQueryUseCase(
     private val categoryRepository: CategoryRepository,
@@ -39,6 +40,10 @@ internal class DefaultCategoriesQueryUseCase(
     }
 
     override fun queryAll(): Flow<List<CategoriesQueryUseCase.Category>> = queryAll
+
+    // TODO: Either share queryAll or use more specific queries
+    override fun queryById(id: Id.Known): Flow<CategoriesQueryUseCase.Category> = queryAll
+        .mapNotNull { categories -> categories.firstOrNull { it.id == id } }
 
     private fun resolve(
         category: CategoryRepository.Category,

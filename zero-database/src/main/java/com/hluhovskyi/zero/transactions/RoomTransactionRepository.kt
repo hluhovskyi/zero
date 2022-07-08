@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
+import android.util.Log
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
@@ -25,6 +26,8 @@ internal class RoomTransactionRepository(
 
     override fun <T> query(criteria: TransactionRepository.Criteria<T>): Flow<T> = currentUserId.take(1)
         .flatMapConcat { userId ->
+            Log.d("GOVNO", "zhepa, ${Thread.currentThread().name}")
+
             when (criteria) {
                 is TransactionRepository.Criteria.All -> transactionRoom().selectByUserId(userId)
                     .map { entities ->

@@ -21,6 +21,8 @@ import com.hluhovskyi.zero.common.LocaleBasedDateFormatter
 import com.hluhovskyi.zero.common.LocaleProvider
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.SystemLocaleProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.coroutines.KotlinDispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.SystemZoneProvider
 import com.hluhovskyi.zero.common.time.ZoneBasedClock
@@ -90,6 +92,10 @@ abstract class ApplicationComponent :
         ]
     )
     object Module {
+
+        @Provides
+        @ApplicationScope
+        fun dispatcherProvider(): DispatcherProvider = KotlinDispatcherProvider
 
         @Provides
         @ApplicationScope

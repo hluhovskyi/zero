@@ -39,6 +39,7 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
+import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
@@ -74,6 +75,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
+        val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
         val categoryComponentBuilder: CategoryComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
@@ -202,8 +204,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 component = component
                     .onTransactionSelectHandler { transactionId ->
                         navigator.navigateTo(
-                            Destinations.Transaction.Item.Edit,
-                            Destinations.Transaction.Item.Edit.TransactionId.withValue(transactionId)
+                            Destinations.Transaction.Item.Preview,
+                            Destinations.Transaction.Item.TransactionId.withValue(transactionId)
                         )
                     }
                     .logging(logger),
@@ -235,7 +237,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
             componentBuilder
-                .transactionId(arguments.getValue(Destinations.Transaction.Item.Edit.TransactionId))
+                .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .logging(logger)
@@ -417,6 +419,19 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Import) {
             componentBuilder
                 .onImportFinishedHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun transactionPreviewEntry(
+            componentBuilder: TransactionPreviewComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Preview) {
+            componentBuilder
+                .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .logging(logger)
         }
     }
