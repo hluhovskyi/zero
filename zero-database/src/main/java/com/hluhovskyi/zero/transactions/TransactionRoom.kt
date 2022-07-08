@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -14,8 +15,10 @@ internal interface TransactionRoom {
     @Query("SELECT * FROM TransactionEntity WHERE userId=:userId ORDER BY datetime(enteredDateTime) DESC")
     fun selectByUserId(userId: String): Flow<List<TransactionEntity>>
 
-    fun selectByUserId(userId: Id.Known): Flow<List<TransactionEntity>> =
-        selectByUserId(userId.value)
+    fun selectByUserId(userId: Id.Known): Flow<List<TransactionEntity>> {
+        Log.d("GOVNO", "ahuet, ${Thread.currentThread().name}")
+        return selectByUserId(userId.value)
+    }
 
     suspend fun selectById(transactionId: Id.Known, userId: Id.Known): TransactionEntity? =
         selectById(transactionId.value, userId.value)

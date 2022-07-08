@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface CategoriesQueryUseCase {
 
+    fun queryById(id: Id.Known): Flow<Category>
+
     fun queryAll(): Flow<List<Category>>
 
     data class Category(

@@ -14,9 +14,10 @@ internal object Destinations {
         object Edit : Transaction, Destination by destinationOf("transactions/edit")
 
         sealed interface Item : Transaction {
-            object Edit : Item, Destination by destinationOf("transactions/{transactionId}/edit", TransactionId) {
-                object TransactionId : Argument<Id> by idValueOf("transactionId")
-            }
+            object TransactionId : Argument<Id> by idValueOf("transactionId")
+
+            object Preview : Item, Destination by destinationOf("transactions/{transactionId}", TransactionId)
+            object Edit : Item, Destination by destinationOf("transactions/{transactionId}/edit", TransactionId)
         }
     }
 

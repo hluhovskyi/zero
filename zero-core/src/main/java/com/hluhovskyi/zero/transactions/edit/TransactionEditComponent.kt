@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
+import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
@@ -46,6 +47,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         val idGenerator: IdGenerator
         val clock: Clock
         val logger: Logger
+        val incorrectStateDetector: IncorrectStateDetector
         val imageLoader: ImageLoader
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
@@ -93,6 +95,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             idGenerator: IdGenerator,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
+            incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
@@ -104,6 +107,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             idGenerator = idGenerator,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
+            incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             logger = logger
         )

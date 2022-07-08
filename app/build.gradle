@@ -67,11 +67,11 @@ dependencies {
 
     implementation deps.timber
 
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation deps.android.core.ktx
     implementation deps.android.compose.ui
     implementation deps.android.compose.material
-    implementation deps.android.compose.uiPreview
     implementation deps.android.compose.activity
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
-    debugImplementation "androidx.compose.ui:ui-tooling:$versions.compose"
+    implementation deps.android.core.lifecycle
+    implementation deps.android.compose.uiPreview
+    debugImplementation deps.android.compose.uiTooling
 }
