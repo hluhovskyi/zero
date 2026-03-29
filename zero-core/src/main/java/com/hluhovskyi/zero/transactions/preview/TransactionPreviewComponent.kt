@@ -69,11 +69,14 @@ abstract class TransactionPreviewComponent : AttachableViewComponent {
         @Provides
         @TransactionPreviewScope
         fun viewModel(
+            @TransactionId transactionId: Id,
             transactionRepository: TransactionRepository,
             iconRepository: IconRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             dispatcherProvider: DispatcherProvider,
         ): TransactionPreviewViewModel = DefaultTransactionPreviewViewModel(
+            transactionId = transactionId,
+            transactionRepository = transactionRepository,
             dispatchers = dispatcherProvider
         )
 

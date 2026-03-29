@@ -34,7 +34,6 @@ abstract class TransactionComponent : AttachableViewComponent {
 
     override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
-
     interface Dependencies {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter

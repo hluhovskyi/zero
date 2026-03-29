@@ -15,11 +15,13 @@ internal interface NavigatorScope {
 
     fun composable(
         destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
         view: @Composable Context.() -> Unit
     ): NavigatorEntry
 
     fun buildable(
         destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
         view: Context.() -> Buildable<out AttachableViewComponent>
     ): NavigatorEntry
 }
@@ -31,19 +33,23 @@ internal class DefaultNavigatorScope(
 
     override fun composable(
         destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption,
         view: @Composable NavigatorScope.Context.() -> Unit
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
+        displayOption = displayOption,
         view = { arguments -> view(NavigatorContext(navigator, arguments)) },
     )
 
     override fun buildable(
         destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption,
         view: NavigatorScope.Context.() -> Buildable<out AttachableViewComponent>
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
+        displayOption = displayOption,
         view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() }
     )
 
@@ -55,6 +61,7 @@ internal class DefaultNavigatorScope(
     private class ComposeNavigationEntry(
         override val route: String,
         override val destination: Destination,
+        override val displayOption: NavigatorEntry.DisplayOption,
         override val view: @Composable (arguments: NavigatorEntry.Arguments) -> Unit
     ) : NavigatorEntry
 }

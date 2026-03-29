@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.LocaleProvider
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import java.util.Currency as JavaCurrency
 
@@ -38,6 +39,7 @@ internal class JavaCurrencyRepository(
                     .toList()
                 )
             }.uncheckedCast()
+            is CurrencyRepository.Criteria.InUse -> emptyFlow()
             is CurrencyRepository.Criteria.ById -> flow { currencies.value[criteria.id]?.let { emit(it) } }.uncheckedCast()
         }
 }

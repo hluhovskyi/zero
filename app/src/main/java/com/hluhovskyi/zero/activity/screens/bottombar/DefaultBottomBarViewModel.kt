@@ -24,6 +24,7 @@ internal class DefaultBottomBarViewModel(
 
     private val transactionsId = Id.Known("transactions")
     private val categoriesId = Id.Known("categories")
+    private val budgetId = Id.Known("budget")
     private val accountsId = Id.Known("accounts")
     private val settingsId = Id.Known("settings")
 
@@ -43,6 +44,15 @@ internal class DefaultBottomBarViewModel(
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_accounts_24"),
                 description = "Accounts icon"
+            ),
+            selected = false
+        ),
+        BottomBarViewModel.Item(
+            id = budgetId,
+            name = "Budget",
+            icon = Image(
+                uri = androidUriResourceFactory.drawable("ic_budget_24"),
+                description = "Budget icon"
             ),
             selected = false
         ),
@@ -121,6 +131,7 @@ internal class DefaultBottomBarViewModel(
         Destinations.Category.All.route -> categoriesId
         Destinations.Account.All.route -> accountsId
         Destinations.Settings.route -> settingsId
+        //Destinations.Budget.route -> budgetId
         else -> Id.Unknown
     }
 }

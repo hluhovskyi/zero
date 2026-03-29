@@ -1,8 +1,18 @@
 package com.hluhovskyi.zero.accounts
 
-import kotlinx.coroutines.flow.Flow
+import com.hluhovskyi.zero.common.ActionStateModel
+import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.Currency
 
-interface AccountUseCase {
+interface AccountUseCase : ActionStateModel<AccountUseCase.Action, AccountUseCase.State> {
 
-    val accounts: Flow<List<Account>>
+    sealed interface Action {
+
+    }
+
+    data class State(
+        val balance: Amount = Amount.zero(),
+        val currency: Currency? = null,
+        val accounts: List<Account> = emptyList(),
+    )
 }

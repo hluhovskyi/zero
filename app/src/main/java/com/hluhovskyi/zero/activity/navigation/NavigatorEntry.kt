@@ -5,10 +5,18 @@ import androidx.compose.runtime.Composable
 internal interface NavigatorEntry {
     val route: String
     val destination: Destination
+    val displayOption: DisplayOption
     val view: @Composable (arguments: Arguments) -> Unit
 
     interface Arguments {
         operator fun <T : Any> get(key: Argument<T>): ArgumentValue<T>
+    }
+
+    sealed interface DisplayOption {
+        object FullyVisible : DisplayOption
+        sealed interface PartiallyVisible : DisplayOption {
+            object BottomSheet : DisplayOption
+        }
     }
 }
 
