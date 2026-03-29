@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.categories.CategoryEntity
 import com.hluhovskyi.zero.categories.CategoryRoom
 import com.hluhovskyi.zero.config.ConfigurationEntity
 import com.hluhovskyi.zero.config.ConfigurationRoom
+import com.hluhovskyi.zero.currencies.CurrenciesRoom
 import com.hluhovskyi.zero.transactions.TransactionEntity
 import com.hluhovskyi.zero.transactions.TransactionRoom
 import com.hluhovskyi.zero.users.CurrentUserEntity
@@ -44,4 +45,6 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun category(): CategoryRoom
 
     abstract fun configuration(): ConfigurationRoom
+
+    abstract fun currenciesRoom(): CurrenciesRoom
 }

@@ -6,6 +6,8 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -36,6 +38,9 @@ abstract class AccountComponent : AttachableViewComponent {
         val iamgeLoader: ImageLoader
         val amountFormatter: AmountFormatter
 
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
+        val currencyConvertUseCase: CurrencyConvertUseCase
+
         val accountRepository: AccountRepository
         val transactionRepository: TransactionRepository
         val currencyRepository: CurrencyRepository
@@ -64,11 +69,15 @@ abstract class AccountComponent : AttachableViewComponent {
             transactionRepository: TransactionRepository,
             currencyRepository: CurrencyRepository,
             iconRepository: IconRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
             currencyRepository = currencyRepository,
             iconRepository = iconRepository,
+            currencyConvertUseCase = currencyConvertUseCase,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
         )
 
         @Provides

@@ -199,12 +199,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             component: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.composable(Destinations.Transaction.All) {
+        ): NavigatorEntry = navigatorScope.composable(
+            destination = Destinations.Transaction.All,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
             TransactionScreen(
                 component = component
                     .onTransactionSelectHandler { transactionId ->
                         navigator.navigateTo(
-                            Destinations.Transaction.Item.Preview,
+                            Destinations.Transaction.Item.Edit,
                             Destinations.Transaction.Item.TransactionId.withValue(transactionId)
                         )
                     }
@@ -220,7 +223,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Transaction.Edit,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .transactionId(Id.Unknown)
                 .onTransactionSavedHandler { navigator.back() }

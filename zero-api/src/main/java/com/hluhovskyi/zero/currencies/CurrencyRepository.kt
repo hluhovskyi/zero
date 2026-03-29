@@ -14,6 +14,8 @@ interface CurrencyRepository {
 
         class All : Criteria<List<Currency>>
 
+        class InUse : Criteria<List<Currency>>
+
         data class ById(val id: Id.Known): Criteria<Currency>
     }
 

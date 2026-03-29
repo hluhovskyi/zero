@@ -5,6 +5,8 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -18,9 +20,11 @@ internal class DefaultAccountUseCase(
     transactionRepository: TransactionRepository,
     currencyRepository: CurrencyRepository,
     iconRepository: IconRepository,
+    currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+    currencyConvertUseCase: CurrencyConvertUseCase,
 ) : AccountUseCase {
 
-    override val accounts: Flow<List<Account>> = combine(
+    override val state: Flow<AccountUseCase.State> = combine(
         accountRepository.query(AccountRepository.Criteria.All()),
         transactionRepository.query(TransactionRepository.Criteria.All())
             .map { transactions ->
@@ -34,7 +38,7 @@ internal class DefaultAccountUseCase(
             .onEmptyReturnEmptyList()
             .associateById(),
     ) { accounts, accountIdToBalance, idToCurrency, idToIcon ->
-        accounts.map { account ->
+        val resultAccounts = accounts.map { account ->
             Account(
                 id = account.id,
                 name = account.name,
@@ -43,6 +47,22 @@ internal class DefaultAccountUseCase(
                 icon = idToIcon[account.iconId]?.image ?: Image.empty(),
             )
         }
+        val balance = accounts.fold(Amount.zero()) { total, account ->
+            total + currencyConvertUseCase.convertToPrimary(
+                amount = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
+                currencyId = account.currencyId
+            )
+        }
+
+        AccountUseCase.State(
+            balance = balance,
+            currency = currencyPrimaryUseCase.getPrimaryCurrency(),
+            accounts = resultAccounts
+        )
+    }
+
+    override fun perform(action: AccountUseCase.Action) {
+
     }
 
     private fun List<TransactionRepository.Transaction>.calculateBalance(): Map<Id.Known, Amount> {
