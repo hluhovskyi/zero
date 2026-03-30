@@ -3,6 +3,7 @@ package com.hluhovskyi.zero
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Uri
 
@@ -20,7 +21,8 @@ interface ImageLoader {
     fun View(
         image: Image,
         modifier: Modifier = Modifier,
-        scale: Scale = Scale.Fit
+        scale: Scale = Scale.Fit,
+        tint: Color? = null,
     ) {
         View(
             uri = image.uri,
