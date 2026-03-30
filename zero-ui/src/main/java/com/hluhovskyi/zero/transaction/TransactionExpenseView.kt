@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.colors.ColorScheme
+import com.hluhovskyi.zero.colors.Color as DomainColor
 import com.hluhovskyi.zero.ui.CategoryIconView
 
 @Composable
@@ -19,17 +21,17 @@ fun TransactionExpenseView(
     categoryName: String,
     amount: String,
     accountName: String,
-    iconColor: Color? = null,
+    iconColorScheme: ColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable () -> Unit)? = null,
+    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
         categoryName = categoryName,
         amount = "-$amount",
         accountName = accountName,
-        iconColor = iconColor,
+        iconColorScheme = iconColorScheme,
         accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
@@ -42,17 +44,17 @@ fun TransactionIncomeView(
     categoryName: String,
     amount: String,
     accountName: String,
-    iconColor: Color? = null,
+    iconColorScheme: ColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable () -> Unit)? = null,
+    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
         categoryName = categoryName,
         amount = "+$amount",
         accountName = accountName,
-        iconColor = iconColor,
+        iconColorScheme = iconColorScheme,
         accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
@@ -65,18 +67,18 @@ fun TransactionView(
     categoryName: String,
     amount: String,
     accountName: String,
-    iconColor: Color? = null,
+    iconColorScheme: ColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable () -> Unit)? = null,
+    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null && iconColor != null) {
-            CategoryIconView(color = iconColor) {
-                icon()
+        if (icon != null && iconColorScheme != null) {
+            CategoryIconView(colorScheme = iconColorScheme) { tint ->
+                icon(tint)
             }
         }
         Column(
