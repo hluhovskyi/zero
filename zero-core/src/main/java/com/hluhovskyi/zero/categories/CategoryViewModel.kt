@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
-import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
@@ -20,6 +20,6 @@ interface CategoryViewModel
         val id: Id.Known,
         val name: String,
         val icon: Image,
-        val color: ColorValue
+        val colorScheme: ColorScheme,
     )
 }
