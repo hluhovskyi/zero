@@ -1,14 +1,13 @@
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
-    compileSdk 32
+    compileSdk versions.compileSdk
 
     defaultConfig {
         minSdk 21
-        targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -22,17 +21,17 @@ android {
     }
     buildFeatures {
         compose true
-        buildConfig false
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
+    namespace 'com.hluhovskyi.zero'
+    lint {
+        targetSdk 32
+    }
+    testOptions {
+        targetSdk 32
     }
 }
 

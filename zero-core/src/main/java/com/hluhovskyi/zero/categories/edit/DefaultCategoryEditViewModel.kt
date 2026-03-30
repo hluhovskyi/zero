@@ -85,7 +85,7 @@ internal class DefaultCategoryEditViewModel(
                             colorRepository.query(ColorRepository.Criteria.ById(colorId)),
                             iconRepository.query(IconRepository.Criteria.ById(iconId)),
                         ) { color, icon -> color to icon }
-                            .collectLatest { (color, icon) ->
+                            .firstOrNull()?.let { (color, icon) ->
                                 mutableState.update { state ->
                                     state.copy(
                                         name = category.name,
@@ -97,6 +97,30 @@ internal class DefaultCategoryEditViewModel(
                                 }
                             }
                     }
+                }
+            } else {
+                launch {
+                    iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
+                        .firstOrNull()?.let { icon ->
+                            mutableState.update { state ->
+                                state.copy(
+                                    iconId = icon.id,
+                                    icon = icon.image
+                                )
+                            }
+                        }
+                }
+
+                launch {
+                    colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
+                        .firstOrNull()?.let { color ->
+                            mutableState.update { state ->
+                                state.copy(
+                                    colorId = color.id,
+                                    color = color.value
+                                )
+                            }
+                        }
                 }
             }
 
@@ -121,30 +145,6 @@ internal class DefaultCategoryEditViewModel(
                             state.copy(
                                 colorId = colorState.color.id,
                                 color = colorState.color.color,
-                            )
-                        }
-                    }
-            }
-
-            launch {
-                iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
-                    .collectLatest { icon ->
-                        mutableState.update { state ->
-                            state.copy(
-                                iconId = icon.id,
-                                icon = icon.image
-                            )
-                        }
-                    }
-            }
-
-            launch {
-                colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
-                    .collectLatest { color ->
-                        mutableState.update { state ->
-                            state.copy(
-                                colorId = color.id,
-                                color = color.value
                             )
                         }
                     }

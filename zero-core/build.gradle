@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
@@ -9,7 +9,6 @@ android {
 
     defaultConfig {
         minSdk versions.minSdk
-        targetSdk versions.targetSdk
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -21,17 +20,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     buildFeatures {
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
+    namespace 'com.hluhovskyi.zero'
+    lint {
+        targetSdk 32
+    }
+    testOptions {
+        targetSdk 32
     }
 }
 
@@ -41,7 +41,7 @@ dependencies {
     implementation(project(":zero-image-loading"))
 
     implementation deps.dagger.runtime
-    kapt deps.dagger.compiler
+    ksp deps.dagger.compiler
 
     implementation deps.android.compose.foundation
     implementation deps.android.compose.ui

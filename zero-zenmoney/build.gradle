@@ -1,12 +1,12 @@
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
@@ -15,5 +15,5 @@ dependencies {
     implementation deps.kotlin.coroutines
 
     implementation deps.dagger.runtime
-    kapt deps.dagger.compiler
+    ksp deps.dagger.compiler
 }
