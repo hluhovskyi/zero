@@ -6,24 +6,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.LocalContentAlpha
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.common.ColorValue
-import com.hluhovskyi.zero.common.toCompose
 
 @Composable
 fun TransactionExpenseView(
     modifier: Modifier,
-    categoryColor: ColorValue,
     categoryName: String,
     amount: String,
     accountName: String,
@@ -33,10 +30,7 @@ fun TransactionExpenseView(
 ) {
     TransactionView(
         modifier = modifier,
-        categoryColor = categoryColor,
         categoryName = categoryName,
-        // TODO: Change to appropriate color
-        amountColor = ColorValue.unspecified(),
         amount = "-$amount",
         accountName = accountName,
         accountIcon = accountIcon,
@@ -48,7 +42,6 @@ fun TransactionExpenseView(
 @Composable
 fun TransactionIncomeView(
     modifier: Modifier,
-    categoryColor: ColorValue,
     categoryName: String,
     amount: String,
     accountName: String,
@@ -58,10 +51,7 @@ fun TransactionIncomeView(
 ) {
     TransactionView(
         modifier = modifier,
-        categoryColor = categoryColor,
         categoryName = categoryName,
-        // TODO: Change to appropriate color
-        amountColor = ColorValue(Color.Green.value),
         amount = "+$amount",
         accountName = accountName,
         accountIcon = accountIcon,
@@ -73,9 +63,7 @@ fun TransactionIncomeView(
 @Composable
 fun TransactionView(
     modifier: Modifier,
-    categoryColor: ColorValue,
     categoryName: String,
-    amountColor: ColorValue,
     amount: String,
     accountName: String,
     accountIcon: (@Composable () -> Unit)? = null,
@@ -87,14 +75,13 @@ fun TransactionView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         icon?.let { iconView ->
-            Column(
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFFDDE3FF), shape = RoundedCornerShape(percent = 30))
+                    .size(40.dp)
+                    .padding(8.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .background(categoryColor.toCompose(), shape = CircleShape)
-                        .size(40.dp)
-                        .padding(8.dp)
-                ) {
+                CompositionLocalProvider(LocalContentColor provides Color(0xFF44464F)) {
                     iconView()
                 }
             }
@@ -105,28 +92,32 @@ fun TransactionView(
             Row {
                 Text(
                     text = categoryName,
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1B1B1F),
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    fontSize = 18.sp,
-                    color = amountColor.toCompose(),
-                    text = amount
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1B1B1F),
+                    text = amount,
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                    accountIcon?.invoke()
-                    Text(
-                        text = accountName,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                accountIcon?.invoke()
+                Text(
+                    text = accountName,
+                    fontSize = 13.sp,
+                    color = Color(0xFF44464F),
+                    modifier = Modifier.weight(1f),
+                )
                 convertedAmount?.let {
                     Text(
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
+                        color = Color(0xFF44464F),
                         text = convertedAmount,
                     )
                 }

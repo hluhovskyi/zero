@@ -5,9 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,7 +38,7 @@ private fun IconPickerView(
     imageLoader: ImageLoader
 ) {
     val state by viewModel.state.collectAsState(initial = IconPickerViewModel.State())
-    LazyVerticalGrid(cells = GridCells.Fixed(5)) {
+    LazyVerticalGrid(columns = GridCells.Fixed(5)) {
         items(state.icons) { item ->
             Box(
                 modifier = Modifier
