@@ -167,7 +167,7 @@ internal class DefaultTransactionViewModel(
                     accountName = account.name,
                     accountIcon = idToIcons[account.iconId]?.image ?: Image.empty(),
                     categoryName = category.name,
-                    categoryColor = category.color,
+                    categoryColorScheme = category.colorScheme,
                     categoryIcon = category.icon,
                 )
             }
@@ -186,7 +186,7 @@ internal class DefaultTransactionViewModel(
                     currencySymbol = currency.symbol,
                     currencyId = transaction.currencyId,
                     categoryName = category.name,
-                    categoryColor = category.color,
+                    categoryColorScheme = category.colorScheme,
                     categoryIcon = category.icon,
                     conversion = if (transaction.currencyId != account.currencyId) {
                         val symbol = idToCurrencies[account.currencyId]?.symbol
