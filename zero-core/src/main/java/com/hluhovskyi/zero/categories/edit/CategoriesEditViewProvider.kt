@@ -1,15 +1,12 @@
 package com.hluhovskyi.zero.categories.edit
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
@@ -23,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.toCompose
+import com.hluhovskyi.zero.ui.CategoryIconView
 
 internal class CategoriesEditViewProvider(
     private val viewModel: CategoryEditViewModel,
@@ -54,13 +52,13 @@ private fun CategoryEditView(
                 .padding(top = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            imageLoader.View(
-                image = state.icon,
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(color = state.color.toCompose(), shape = CircleShape)
-                    .padding(12.dp)
-            )
+            CategoryIconView(
+                color = state.color.toCompose(),
+                size = 64.dp,
+                contentPadding = 12.dp,
+            ) {
+                imageLoader.View(image = state.icon)
+            }
         }
 
         Row(
