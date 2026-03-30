@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.toCompose
 import com.hluhovskyi.zero.ui.CategoryIconView
 
 internal class CategoryViewProvider(
@@ -52,13 +51,14 @@ private fun CategoryView(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CategoryIconView(color = category.color.toCompose()) {
+                CategoryIconView(colorScheme = category.colorScheme) { tint ->
                     imageLoader.View(
                         image = category.icon,
                         modifier = Modifier
                             .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
                             .aspectRatio(1f),
-                        scale = ImageLoader.Scale.Crop
+                        scale = ImageLoader.Scale.Crop,
+                        tint = tint,
                     )
                 }
                 Text(

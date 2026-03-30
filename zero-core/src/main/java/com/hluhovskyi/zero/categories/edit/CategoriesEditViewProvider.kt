@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.toCompose
 import com.hluhovskyi.zero.ui.CategoryIconView
 
 internal class CategoriesEditViewProvider(
@@ -53,11 +52,11 @@ private fun CategoryEditView(
             contentAlignment = Alignment.Center,
         ) {
             CategoryIconView(
-                color = state.color.toCompose(),
+                colorScheme = state.colorScheme,
                 size = 64.dp,
                 contentPadding = 12.dp,
-            ) {
-                imageLoader.View(image = state.icon)
+            ) { tint ->
+                imageLoader.View(image = state.icon, tint = tint)
             }
         }
 

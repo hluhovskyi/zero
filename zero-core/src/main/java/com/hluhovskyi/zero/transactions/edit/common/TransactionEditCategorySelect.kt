@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
-import com.hluhovskyi.zero.common.toCompose
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
@@ -40,14 +39,15 @@ fun TransactionEditCategorySelect(
         menuItem = { category ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CategoryIconView(
-                    color = category.color.toCompose(),
+                    colorScheme = category.colorScheme,
                     size = 32.dp,
                     contentPadding = 6.dp,
                     modifier = Modifier.padding(end = 12.dp),
-                ) {
+                ) { tint ->
                     imageLoader.View(
                         modifier = Modifier.sizeIn(maxHeight = 20.dp, maxWidth = 20.dp),
-                        image = category.icon
+                        image = category.icon,
+                        tint = tint,
                     )
                 }
                 Text(text = category.name)
@@ -56,12 +56,12 @@ fun TransactionEditCategorySelect(
         selectedItem = selectedCategory,
         selectedItemIcon = { category ->
             CategoryIconView(
-                color = category.color.toCompose(),
+                colorScheme = category.colorScheme,
                 size = 32.dp,
                 contentPadding = 6.dp,
                 modifier = Modifier.padding(start = 8.dp),
-            ) {
-                imageLoader.View(image = category.icon)
+            ) { tint ->
+                imageLoader.View(image = category.icon, tint = tint)
             }
         },
         onItemSelected = onCategorySelected
