@@ -67,20 +67,20 @@ This single change cascades through all consumers:
 
 ## `ImageLoader` Tinting
 
-`ImageLoader.View()` gains a `tint: Color? = null` parameter:
+`ImageLoader.View()` gains a `tint: ColorValue? = null` parameter using the app's own domain type:
 
 ```kotlin
 fun View(
     image: Image,
     modifier: Modifier = Modifier,
     scale: Scale = Scale.Fit,
-    tint: Color? = null,         // new — androidx.compose.ui.graphics.Color
+    tint: ColorValue? = null,    // new — domain ColorValue, not Compose Color
 )
 ```
 
-`CoilImageLoader` passes it to `AsyncImage`:
+`CoilImageLoader` converts and passes it to `AsyncImage`:
 ```kotlin
-colorFilter = tint?.let { ColorFilter.tint(it) }
+colorFilter = tint?.let { ColorFilter.tint(it.toCompose()) }
 ```
 
 `EmptyImageLoader` accepts and ignores the param.
@@ -100,11 +100,11 @@ fun CategoryIconView(
     size: Dp = 40.dp,
     contentPadding: Dp = 8.dp,
     modifier: Modifier = Modifier,
-    content: @Composable (iconTint: Color) -> Unit,
+    content: @Composable (iconTint: ColorValue) -> Unit,  // domain type, no conversion needed at call site
 )
 ```
 
-Internally delegates to the existing `CategoryIconView(color: Color, ...)` overload, passing `colorScheme.background.toCompose()` as background and `colorScheme.primary.toCompose()` to the content lambda.
+Internally delegates to the existing `CategoryIconView(color: Color, ...)` overload, passing `colorScheme.background.toCompose()` as background and `colorScheme.primary` (as `ColorValue`) to the content lambda.
 
 The existing single-color overload is kept unchanged for non-scheme use cases.
 
@@ -112,11 +112,11 @@ The existing single-color overload is kept unchanged for non-scheme use cases.
 
 ## UI Call Sites (all 4 screens)
 
-All four screens use the same pattern — no repetition of color conversion logic:
+All four screens use the same pattern — no color conversion at call sites:
 
 ```kotlin
 CategoryIconView(colorScheme = scheme) { tint ->
-    imageLoader.View(image = icon, tint = tint)
+    imageLoader.View(image = icon, tint = tint)  // tint: ColorValue, passed straight through
 }
 ```
 
