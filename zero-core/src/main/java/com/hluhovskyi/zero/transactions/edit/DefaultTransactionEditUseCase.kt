@@ -297,7 +297,7 @@ internal class DefaultTransactionEditUseCase(
                             TransactionEditCategory(
                                 id = category.id,
                                 name = category.name,
-                                color = category.color,
+                                colorScheme = category.colorScheme,
                                 icon = category.icon,
                             )
                         }
