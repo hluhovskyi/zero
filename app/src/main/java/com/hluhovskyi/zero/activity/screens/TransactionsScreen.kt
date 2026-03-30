@@ -1,8 +1,10 @@
 package com.hluhovskyi.zero.activity.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
@@ -23,7 +25,9 @@ fun TransactionScreen(
     onTransactionEdit: () -> Unit
 ) {
     Box(
-       modifier = Modifier.fillMaxSize()
+       modifier = Modifier
+           .fillMaxSize()
+           .background(Color(0xFFF5F3F7))
     ) {
         component.AttachWithView()
         ExtendedFloatingActionButton(
