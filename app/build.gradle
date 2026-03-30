@@ -1,15 +1,15 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
-    compileSdk 32
+    compileSdk versions.compileSdk
 
     defaultConfig {
         applicationId "com.hluhovskyi.zero"
-        minSdk 21
+        minSdk versions.minSdk
         targetSdk 32
         versionCode 1
         versionName "1.0"
@@ -28,23 +28,20 @@ android {
     }
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     buildFeatures {
         compose true
+        buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
-    }
+
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    namespace 'com.hluhovskyi.zero'
 }
 
 dependencies {
@@ -63,7 +60,7 @@ dependencies {
 
     implementation deps.javax.inject
     implementation deps.dagger.runtime
-    kapt deps.dagger.compiler
+    ksp deps.dagger.compiler
 
     implementation deps.timber
 

@@ -253,7 +253,7 @@ abstract class ApplicationComponent :
 }
 
 @dagger.Module
-private object DatabaseModule {
+internal object DatabaseModule {
 
     @Provides
     @ApplicationScope
@@ -306,7 +306,7 @@ private object DatabaseModule {
 }
 
 @dagger.Module
-private object ImportModule {
+internal object ImportModule {
 
     @Provides
     @ApplicationScope

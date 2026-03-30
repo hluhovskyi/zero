@@ -71,7 +71,7 @@ private class ComponentHolderViewModel<T : AttachableViewComponent>(
     ) : ViewModelProvider.Factory {
 
         @Suppress("unchecked_cast")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
             ComponentHolderViewModel<Component>(component) as T
     }
 }

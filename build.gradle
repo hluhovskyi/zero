@@ -1,11 +1,11 @@
 buildscript {
     ext {
-        room_version = '2.4.2'
+        room_version = '2.8.4'
 
         versions = [
-                minSdk    : 21,
-                compileSdk: 32,
-                targetSdk : 32,
+                minSdk    : 23,
+                compileSdk: 34,
+                targetSdk : 34,
                 compose   : '1.2.0'
         ]
 
@@ -35,8 +35,8 @@ buildscript {
                         ]
                 ],
                 dagger : [
-                        runtime : "com.google.dagger:dagger:2.42",
-                        compiler: "com.google.dagger:dagger-compiler:2.42"
+                        runtime : "com.google.dagger:dagger:2.56.2",
+                        compiler: "com.google.dagger:dagger-compiler:2.56.2"
                 ],
                 javax  : [
                         inject: "javax.inject:javax.inject:1"
@@ -53,11 +53,12 @@ buildscript {
 }
 
 plugins {
-    id 'com.android.application' version '7.2.1' apply false
-    id 'com.android.library' version '7.2.1' apply false
-    id 'org.jetbrains.kotlin.android' version '1.7.0' apply false
-    id 'org.jetbrains.kotlin.jvm' version '1.7.0' apply false
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.0'
+    id 'com.android.application' version '9.1.0' apply false
+    id 'com.android.library' version '9.1.0' apply false
+    id 'org.jetbrains.kotlin.jvm' version '2.3.20' apply false
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.3.20'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.3.20' apply false
+    id 'com.google.devtools.ksp' version '2.3.6' apply false
 }
 
 task clean(type: Delete) {

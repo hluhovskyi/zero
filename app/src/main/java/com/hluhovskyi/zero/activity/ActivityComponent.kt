@@ -190,7 +190,7 @@ abstract class ActivityComponent :
 }
 
 @dagger.Module
-private object MainActivityModule {
+internal object MainActivityModule {
 
     @Provides
     @ActivityScope
