@@ -29,6 +29,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.toCompose
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 
@@ -117,6 +118,7 @@ private fun TransactionView(
                                         currencySymbol = transaction.currencySymbol
                                     ),
                                     accountName = transaction.accountName,
+                                    iconColor = transaction.categoryColor.toCompose(),
                                     accountIcon = transaction.accountIcon.toComposable(
                                         imageLoader = imageLoader,
                                         modifier = Modifier
@@ -139,6 +141,7 @@ private fun TransactionView(
                                         currencySymbol = transaction.currencySymbol,
                                     ),
                                     accountName = transaction.accountName,
+                                    iconColor = transaction.categoryColor.toCompose(),
                                     convertedAmount = transaction.conversion.format(amountFormatter),
                                     icon = transaction.categoryIcon.toComposable(
                                         imageLoader = imageLoader,
