@@ -12,8 +12,8 @@ Give each category icon a two-color scheme: a dark, saturated primary color for 
 
 ```kotlin
 data class ColorScheme(
-    val primary: ColorValue,    // dark, saturated — used as icon tint
-    val background: ColorValue  // light, neutral — used as container background
+    val primary: Color,    // com.hluhovskyi.zero.colors.Color — dark, saturated — used as icon tint
+    val background: Color  // com.hluhovskyi.zero.colors.Color — light, neutral — used as container background
 )
 ```
 
@@ -36,12 +36,14 @@ Synchronous because `ColorScheme` is a pure lookup with no async work.
 
 An `orange` color entry is added alongside the existing `blue` and `red`. Schemes:
 
-| Color ID  | `primary` (`ColorValue`) | `background` (`ColorValue`) |
-|-----------|--------------------------|------------------------------|
-| `blue`    | `#1565C0`                | `#E3F2FD`                    |
-| `red`     | `#B71C1C`                | `#FFEBEE`                    |
-| `orange`  | `#E65100`                | `#FFF3E0`                    |
-| fallback  | `#424242`                | `#F5F5F5`                    |
+Scheme `Color` objects use synthetic IDs (e.g. `"blue_primary"`, `"blue_background"`) — they are not independently queryable via `ColorRepository.query()`.
+
+| Color ID  | `primary.value` | `background.value` |
+|-----------|-----------------|---------------------|
+| `blue`    | `#1565C0`       | `#E3F2FD`           |
+| `red`     | `#B71C1C`       | `#FFEBEE`           |
+| `orange`  | `#E65100`       | `#FFF3E0`           |
+| fallback  | `#424242`       | `#F5F5F5`           |
 
 The fallback is used when `colorId` is unknown.
 
@@ -67,20 +69,20 @@ This single change cascades through all consumers:
 
 ## `ImageLoader` Tinting
 
-`ImageLoader.View()` gains a `tint: ColorValue? = null` parameter using the app's own domain type:
+`ImageLoader.View()` gains a `tint: Color? = null` parameter using the app's domain `Color` type (`com.hluhovskyi.zero.colors.Color`):
 
 ```kotlin
 fun View(
     image: Image,
     modifier: Modifier = Modifier,
     scale: Scale = Scale.Fit,
-    tint: ColorValue? = null,    // new — domain ColorValue, not Compose Color
+    tint: Color? = null,    // new — com.hluhovskyi.zero.colors.Color, not Compose Color
 )
 ```
 
 `CoilImageLoader` converts and passes it to `AsyncImage`:
 ```kotlin
-colorFilter = tint?.let { ColorFilter.tint(it.toCompose()) }
+colorFilter = tint?.let { ColorFilter.tint(it.value.toCompose()) }
 ```
 
 `EmptyImageLoader` accepts and ignores the param.
@@ -100,11 +102,11 @@ fun CategoryIconView(
     size: Dp = 40.dp,
     contentPadding: Dp = 8.dp,
     modifier: Modifier = Modifier,
-    content: @Composable (iconTint: ColorValue) -> Unit,  // domain type, no conversion needed at call site
+    content: @Composable (iconTint: Color) -> Unit,  // com.hluhovskyi.zero.colors.Color, no conversion at call site
 )
 ```
 
-Internally delegates to the existing `CategoryIconView(color: Color, ...)` overload, passing `colorScheme.background.toCompose()` as background and `colorScheme.primary` (as `ColorValue`) to the content lambda.
+Internally delegates to the existing `CategoryIconView(color: ComposeColor, ...)` overload, passing `colorScheme.background.value.toCompose()` as background and `colorScheme.primary` (as `com.hluhovskyi.zero.colors.Color`) to the content lambda.
 
 The existing single-color overload is kept unchanged for non-scheme use cases.
 
@@ -116,7 +118,7 @@ All four screens use the same pattern — no color conversion at call sites:
 
 ```kotlin
 CategoryIconView(colorScheme = scheme) { tint ->
-    imageLoader.View(image = icon, tint = tint)  // tint: ColorValue, passed straight through
+    imageLoader.View(image = icon, tint = tint)  // tint: com.hluhovskyi.zero.colors.Color, passed straight through
 }
 ```
 
