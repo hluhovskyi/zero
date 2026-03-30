@@ -1,7 +1,8 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.colors.Color
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
-import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Image
 
 interface CategoryEditViewModel
@@ -17,6 +18,9 @@ interface CategoryEditViewModel
     data class State(
         val name: String = "",
         val icon: Image = Image.empty(),
-        val color: ColorValue = ColorValue.unspecified(),
+        val colorScheme: ColorScheme = ColorScheme(
+            primary = Color.empty(),
+            background = Color.empty(),
+        ),
     )
 }

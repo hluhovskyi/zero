@@ -1,9 +1,10 @@
 package com.hluhovskyi.zero.categories.edit
 
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.icons.IconRepository
@@ -37,7 +38,7 @@ internal class DefaultCategoryEditViewModel(
             CategoryEditViewModel.State(
                 name = state.name,
                 icon = state.icon,
-                color = state.color,
+                colorScheme = state.colorScheme,
             )
         }
 
@@ -92,7 +93,7 @@ internal class DefaultCategoryEditViewModel(
                                         iconId = icon.id,
                                         icon = icon.image,
                                         colorId = color.id,
-                                        color = color.value,
+                                        colorScheme = colorRepository.schemeFor(color.id),
                                     )
                                 }
                             }
@@ -117,7 +118,7 @@ internal class DefaultCategoryEditViewModel(
                             mutableState.update { state ->
                                 state.copy(
                                     colorId = color.id,
-                                    color = color.value
+                                    colorScheme = colorRepository.schemeFor(color.id),
                                 )
                             }
                         }
@@ -144,7 +145,7 @@ internal class DefaultCategoryEditViewModel(
                         mutableState.update { state ->
                             state.copy(
                                 colorId = colorState.color.id,
-                                color = colorState.color.color,
+                                colorScheme = colorRepository.schemeFor(colorState.color.id),
                             )
                         }
                     }
@@ -157,6 +158,9 @@ internal class DefaultCategoryEditViewModel(
         val iconId: Id = Id.Unknown,
         val icon: Image = Image.empty(),
         val colorId: Id = Id.Unknown,
-        val color: ColorValue = ColorValue.unspecified(),
+        val colorScheme: ColorScheme = ColorScheme(
+            primary = Color.empty(),
+            background = Color.empty(),
+        ),
     )
 }
