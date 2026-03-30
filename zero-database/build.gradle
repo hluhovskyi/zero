@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'com.google.devtools.ksp'
+    id 'androidx.room'
 }
 
 android {
@@ -29,6 +30,9 @@ android {
     }
     testOptions {
         targetSdk 32
+    }
+    room {
+        schemaDirectory "$projectDir/schemas"
     }
 }
 

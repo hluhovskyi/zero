@@ -41,6 +41,14 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    kotlin {
+        compilerOptions {
+            optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
+        }
+    }
+
     namespace 'com.hluhovskyi.zero'
 }
 

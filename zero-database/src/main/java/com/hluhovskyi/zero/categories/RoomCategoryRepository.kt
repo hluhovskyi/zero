@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.valueOrNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
@@ -21,6 +22,7 @@ internal class RoomCategoryRepository(
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : CategoryRepository {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun <T> query(criteria: CategoryRepository.Criteria<T>): Flow<T> =
         when (criteria) {
             is CategoryRepository.Criteria.All -> currentUserId.take(1)

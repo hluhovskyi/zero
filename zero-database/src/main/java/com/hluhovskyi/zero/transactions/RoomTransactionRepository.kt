@@ -11,8 +11,10 @@ import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
@@ -24,10 +26,9 @@ internal class RoomTransactionRepository(
     private val clock: Clock
 ) : TransactionRepository {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun <T> query(criteria: TransactionRepository.Criteria<T>): Flow<T> = currentUserId.take(1)
         .flatMapConcat { userId ->
-            Log.d("GOVNO", "zhepa, ${Thread.currentThread().name}")
-
             when (criteria) {
                 is TransactionRepository.Criteria.All -> transactionRoom().selectByUserId(userId)
                     .map { entities ->
