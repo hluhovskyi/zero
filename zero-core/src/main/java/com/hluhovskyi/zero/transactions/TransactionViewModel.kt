@@ -1,8 +1,8 @@
 package com.hluhovskyi.zero.transactions
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
-import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import java.time.LocalDate
@@ -41,7 +41,7 @@ interface TransactionViewModel
                 val accountName: String,
                 val accountIcon: Image,
                 val categoryName: String,
-                val categoryColor: ColorValue,
+                val categoryColorScheme: ColorScheme,
                 val categoryIcon: Image,
                 val conversion: Conversion
             ) : Transaction
@@ -55,7 +55,7 @@ interface TransactionViewModel
                 val accountName: String,
                 val accountIcon: Image,
                 val categoryName: String,
-                val categoryColor: ColorValue,
+                val categoryColorScheme: ColorScheme,
                 val categoryIcon: Image,
                 val conversion: Conversion,
             ) : Transaction
