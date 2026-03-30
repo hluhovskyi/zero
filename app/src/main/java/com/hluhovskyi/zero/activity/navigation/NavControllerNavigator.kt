@@ -61,7 +61,7 @@ internal class NavControllerNavigator(
                     arguments = backStack.arguments?.let { bundle ->
                         bundle.keySet().mapNotNull { key ->
                             // TODO: handle non string as well
-                            val value = bundle.get(key) as? String
+                            val value = bundle.getString(key)
                             if (value != null) {
                                 stringValueOf(key).withValue(value)
                             } else {
