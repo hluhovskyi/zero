@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.colors.ColorScheme
+import com.hluhovskyi.zero.colors.Color as DomainColor
+import com.hluhovskyi.zero.common.toCompose
 
 @Composable
 fun CategoryIconView(
@@ -29,4 +32,22 @@ fun CategoryIconView(
         contentAlignment = Alignment.Center,
         content = content,
     )
+}
+
+@Composable
+fun CategoryIconView(
+    colorScheme: ColorScheme,
+    size: Dp = 40.dp,
+    contentPadding: Dp = 8.dp,
+    modifier: Modifier = Modifier,
+    content: @Composable (iconTint: DomainColor) -> Unit,
+) {
+    CategoryIconView(
+        color = colorScheme.background.value.toCompose(),
+        size = size,
+        contentPadding = contentPadding,
+        modifier = modifier,
+    ) {
+        content(colorScheme.primary)
+    }
 }
