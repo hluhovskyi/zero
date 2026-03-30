@@ -1,12 +1,8 @@
 package com.hluhovskyi.zero.transaction
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ui.CategoryIconView
 
 @Composable
 fun TransactionExpenseView(
@@ -22,6 +19,7 @@ fun TransactionExpenseView(
     categoryName: String,
     amount: String,
     accountName: String,
+    iconColor: Color? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
@@ -31,6 +29,7 @@ fun TransactionExpenseView(
         categoryName = categoryName,
         amount = "-$amount",
         accountName = accountName,
+        iconColor = iconColor,
         accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
@@ -43,6 +42,7 @@ fun TransactionIncomeView(
     categoryName: String,
     amount: String,
     accountName: String,
+    iconColor: Color? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
@@ -52,6 +52,7 @@ fun TransactionIncomeView(
         categoryName = categoryName,
         amount = "+$amount",
         accountName = accountName,
+        iconColor = iconColor,
         accountIcon = accountIcon,
         convertedAmount = convertedAmount,
         icon = icon,
@@ -64,6 +65,7 @@ fun TransactionView(
     categoryName: String,
     amount: String,
     accountName: String,
+    iconColor: Color? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
     icon: (@Composable () -> Unit)? = null,
@@ -72,14 +74,9 @@ fun TransactionView(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        icon?.let { iconView ->
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFFDDE3FF), shape = RoundedCornerShape(percent = 30))
-                    .size(40.dp)
-                    .padding(8.dp)
-            ) {
-                iconView()
+        if (icon != null && iconColor != null) {
+            CategoryIconView(color = iconColor) {
+                icon()
             }
         }
         Column(
