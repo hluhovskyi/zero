@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorRepository
-import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
@@ -57,11 +56,14 @@ internal class DefaultCategoriesQueryUseCase(
         val color = idToColors[category.colorId]
             ?: idToColors[ColorRepository.unknownCategoryColorId()]
 
+        val colorScheme = color?.let { colorRepository.schemeFor(it.id) }
+            ?: colorRepository.schemeFor(ColorRepository.unknownCategoryColorId())
+
         return CategoriesQueryUseCase.Category(
             id = category.id,
             name = category.name,
             icon = icon.image,
-            color = color?.value ?: ColorValue.unspecified()
+            colorScheme = colorScheme,
         )
     }
 }
