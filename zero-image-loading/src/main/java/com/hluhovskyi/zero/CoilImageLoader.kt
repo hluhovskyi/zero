@@ -70,7 +70,9 @@ internal class CoilImageLoader(
                     imageLoader = imageLoader,
                     modifier = modifier,
                     contentScale = contentScale,
-                    colorFilter = tint?.let { ColorFilter.tint(ComposeColor(it.value.hex)) },
+                    colorFilter = tint
+                        ?.takeIf { !it.value.isUnspecified() }
+                        ?.let { ColorFilter.tint(ComposeColor(it.value.hex.toInt())) },
                 )
             }
             else -> {
