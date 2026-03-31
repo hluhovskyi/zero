@@ -14,23 +14,9 @@ interface ImageLoader {
         uri: Uri,
         contentDescription: String?,
         modifier: Modifier,
-        scale: Scale
-    )
-
-    @Composable
-    fun View(
-        image: Image,
-        modifier: Modifier = Modifier,
-        scale: Scale = Scale.Fit,
+        scale: Scale,
         tint: Color? = null,
-    ) {
-        View(
-            uri = image.uri,
-            contentDescription = image.description,
-            modifier = modifier,
-            scale = scale
-        )
-    }
+    )
 
     enum class Scale {
         Fit,
@@ -57,12 +43,30 @@ fun ImageLoader.View(
     uri: Uri,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    scale: ImageLoader.Scale = ImageLoader.Scale.Fit
+    scale: ImageLoader.Scale = ImageLoader.Scale.Fit,
+    tint: Color? = null,
 ) {
     View(
         uri = uri,
         contentDescription = contentDescription,
         modifier = modifier,
-        scale = scale
+        scale = scale,
+        tint = tint,
+    )
+}
+
+@Composable
+fun ImageLoader.View(
+    image: Image,
+    modifier: Modifier = Modifier,
+    scale: ImageLoader.Scale = ImageLoader.Scale.Fit,
+    tint: Color? = null,
+) {
+    View(
+        uri = image.uri,
+        contentDescription = image.description,
+        modifier = modifier,
+        scale = scale,
+        tint = tint,
     )
 }
