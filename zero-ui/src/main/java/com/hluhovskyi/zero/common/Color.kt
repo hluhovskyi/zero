@@ -6,5 +6,5 @@ fun ColorValue.toCompose(): ComposeColor =
     if (isUnspecified()) {
         ComposeColor.Unspecified
     } else {
-        ComposeColor(hex.toLong())
+        ComposeColor(hex.toInt())
     }
