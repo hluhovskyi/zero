@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -9,8 +10,10 @@ import kotlinx.coroutines.flow.emptyFlow
 interface CategoryEditIconUseCase
     : ActionStateModel<CategoryEditIconUseCase.Action, CategoryEditIconUseCase.State> {
 
+    val colorScheme: ColorScheme?
+
     sealed interface Action {
-        object Request : Action
+        data class Request(val colorScheme: ColorScheme? = null) : Action
         data class Pick(val icon: Icon) : Action
     }
 
@@ -35,6 +38,7 @@ interface CategoryEditIconUseCase
     }
 
     object Noop : CategoryEditIconUseCase {
+        override val colorScheme: ColorScheme? = null
         override val state: Flow<State> = emptyFlow()
         override fun perform(action: Action) = Unit
     }
