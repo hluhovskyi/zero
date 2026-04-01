@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.CategoryIconView
 
 internal class IconPickerViewProvider(
     private val viewModel: IconPickerViewModel,
@@ -47,11 +49,38 @@ private fun IconPickerView(
                     .clickable { viewModel.perform(IconPickerViewModel.Action.SelectIcon(item)) },
                 contentAlignment = Alignment.Center
             ) {
-                imageLoader.View(
-                    modifier = Modifier.size(48.dp),
-                    image = item.image
+                IconCell(
+                    item = item,
+                    colorScheme = state.colorScheme,
+                    imageLoader = imageLoader,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun IconCell(
+    item: Icon,
+    colorScheme: ColorScheme?,
+    imageLoader: ImageLoader,
+) {
+    if (colorScheme != null) {
+        CategoryIconView(
+            colorScheme = colorScheme,
+            size = 48.dp,
+            contentPadding = 10.dp,
+        ) { tint ->
+            imageLoader.View(
+                modifier = Modifier.size(28.dp),
+                image = item.image,
+                tint = tint,
+            )
+        }
+    } else {
+        imageLoader.View(
+            modifier = Modifier.size(48.dp),
+            image = item.image,
+        )
     }
 }

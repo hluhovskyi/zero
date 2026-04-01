@@ -1,6 +1,9 @@
 package com.hluhovskyi.zero.icons
 
+import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +16,9 @@ import java.io.Closeable
 
 internal class DefaultIconPickerViewModel(
     private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     private val onIconSelectedHandler: OnIconSelectedHandler,
+    private val colorId: Id = Id.Unknown,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : IconPickerViewModel {
 
@@ -29,6 +34,12 @@ internal class DefaultIconPickerViewModel(
     }
 
     override fun attach(): Closeable = Closeables.of {
+        coroutineScope.launch {
+            val colorScheme = (colorId as? Id.Known)
+                ?.let { colorRepository.schemeFor(it) }
+                ?: ColorScheme.Grey
+            mutableState.update { it.copy(colorScheme = colorScheme) }
+        }
         coroutineScope.launch {
             iconRepository.query(IconRepository.Criteria.All())
                 .map { icons ->

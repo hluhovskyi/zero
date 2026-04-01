@@ -358,6 +358,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Icon.Picker) {
             componentBuilder
+                .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
                 .onIconSelectedHandler { icon ->
                     accountEditIconUseCase.perform(
                         AccountEditIconUseCase.Action.Pick(
