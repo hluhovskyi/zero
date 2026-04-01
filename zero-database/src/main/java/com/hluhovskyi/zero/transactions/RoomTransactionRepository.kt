@@ -27,13 +27,16 @@ internal class RoomTransactionRepository(
 ) : TransactionRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun <T> query(criteria: TransactionRepository.Criteria<T>): Flow<T> = currentUserId.take(1)
+    override fun <T> query(
+        criteria: TransactionRepository.Criteria<T>,
+        trigger: Flow<*>,
+    ): Flow<T> = currentUserId.take(1)
         .flatMapConcat { userId ->
             when (criteria) {
-                is TransactionRepository.Criteria.All -> transactionRoom().selectByUserId(userId)
-                    .map { entities ->
-                        entities.mapNotNull { entity -> entity.toRepository() }
-                    }
+                is TransactionRepository.Criteria.All -> paginatedFlow(userId, trigger)
+                is TransactionRepository.Criteria.After -> transactionRoom()
+                    .selectAfter(userId.value, criteria.dateTime.toString())
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
 
                 is TransactionRepository.Criteria.ById ->
                     flow<TransactionRepository.Transaction> {
@@ -46,6 +49,38 @@ internal class RoomTransactionRepository(
             }
         }
         .uncheckedCast()
+
+    private fun paginatedFlow(
+        userId: Id.Known,
+        trigger: Flow<*>,
+    ): Flow<List<TransactionRepository.Transaction>> = flow {
+        val accumulated = mutableListOf<TransactionEntity>()
+
+        val firstPage = transactionRoom().selectFirstPage(userId.value, PAGE_SIZE)
+        accumulated.addAll(firstPage + loadDayPadding(userId, firstPage))
+        emit(accumulated.mapNotNull { it.toRepository() })
+
+        trigger.collect {
+            val oldest = accumulated.lastOrNull() ?: return@collect
+            val cursorDate = oldest.enteredDateTime.toLocalDate().toString()
+            val nextPage = transactionRoom().selectNextPage(userId.value, cursorDate, PAGE_SIZE)
+            if (nextPage.isEmpty()) return@collect
+            accumulated.addAll(nextPage + loadDayPadding(userId, nextPage))
+            emit(accumulated.mapNotNull { it.toRepository() })
+        }
+    }
+
+    private suspend fun loadDayPadding(
+        userId: Id.Known,
+        page: List<TransactionEntity>,
+    ): List<TransactionEntity> {
+        val oldest = page.lastOrNull() ?: return emptyList()
+        return transactionRoom().selectRemainingOnDay(
+            userId = userId.value,
+            day = oldest.enteredDateTime.toLocalDate().toString(),
+            beforeDateTime = oldest.enteredDateTime.toString(),
+        )
+    }
 
     override suspend fun insert(transaction: TransactionRepository.Transaction) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
@@ -163,4 +198,8 @@ internal class RoomTransactionRepository(
     private fun RateEntity.convert(): Rate = Rate(value)
 
     private fun Rate.convert(): RateEntity = RateEntity(value)
+
+    private companion object {
+        const val PAGE_SIZE = 20
+    }
 }
