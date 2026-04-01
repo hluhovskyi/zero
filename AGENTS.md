@@ -7,5 +7,5 @@
 - [Module Boundaries](docs/agents/module-boundaries.md) — `app`, `zero-core`, `zero-ui`, `zero-api`, `zero-image-loading` and their rules
 - [ImageLoader](docs/agents/image-loading.md) — Interface design, tint via `rememberAsyncImagePainter`, `ComposeColor` int constructor
 - [ColorScheme](docs/agents/color-scheme.md) — `ColorScheme`, `ColorScheme.Grey` fallback, `colorRepository.schemeFor`, `ColorValue`
-- [Testing](docs/agents/testing.md) — JUnit/Mockito best practices, explicit type inference, factory methods for DRY tests
+- [Testing](docs/agents/testing.md) — JUnit/Mockito best practices (including Flow type inference), factory methods for DRY tests, coroutines testing
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — `DefaultImpls` dispatch bug, `ComposeColor` constructor pitfall

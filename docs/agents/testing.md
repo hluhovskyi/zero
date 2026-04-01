@@ -9,7 +9,8 @@ This project uses **JUnit 4**, **Mockito-Kotlin**, and **Kotlinx-Coroutines-Test
 
 ## Mockito Best Practices
 
-### 1. Explicit Type Inference
+### 1. Type Inference in Mockito + Flow
+
 The Kotlin compiler often fails to infer types for generic methods (like `Repository.query<T>`) when used with Mockito matchers. **Always specify types explicitly** to avoid compilation errors.
 
 **Bad:**
