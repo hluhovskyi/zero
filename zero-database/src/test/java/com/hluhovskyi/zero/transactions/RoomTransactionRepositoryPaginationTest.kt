@@ -1,0 +1,130 @@
+package com.hluhovskyi.zero.transactions
+
+import com.hluhovskyi.zero.common.AmountEntity
+import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.IncorrectStateDetector
+import com.hluhovskyi.zero.common.RateEntity
+import com.hluhovskyi.zero.common.time.Clock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
+import java.math.BigDecimal
+import java.time.LocalDateTime
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(MockitoJUnitRunner::class)
+class RoomTransactionRepositoryPaginationTest {
+
+    @Mock private lateinit var transactionRoom: TransactionRoom
+    @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
+    @Mock private lateinit var clock: Clock
+
+    private lateinit var repo: RoomTransactionRepository
+
+    private val userId = Id.Known("user1")
+    private val jan15_10h = LocalDateTime.of(2024, 1, 15, 10, 0)
+    private val jan15_8h  = LocalDateTime.of(2024, 1, 15, 8, 0)
+    private val jan14_18h = LocalDateTime.of(2024, 1, 14, 18, 0)
+
+    @Before
+    fun setUp() {
+        repo = RoomTransactionRepository(
+            transactionRoom = { transactionRoom },
+            currentUserId = flowOf(userId),
+            incorrectStateDetector = incorrectStateDetector,
+            clock = clock,
+        )
+    }
+
+    private fun expenseEntity(id: String, dateTime: LocalDateTime) = TransactionEntity(
+        id = Id.Known(id),
+        userId = userId,
+        type = TransactionEntity.Type.EXPENSE,
+        currencyId = Id.Known("usd"),
+        accountId = Id.Known("acc"),
+        categoryId = "cat",
+        amount = AmountEntity(BigDecimal.ONE),
+        rate = RateEntity(BigDecimal.ONE),
+        targetAccount = null,
+        targetAmount = AmountEntity.empty(),
+        enteredDateTime = dateTime,
+        creationDateTime = dateTime,
+        updatedDateTime = dateTime,
+    )
+
+    // --- Criteria.After ---
+
+    @Test
+    fun `Criteria_After emits transactions newer than given datetime`() = runTest {
+        val roomFlow = MutableSharedFlow<List<TransactionEntity>>(replay = 1)
+        whenever(transactionRoom.selectAfter("user1", jan15_8h.toString()))
+            .thenReturn(roomFlow)
+
+        val results = mutableListOf<List<TransactionRepository.Transaction>>()
+        val job = launch {
+            repo.query(TransactionRepository.Criteria.After(jan15_8h)).collect { results.add(it) }
+        }
+
+        roomFlow.emit(listOf(expenseEntity("t1", jan15_10h)))
+        advanceUntilIdle()
+        assertEquals(listOf("t1"), results.last().map { it.id.value })
+
+        // Simulate new insert — Room re-emits
+        roomFlow.emit(listOf(expenseEntity("t2", jan15_10h.plusHours(1)), expenseEntity("t1", jan15_10h)))
+        advanceUntilIdle()
+        assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
+
+        job.cancel()
+    }
+
+    // --- Criteria.All with trigger ---
+
+    @Test
+    fun `Criteria_All initial page is padded to complete the last day`() = runTest {
+        whenever(transactionRoom.selectFirstPage("user1", 100))
+            .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
+        whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15_10h.toString()))
+            .thenReturn(listOf(expenseEntity("t2", jan15_8h)))
+
+        val result = repo.query(TransactionRepository.Criteria.All()).first()
+
+        assertEquals(listOf("t1", "t2"), result.map { it.id.value })
+    }
+
+    @Test
+    fun `Criteria_All trigger loads next cursor page appended to first`() = runTest {
+        val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        whenever(transactionRoom.selectFirstPage("user1", 100))
+            .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
+        whenever(transactionRoom.selectRemainingOnDay(any(), any(), any()))
+            .thenReturn(emptyList())
+        whenever(transactionRoom.selectNextPage("user1", "2024-01-15", 100))
+            .thenReturn(listOf(expenseEntity("t2", jan14_18h)))
+
+        val results = mutableListOf<List<TransactionRepository.Transaction>>()
+        val job = launch {
+            repo.query(TransactionRepository.Criteria.All(), trigger).collect { results.add(it) }
+        }
+
+        advanceUntilIdle()
+        assertEquals(listOf("t1"), results.last().map { it.id.value })
+
+        trigger.emit(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf("t1", "t2"), results.last().map { it.id.value })
+
+        job.cancel()
+    }
+}

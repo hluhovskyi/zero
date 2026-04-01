@@ -48,6 +48,11 @@ buildscript {
                 ],
                 timber : "com.jakewharton.timber:timber:5.0.1",
                 coil   : "io.coil-kt:coil-compose:2.1.0",
+                test   : [
+                        junit    : "junit:junit:4.13.2",
+                        mockito  : "org.mockito.kotlin:mockito-kotlin:5.4.0",
+                        coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2",
+                ]
         ]
     }
 }

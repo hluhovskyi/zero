@@ -19,11 +19,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEmpty
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
+import java.time.LocalDateTime
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -40,20 +45,42 @@ internal class DefaultTransactionViewModel(
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
     override val state: Flow<TransactionViewModel.State> = mutableState
 
+    private val loadMoreTrigger = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
     override fun perform(action: TransactionViewModel.Action) {
         when (action) {
             is TransactionViewModel.Action.SelectTransaction -> {
                 onTransactionSelectedHandler.onSelected(action.item.id)
+            }
+
+            is TransactionViewModel.Action.LoadMore -> {
+                coroutineScope.launch {
+                    loadMoreTrigger.emit(Unit)
+                }
             }
         }
     }
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            val initialTimestamp = LocalDateTime.now()
             combine(
-                transactionRepository.query(TransactionRepository.Criteria.All())
-                    .onStartWithEmptyList()
-                    .onEmptyReturnEmptyList(),
+                combine(
+                    transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
+                        .onStartWithEmptyList()
+                        .onEmptyReturnEmptyList(),
+                    transactionRepository.query(
+                        TransactionRepository.Criteria.All(),
+                        trigger = loadMoreTrigger
+                    )
+                        .onStartWithEmptyList()
+                        .onEmptyReturnEmptyList(),
+                ) { new, paged ->
+                    (new + paged).distinctBy { it.id }
+                },
                 categoriesQueryUseCase.queryAll()
                     .onStartWithEmptyList()
                     .onEmptyReturnEmptyList()

@@ -9,12 +9,13 @@ import java.time.LocalDateTime
 
 interface TransactionRepository {
 
-    fun <T> query(criteria: Criteria<T>): Flow<T>
+    fun <T> query(criteria: Criteria<T>, trigger: Flow<*> = emptyFlow<Any>()): Flow<T>
 
     sealed interface Criteria<T> {
 
         class All : Criteria<List<Transaction>>
         data class ById(val id: Id.Known) : Criteria<Transaction>
+        data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
     }
 
     sealed interface Trigger {
@@ -66,7 +67,7 @@ interface TransactionRepository {
     }
 
     object Noop : TransactionRepository {
-        override fun <T> query(criteria: Criteria<T>): Flow<T> = emptyFlow()
+        override fun <T> query(criteria: Criteria<T>, trigger: Flow<*>): Flow<T> = emptyFlow()
         override suspend fun insert(transaction: Transaction) = Unit
         override suspend fun insert(transactions: List<Transaction>) = Unit
     }

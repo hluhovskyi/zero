@@ -50,4 +50,8 @@ dependencies {
 
     implementation deps.android.core.ktx
     implementation deps.android.core.appcompat
+
+    testImplementation deps.test.junit
+    testImplementation deps.test.mockito
+    testImplementation deps.test.coroutines
 }
