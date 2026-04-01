@@ -72,7 +72,7 @@ private fun TransactionView(
             if (totalItems == 0) return@derivedStateOf false
             val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index
                 ?: return@derivedStateOf false
-            lastVisibleIndex >= totalItems - 15
+            lastVisibleIndex >= totalItems - 30
         }
     }
 

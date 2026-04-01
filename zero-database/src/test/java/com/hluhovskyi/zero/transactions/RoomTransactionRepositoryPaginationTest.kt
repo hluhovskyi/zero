@@ -93,7 +93,7 @@ class RoomTransactionRepositoryPaginationTest {
 
     @Test
     fun `Criteria_All initial page is padded to complete the last day`() = runTest {
-        whenever(transactionRoom.selectFirstPage("user1", 50))
+        whenever(transactionRoom.selectFirstPage("user1", 100))
             .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
         whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15_10h.toString()))
             .thenReturn(listOf(expenseEntity("t2", jan15_8h)))
@@ -106,11 +106,11 @@ class RoomTransactionRepositoryPaginationTest {
     @Test
     fun `Criteria_All trigger loads next cursor page appended to first`() = runTest {
         val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-        whenever(transactionRoom.selectFirstPage("user1", 50))
+        whenever(transactionRoom.selectFirstPage("user1", 100))
             .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
         whenever(transactionRoom.selectRemainingOnDay(any(), any(), any()))
             .thenReturn(emptyList())
-        whenever(transactionRoom.selectNextPage("user1", "2024-01-15", 50))
+        whenever(transactionRoom.selectNextPage("user1", "2024-01-15", 100))
             .thenReturn(listOf(expenseEntity("t2", jan14_18h)))
 
         val results = mutableListOf<List<TransactionRepository.Transaction>>()

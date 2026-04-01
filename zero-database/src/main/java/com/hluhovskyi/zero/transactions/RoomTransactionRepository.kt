@@ -200,6 +200,6 @@ internal class RoomTransactionRepository(
     private fun Rate.convert(): RateEntity = RateEntity(value)
 
     private companion object {
-        const val PAGE_SIZE = 50
+        const val PAGE_SIZE = 100
     }
 }
