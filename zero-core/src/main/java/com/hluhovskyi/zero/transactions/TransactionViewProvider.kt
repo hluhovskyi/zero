@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -59,7 +63,27 @@ private fun TransactionView(
     dateFormatter: DateFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
+    val lazyListState = rememberLazyListState()
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val layoutInfo = lazyListState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            if (totalItems == 0) return@derivedStateOf false
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                ?: return@derivedStateOf false
+            lastVisibleIndex >= totalItems - 5
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) {
+            viewModel.perform(TransactionViewModel.Action.LoadMore)
+        }
+    }
+
     LazyColumn(
+        state = lazyListState,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     ) {
         items(state.transactions) { transaction ->
