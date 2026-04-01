@@ -9,3 +9,4 @@
 - [ColorScheme](docs/agents/color-scheme.md) — `ColorScheme`, `ColorScheme.Grey` fallback, `colorRepository.schemeFor`, `ColorValue`
 - [Testing](docs/agents/testing.md) — JUnit/Mockito best practices (including Flow type inference), factory methods for DRY tests, coroutines testing
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — `DefaultImpls` dispatch bug, `ComposeColor` constructor pitfall
+- [Branch Management](docs/agents/branch-management.md) — Protected `master` branch, PR-only workflow
