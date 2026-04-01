@@ -245,6 +245,8 @@ internal class DefaultTransactionViewModel(
                     targetAmount = transaction.targetAmount,
                     targetCurrencyId = targetCurrency.id,
                     targetCurrencySymbol = targetCurrency.symbol,
+                    transferIcon = idToIcons[IconRepository.transferIconId()]?.image ?: Image.empty(),
+                    transferColorScheme = ColorScheme.Grey,
                 )
             }
         }
