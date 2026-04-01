@@ -22,6 +22,11 @@ internal class PredefinedIconRepository(
             resourceName = "ic_cash_24",
             description = "Cash"
         ),
+        iconOf(
+            id = IconRepository.transferIconId(),
+            resourceName = "ic_transfer_24",
+            description = "Transfer"
+        ),
 
         iconOf(id = KnownIconIds.cash, resourceName = "ic_cash_24", description = "Cash"),
         iconOf(id = KnownIconIds.bank, resourceName = "ic_bank_24", description = "Bank"),
