@@ -28,13 +28,13 @@ fun TransactionExpenseView(
 ) {
     TransactionView(
         modifier = modifier,
-        categoryName = categoryName,
-        amount = "-$amount",
-        accountName = accountName,
+        primaryText = categoryName,
+        primaryAmount = "-$amount",
+        secondaryText = accountName,
+        secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
-        accountIcon = accountIcon,
-        convertedAmount = convertedAmount,
-        icon = icon,
+        secondaryIcon = accountIcon,
+        mainIcon = icon,
     )
 }
 
@@ -51,34 +51,34 @@ fun TransactionIncomeView(
 ) {
     TransactionView(
         modifier = modifier,
-        categoryName = categoryName,
-        amount = "+$amount",
-        accountName = accountName,
+        primaryText = categoryName,
+        primaryAmount = "+$amount",
+        secondaryText = accountName,
+        secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
-        accountIcon = accountIcon,
-        convertedAmount = convertedAmount,
-        icon = icon,
+        secondaryIcon = accountIcon,
+        mainIcon = icon,
     )
 }
 
 @Composable
 fun TransactionView(
     modifier: Modifier,
-    categoryName: String,
-    amount: String,
-    accountName: String,
+    primaryText: String,
+    primaryAmount: String,
+    secondaryText: String,
+    secondaryAmount: String? = null,
     iconColorScheme: ColorScheme? = null,
-    accountIcon: (@Composable () -> Unit)? = null,
-    convertedAmount: String? = null,
-    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
+    secondaryIcon: (@Composable () -> Unit)? = null,
+    mainIcon: (@Composable (tint: DomainColor) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null && iconColorScheme != null) {
+        if (mainIcon != null && iconColorScheme != null) {
             CategoryIconView(colorScheme = iconColorScheme) { tint ->
-                icon(tint)
+                mainIcon(tint)
             }
         }
         Column(
@@ -86,7 +86,7 @@ fun TransactionView(
         ) {
             Row {
                 Text(
-                    text = categoryName,
+                    text = primaryText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF1B1B1F),
@@ -96,24 +96,24 @@ fun TransactionView(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1B1B1F),
-                    text = amount,
+                    text = primaryAmount,
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                accountIcon?.invoke()
+                secondaryIcon?.invoke()
                 Text(
-                    text = accountName,
+                    text = secondaryText,
                     fontSize = 13.sp,
                     color = Color(0xFF44464F),
                     modifier = Modifier.weight(1f),
                 )
-                convertedAmount?.let {
+                secondaryAmount?.let {
                     Text(
                         fontSize = 12.sp,
                         color = Color(0xFF44464F),
-                        text = convertedAmount,
+                        text = it,
                     )
                 }
             }
