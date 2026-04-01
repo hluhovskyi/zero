@@ -72,6 +72,8 @@ interface TransactionViewModel
                 val targetAmount: Amount,
                 val targetCurrencyId: Id.Known,
                 val targetCurrencySymbol: String,
+                val transferIcon: Image,
+                val transferColorScheme: ColorScheme,
             ) : Transaction
         }
     }
