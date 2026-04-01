@@ -20,5 +20,6 @@ interface IconRepository {
 
         fun unknownCategoryIconId(): Id.Known = Id("unknown_category_icon")
         fun defaultAccountIconId(): Id.Known = Id("default_account_icon")
+        fun transferIconId(): Id.Known = Id("transfer_icon")
     }
 }
