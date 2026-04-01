@@ -46,4 +46,8 @@ dependencies {
 
     implementation deps.dagger.runtime
     ksp deps.dagger.compiler
+
+    testImplementation deps.test.junit
+    testImplementation deps.test.mockito
+    testImplementation deps.test.coroutines
 }

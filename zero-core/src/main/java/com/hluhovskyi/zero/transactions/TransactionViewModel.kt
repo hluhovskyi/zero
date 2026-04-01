@@ -13,6 +13,7 @@ interface TransactionViewModel
 
     sealed interface Action {
         data class SelectTransaction(val item: Item.Transaction) : Action
+        data object LoadMore : Action
     }
 
     data class State(
