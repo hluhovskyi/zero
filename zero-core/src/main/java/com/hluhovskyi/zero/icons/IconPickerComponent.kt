@@ -1,8 +1,10 @@
 package com.hluhovskyi.zero.icons
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import dagger.BindsInstance
 import dagger.Provides
@@ -29,8 +31,8 @@ abstract class IconPickerComponent : AttachableViewComponent {
 
     interface Dependencies {
         val imageLoader: ImageLoader
-
         val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -38,6 +40,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerIconPickerComponent.builder()
             .dependencies(dependencies)
             .onIconSelectedHandler(OnIconSelectedHandler.Noop)
+            .colorId(Id.Unknown)
     }
 
     @dagger.Component.Builder
@@ -47,6 +50,9 @@ abstract class IconPickerComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onIconSelectedHandler(handler: OnIconSelectedHandler): Builder
+
+        @BindsInstance
+        fun colorId(colorId: Id): Builder
     }
 
     @dagger.Module
@@ -56,10 +62,14 @@ abstract class IconPickerComponent : AttachableViewComponent {
         @IconPickerScope
         fun viewModel(
             iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             onIconSelectedHandler: OnIconSelectedHandler,
+            colorId: Id,
         ): IconPickerViewModel = DefaultIconPickerViewModel(
             iconRepository = iconRepository,
-            onIconSelectedHandler = onIconSelectedHandler
+            colorRepository = colorRepository,
+            onIconSelectedHandler = onIconSelectedHandler,
+            colorId = colorId,
         )
 
         @Provides

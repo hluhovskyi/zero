@@ -7,7 +7,6 @@ import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.activity.navigation.observeArgumentValue
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
-import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.Logger
@@ -32,9 +31,6 @@ internal class DefaultCategoryEditIconUseCase(
 
     private val logger = inputLogger.withTag(TAG)
 
-    override var colorScheme: ColorScheme? = null
-        private set
-
     private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<CategoryEditIconUseCase.Action.Pick>(
         extraBufferCapacity = 1,
@@ -44,13 +40,18 @@ internal class DefaultCategoryEditIconUseCase(
     override fun perform(action: CategoryEditIconUseCase.Action) {
         when (action) {
             is CategoryEditIconUseCase.Action.Request -> {
-                colorScheme = action.colorScheme
                 val id = requestIdGenerator()
                 requestId.set(id)
                 logger.d("perform, requestId=$requestId")
+                val args = buildList {
+                    add(Destinations.Icon.Picker.RequestId.withValue(id))
+                    (action.colorId as? Id.Known)?.let { colorId ->
+                        add(Destinations.Icon.Picker.ColorId.withValue(colorId))
+                    }
+                }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
-                    Destinations.Icon.Picker.RequestId.withValue(id)
+                    *args.toTypedArray()
                 )
             }
             is CategoryEditIconUseCase.Action.Pick -> {

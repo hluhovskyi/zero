@@ -27,9 +27,9 @@ internal class DefaultNavigationRouteResolver(
         val optionalValues = argumentValues.filter { it.argument.optional }
         if (optionalValues.isNotEmpty()) {
             newRoute += '?'
-            optionalValues.forEach { argumentValue ->
+            newRoute += optionalValues.joinToString("&") { argumentValue ->
                 val value = navigationArgumentSerializer.serialize(argumentValue)
-                newRoute += "${argumentValue.argument.key}=$value"
+                "${argumentValue.argument.key}=$value"
             }
         }
 
@@ -50,8 +50,8 @@ internal class DefaultNavigationRouteResolver(
         val optionalArguments = destination.arguments.filter { it.optional }
         if (optionalArguments.isNotEmpty()) {
             newRoute += '?'
-            optionalArguments.forEach { argument ->
-                newRoute += "${argument.key}={${argument.key}}"
+            newRoute += optionalArguments.joinToString("&") { argument ->
+                "${argument.key}={${argument.key}}"
             }
         }
 
