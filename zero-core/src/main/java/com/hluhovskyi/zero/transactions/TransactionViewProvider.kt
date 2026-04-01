@@ -36,6 +36,7 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
+import com.hluhovskyi.zero.transaction.TransactionTransferView
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -175,8 +176,22 @@ private fun TransactionView(
                             }
                             is TransactionViewModel.Item.Transaction.Transfer -> {
                                 TransactionTransferView(
-                                    item = transaction,
                                     modifier = contentModifier,
+                                    sourceAccountName = transaction.accountName,
+                                    targetAccountName = transaction.targetAccountName,
+                                    sourceAmount = amountFormatter.format(
+                                        amount = transaction.amount,
+                                        currencySymbol = transaction.currencySymbol,
+                                    ),
+                                    targetAmount = amountFormatter.format(
+                                        amount = transaction.targetAmount,
+                                        currencySymbol = transaction.targetCurrencySymbol,
+                                    ),
+                                    transferIconColorScheme = transaction.transferColorScheme,
+                                    transferIcon = transaction.transferIcon.toTintedComposable(
+                                        imageLoader = imageLoader,
+                                        modifier = Modifier.size(24.dp),
+                                    ),
                                 )
                             }
                         }
@@ -226,24 +241,4 @@ private fun Image.toTintedComposable(
         modifier = modifier,
         tint = tint,
     )
-}
-
-
-@Composable
-fun TransactionTransferView(
-    modifier: Modifier,
-    item: TransactionViewModel.Item.Transaction.Transfer
-) {
-    Row(modifier = modifier) {
-        Text(
-            text = item.accountName,
-            fontSize = 18.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            text = "-${item.amount.value.toPlainString()}"
-        )
-    }
 }

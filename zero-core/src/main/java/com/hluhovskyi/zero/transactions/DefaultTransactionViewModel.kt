@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
@@ -245,6 +246,8 @@ internal class DefaultTransactionViewModel(
                     targetAmount = transaction.targetAmount,
                     targetCurrencyId = targetCurrency.id,
                     targetCurrencySymbol = targetCurrency.symbol,
+                    transferIcon = idToIcons[IconRepository.transferIconId()]?.image ?: Image.empty(),
+                    transferColorScheme = ColorScheme.Grey,
                 )
             }
         }
