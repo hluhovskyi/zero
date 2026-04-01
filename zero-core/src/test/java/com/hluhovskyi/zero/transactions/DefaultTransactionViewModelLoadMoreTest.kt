@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -50,17 +51,7 @@ class DefaultTransactionViewModelLoadMoreTest {
 
     @Test
     fun `LoadMore action emits to the trigger passed to Criteria_All query`() = runTest {
-        val viewModel = DefaultTransactionViewModel(
-            transactionRepository = transactionRepository,
-            accountRepository = accountRepository,
-            currencyRepository = currencyRepository,
-            iconRepository = iconRepository,
-            categoriesQueryUseCase = categoriesQueryUseCase,
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            currencyConvertUseCase = currencyConvertUseCase,
-            onTransactionSelectedHandler = onTransactionSelectedHandler,
-            coroutineScope = this
-        )
+        val viewModel = createViewModel(this)
         viewModel.attach()
         runCurrent()
 
@@ -88,17 +79,7 @@ class DefaultTransactionViewModelLoadMoreTest {
 
     @Test
     fun `attach queries Criteria_After with a recent timestamp`() = runTest {
-        val viewModel = DefaultTransactionViewModel(
-            transactionRepository = transactionRepository,
-            accountRepository = accountRepository,
-            currencyRepository = currencyRepository,
-            iconRepository = iconRepository,
-            categoriesQueryUseCase = categoriesQueryUseCase,
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            currencyConvertUseCase = currencyConvertUseCase,
-            onTransactionSelectedHandler = onTransactionSelectedHandler,
-            coroutineScope = this
-        )
+        val viewModel = createViewModel(this)
         viewModel.attach()
         runCurrent()
 
@@ -109,4 +90,16 @@ class DefaultTransactionViewModelLoadMoreTest {
             .filterIsInstance<TransactionRepository.Criteria.After>()
         assertEquals(1, afterCriteria.size)
     }
+
+    private fun createViewModel(coroutineScope: CoroutineScope) = DefaultTransactionViewModel(
+        transactionRepository = transactionRepository,
+        accountRepository = accountRepository,
+        currencyRepository = currencyRepository,
+        iconRepository = iconRepository,
+        categoriesQueryUseCase = categoriesQueryUseCase,
+        currencyPrimaryUseCase = currencyPrimaryUseCase,
+        currencyConvertUseCase = currencyConvertUseCase,
+        onTransactionSelectedHandler = onTransactionSelectedHandler,
+        coroutineScope = coroutineScope
+    )
 }
