@@ -120,3 +120,24 @@ fun TransactionView(
         }
     }
 }
+
+@Composable
+fun TransactionTransferView(
+    modifier: Modifier,
+    sourceAccountName: String,
+    targetAccountName: String,
+    sourceAmount: String,
+    targetAmount: String,
+    transferIconColorScheme: ColorScheme? = null,
+    transferIcon: (@Composable (tint: DomainColor) -> Unit)? = null,
+) {
+    TransactionView(
+        modifier = modifier,
+        primaryText = targetAccountName,
+        primaryAmount = "+$targetAmount",
+        secondaryText = sourceAccountName,
+        secondaryAmount = "-$sourceAmount",
+        iconColorScheme = transferIconColorScheme,
+        mainIcon = transferIcon,
+    )
+}
