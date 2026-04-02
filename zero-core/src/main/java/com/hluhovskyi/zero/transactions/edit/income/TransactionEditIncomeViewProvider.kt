@@ -26,7 +26,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -315,9 +315,9 @@ private fun <T> SelectorCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Icon(
-                    imageVector = Icons.Filled.UnfoldMore,
+                    imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(24.dp),
                     tint = OnSurfaceVariant,
                 )
             }
