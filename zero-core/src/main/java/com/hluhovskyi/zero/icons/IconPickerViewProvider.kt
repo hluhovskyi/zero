@@ -19,6 +19,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.mapping.toUi
 
 internal class IconPickerViewProvider(
     private val viewModel: IconPickerViewModel,
@@ -67,14 +68,14 @@ private fun IconCell(
 ) {
     if (colorScheme != null) {
         CategoryIconView(
-            colorScheme = colorScheme,
+            colorScheme = colorScheme.toUi(),
             size = 48.dp,
             contentPadding = 10.dp,
         ) { tint ->
             imageLoader.View(
                 modifier = Modifier.size(28.dp),
                 image = item.image,
-                tint = tint,
+                tint = tint.value,
             )
         }
     } else {

@@ -1,12 +1,10 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,6 +14,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,11 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.colors.Color as DomainColor
-import com.hluhovskyi.zero.common.ColorValue
-import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.UiColor
+import com.hluhovskyi.zero.ui.mapping.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 
 @Composable
@@ -69,7 +67,7 @@ private fun CategoryItem(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CategoryIconView(
-            colorScheme = category.colorScheme,
+            colorScheme = category.colorScheme.toUi(),
             size = 48.dp,
             contentPadding = 12.dp,
         ) { iconTint ->
@@ -77,9 +75,9 @@ private fun CategoryItem(
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
                 image = category.icon,
                 tint = if (isSelected) {
-                    DomainColor(Id("white"), ColorValue(0xFFFFFFFF.toULong()))
+                    Color.White
                 } else {
-                    iconTint
+                    iconTint.value
                 },
             )
         }

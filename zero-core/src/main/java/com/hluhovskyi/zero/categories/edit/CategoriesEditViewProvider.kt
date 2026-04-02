@@ -21,6 +21,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.mapping.toUi
 
 internal class CategoriesEditViewProvider(
     private val viewModel: CategoryEditViewModel,
@@ -53,11 +54,11 @@ private fun CategoryEditView(
             contentAlignment = Alignment.Center,
         ) {
             CategoryIconView(
-                colorScheme = state.colorScheme,
+                colorScheme = state.colorScheme.toUi(),
                 size = 64.dp,
                 contentPadding = 12.dp,
             ) { tint ->
-                imageLoader.View(image = state.icon, tint = tint)
+                imageLoader.View(image = state.icon, tint = tint.value)
             }
         }
 

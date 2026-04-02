@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.toCompose
+import com.hluhovskyi.zero.ui.mapping.toCompose
 
 internal class ColorPickerViewProvider(
     private val viewModel: ColorPickerViewModel,

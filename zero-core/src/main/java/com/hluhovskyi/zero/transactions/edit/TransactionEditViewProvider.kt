@@ -2,45 +2,32 @@ package com.hluhovskyi.zero.transactions.edit
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.ModalHeader
+import com.hluhovskyi.zero.ui.SegmentedToggle
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -73,28 +60,36 @@ private fun TransactionEditView(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colors.background)
             .imePadding()
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 96.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
             item {
-                TransactionEditHeader(
-                    onDiscard = { viewModel.perform(TransactionEditViewModel.Action.Discard) }
+                ModalHeader(
+                    title = "New Transaction",
+                    onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) }
                 )
             }
             item {
-                TransactionTypeToggle(
+                SegmentedToggle(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .padding(top = 24.dp),
-                    types = state.transactionTypes,
-                    selectedType = state.selectedTransactionType,
-                    onTypeSelected = { type ->
+                    items = state.transactionTypes,
+                    selectedItem = state.selectedTransactionType,
+                    onItemSelected = { type ->
                         viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(type))
+                    },
+                    labelMapping = { type ->
+                        when (type) {
+                            TransactionEditType.EXPENSE -> "Expense"
+                            TransactionEditType.INCOME -> "Income"
+                            TransactionEditType.TRANSFER -> "Transfer"
+                        }
                     }
                 )
             }
@@ -107,95 +102,21 @@ private fun TransactionEditView(
             }
         }
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null
+                )
+            },
+            text = {
+                Text(text = "Save Transaction")
+            },
             onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = "Save Transaction",
-                tint = Color.White
-            )
-        }
-    }
-}
-
-@Composable
-private fun TransactionEditHeader(
-    onDiscard: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onDiscard) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = "Discard",
-                tint = PrimaryContainer,
-            )
-        }
-        Text(
-            modifier = Modifier.weight(1f),
-            text = "New Transaction",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryContainer,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-        // Spacer to balance the close button width
-        Box(modifier = Modifier.widthIn(min = 48.dp))
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-private fun TransactionTypeToggle(
-    modifier: Modifier = Modifier,
-    types: List<TransactionEditType>,
-    selectedType: TransactionEditType?,
-    onTypeSelected: (TransactionEditType) -> Unit
-) {
-    Row(
-        modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-        types.forEach { type ->
-            val isSelected = type == selectedType
-            val label = when (type) {
-                TransactionEditType.EXPENSE -> "Expense"
-                TransactionEditType.INCOME -> "Income"
-                TransactionEditType.TRANSFER -> "Transfer"
-            }
-
-            Surface(
-                modifier = Modifier.weight(1f),
-                onClick = { onTypeSelected(type) },
-                shape = RoundedCornerShape(8.dp),
-                color = if (isSelected) SurfaceContainerLowest else Color.Transparent,
-                elevation = if (isSelected) 2.dp else 0.dp,
-            ) {
-                Text(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    text = label,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        OnSurfaceVariant
-                    },
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
-            }
-        }
     }
 }
