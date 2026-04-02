@@ -225,12 +225,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Transaction.Edit,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             componentBuilder
                 .transactionId(Id.Unknown)
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
@@ -246,6 +247,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
