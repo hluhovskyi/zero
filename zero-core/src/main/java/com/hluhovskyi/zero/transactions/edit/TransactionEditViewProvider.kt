@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -21,6 +23,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,7 +70,11 @@ private fun TransactionEditView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,24 +107,19 @@ private fun TransactionEditView(
             }
         }
 
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp)
-                .height(56.dp),
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
             onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-            text = {
-                Text(
-                    text = "Save Transaction",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                )
-            },
-            backgroundColor = PrimaryContainer,
-            contentColor = Color.White,
-            shape = RoundedCornerShape(16.dp),
-        )
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = "Save Transaction",
+                tint = Color.White
+            )
+        }
     }
 }
 

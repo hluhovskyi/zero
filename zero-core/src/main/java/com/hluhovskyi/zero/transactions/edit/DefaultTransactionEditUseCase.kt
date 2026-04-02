@@ -62,7 +62,8 @@ internal class DefaultTransactionEditUseCase(
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
-                    rate = state.rate
+                    rate = state.rate,
+                    date = state.localDateTime ?: clock.localDateTime()
                 )
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
                     accounts = state.accounts,
@@ -72,7 +73,8 @@ internal class DefaultTransactionEditUseCase(
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
-                    rate = state.rate
+                    rate = state.rate,
+                    date = state.localDateTime ?: clock.localDateTime()
                 )
                 TransactionEditType.TRANSFER -> TransactionEditUseCase.State.Transfer(
                     accounts = state.accounts,
@@ -80,6 +82,7 @@ internal class DefaultTransactionEditUseCase(
                     targetAccounts = state.targetAccounts,
                     selectedTargetAccount = state.selectedTargetAccount,
                     amount = state.amount,
+                    date = state.localDateTime ?: clock.localDateTime()
                 )
             }
         }
@@ -123,6 +126,11 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.SwitchTransaction -> {
                 mutableState.update { state ->
                     state.copy(transactionType = action.type)
+                }
+            }
+            is TransactionEditUseCase.Action.ChangeDate -> {
+                mutableState.update { state ->
+                    state.copy(localDateTime = action.date)
                 }
             }
             is TransactionEditUseCase.Action.EditCategories -> {

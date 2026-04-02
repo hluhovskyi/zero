@@ -16,7 +16,8 @@ internal class DefaultTransactionEditViewModel(
                     is TransactionEditUseCase.State.Expense -> TransactionEditType.EXPENSE
                     is TransactionEditUseCase.State.Income -> TransactionEditType.INCOME
                     is TransactionEditUseCase.State.Transfer -> TransactionEditType.TRANSFER
-                }
+                },
+                date = state.date
             )
         }
 
@@ -24,6 +25,8 @@ internal class DefaultTransactionEditViewModel(
         val useCaseAction = when (action) {
             is TransactionEditViewModel.Action.ChangeTransactionType ->
                 TransactionEditUseCase.Action.SwitchTransaction(action.type)
+            is TransactionEditViewModel.Action.ChangeDate ->
+                TransactionEditUseCase.Action.ChangeDate(action.date)
             is TransactionEditViewModel.Action.Save ->
                 TransactionEditUseCase.Action.Save
             is TransactionEditViewModel.Action.Discard ->

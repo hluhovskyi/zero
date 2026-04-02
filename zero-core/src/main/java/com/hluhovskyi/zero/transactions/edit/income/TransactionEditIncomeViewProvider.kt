@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +29,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,8 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,20 +58,15 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrency
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
+import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import android.app.DatePickerDialog
 import com.hluhovskyi.zero.colors.Color as DomainColor
-
-private val TintWhite = DomainColor(
-    id = Id("tint_white"),
-    value = ColorValue(0xFFFFFFFF.toULong())
-)
-private val TintPrimaryContainer = DomainColor(
-    id = Id("tint_primary_container"),
-    value = ColorValue(0xFF0A2351.toULong())
-)
 
 internal class TransactionEditIncomeViewProvider(
     private val viewModel: TransactionEditIncomeViewModel,
@@ -88,6 +88,11 @@ private fun TransactionEditIncomeView(
     imageLoader: ImageLoader
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Column(
         modifier = Modifier.padding(horizontal = 24.dp)
@@ -98,8 +103,13 @@ private fun TransactionEditIncomeView(
                 .padding(top = 32.dp, bottom = 40.dp),
             amount = state.amount,
             currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
+            focusRequester = focusRequester,
             onAmountChange = {
                 viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
+            },
+            currencies = state.currencies,
+            onCurrencySelected = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
             }
         )
 
@@ -119,14 +129,12 @@ private fun TransactionEditIncomeView(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SelectorCard(
+            DatePickerCard(
                 modifier = Modifier.weight(1f),
-                label = "Currency",
-                value = state.selectedCurrency?.let { "${it.currencySymbol} - ${it.name}" } ?: "",
-                items = state.currencies,
-                nameMapping = { "${it.currencySymbol} - ${it.name}" },
-                onItemSelected = {
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
+                label = "Date",
+                date = state.date,
+                onDateSelected = {
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
                 }
             )
             SelectorCard(
@@ -155,13 +163,19 @@ private fun TransactionEditIncomeView(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun AmountDisplay(
     modifier: Modifier = Modifier,
     amount: String,
     currencySymbol: String,
-    onAmountChange: (String) -> Unit
+    focusRequester: FocusRequester,
+    onAmountChange: (String) -> Unit,
+    currencies: List<TransactionEditCurrency>,
+    onCurrencySelected: (TransactionEditCurrency) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -173,31 +187,74 @@ private fun AmountDisplay(
             color = OnSurfaceVariant,
             letterSpacing = 3.sp,
         )
-        Row(
-            modifier = Modifier.padding(top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = currencySymbol,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
-            )
-            BasicTextField(
-                value = amount,
-                onValueChange = onAmountChange,
-                modifier = Modifier.sizeIn(minWidth = 80.dp),
-                textStyle = TextStyle(
-                    fontSize = 56.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colors.primary,
-                    textAlign = TextAlign.Center,
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                cursorBrush = SolidColor(MaterialTheme.colors.primary),
-                singleLine = true,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.clickable { expanded = true },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = currencySymbol,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceVariant,
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(top = 4.dp),
+                            tint = OnSurfaceVariant,
+                        )
+                    }
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        currencies.forEach { currency ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    onCurrencySelected(currency)
+                                    expanded = false
+                                }
+                            ) {
+                                Text(text = "${currency.currencySymbol} - ${currency.name}")
+                            }
+                        }
+                    }
+                }
+
+                BasicTextField(
+                    value = amount,
+                    onValueChange = onAmountChange,
+                    modifier = Modifier
+                        .sizeIn(minWidth = 40.dp)
+                        .focusRequester(focusRequester),
+                    textStyle = TextStyle(
+                        fontSize = 56.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colors.primary,
+                        textAlign = TextAlign.Start,
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    singleLine = true,
+                )
+            }
         }
     }
 }
@@ -240,26 +297,26 @@ private fun CategoryItem(
             .width(72.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = if (isSelected) PrimaryContainer else Color(0xFFF1F5F9),
-                    shape = CircleShape,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
+        CategoryIconView(
+            colorScheme = category.colorScheme,
+            size = 48.dp,
+            contentPadding = 12.dp,
+        ) { iconTint ->
             imageLoader.View(
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
                 image = category.icon,
-                tint = if (isSelected) TintWhite else TintPrimaryContainer,
+                tint = if (isSelected) {
+                    DomainColor(Id("white"), ColorValue(0xFFFFFFFF.toULong()))
+                } else {
+                    iconTint
+                },
             )
         }
         Text(
             modifier = Modifier.padding(top = 8.dp),
             text = category.name,
             fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
             color = if (isSelected) MaterialTheme.colors.primary else OnSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -289,6 +346,7 @@ private fun <T> SelectorCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                .clickable { expanded = true }
                 .padding(16.dp)
         ) {
             Text(
@@ -337,6 +395,67 @@ private fun <T> SelectorCard(
                     Text(text = nameMapping(item))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DatePickerCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    date: LocalDateTime,
+    onDateSelected: (LocalDateTime) -> Unit
+) {
+    val context = LocalContext.current
+    val formattedDate = remember(date) {
+        date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+    }
+
+    Column(
+        modifier = modifier
+            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .clickable {
+                DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        onDateSelected(LocalDateTime.of(year, month + 1, dayOfMonth, 0, 0))
+                    },
+                    date.year,
+                    date.monthValue - 1,
+                    date.dayOfMonth
+                ).show()
+            }
+            .padding(16.dp)
+    ) {
+        Text(
+            text = label.uppercase(),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = OnSurfaceVariant,
+            letterSpacing = 1.sp,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = formattedDate,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = OnSurfaceVariant,
+            )
         }
     }
 }
