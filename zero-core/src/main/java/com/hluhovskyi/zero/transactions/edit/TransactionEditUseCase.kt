@@ -19,6 +19,7 @@ interface TransactionEditUseCase :
         data class ChangeRate(val rate: String) : Action
         object EditCategories : Action
         object Save : Action
+        object Discard : Action
     }
 
     sealed interface State {

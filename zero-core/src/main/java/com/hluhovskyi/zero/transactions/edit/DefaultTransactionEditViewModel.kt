@@ -26,6 +26,8 @@ internal class DefaultTransactionEditViewModel(
                 TransactionEditUseCase.Action.SwitchTransaction(action.type)
             is TransactionEditViewModel.Action.Save ->
                 TransactionEditUseCase.Action.Save
+            is TransactionEditViewModel.Action.Discard ->
+                TransactionEditUseCase.Action.Discard
         }
 
         useCase.perform(useCaseAction)

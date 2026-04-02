@@ -41,6 +41,7 @@ internal class DefaultTransactionEditUseCase(
     private val idGenerator: IdGenerator,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
+    private val onDiscardHandler: OnDiscardHandler,
     private val clock: Clock,
     private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -186,6 +187,11 @@ internal class DefaultTransactionEditUseCase(
                     launch(context = Dispatchers.Main) {
                         onTransactionSavedHandler.onSaved()
                     }
+                }
+            }
+            is TransactionEditUseCase.Action.Discard -> {
+                coroutineScope.launch(context = Dispatchers.Main) {
+                    onDiscardHandler.onDiscard()
                 }
             }
         }

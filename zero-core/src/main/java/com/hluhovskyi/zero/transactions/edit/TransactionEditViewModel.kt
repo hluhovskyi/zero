@@ -8,6 +8,7 @@ interface TransactionEditViewModel
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action
         object Save : Action
+        object Discard : Action
     }
 
     data class State(
