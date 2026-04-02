@@ -19,7 +19,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.mapping.toUi
+import com.hluhovskyi.zero.ui.common.toUi
 
 internal class IconPickerViewProvider(
     private val viewModel: IconPickerViewModel,

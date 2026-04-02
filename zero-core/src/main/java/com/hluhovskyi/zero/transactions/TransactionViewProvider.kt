@@ -37,7 +37,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
-import com.hluhovskyi.zero.ui.mapping.toUi
+import com.hluhovskyi.zero.ui.common.toUi
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,

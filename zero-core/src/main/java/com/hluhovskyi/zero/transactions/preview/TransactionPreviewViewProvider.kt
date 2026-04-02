@@ -15,7 +15,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.mapping.toCompose
+import com.hluhovskyi.zero.ui.common.toCompose
 
 internal class TransactionPreviewViewProvider(
     private val viewModel: TransactionPreviewViewModel,

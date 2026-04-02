@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.ui.mapping
+package com.hluhovskyi.zero.ui.common
 
 import androidx.compose.ui.graphics.Color as ComposeColor
 import com.hluhovskyi.zero.colors.Color as DomainColor

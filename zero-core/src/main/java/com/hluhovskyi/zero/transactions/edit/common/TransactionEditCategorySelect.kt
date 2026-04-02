@@ -21,7 +21,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
-import com.hluhovskyi.zero.ui.mapping.toUi
+import com.hluhovskyi.zero.ui.common.toUi
 
 @Composable
 fun TransactionEditCategorySelect(
