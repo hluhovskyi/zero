@@ -37,10 +37,10 @@ fun CategoryIconView(
     size: Dp = 40.dp,
     contentPadding: Dp = 8.dp,
     modifier: Modifier = Modifier,
-    content: @Composable (iconTint: UiColor) -> Unit,
+    content: @Composable (iconTint: Color) -> Unit,
 ) {
     CategoryIconView(
-        color = colorScheme.background.value,
+        color = colorScheme.background,
         size = size,
         contentPadding = contentPadding,
         modifier = modifier,

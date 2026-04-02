@@ -58,7 +58,7 @@ private fun CategoryEditView(
                 size = 64.dp,
                 contentPadding = 12.dp,
             ) { tint ->
-                imageLoader.View(image = state.icon, tint = tint.value)
+                imageLoader.View(image = state.icon, tint = tint)
             }
         }
 

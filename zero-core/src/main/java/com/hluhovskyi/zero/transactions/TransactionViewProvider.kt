@@ -37,7 +37,6 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
-import com.hluhovskyi.zero.ui.UiColor
 import com.hluhovskyi.zero.ui.mapping.toUi
 
 internal class TransactionViewProvider(
@@ -237,10 +236,10 @@ private fun Image.toComposable(
 private fun Image.toTintedComposable(
     imageLoader: ImageLoader,
     modifier: Modifier = Modifier
-): @Composable (tint: UiColor) -> Unit = { tint ->
+): @Composable (tint: Color) -> Unit = { tint ->
     imageLoader.View(
         image = this,
         modifier = modifier,
-        tint = tint.value,
+        tint = tint,
     )
 }

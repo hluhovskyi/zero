@@ -75,7 +75,7 @@ private fun IconCell(
             imageLoader.View(
                 modifier = Modifier.size(28.dp),
                 image = item.image,
-                tint = tint.value,
+                tint = tint,
             )
         }
     } else {

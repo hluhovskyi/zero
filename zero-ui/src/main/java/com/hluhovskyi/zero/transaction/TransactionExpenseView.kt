@@ -12,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.UiColor
 import com.hluhovskyi.zero.ui.UiColorScheme
 
 @Composable
@@ -24,7 +23,7 @@ fun TransactionExpenseView(
     iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable (tint: UiColor) -> Unit)? = null,
+    icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
@@ -47,7 +46,7 @@ fun TransactionIncomeView(
     iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable (tint: UiColor) -> Unit)? = null,
+    icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
@@ -70,7 +69,7 @@ fun TransactionView(
     secondaryAmount: String? = null,
     iconColorScheme: UiColorScheme? = null,
     secondaryIcon: (@Composable () -> Unit)? = null,
-    mainIcon: (@Composable (tint: UiColor) -> Unit)? = null,
+    mainIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
@@ -129,7 +128,7 @@ fun TransactionTransferView(
     sourceAmount: String,
     targetAmount: String,
     transferIconColorScheme: UiColorScheme? = null,
-    transferIcon: (@Composable (tint: UiColor) -> Unit)? = null,
+    transferIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,

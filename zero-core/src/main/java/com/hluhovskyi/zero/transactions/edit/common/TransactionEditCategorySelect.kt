@@ -49,7 +49,7 @@ fun TransactionEditCategorySelect(
                     imageLoader.View(
                         modifier = Modifier.sizeIn(maxHeight = 20.dp, maxWidth = 20.dp),
                         image = category.icon,
-                        tint = tint.value,
+                        tint = tint,
                     )
                 }
                 Text(text = category.name)
@@ -63,7 +63,7 @@ fun TransactionEditCategorySelect(
                 contentPadding = 6.dp,
                 modifier = Modifier.padding(start = 8.dp),
             ) { tint ->
-                imageLoader.View(image = category.icon, tint = tint.value)
+                imageLoader.View(image = category.icon, tint = tint)
             }
         },
         onItemSelected = onCategorySelected

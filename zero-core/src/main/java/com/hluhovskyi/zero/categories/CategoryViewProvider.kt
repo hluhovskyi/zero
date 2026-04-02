@@ -60,7 +60,7 @@ private fun CategoryView(
                             .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp)
                             .aspectRatio(1f),
                         scale = ImageLoader.Scale.Crop,
-                        tint = tint.value,
+                        tint = tint,
                     )
                 }
                 Text(
