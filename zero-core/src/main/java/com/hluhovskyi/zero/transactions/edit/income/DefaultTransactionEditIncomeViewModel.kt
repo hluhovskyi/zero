@@ -21,6 +21,7 @@ internal class DefaultTransactionEditIncomeViewModel(
                 selectedCurrency = state.selectedCurrency,
                 amount = state.amount,
                 rate = state.rate,
+                date = state.date,
             )
         }
 
@@ -30,6 +31,8 @@ internal class DefaultTransactionEditIncomeViewModel(
                 TransactionEditUseCase.Action.ChangeAmount(action.amount)
             is TransactionEditIncomeViewModel.Action.ChangeRate ->
                 TransactionEditUseCase.Action.ChangeRate(action.rate)
+            is TransactionEditIncomeViewModel.Action.ChangeDate ->
+                TransactionEditUseCase.Action.ChangeDate(action.date)
             is TransactionEditIncomeViewModel.Action.EditCategories ->
                 TransactionEditUseCase.Action.EditCategories
             is TransactionEditIncomeViewModel.Action.SelectAccount ->

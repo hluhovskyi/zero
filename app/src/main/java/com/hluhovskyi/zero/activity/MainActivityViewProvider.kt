@@ -1,6 +1,8 @@
 package com.hluhovskyi.zero.activity
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -19,7 +21,10 @@ internal class MainActivityViewProvider(
     override fun View() {
         ZeroTheme {
             Surface(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
                 color = MaterialTheme.colors.background
             ) {
                 screenComponent

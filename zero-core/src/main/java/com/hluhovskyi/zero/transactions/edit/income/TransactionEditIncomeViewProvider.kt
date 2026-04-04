@@ -1,21 +1,29 @@
 package com.hluhovskyi.zero.transactions.edit.income
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAccountSelect
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAmountTextField
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCategorySelectWithEditButton
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCurrencySelect
+import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
+import com.hluhovskyi.zero.transactions.edit.common.CategoryScrollRow
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
+import com.hluhovskyi.zero.ui.DatePickerCard
+import com.hluhovskyi.zero.ui.SelectorCard
 
 internal class TransactionEditIncomeViewProvider(
     private val viewModel: TransactionEditIncomeViewModel,
@@ -36,49 +44,73 @@ private fun TransactionEditIncomeView(
     viewModel: TransactionEditIncomeViewModel,
     imageLoader: ImageLoader
 ) {
-    Column {
-        val defaultModifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
-        val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
-        TransactionEditAccountSelect(
-            modifier = defaultModifier,
-            accounts = state.accounts,
-            selectedAccount = state.selectedAccount,
-            onAccountSelected = {
-                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectAccount(it))
+    val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp)
+    ) {
+        AmountDisplay(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp, bottom = 40.dp),
+            amount = state.amount,
+            currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
+            focusRequester = focusRequester,
+            onAmountChange = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
+            },
+            currencies = state.currencies,
+            onCurrencySelected = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
             }
         )
-        TransactionEditCategorySelectWithEditButton(
-            modifier = defaultModifier,
+
+        CategoryScrollRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
             imageLoader = imageLoader,
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
                 viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(it))
-            },
-            onCategoryEdit = {
-                viewModel.perform(TransactionEditIncomeViewModel.Action.EditCategories)
             }
         )
-        TransactionEditCurrencySelect(
-            modifier = defaultModifier,
-            currencies = state.currencies,
-            selectedCurrency = state.selectedCurrency,
-            onCurrencySelected = {
-                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
-            }
-        )
-        TransactionEditAmountTextField(
-            modifier = defaultModifier,
-            amount = state.amount,
-            onValueChange = {
-                viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
-            }
-        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            DatePickerCard(
+                modifier = Modifier.weight(1f),
+                label = "Date",
+                date = state.date,
+                onDateSelected = {
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
+                }
+            )
+            SelectorCard(
+                modifier = Modifier.weight(1f),
+                label = "Account",
+                value = state.selectedAccount?.name ?: "",
+                items = state.accounts,
+                nameMapping = { it.name },
+                onItemSelected = {
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectAccount(it))
+                }
+            )
+        }
+
         AnimatedVisibility(visible = state.showRate) {
             TransactionEditRateTextField(
-                modifier = defaultModifier,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
                 rate = state.rate,
                 onValueChange = { rate ->
                     viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeRate(rate))
@@ -87,4 +119,3 @@ private fun TransactionEditIncomeView(
         }
     }
 }
-

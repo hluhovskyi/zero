@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Closeables
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.io.Closeable
+import java.time.LocalDateTime
 
 interface TransactionEditUseCase :
     AttachableActionStateModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
@@ -17,11 +18,15 @@ interface TransactionEditUseCase :
         data class SelectCategory(val category: TransactionEditCategory) : Action
         data class ChangeAmount(val amount: String) : Action
         data class ChangeRate(val rate: String) : Action
+        data class ChangeDate(val date: LocalDateTime) : Action
         object EditCategories : Action
         object Save : Action
+        object Discard : Action
     }
 
     sealed interface State {
+
+        val date: LocalDateTime
 
         data class Expense(
             val accounts: List<TransactionEditAccount> = emptyList(),
@@ -32,6 +37,7 @@ interface TransactionEditUseCase :
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            override val date: LocalDateTime = LocalDateTime.now(),
         ) : State
 
         data class Income(
@@ -43,6 +49,7 @@ interface TransactionEditUseCase :
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            override val date: LocalDateTime = LocalDateTime.now(),
         ) : State
 
         data class Transfer(
@@ -51,6 +58,7 @@ interface TransactionEditUseCase :
             val targetAccounts: List<TransactionEditAccount> = emptyList(),
             val selectedTargetAccount: TransactionEditAccount? = null,
             val amount: String = "",
+            override val date: LocalDateTime = LocalDateTime.now(),
         ) : State
     }
 

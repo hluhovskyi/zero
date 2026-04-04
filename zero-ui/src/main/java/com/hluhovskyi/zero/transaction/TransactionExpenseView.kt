@@ -11,9 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.colors.ColorScheme
-import com.hluhovskyi.zero.colors.Color as DomainColor
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.UiColorScheme
 
 @Composable
 fun TransactionExpenseView(
@@ -21,10 +20,10 @@ fun TransactionExpenseView(
     categoryName: String,
     amount: String,
     accountName: String,
-    iconColorScheme: ColorScheme? = null,
+    iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
+    icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
@@ -44,10 +43,10 @@ fun TransactionIncomeView(
     categoryName: String,
     amount: String,
     accountName: String,
-    iconColorScheme: ColorScheme? = null,
+    iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
-    icon: (@Composable (tint: DomainColor) -> Unit)? = null,
+    icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,
@@ -68,9 +67,9 @@ fun TransactionView(
     primaryAmount: String,
     secondaryText: String,
     secondaryAmount: String? = null,
-    iconColorScheme: ColorScheme? = null,
+    iconColorScheme: UiColorScheme? = null,
     secondaryIcon: (@Composable () -> Unit)? = null,
-    mainIcon: (@Composable (tint: DomainColor) -> Unit)? = null,
+    mainIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
@@ -128,8 +127,8 @@ fun TransactionTransferView(
     targetAccountName: String,
     sourceAmount: String,
     targetAmount: String,
-    transferIconColorScheme: ColorScheme? = null,
-    transferIcon: (@Composable (tint: DomainColor) -> Unit)? = null,
+    transferIconColorScheme: UiColorScheme? = null,
+    transferIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
         modifier = modifier,

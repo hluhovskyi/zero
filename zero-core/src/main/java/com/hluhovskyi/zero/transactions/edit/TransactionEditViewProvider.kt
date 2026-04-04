@@ -1,22 +1,33 @@
 package com.hluhovskyi.zero.transactions.edit
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.material.Button
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
+import com.hluhovskyi.zero.ui.ModalHeader
+import com.hluhovskyi.zero.ui.SegmentedToggle
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -44,61 +55,68 @@ private fun TransactionEditView(
     incomeComponent: Buildable<out AttachableViewComponent>,
     transferComponent: Buildable<out AttachableViewComponent>
 ) {
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
-        TransactionTypeSelect(
-            types = state.transactionTypes,
-            selectedType = state.selectedTransactionType,
-            onTypeSelected = { type ->
-                viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(type))
-            }
-        )
-        when (state.selectedTransactionType) {
-            TransactionEditType.EXPENSE -> {
-                expenseComponent.AttachWithView()
-            }
-            TransactionEditType.INCOME -> {
-                incomeComponent.AttachWithView()
-            }
-            TransactionEditType.TRANSFER -> {
-                transferComponent.AttachWithView()
-            }
-        }
-        Button(
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .sizeIn(minHeight = 48.dp)
-                .fillMaxWidth(),
-            onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) }
-        ) {
-            Text(text = "Save transaction")
-        }
-    }
-}
+    val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
 
-@Composable
-private fun TransactionTypeSelect(
-    modifier: Modifier = Modifier,
-    types: List<TransactionEditType>,
-    selectedType: TransactionEditType?,
-    onTypeSelected: (TransactionEditType) -> Unit
-) {
-    TextFieldDropdownMenu(
-        modifier = modifier,
-        items = types,
-        label = {
-            Text(text = "Type")
-        },
-        nameMapping = {
-            when (it) {
-                TransactionEditType.EXPENSE -> "Expense"
-                TransactionEditType.INCOME -> "Income"
-                TransactionEditType.TRANSFER -> "Transfer"
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colors.background)
+            .imePadding()
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 120.dp)
+        ) {
+            item {
+                ModalHeader(
+                    title = "New Transaction",
+                    onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) }
+                )
             }
-        },
-        selectedItem = selectedType,
-        onItemSelected = onTypeSelected
-    )
+            item {
+                SegmentedToggle(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 24.dp),
+                    items = state.transactionTypes,
+                    selectedItem = state.selectedTransactionType,
+                    onItemSelected = { type ->
+                        viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(type))
+                    },
+                    labelMapping = { type ->
+                        when (type) {
+                            TransactionEditType.EXPENSE -> "Expense"
+                            TransactionEditType.INCOME -> "Income"
+                            TransactionEditType.TRANSFER -> "Transfer"
+                        }
+                    }
+                )
+            }
+            item {
+                when (state.selectedTransactionType) {
+                    TransactionEditType.EXPENSE -> expenseComponent.AttachWithView()
+                    TransactionEditType.INCOME -> incomeComponent.AttachWithView()
+                    TransactionEditType.TRANSFER -> transferComponent.AttachWithView()
+                }
+            }
+        }
+
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null
+                )
+            },
+            text = {
+                Text(text = "Save Transaction")
+            },
+            onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+        )
+    }
 }

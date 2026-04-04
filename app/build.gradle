@@ -57,6 +57,7 @@ dependencies {
     coreLibraryDesugaring deps.android.tools.desugar
 
     implementation(project(":zero-api"))
+    implementation(project(":zero-ui"))
     implementation(project(":zero-database"))
     implementation(project(":zero-core"))
     implementation(project(":zero-image-loading"))
