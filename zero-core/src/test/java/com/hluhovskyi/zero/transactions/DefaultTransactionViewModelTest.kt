@@ -104,6 +104,7 @@ class DefaultTransactionViewModelTest {
         val transaction = TransactionRepository.Transaction.Transfer(
             id = Id.Known("t1"),
             dateTime = LocalDateTime.now(),
+            updatedDateTime = LocalDateTime.now(),
             amount = Amount(BigDecimal.TEN),
             currencyId = Id.Known("c1"),
             accountId = Id.Known("a1"),
