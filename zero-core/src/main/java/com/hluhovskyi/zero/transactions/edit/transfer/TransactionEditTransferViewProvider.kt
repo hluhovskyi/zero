@@ -144,33 +144,49 @@ private fun RateModePill(
     Column(
         modifier = modifier
             .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
-            .clickable { onCycleMode() }
             .padding(16.dp),
     ) {
         when (val mode = state.transferRateMode) {
             is TransferRateMode.Default -> {
-                val pillText = formatDefaultPillText(
-                    amount = state.amount,
-                    rate = mode.rate,
-                    sourceCurrencySymbol = state.sourceCurrencySymbol,
-                    targetCurrencySymbol = state.targetCurrencySymbol,
-                )
-                Text(
-                    text = pillText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = OnSurfaceVariant,
-                )
+                Column(
+                    modifier = Modifier.clickable { onCycleMode() }
+                ) {
+                    val pillText = formatDefaultPillText(
+                        amount = state.amount,
+                        rate = mode.rate,
+                        sourceCurrencySymbol = state.sourceCurrencySymbol,
+                        targetCurrencySymbol = state.targetCurrencySymbol,
+                    )
+                    Text(
+                        text = pillText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurfaceVariant,
+                    )
+                }
             }
 
             is TransferRateMode.CustomRate -> {
-                Text(
-                    text = "RATE",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
-                    letterSpacing = 1.sp,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "RATE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.sp,
+                    )
+                    Text(
+                        text = "CHANGE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.primary,
+                        modifier = Modifier.clickable { onCycleMode() }
+                    )
+                }
                 BasicTextField(
                     value = mode.rate,
                     onValueChange = onRateChange,
@@ -210,13 +226,26 @@ private fun RateModePill(
             }
 
             is TransferRateMode.CustomAmount -> {
-                Text(
-                    text = "DESTINATION AMOUNT",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
-                    letterSpacing = 1.sp,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "DESTINATION AMOUNT",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.sp,
+                    )
+                    Text(
+                        text = "CHANGE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.primary,
+                        modifier = Modifier.clickable { onCycleMode() }
+                    )
+                }
                 BasicTextField(
                     value = state.targetAmount,
                     onValueChange = onTargetAmountChange,
