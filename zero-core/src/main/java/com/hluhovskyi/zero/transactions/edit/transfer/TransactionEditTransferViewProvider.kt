@@ -357,7 +357,7 @@ private fun formatDefaultPillText(
     val targetAmount = sourceAmount.multiply(rate.value)
     val formattedTarget = amountFormat.format(targetAmount)
 
-    return if (sourceCurrencySymbol == targetCurrencySymbol || rate is Rate.Same) {
+    return if (sourceCurrencySymbol == targetCurrencySymbol) {
         "Receives $formattedTarget"
     } else {
         val formattedRate = rate.value.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
