@@ -343,10 +343,17 @@ internal class DefaultTransactionEditUseCase(
                                     val targetAccountToSelect =
                                         state.accounts.firstOrNull { it.id == transaction.targetAccount }
 
-                                    partialState.copy(
+                                    val finalState = partialState.copy(
                                         transactionType = TransactionEditType.TRANSFER,
                                         selectedTargetAccount = targetAccountToSelect,
                                     )
+
+                                    fetchRate(
+                                        sourceAccount = finalState.selectedAccount,
+                                        targetAccount = finalState.selectedTargetAccount
+                                    )
+
+                                    finalState
                                 }
                             }
                         }
