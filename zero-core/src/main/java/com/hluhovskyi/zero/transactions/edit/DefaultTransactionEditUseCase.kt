@@ -247,23 +247,24 @@ internal class DefaultTransactionEditUseCase(
             }
             is TransactionEditUseCase.Action.CycleTransferRateMode -> {
                 mutableState.update { state ->
+                    var nextTargetAmount = state.targetAmount
                     val nextMode = when (val currentMode = state.transferRateMode) {
                         is TransferRateMode.Default -> {
-                            val rateStr = currentMode.rate.value.setScale(4, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            val rateStr = currentMode.rate.value.setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
                             TransferRateMode.CustomRate(rateStr)
                         }
                         is TransferRateMode.CustomRate -> {
                             val sourceAmount = state.amount.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
                             val rate = currentMode.rate.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
-                            val targetAmount = sourceAmount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-                            TransferRateMode.CustomAmount(targetAmount)
+                            nextTargetAmount = sourceAmount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            TransferRateMode.CustomAmount(nextTargetAmount)
                         }
-                        is TransferRateMode.CustomAmount -> TransferRateMode.Default(Rate.Same).let {
-                            // Restore rate if accounts have different currencies
-                            it // Will be updated by fetchRate if needed
-                        }
+                        is TransferRateMode.CustomAmount -> TransferRateMode.Default(Rate.Same)
                     }
-                    state.copy(transferRateMode = nextMode)
+                    state.copy(
+                        transferRateMode = nextMode,
+                        targetAmount = nextTargetAmount
+                    )
                 }
                 // If cycling back to Default, re-fetch the rate
                 val currentState = mutableState.value
