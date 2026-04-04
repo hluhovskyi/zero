@@ -21,7 +21,7 @@ zero-image-loading   → ImageLoader interface + Coil impl
 zero-zenmoney        → ZenMoney CSV import
 ```
 
-**Dependency flow:** `app → zero-core → zero-api`, `app → zero-database → zero-api`, `zero-core → zero-ui → zero-api`, `zero-core → zero-image-loading`.
+**Dependency flow:** `app → zero-core → zero-api`, `app → zero-database → zero-api`, `zero-core → zero-ui` (dumb views, no domain types), `zero-core → zero-image-loading`.
 
 Each module has its own `AGENTS.md` with module-specific rules.
 
