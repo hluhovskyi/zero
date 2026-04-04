@@ -37,6 +37,7 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 ## Reference Docs
 
 - [Architecture Patterns](docs/agents/architecture.md) — Component/ViewModel/UseCase/ViewProvider, attach() lifecycle, Flow composition
+- [Concurrency](docs/agents/concurrency.md) — Async-first design, Dispatchers, Flow vs suspend, state management, pagination
 - [Data Layer](docs/agents/data-layer.md) — Repository pattern, Room entities, query/insert conventions
 - [Navigation](docs/agents/navigation.md) — URL-based routing, Destination, Argument, Navigator, handler pattern
 - [Dependency Injection](docs/agents/dependency-injection.md) — Dagger component structure, @BindsInstance, lifecycle timing
