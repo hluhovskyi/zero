@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.io.Closeable
@@ -22,6 +23,10 @@ interface TransactionEditUseCase :
         object EditCategories : Action
         object Save : Action
         object Discard : Action
+        data class ChangeTargetAmount(val amount: String) : Action
+        data class ChangeTransferRate(val rate: String) : Action
+        object CycleTransferRateMode : Action
+        object SwapAccounts : Action
     }
 
     sealed interface State {
@@ -58,6 +63,10 @@ interface TransactionEditUseCase :
             val targetAccounts: List<TransactionEditAccount> = emptyList(),
             val selectedTargetAccount: TransactionEditAccount? = null,
             val amount: String = "",
+            val targetAmount: String = "",
+            val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
+            val sourceCurrencySymbol: String = "",
+            val targetCurrencySymbol: String = "",
             override val date: LocalDateTime = LocalDateTime.now(),
         ) : State
     }
