@@ -47,4 +47,4 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Testing](docs/agents/testing.md) — JUnit/Mockito, Flow type inference, coroutines testing
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — DefaultImpls dispatch bug, ComposeColor pitfall
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
-- [Code Style](docs/agents/code-style.md) — Import conventions
+- [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
