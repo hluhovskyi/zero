@@ -5,9 +5,7 @@ Zero is a personal finance Android app (Kotlin, Jetpack Compose, Dagger, Room). 
 ## Cross-Cutting Rules
 
 1. **Never commit directly to `master`** — feature branch + PR always. See [Branch Management](docs/agents/branch-management.md).
-2. **Use imports, not fully qualified names** — see [Code Style](docs/agents/code-style.md).
-3. **Use `Clock` for timestamps** — never `LocalDateTime.now()`. Clock is injectable and testable.
-4. **Use `Id.Unknown` instead of `null`** for missing identifiers.
+2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
 
 ## Module Map
 
