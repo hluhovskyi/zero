@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hluhovskyi.zero.common.Rate
+import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
 import com.hluhovskyi.zero.common.ViewProvider
@@ -296,8 +297,8 @@ private fun RateModePill(
 private fun AccountSelectorsWithSwap(
     modifier: Modifier = Modifier,
     state: TransactionEditTransferViewModel.State,
-    onSourceSelected: (com.hluhovskyi.zero.transactions.edit.TransactionEditAccount) -> Unit,
-    onTargetSelected: (com.hluhovskyi.zero.transactions.edit.TransactionEditAccount) -> Unit,
+    onSourceSelected: (TransactionEditAccount) -> Unit,
+    onTargetSelected: (TransactionEditAccount) -> Unit,
     onSwap: () -> Unit,
 ) {
     Box(

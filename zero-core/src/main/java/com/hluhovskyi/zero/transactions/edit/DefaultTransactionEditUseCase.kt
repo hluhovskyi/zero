@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 private const val TAG = "DefaultTransactionEditUseCase"
@@ -119,7 +121,14 @@ internal class DefaultTransactionEditUseCase(
                     state.copy(selectedAccount = action.account)
                 }
                 if (mutableState.value.transactionType == TransactionEditType.TRANSFER) {
-                    fetchRate(action.account, mutableState.value.selectedTargetAccount)
+                    coroutineScope.launch {
+                        val rate = fetchRate(action.account, mutableState.value.selectedTargetAccount)
+                        if (rate != null) {
+                            mutableState.update { state ->
+                                state.copy(transferRateMode = TransferRateMode.Default(rate))
+                            }
+                        }
+                    }
                 }
             }
             is TransactionEditUseCase.Action.SelectCategory -> {
@@ -140,7 +149,14 @@ internal class DefaultTransactionEditUseCase(
                     state.copy(selectedTargetAccount = action.account)
                 }
                 if (mutableState.value.transactionType == TransactionEditType.TRANSFER) {
-                    fetchRate(mutableState.value.selectedAccount, action.account)
+                    coroutineScope.launch {
+                        val rate = fetchRate(mutableState.value.selectedAccount, action.account)
+                        if (rate != null) {
+                            mutableState.update { state ->
+                                state.copy(transferRateMode = TransferRateMode.Default(rate))
+                            }
+                        }
+                    }
                 }
             }
             is TransactionEditUseCase.Action.SwitchTransaction -> {
@@ -250,13 +266,13 @@ internal class DefaultTransactionEditUseCase(
                     var nextTargetAmount = state.targetAmount
                     val nextMode = when (val currentMode = state.transferRateMode) {
                         is TransferRateMode.Default -> {
-                            val rateStr = currentMode.rate.value.setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            val rateStr = currentMode.rate.value.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
                             TransferRateMode.CustomRate(rateStr)
                         }
                         is TransferRateMode.CustomRate -> {
-                            val sourceAmount = state.amount.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
-                            val rate = currentMode.rate.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
-                            nextTargetAmount = sourceAmount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            val sourceAmount = state.amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                            val rate = currentMode.rate.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                            nextTargetAmount = sourceAmount.multiply(rate).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
                             TransferRateMode.CustomAmount(nextTargetAmount)
                         }
                         is TransferRateMode.CustomAmount -> TransferRateMode.Default(Rate.Same)
@@ -269,7 +285,14 @@ internal class DefaultTransactionEditUseCase(
                 // If cycling back to Default, re-fetch the rate
                 val currentState = mutableState.value
                 if (currentState.transferRateMode is TransferRateMode.Default) {
-                    fetchRate(currentState.selectedAccount, currentState.selectedTargetAccount)
+                    coroutineScope.launch {
+                        val rate = fetchRate(currentState.selectedAccount, currentState.selectedTargetAccount)
+                        if (rate != null) {
+                            mutableState.update { state ->
+                                state.copy(transferRateMode = TransferRateMode.Default(rate))
+                            }
+                        }
+                    }
                 }
             }
             is TransactionEditUseCase.Action.SwapAccounts -> {
@@ -280,7 +303,14 @@ internal class DefaultTransactionEditUseCase(
                     )
                 }
                 val currentState = mutableState.value
-                fetchRate(currentState.selectedAccount, currentState.selectedTargetAccount)
+                coroutineScope.launch {
+                    val rate = fetchRate(currentState.selectedAccount, currentState.selectedTargetAccount)
+                    if (rate != null) {
+                        mutableState.update { state ->
+                            state.copy(transferRateMode = TransferRateMode.Default(rate))
+                        }
+                    }
+                }
             }
         }
     }
@@ -348,10 +378,17 @@ internal class DefaultTransactionEditUseCase(
                                         selectedTargetAccount = targetAccountToSelect,
                                     )
 
-                                    fetchRate(
-                                        sourceAccount = finalState.selectedAccount,
-                                        targetAccount = finalState.selectedTargetAccount
-                                    )
+                                    coroutineScope.launch {
+                                        val rate = fetchRate(
+                                            sourceAccount = finalState.selectedAccount,
+                                            targetAccount = finalState.selectedTargetAccount
+                                        )
+                                        if (rate != null) {
+                                            mutableState.update { state ->
+                                                state.copy(transferRateMode = TransferRateMode.Default(rate))
+                                            }
+                                        }
+                                    }
 
                                     finalState
                                 }
@@ -453,23 +490,15 @@ internal class DefaultTransactionEditUseCase(
         }
     }
 
-    private fun fetchRate(
+    private suspend fun fetchRate(
         sourceAccount: TransactionEditAccount?,
         targetAccount: TransactionEditAccount?
-    ) {
-        if (sourceAccount == null || targetAccount == null) return
+    ): Rate? {
+        if (sourceAccount == null || targetAccount == null) return null
         if (sourceAccount.currencyId == targetAccount.currencyId) {
-            mutableState.update { state ->
-                state.copy(transferRateMode = TransferRateMode.Default(Rate.Same))
-            }
-            return
+            return Rate.Same
         }
-        coroutineScope.launch {
-            val rate = currencyConvertUseCase.getRate(sourceAccount.currencyId, targetAccount.currencyId)
-            mutableState.update { state ->
-                state.copy(transferRateMode = TransferRateMode.Default(rate))
-            }
-        }
+        return currencyConvertUseCase.getRate(sourceAccount.currencyId, targetAccount.currencyId)
     }
 
     private data class CompositeState(
