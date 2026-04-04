@@ -165,30 +165,30 @@ internal class DefaultTransactionEditUseCase(
                     val dateTime = state.localDateTime ?: clock.localDateTime()
                     val transaction = when (state.transactionType) {
                         TransactionEditType.EXPENSE -> {
-                            val account = state.selectedAccount ?: return@launch
-                            val currency = state.selectedCurrency ?: return@launch
                             val category = state.selectedCategory ?: return@launch
+                            val account = state.selectedAccount ?: return@launch
+                            val currency = state.selectedCurrency
 
                             TransactionRepository.Transaction.Expense(
                                 id = transactionId,
                                 amount = Amount(state.amount.toBigDecimalOrNull()),
                                 accountId = account.id,
-                                currencyId = currency.id,
+                                currencyId = currency?.id ?: account.currencyId,
                                 categoryId = category.id,
                                 dateTime = dateTime,
                                 rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
                         TransactionEditType.INCOME -> {
-                            val account = state.selectedAccount ?: return@launch
-                            val currency = state.selectedCurrency ?: return@launch
                             val category = state.selectedCategory ?: return@launch
+                            val account = state.selectedAccount ?: return@launch
+                            val currency = state.selectedCurrency
 
                             TransactionRepository.Transaction.Income(
                                 id = transactionId,
                                 amount = Amount(state.amount.toBigDecimalOrNull()),
                                 accountId = account.id,
-                                currencyId = currency.id,
+                                currencyId = currency?.id ?: account.currencyId,
                                 categoryId = category.id,
                                 dateTime = dateTime,
                                 rate = Rate(state.rate.toBigDecimalOrNull())
