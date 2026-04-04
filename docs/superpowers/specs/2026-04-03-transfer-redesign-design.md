@@ -9,7 +9,7 @@ Reference design: Stitch project `9891740845259743556`, screen `63b0c4b0c4cd4359
 ## Scope
 
 **In scope:**
-- Large centered amount display (reuse `AmountDisplay` without currency dropdown)
+- Large centered amount display (reuse `AmountDisplay` with currency symbol visible but dropdown disabled)
 - Rate mode pill — clickable button cycling through 3 modes
 - From/To account selectors (reuse `SelectorCard`) with swap button
 - Date picker (reuse `DatePickerCard`)
@@ -17,14 +17,14 @@ Reference design: Stitch project `9891740845259743556`, screen `63b0c4b0c4cd4359
 - UseCase extensions: target amount, rate mode, swap accounts, rate fetching via `CurrencyConvertUseCase`
 
 **Out of scope:**
-- Currency labels near amounts
+- Editable currency selection on amounts
 - Tags, notes, recurring, receipt
 - Any UI elements not listed above
 
 ## Layout
 
 ```
-AMOUNT                    (AmountDisplay, no currency dropdown)
+$ AMOUNT                  (AmountDisplay, currency symbol shown, dropdown hidden)
   0.00
 
 [ Rate pill — clickable ]
@@ -137,7 +137,7 @@ data class Transfer(
 ### View layer
 
 **`TransactionEditTransferViewProvider.kt`** — full rewrite of composable:
-- Extend `AmountDisplay` with a `showCurrencySelector: Boolean = true` parameter. Transfer passes `false` to hide the currency symbol and dropdown arrow entirely.
+- Extend `AmountDisplay` with a `showCurrencySelector: Boolean = true` parameter. Transfer passes `false` to hide the dropdown arrow and disable the click — the currency symbol still displays (derived from the source account's currency).
 - New `RateModePill` private composable — renders current mode, handles click to dispatch `CycleRateMode`
 - Reuse `SelectorCard` for From/To accounts
 - New `SwapButton` private composable — circular button between account cards, dispatches `SwapAccounts`
