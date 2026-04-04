@@ -247,9 +247,17 @@ internal class DefaultTransactionEditUseCase(
             }
             is TransactionEditUseCase.Action.CycleTransferRateMode -> {
                 mutableState.update { state ->
-                    val nextMode = when (state.transferRateMode) {
-                        is TransferRateMode.Default -> TransferRateMode.CustomRate("")
-                        is TransferRateMode.CustomRate -> TransferRateMode.CustomAmount("")
+                    val nextMode = when (val currentMode = state.transferRateMode) {
+                        is TransferRateMode.Default -> {
+                            val rateStr = currentMode.rate.value.setScale(4, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            TransferRateMode.CustomRate(rateStr)
+                        }
+                        is TransferRateMode.CustomRate -> {
+                            val sourceAmount = state.amount.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
+                            val rate = currentMode.rate.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO
+                            val targetAmount = sourceAmount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+                            TransferRateMode.CustomAmount(targetAmount)
+                        }
                         is TransferRateMode.CustomAmount -> TransferRateMode.Default(Rate.Same).let {
                             // Restore rate if accounts have different currencies
                             it // Will be updated by fetchRate if needed
