@@ -17,7 +17,12 @@ internal class DefaultTransactionEditTransferViewModel(
                 selectedAccount = state.selectedAccount,
                 targetAccounts = state.targetAccounts,
                 selectedTargetAccount = state.selectedTargetAccount,
-                amount = state.amount
+                amount = state.amount,
+                targetAmount = state.targetAmount,
+                transferRateMode = state.transferRateMode,
+                sourceCurrencySymbol = state.sourceCurrencySymbol,
+                targetCurrencySymbol = state.targetCurrencySymbol,
+                date = state.date,
             )
         }
 
@@ -29,6 +34,16 @@ internal class DefaultTransactionEditTransferViewModel(
                 TransactionEditUseCase.Action.SelectAccount(action.account)
             is TransactionEditTransferViewModel.Action.SelectTargetAccount ->
                 TransactionEditUseCase.Action.SelectTargetAccount(action.account)
+            is TransactionEditTransferViewModel.Action.ChangeTargetAmount ->
+                TransactionEditUseCase.Action.ChangeTargetAmount(action.amount)
+            is TransactionEditTransferViewModel.Action.ChangeTransferRate ->
+                TransactionEditUseCase.Action.ChangeTransferRate(action.rate)
+            is TransactionEditTransferViewModel.Action.ChangeDate ->
+                TransactionEditUseCase.Action.ChangeDate(action.date)
+            is TransactionEditTransferViewModel.Action.CycleRateMode ->
+                TransactionEditUseCase.Action.CycleTransferRateMode
+            is TransactionEditTransferViewModel.Action.SwapAccounts ->
+                TransactionEditUseCase.Action.SwapAccounts
         }
         useCase.perform(useCaseAction)
     }
