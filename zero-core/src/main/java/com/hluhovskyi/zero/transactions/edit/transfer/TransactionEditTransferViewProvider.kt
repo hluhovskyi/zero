@@ -19,7 +19,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -271,7 +271,10 @@ private fun AccountSelectorsWithSwap(
     onTargetSelected: (com.hluhovskyi.zero.transactions.edit.TransactionEditAccount) -> Unit,
     onSwap: () -> Unit,
 ) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
@@ -296,8 +299,6 @@ private fun AccountSelectorsWithSwap(
         // Swap button — centered, overlapping between cards
         Box(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .offset(x = (-12).dp)
                 .zIndex(1f)
                 .size(40.dp)
                 .clip(CircleShape)
@@ -306,7 +307,7 @@ private fun AccountSelectorsWithSwap(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowDropDown,
+                imageVector = Icons.Filled.SwapVert,
                 contentDescription = "Swap accounts",
                 modifier = Modifier.size(20.dp),
                 tint = OnSurfaceVariant,

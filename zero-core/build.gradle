@@ -46,6 +46,7 @@ dependencies {
     implementation deps.android.compose.foundation
     implementation deps.android.compose.ui
     implementation deps.android.compose.material
+    implementation deps.android.compose.materialIconsExtended
     implementation deps.android.compose.viewModel
 
     implementation deps.android.core.ktx
