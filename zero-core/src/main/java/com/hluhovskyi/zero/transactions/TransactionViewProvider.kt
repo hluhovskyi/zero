@@ -37,6 +37,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
+import com.hluhovskyi.zero.ui.common.toUi
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -143,7 +144,7 @@ private fun TransactionView(
                                         currencySymbol = transaction.currencySymbol
                                     ),
                                     accountName = transaction.accountName,
-                                    iconColorScheme = transaction.categoryColorScheme,
+                                    iconColorScheme = transaction.categoryColorScheme.toUi(),
                                     accountIcon = transaction.accountIcon.toComposable(
                                         imageLoader = imageLoader,
                                         modifier = Modifier
@@ -166,7 +167,7 @@ private fun TransactionView(
                                         currencySymbol = transaction.currencySymbol,
                                     ),
                                     accountName = transaction.accountName,
-                                    iconColorScheme = transaction.categoryColorScheme,
+                                    iconColorScheme = transaction.categoryColorScheme.toUi(),
                                     convertedAmount = transaction.conversion.format(amountFormatter),
                                     icon = transaction.categoryIcon.toTintedComposable(
                                         imageLoader = imageLoader,
@@ -187,7 +188,7 @@ private fun TransactionView(
                                         amount = transaction.targetAmount,
                                         currencySymbol = transaction.targetCurrencySymbol,
                                     ),
-                                    transferIconColorScheme = transaction.transferColorScheme,
+                                    transferIconColorScheme = transaction.transferColorScheme.toUi(),
                                     transferIcon = transaction.transferIcon.toTintedComposable(
                                         imageLoader = imageLoader,
                                         modifier = Modifier.size(24.dp),
@@ -235,7 +236,7 @@ private fun Image.toComposable(
 private fun Image.toTintedComposable(
     imageLoader: ImageLoader,
     modifier: Modifier = Modifier
-): @Composable (tint: com.hluhovskyi.zero.colors.Color) -> Unit = { tint ->
+): @Composable (tint: Color) -> Unit = { tint ->
     imageLoader.View(
         image = this,
         modifier = modifier,

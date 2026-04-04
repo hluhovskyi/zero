@@ -21,6 +21,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
+import com.hluhovskyi.zero.ui.common.toUi
 
 @Composable
 fun TransactionEditCategorySelect(
@@ -40,7 +41,7 @@ fun TransactionEditCategorySelect(
         menuItem = { category ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CategoryIconView(
-                    colorScheme = category.colorScheme,
+                    colorScheme = category.colorScheme.toUi(),
                     size = 32.dp,
                     contentPadding = 6.dp,
                     modifier = Modifier.padding(end = 12.dp),
@@ -57,7 +58,7 @@ fun TransactionEditCategorySelect(
         selectedItem = selectedCategory,
         selectedItemIcon = { category ->
             CategoryIconView(
-                colorScheme = category.colorScheme,
+                colorScheme = category.colorScheme.toUi(),
                 size = 32.dp,
                 contentPadding = 6.dp,
                 modifier = Modifier.padding(start = 8.dp),

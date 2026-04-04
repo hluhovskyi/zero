@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.common.Uri
 import androidx.compose.foundation.Image as ComposeImage
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -24,7 +23,7 @@ internal class CoilImageLoader(
         contentDescription: String?,
         modifier: Modifier,
         scale: ImageLoader.Scale,
-        tint: Color?,
+        tint: ComposeColor?,
     ) {
         val contentScale = when (scale) {
             ImageLoader.Scale.Fit -> ContentScale.Fit
@@ -45,8 +44,8 @@ internal class CoilImageLoader(
                     modifier = modifier,
                     contentScale = contentScale,
                     colorFilter = tint
-                        ?.takeIf { !it.value.isUnspecified() }
-                        ?.let { ColorFilter.tint(ComposeColor(it.value.hex.toInt())) },
+                        ?.takeIf { it != ComposeColor.Unspecified }
+                        ?.let { ColorFilter.tint(it) },
                 )
             }
             else -> {

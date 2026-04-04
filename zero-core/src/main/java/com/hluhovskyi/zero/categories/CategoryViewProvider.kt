@@ -20,6 +20,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.common.toUi
 
 internal class CategoryViewProvider(
     private val viewModel: CategoryViewModel,
@@ -52,7 +53,7 @@ private fun CategoryView(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CategoryIconView(colorScheme = category.colorScheme) { tint ->
+                CategoryIconView(colorScheme = category.colorScheme.toUi()) { tint ->
                     imageLoader.View(
                         image = category.icon,
                         modifier = Modifier
