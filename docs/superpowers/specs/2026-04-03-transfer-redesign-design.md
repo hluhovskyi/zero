@@ -28,8 +28,8 @@ AMOUNT                    (AmountDisplay, no currency dropdown)
   0.00
 
 [ Rate pill — clickable ]
-  DEFAULT:       "Receives the same amount" / "1 USD = 43 UAH"
-  CUSTOM_RATE:   Rate input field
+  DEFAULT:       "Receives 1,000.00" (same currency) / "Receives ₴43,000.00 · 1 USD = 43 UAH" (different)
+  CUSTOM_RATE:   Rate input field + computed destination shown read-only
   CUSTOM_AMOUNT: Destination amount input field
 
 [ From account  ▾ ]      SelectorCard
@@ -43,9 +43,9 @@ AMOUNT                    (AmountDisplay, no currency dropdown)
 
 ```kotlin
 sealed interface TransferRateMode {
-    // Collapsed. Destination amount hidden.
-    // Same currency: shows "Receives the same amount"
-    // Different currency: shows "1 USD = 43.00 UAH" (rate from CurrencyConvertUseCase)
+    // Collapsed. No separate destination field.
+    // Same currency: pill shows "Receives 1,000.00"
+    // Different currency: pill shows "Receives ₴43,000.00 · 1 USD = 43 UAH"
     data class Default(val rate: Rate) : TransferRateMode
 
     // Expanded. User edits rate, destination amount auto-calculated and shown read-only.
