@@ -3,14 +3,12 @@ package com.hluhovskyi.zero.transactions.edit.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +26,8 @@ import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 
+private const val GRID_COLUMNS = 4
+
 @Composable
 fun CategoryBottomSheetGrid(
     imageLoader: ImageLoader,
@@ -37,34 +37,47 @@ fun CategoryBottomSheetGrid(
 ) {
     val sortedCategories = categories.sortedBy { it.name }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        items(sortedCategories, key = { it.id.value }) { category ->
-            val isSelected = category.id == selectedCategory?.id
-            CategoryGridItem(
-                imageLoader = imageLoader,
-                category = category,
-                isSelected = isSelected,
-                onClick = { onCategorySelected(category) }
-            )
+        sortedCategories.chunked(GRID_COLUMNS).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                row.forEach { category ->
+                    val isSelected = category.id == selectedCategory?.id
+                    CategoryGridItem(
+                        modifier = Modifier.weight(1f),
+                        imageLoader = imageLoader,
+                        category = category,
+                        isSelected = isSelected,
+                        onClick = { onCategorySelected(category) }
+                    )
+                }
+                // Fill remaining slots with empty spacers to keep grid alignment
+                repeat(GRID_COLUMNS - row.size) {
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun CategoryGridItem(
+    modifier: Modifier = Modifier,
     imageLoader: ImageLoader,
     category: TransactionEditCategory,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
