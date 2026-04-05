@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
@@ -54,6 +55,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
+        val currencyConvertUseCase: CurrencyConvertUseCase
         val transactionRepository: TransactionRepository
     }
 
@@ -95,6 +97,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
             transactionRepository: TransactionRepository,
             idGenerator: IdGenerator,
             onTransactionSavedHandler: OnTransactionSavedHandler,
@@ -107,6 +110,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             transactionId = transactionId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            currencyConvertUseCase = currencyConvertUseCase,
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             idGenerator = idGenerator,

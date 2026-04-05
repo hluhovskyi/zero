@@ -49,8 +49,9 @@ fun AmountDisplay(
     currencySymbol: String,
     focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
-    currencies: List<TransactionEditCurrency>,
-    onCurrencySelected: (TransactionEditCurrency) -> Unit
+    currencies: List<TransactionEditCurrency> = emptyList(),
+    onCurrencySelected: (TransactionEditCurrency) -> Unit = {},
+    showCurrencySelector: Boolean = true,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var textFieldValue by remember {
@@ -85,7 +86,10 @@ fun AmountDisplay(
             Box {
                 Row(
                     modifier = Modifier
-                        .clickable { expanded = true }
+                        .then(
+                            if (showCurrencySelector) Modifier.clickable { expanded = true }
+                            else Modifier
+                        )
                         .padding(end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -96,26 +100,30 @@ fun AmountDisplay(
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                     )
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = OnSurfaceVariant,
-                    )
+                    if (showCurrencySelector) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = OnSurfaceVariant,
+                        )
+                    }
                 }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    currencies.forEach { currencyItem ->
-                        DropdownMenuItem(
-                            onClick = {
-                                onCurrencySelected(currencyItem)
-                                expanded = false
+                if (showCurrencySelector) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        currencies.forEach { currencyItem ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    onCurrencySelected(currencyItem)
+                                    expanded = false
+                                }
+                            ) {
+                                Text(text = "${currencyItem.currencySymbol} - ${currencyItem.name}")
                             }
-                        ) {
-                            Text(text = "${currencyItem.currencySymbol} - ${currencyItem.name}")
                         }
                     }
                 }
