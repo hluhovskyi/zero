@@ -3,6 +3,13 @@ package com.hluhovskyi.zero.common
 import kotlinx.coroutines.Job
 import java.io.Closeable
 
+/**
+ * Factory for [Closeable] instances used in the [Attachable.attach] lifecycle pattern.
+ *
+ * - [empty] — no-op, for components with no cleanup.
+ * - [from] — runs an arbitrary action on close.
+ * - [of] — wraps a coroutine [Job]; calling `close()` cancels the job and all children.
+ */
 object Closeables {
 
     fun empty(): Closeable = EmptyCloseable
