@@ -11,7 +11,6 @@ interface TransactionEditViewModel
         data class ChangeDate(val date: LocalDateTime) : Action
         object Save : Action
         object Discard : Action
-        object ShowAllCategories : Action
         object DismissCategoryPicker : Action
     }
 

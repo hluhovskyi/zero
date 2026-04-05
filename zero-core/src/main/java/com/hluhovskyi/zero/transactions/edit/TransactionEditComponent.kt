@@ -69,7 +69,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
-            .onShowAllCategoriesHandler(OnShowAllCategoriesHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -88,9 +87,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         @BindsInstance
         fun onDiscardHandler(handler: OnDiscardHandler): Builder
-
-        @BindsInstance
-        fun onShowAllCategoriesHandler(handler: OnShowAllCategoriesHandler): Builder
     }
 
     @dagger.Module
@@ -147,10 +143,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             useCase: TransactionEditUseCase,
             logger: Logger
         ): ViewProvider {
-            val onShowAllHandler = OnShowAllCategoriesHandler {
-                viewModel.perform(TransactionEditViewModel.Action.ShowAllCategories)
-            }
-
             val categoryPickerBuildable = categoryPickerComponentBuilder
                 .onCategorySelectedHandler { categoryId ->
                     useCase.perform(TransactionEditUseCase.Action.SelectCategoryById(categoryId))
@@ -159,12 +151,8 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             return TransactionEditViewProvider(
                 viewModel = viewModel,
                 categoryPickerComponent = categoryPickerBuildable.logging(logger),
-                expenseComponent = expenseComponentBuilder
-                    .onShowAllCategoriesHandler(onShowAllHandler)
-                    .logging(logger),
-                incomeComponent = incomeComponentBuilder
-                    .onShowAllCategoriesHandler(onShowAllHandler)
-                    .logging(logger),
+                expenseComponent = expenseComponentBuilder.logging(logger),
+                incomeComponent = incomeComponentBuilder.logging(logger),
                 transferComponent = transferComponentBuilder.logging(logger),
             )
         }

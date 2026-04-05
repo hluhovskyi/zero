@@ -70,7 +70,8 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime()
+                    date = state.localDateTime ?: clock.localDateTime(),
+                    showCategoryPicker = state.showCategoryPicker
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -82,7 +83,8 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime()
+                    date = state.localDateTime ?: clock.localDateTime(),
+                    showCategoryPicker = state.showCategoryPicker
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -134,7 +136,23 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.SelectCategoryById -> {
                 mutableState.update { state ->
                     val category = state.categories.firstOrNull { it.id == action.categoryId }
-                    if (category != null) state.copy(selectedCategory = category) else state
+                    if (category != null) {
+                        state.copy(selectedCategory = category, showCategoryPicker = false)
+                    } else {
+                        state
+                    }
+                }
+            }
+
+            is TransactionEditUseCase.Action.ShowAllCategories -> {
+                mutableState.update { state ->
+                    state.copy(showCategoryPicker = true)
+                }
+            }
+
+            is TransactionEditUseCase.Action.DismissCategoryPicker -> {
+                mutableState.update { state ->
+                    state.copy(showCategoryPicker = false)
                 }
             }
 
@@ -596,5 +614,6 @@ internal class DefaultTransactionEditUseCase(
         val rate: String = "",
         val targetAmount: String = "",
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
+        val showCategoryPicker: Boolean = false,
     )
 }

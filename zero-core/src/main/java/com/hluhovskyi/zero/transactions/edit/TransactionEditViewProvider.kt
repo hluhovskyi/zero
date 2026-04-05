@@ -22,12 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -35,8 +36,6 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.LaunchedEffect
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -72,16 +71,12 @@ private fun TransactionEditView(
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(state.selectedCategory) {
-        if (sheetState.isVisible) {
-            sheetState.hide()
-        }
-    }
-
     LaunchedEffect(state.showCategoryPicker) {
-        if (state.showCategoryPicker && !sheetState.isVisible) {
+        if (state.showCategoryPicker) {
             focusManager.clearFocus()
             sheetState.show()
+        } else {
+            sheetState.hide()
         }
     }
 

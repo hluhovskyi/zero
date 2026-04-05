@@ -5,7 +5,6 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.OnShowAllCategoriesHandler
 import com.hluhovskyi.zero.transactions.edit.TransactionEditUseCase
 import dagger.BindsInstance
 import dagger.Provides
@@ -46,9 +45,6 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
 
         @BindsInstance
         fun transactionEditUseCase(useCase: TransactionEditUseCase): Builder
-
-        @BindsInstance
-        fun onShowAllCategoriesHandler(handler: OnShowAllCategoriesHandler): Builder
     }
 
     @dagger.Module
@@ -67,11 +63,9 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
         fun viewProvider(
             viewModel: TransactionEditExpenseViewModel,
             imageLoader: ImageLoader,
-            onShowAllCategoriesHandler: OnShowAllCategoriesHandler,
         ): ViewProvider = TransactionEditExpenseViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
-            onShowAllCategoriesHandler = onShowAllCategoriesHandler,
         )
     }
 }

@@ -41,6 +41,8 @@ internal class DefaultTransactionEditExpenseViewModel(
                 TransactionEditUseCase.Action.SelectCategory(action.category)
             is TransactionEditExpenseViewModel.Action.SelectCurrency ->
                 TransactionEditUseCase.Action.SelectCurrency(action.currency)
+            is TransactionEditExpenseViewModel.Action.ShowAllCategories ->
+                TransactionEditUseCase.Action.ShowAllCategories
         }
         useCase.perform(useCaseAction)
     }

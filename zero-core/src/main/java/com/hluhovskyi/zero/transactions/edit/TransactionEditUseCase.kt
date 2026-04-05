@@ -28,6 +28,8 @@ interface TransactionEditUseCase :
         data class ChangeTransferRate(val rate: String) : Action
         object CycleTransferRateMode : Action
         object SwapAccounts : Action
+        object ShowAllCategories : Action
+        object DismissCategoryPicker : Action
     }
 
     sealed interface State {
@@ -44,6 +46,7 @@ interface TransactionEditUseCase :
             val amount: String = "",
             val rate: String = "",
             override val date: LocalDateTime = LocalDateTime.now(),
+            val showCategoryPicker: Boolean = false,
         ) : State
 
         data class Income(
@@ -56,6 +59,7 @@ interface TransactionEditUseCase :
             val amount: String = "",
             val rate: String = "",
             override val date: LocalDateTime = LocalDateTime.now(),
+            val showCategoryPicker: Boolean = false,
         ) : State
 
         data class Transfer(
