@@ -1,0 +1,14 @@
+{
+  "name": "zero-project",
+  "description": "Project-specific skills for the Zero app",
+  "owner": {
+    "name": "Artem Hluhovskyi"
+  },
+  "plugins": [
+    {
+      "name": "zero-project",
+      "description": "Project-specific skills for the Zero app",
+      "source": "./plugins/zero-project"
+    }
+  ]
+}
