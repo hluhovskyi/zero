@@ -2,6 +2,10 @@
 
 Zero is a personal finance Android app (Kotlin, Jetpack Compose, Dagger, Room). Tracks expenses, income, and transfers across accounts with multi-currency support.
 
+## Maintaining These Docs
+
+If you discover a non-obvious gotcha, a new pattern, or a rule that isn't documented — update the relevant doc file. Don't document things the code already says clearly. Only document the "why" and the traps.
+
 ## Cross-Cutting Rules
 
 1. **Never commit directly to `master`** — feature branch + PR always. See [Branch Management](docs/agents/branch-management.md).
