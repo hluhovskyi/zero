@@ -9,10 +9,15 @@ import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.runningFold
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.exp
 
@@ -49,30 +54,66 @@ internal class DefaultCategoriesQueryUseCase(
     override fun queryById(id: Id.Known): Flow<CategoriesQueryUseCase.Category> = queryAll
         .mapNotNull { categories -> categories.firstOrNull { it.id == id } }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun queryRanked(
         signals: Flow<CategoriesQueryUseCase.RankSignal>,
-    ): Flow<List<CategoriesQueryUseCase.Category>> = combine(
-        queryAll,
-        transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatistics()),
-    ) { categories, usageStatistics ->
-        rankCategories(categories, usageStatistics)
+    ): Flow<List<CategoriesQueryUseCase.Category>> {
+        val signalState = signals.runningFold(SignalState()) { state, signal ->
+            when (signal) {
+                is CategoriesQueryUseCase.RankSignal.AccountChanged -> state.copy(accountId = signal.accountId)
+                is CategoriesQueryUseCase.RankSignal.DateChanged -> state.copy(date = signal.date)
+            }
+        }
+
+        return signalState.flatMapLatest { state ->
+            val accountStatsFlow = state.accountId?.let {
+                transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatisticsByAccount(it))
+            } ?: flowOf(emptyList())
+
+            val monthStatsFlow = state.date?.let {
+                transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatisticsByMonth(it.monthValue))
+            } ?: flowOf(emptyList())
+
+            combine(
+                queryAll,
+                transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatistics()),
+                accountStatsFlow,
+                monthStatsFlow,
+            ) { categories, globalStats, accountStats, monthStats ->
+                rankCategories(categories, globalStats, accountStats, monthStats)
+            }
+        }
     }
 
     private fun rankCategories(
         categories: List<CategoriesQueryUseCase.Category>,
-        usageStatistics: List<TransactionRepository.CategoryUsageStatistic>,
+        globalStats: List<TransactionRepository.CategoryUsageStatistic>,
+        accountStats: List<TransactionRepository.CategoryUsageStatistic>,
+        monthStats: List<TransactionRepository.CategoryUsageStatistic>,
     ): List<CategoriesQueryUseCase.Category> {
-        val statsById = usageStatistics.associateBy { it.categoryId }
+        val globalById = globalStats.associateBy { it.categoryId }
+        val accountById = accountStats.associateBy { it.categoryId }
+        val monthById = monthStats.associateBy { it.categoryId }
         val now = LocalDateTime.now()
 
-        val (used, unused) = categories.partition { statsById.containsKey(it.id) }
+        val (used, unused) = categories.partition { globalById.containsKey(it.id) }
 
         val scored = used
             .map { category ->
-                val stat = statsById.getValue(category.id)
-                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()
+                val globalStat = globalById.getValue(category.id)
+                val daysSinceLastUse = Duration.between(globalStat.lastUsedDateTime, now).toDays().toDouble()
                 val recencyDecay = exp(-daysSinceLastUse / DECAY_PERIOD_DAYS)
-                val score = stat.transactionCount * recencyDecay
+                val baseScore = globalStat.transactionCount * recencyDecay
+
+                val accountMultiplier = accountById[category.id]?.let { accountStat ->
+                    1.0 + accountStat.transactionCount.toDouble() / globalStat.transactionCount
+                } ?: 1.0
+
+                val monthMultiplier = monthById[category.id]?.let { monthStat ->
+                    1.0 + MONTH_WEIGHT * monthStat.transactionCount.toDouble() / globalStat.transactionCount
+                } ?: 1.0
+
+                val score = baseScore * accountMultiplier * monthMultiplier
                 category to score
             }
             .sortedByDescending { it.second }
@@ -106,7 +147,13 @@ internal class DefaultCategoriesQueryUseCase(
         )
     }
 
+    private data class SignalState(
+        val accountId: Id.Known? = null,
+        val date: LocalDate? = null,
+    )
+
     private companion object {
         const val DECAY_PERIOD_DAYS = 30.0
+        const val MONTH_WEIGHT = 0.5
     }
 }
