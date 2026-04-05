@@ -9,7 +9,6 @@ interface TransactionEditViewModel
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action
         data class ChangeDate(val date: LocalDateTime) : Action
-        data class SelectCategory(val category: TransactionEditCategory) : Action
         object Save : Action
         object Discard : Action
     }
@@ -18,7 +17,6 @@ interface TransactionEditViewModel
         val transactionTypes: List<TransactionEditType> = emptyList(),
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val date: LocalDateTime = LocalDateTime.now(),
-        val categories: List<TransactionEditCategory> = emptyList(),
         val selectedCategory: TransactionEditCategory? = null,
     )
 }
