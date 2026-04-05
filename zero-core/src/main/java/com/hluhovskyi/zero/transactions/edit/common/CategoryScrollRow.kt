@@ -69,15 +69,12 @@ private fun CategoryItem(
             colorScheme = category.colorScheme.toUi(),
             size = 48.dp,
             contentPadding = 12.dp,
+            isSelected = isSelected,
         ) { iconTint ->
             imageLoader.View(
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
                 image = category.icon,
-                tint = if (isSelected) {
-                    Color.White
-                } else {
-                    iconTint
-                },
+                tint = iconTint,
             )
         }
         Text(
