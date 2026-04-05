@@ -26,3 +26,15 @@ Zero uses a custom layer on top of Jetpack Navigation with URL-based routes.
 ## Passing Data Between Screens
 
 Data flows as navigation arguments — not stored state on use cases or view models. When a picker screen needs context (e.g., a color ID to preview icons), encode it as an `Argument<Id>` on the destination and resolve it at the destination using a repository.
+
+## Returning a Result from a Screen
+
+Use a scoped use case (`Action.Request` / `Action.Pick` / `State.Picked`) — interface in `zero-core`, navigation-aware implementation in `app`. See `CategoryEditIconUseCase` + `DefaultCategoryEditIconUseCase` as the canonical example.
+
+Do not relay results through ViewModel state or shared flows on components.
+
+## Bottom Sheet Destinations
+
+Use `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` for destinations that should appear as a bottom sheet overlay. In `MainActivityScreenViewProvider` these are registered as `dialog {}` destinations (so they overlay the current screen rather than replacing it), wrapped in `BottomSheetNavDestination` which owns the `ModalBottomSheetLayout` show/dismiss logic.
+
+**Known issue**: Sheet renders full-screen instead of as an overlay. Fix pending.

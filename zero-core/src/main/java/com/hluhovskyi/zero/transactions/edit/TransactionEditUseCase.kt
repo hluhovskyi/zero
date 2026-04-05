@@ -27,6 +27,7 @@ interface TransactionEditUseCase :
         data class ChangeTransferRate(val rate: String) : Action
         object CycleTransferRateMode : Action
         object SwapAccounts : Action
+        object ShowAllCategories : Action
     }
 
     sealed interface State {

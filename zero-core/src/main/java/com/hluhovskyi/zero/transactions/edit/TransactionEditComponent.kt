@@ -67,6 +67,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
+            .transactionEditCategoryUseCase(TransactionEditCategoryUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -85,6 +86,9 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         @BindsInstance
         fun onDiscardHandler(handler: OnDiscardHandler): Builder
+
+        @BindsInstance
+        fun transactionEditCategoryUseCase(useCase: TransactionEditCategoryUseCase): Builder
     }
 
     @dagger.Module
@@ -103,6 +107,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
             logger: Logger,
@@ -117,6 +122,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
+            transactionEditCategoryUseCase = transactionEditCategoryUseCase,
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             logger = logger

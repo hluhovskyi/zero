@@ -1,14 +1,11 @@
 package com.hluhovskyi.zero.transactions.edit.expense
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,7 +31,7 @@ internal class TransactionEditExpenseViewProvider(
     override fun View() {
         TransactionEditExpenseView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -42,7 +39,7 @@ internal class TransactionEditExpenseViewProvider(
 @Composable
 private fun TransactionEditExpenseView(
     viewModel: TransactionEditExpenseViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseViewModel.State())
     val focusRequester = remember { FocusRequester() }
@@ -79,6 +76,9 @@ private fun TransactionEditExpenseView(
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
                 viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(it))
+            },
+            onShowAll = {
+                viewModel.perform(TransactionEditExpenseViewModel.Action.ShowAllCategories)
             }
         )
 

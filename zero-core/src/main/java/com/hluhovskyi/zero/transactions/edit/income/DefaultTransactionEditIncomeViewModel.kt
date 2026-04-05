@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 internal class DefaultTransactionEditIncomeViewModel(
-    private val useCase: TransactionEditUseCase
+    private val useCase: TransactionEditUseCase,
 ) : TransactionEditIncomeViewModel {
 
     override val state: Flow<TransactionEditIncomeViewModel.State> = useCase.state
@@ -41,6 +41,8 @@ internal class DefaultTransactionEditIncomeViewModel(
                 TransactionEditUseCase.Action.SelectCategory(action.category)
             is TransactionEditIncomeViewModel.Action.SelectCurrency ->
                 TransactionEditUseCase.Action.SelectCurrency(action.currency)
+            is TransactionEditIncomeViewModel.Action.ShowAllCategories ->
+                TransactionEditUseCase.Action.ShowAllCategories
         }
         useCase.perform(useCaseAction)
     }

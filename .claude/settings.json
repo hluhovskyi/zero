@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "zero-project": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/google-mac/Projects/zero/.claude/marketplace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "zero-project@zero-project": true
+  }
+}

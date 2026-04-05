@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
@@ -49,6 +51,7 @@ internal class DefaultTransactionEditUseCase(
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
+    private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
     private val clock: Clock,
     private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -70,7 +73,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime()
+                    date = state.localDateTime ?: clock.localDateTime(),
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -82,7 +85,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime()
+                    date = state.localDateTime ?: clock.localDateTime(),
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -129,6 +132,10 @@ internal class DefaultTransactionEditUseCase(
                 mutableState.update { state ->
                     state.copy(selectedCategory = action.category)
                 }
+            }
+
+            is TransactionEditUseCase.Action.ShowAllCategories -> {
+                transactionEditCategoryUseCase.perform(TransactionEditCategoryUseCase.Action.Request)
             }
 
             is TransactionEditUseCase.Action.SelectCurrency -> {
@@ -375,6 +382,17 @@ internal class DefaultTransactionEditUseCase(
                                         ?: currencies.firstOrNull()
                                 },
                             )
+                        }
+                    }
+            }
+
+            launch(context = Dispatchers.Main) {
+                transactionEditCategoryUseCase.state
+                    .filterIsInstance<TransactionEditCategoryUseCase.State.Picked>()
+                    .collectLatest { picked ->
+                        mutableState.update { state ->
+                            val category = state.categories.firstOrNull { it.id == picked.categoryId }
+                            if (category != null) state.copy(selectedCategory = category) else state
                         }
                     }
             }

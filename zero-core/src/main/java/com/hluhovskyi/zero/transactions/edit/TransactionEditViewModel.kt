@@ -17,5 +17,6 @@ interface TransactionEditViewModel
         val transactionTypes: List<TransactionEditType> = emptyList(),
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val date: LocalDateTime = LocalDateTime.now(),
+        val selectedCategory: TransactionEditCategory? = null,
     )
 }

@@ -24,6 +24,9 @@ internal object Destinations {
     sealed interface Category : Destination {
         object All : Category, Destination by destinationOf("categories")
         object Edit : Category, Destination by destinationOf("categories/edit")
+        object Picker : Category, Destination by destinationOf("categories/picker", RequestId) {
+            object RequestId : Argument<Id> by idOptionalValueOf("requestId")
+        }
 
         sealed interface Item : Category {
             object Edit : Item, Destination by destinationOf("categories/{categoryId}/edit", CategoryId) {

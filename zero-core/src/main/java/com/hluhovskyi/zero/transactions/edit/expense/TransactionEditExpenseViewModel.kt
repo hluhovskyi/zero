@@ -17,6 +17,7 @@ interface TransactionEditExpenseViewModel
         data class ChangeRate(val rate: String) : Action
         data class ChangeDate(val date: LocalDateTime) : Action
         object EditCategories : Action
+        object ShowAllCategories : Action
     }
 
     data class State(
