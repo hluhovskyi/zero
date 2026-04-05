@@ -77,9 +77,9 @@ interface CategoriesQueryUseCase {
 
 `DefaultTransactionEditUseCase`:
 
-1. Collects the **first emission** from `queryRanked` — ranking is computed once on screen open, not continuously re-ranked.
+1. Subscribes to `queryRanked(signals)` — the flow is reactive. In Phase 1, ranking effectively computes once because signals are ignored. In Phase 2, the list may re-rank when account/date signals change.
 2. If editing an existing transaction, moves the **original** category (the one saved on the transaction when opened) to position 0. Subsequent user selections do not reorder the list.
-3. Stores the ranked list as immutable state.
+3. Updates categories state on each emission.
 
 ## UI Changes to CategoryScrollRow
 
