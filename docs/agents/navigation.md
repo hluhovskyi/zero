@@ -29,12 +29,12 @@ Data flows as navigation arguments — not stored state on use cases or view mod
 
 ## Returning a Result from a Screen
 
-When screen A navigates to screen B and needs a result back (a picked value, a confirmation, etc.), use the Request / Deliver / Result use case pattern established by `DefaultCategoryEditIconUseCase` and `DefaultAccountEditIconUseCase`:
+When screen A navigates to screen B and needs a result back (a selected value, a confirmation, etc.), use the Request / Pick / Picked use case pattern. Canonical examples: `CategoryEditIconUseCase` + `DefaultCategoryEditIconUseCase`, `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase`.
 
-1. **Interface in `zero-core`** — `XxxUseCase` with `Action.Request`, `Action.Deliver(value)`, `State.Result(value)`. Implement `Noop`.
-2. **Implementation in `app`** — navigates to the destination on `Request` (with a generated `requestId` as nav argument), buffers `Deliver` results in a `MutableSharedFlow`, emits `Result` only when the `requestId` matches (guards against stale results from a previous navigation). Calls `navigator.back()` on emit.
-3. **Wire in `MainActivityScreenComponent.Module`** — scope to `@MainActivityScreenScope`. Screen B's `onXxxSelectedHandler` calls `perform(Deliver(...))`. Screen A's component receives the use case via `@BindsInstance`.
-4. **Caller (screen A)** — calls `perform(Request)` to open screen B; observes `state` for `Result` in `attach()`.
+1. **Interface in `zero-core`** — `XxxUseCase` with `Action.Request`, `Action.Pick(value)`, `State.Picked(value)`. Implement `Noop`. The interface has no knowledge of navigation.
+2. **Implementation in `app`** — navigates to screen B on `Request` (passing a generated `requestId` as nav argument), buffers `Pick` events in a `MutableSharedFlow`, emits `Picked` only when the `requestId` matches (guards against stale results from previous navigations). Calls `navigator.back()` on emit.
+3. **Wire in `MainActivityScreenComponent.Module`** — scope to `@MainActivityScreenScope`. Screen B's `onXxxSelectedHandler` calls `perform(Pick(...))`. Screen A's component receives the use case via `@BindsInstance`.
+4. **Caller (screen A)** — calls `perform(Request)` to open screen B; observes `state` for `Picked` in `attach()`.
 
 Do not relay results through ViewModel state, shared flows on the component, or any other mechanism. Navigation is the source of truth.
 
@@ -42,4 +42,4 @@ Do not relay results through ViewModel state, shared flows on the component, or 
 
 Use `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` for destinations that should appear as a bottom sheet overlay. In `MainActivityScreenViewProvider` these are registered as `dialog {}` destinations (so they overlay the current screen rather than replacing it), wrapped in `BottomSheetNavDestination` which owns the `ModalBottomSheetLayout` show/dismiss logic.
 
-**Known issue**: The dialog window background transparency is not yet fully resolved — the sheet may render full-screen. Investigation ongoing.
+**Known issue**: The dialog window background transparency is not yet resolved — the sheet renders full-screen instead of as an overlay. The `dialog {}` + `BottomSheetNavDestination` approach is in place but the visual result is wrong.
