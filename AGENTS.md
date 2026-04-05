@@ -50,7 +50,6 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [ImageLoader](docs/agents/image-loading.md) — Interface design, tint handling
 - [ColorScheme](docs/agents/color-scheme.md) — ColorScheme, ColorValue, colorRepository
 - [Testing](docs/agents/testing.md) — JUnit/Mockito, Flow type inference, coroutines testing
-- [Category Ranking](docs/agents/category-ranking.md) — Signal-driven scoring system, adding new signals, gotchas
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — DefaultImpls dispatch bug, ComposeColor pitfall
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
 - [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
