@@ -30,20 +30,18 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.CategoryBottomSheetGrid
 import com.hluhovskyi.zero.transactions.edit.common.LocalShowAllCategories
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
-    private val imageLoader: ImageLoader,
     private val categoryPickerComponent: Buildable<out AttachableViewComponent>,
     private val expenseComponent: Buildable<out AttachableViewComponent>,
     private val incomeComponent: Buildable<out AttachableViewComponent>,
@@ -54,7 +52,6 @@ internal class TransactionEditViewProvider(
     override fun View() {
         TransactionEditView(
             viewModel = viewModel,
-            imageLoader = imageLoader,
             categoryPickerComponent = categoryPickerComponent,
             expenseComponent = expenseComponent,
             incomeComponent = incomeComponent,
@@ -67,7 +64,6 @@ internal class TransactionEditViewProvider(
 @Composable
 private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
-    imageLoader: ImageLoader,
     categoryPickerComponent: Buildable<out AttachableViewComponent>,
     expenseComponent: Buildable<out AttachableViewComponent>,
     incomeComponent: Buildable<out AttachableViewComponent>,
@@ -78,20 +74,18 @@ private fun TransactionEditView(
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
+    LaunchedEffect(state.selectedCategory) {
+        if (sheetState.isVisible) {
+            sheetState.hide()
+        }
+    }
+
     ModalBottomSheetLayout(
         sheetState = sheetState,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetBackgroundColor = MaterialTheme.colors.background,
         sheetContent = {
-            CategoryBottomSheetGrid(
-                imageLoader = imageLoader,
-                categories = state.categories,
-                selectedCategory = state.selectedCategory,
-                onCategorySelected = { category ->
-                    viewModel.perform(TransactionEditViewModel.Action.SelectCategory(category))
-                    coroutineScope.launch { sheetState.hide() }
-                }
-            )
+            categoryPickerComponent.AttachWithView()
         }
     ) {
         CompositionLocalProvider(
