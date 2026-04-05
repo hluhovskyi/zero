@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.imports.accounts.ImportAccountPickerComponent
 import com.hluhovskyi.zero.imports.categories.ImportCategoriesPickerComponent
 import com.hluhovskyi.zero.imports.filepicker.ImportFilePickerComponent
 import com.hluhovskyi.zero.imports.transactions.ImportTransactionPreviewComponent
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -41,6 +42,7 @@ abstract class ImportComponent : AttachableViewComponent,
         val accountRepository: AccountRepository
         val categoryRepository: CategoryRepository
         val transactionRepository: TransactionRepository
+        val clock: Clock
     }
 
     companion object {
@@ -74,12 +76,14 @@ abstract class ImportComponent : AttachableViewComponent,
             categoryRepository: CategoryRepository,
             transactionRepository: TransactionRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
+            clock: Clock,
         ): ImportUseCase = DefaultImportUseCase(
             importSourceUseCase = importSourceUseCase,
             accountRepository = accountRepository,
             categoryRepository = categoryRepository,
             transactionRepository = transactionRepository,
             onImportFinishedHandler = onImportFinishedHandler,
+            clock = clock,
         )
 
         @Provides

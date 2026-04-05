@@ -80,7 +80,18 @@ internal class DefaultTransactionViewModel(
                         .onStartWithEmptyList()
                         .onEmptyReturnEmptyList(),
                 ) { new, paged ->
-                    (new + paged).distinctBy { it.id }
+                    val freshById = new.associateBy { it.id }
+                    val merged = paged.map { transaction ->
+                        val fresh = freshById[transaction.id]
+                        if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
+                            fresh
+                        } else {
+                            transaction
+                        }
+                    }
+                    val existingIds = paged.map { it.id }.toSet()
+                    val added = new.filter { it.id !in existingIds }
+                    (added + merged).sortedByDescending { it.dateTime }
                 },
                 categoriesQueryUseCase.queryAll()
                     .onStartWithEmptyList()
