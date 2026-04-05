@@ -1,5 +1,9 @@
 package com.hluhovskyi.zero.common
 
+/**
+ * Loadable image reference. Use [empty] when no image is available (e.g. missing icon).
+ * The factory `Image(uri, description)` returns [empty] automatically if uri is [Uri.Empty].
+ */
 interface Image {
 
     val uri: Uri
