@@ -20,7 +20,7 @@ internal interface TransactionRoom {
     @Query("""
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
-          AND datetime(enteredDateTime) > datetime(:after)
+          AND datetime(updatedDateTime) > datetime(:after)
         ORDER BY datetime(enteredDateTime) DESC
     """)
     fun selectAfter(userId: String, after: String): Flow<List<TransactionEntity>>

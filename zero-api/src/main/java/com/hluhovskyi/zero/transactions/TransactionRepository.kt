@@ -34,6 +34,7 @@ interface TransactionRepository {
         val currencyId: Id.Known
         val accountId: Id.Known
         val dateTime: LocalDateTime
+        val updatedDateTime: LocalDateTime
 
         data class Expense(
             override val id: Id.Known,
@@ -41,6 +42,7 @@ interface TransactionRepository {
             override val accountId: Id.Known,
             override val currencyId: Id.Known,
             override val dateTime: LocalDateTime,
+            override val updatedDateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -51,6 +53,7 @@ interface TransactionRepository {
             override val accountId: Id.Known,
             override val currencyId: Id.Known,
             override val dateTime: LocalDateTime,
+            override val updatedDateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -61,6 +64,7 @@ interface TransactionRepository {
             override val currencyId: Id.Known,
             override val accountId: Id.Known,
             override val dateTime: LocalDateTime,
+            override val updatedDateTime: LocalDateTime,
             val targetAccount: Id.Known,
             val targetAmount: Amount
         ) : Transaction

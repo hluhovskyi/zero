@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.localDateTime
 import java.io.Closeable
 
 internal class DefaultImportUseCase(
@@ -24,6 +26,7 @@ internal class DefaultImportUseCase(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
+    private val clock: Clock,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : ImportUseCase {
 
@@ -90,6 +93,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     categoryId = transaction.categoryId,
                                     dateTime = transaction.dateTime,
+                                    updatedDateTime = clock.localDateTime(),
                                     // TODO: Handle rate
                                     rate = Rate.Same
                                 )
@@ -100,6 +104,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     categoryId = transaction.categoryId,
                                     dateTime = transaction.dateTime,
+                                    updatedDateTime = clock.localDateTime(),
                                     // TODO: Handle rate
                                     rate = Rate.Same
                                 )
@@ -109,6 +114,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     accountId = transaction.accountId,
                                     dateTime = transaction.dateTime,
+                                    updatedDateTime = clock.localDateTime(),
                                     targetAmount = transaction.targetAmount,
                                     targetAccount = transaction.targetAccount
                                 )

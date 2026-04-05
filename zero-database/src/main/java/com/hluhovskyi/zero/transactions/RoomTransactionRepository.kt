@@ -105,6 +105,7 @@ internal class RoomTransactionRepository(
                     accountId = accountId,
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
+                    updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert()
                 )
@@ -119,6 +120,7 @@ internal class RoomTransactionRepository(
                     accountId = accountId,
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
+                    updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert()
                 )
@@ -132,6 +134,7 @@ internal class RoomTransactionRepository(
                     accountId = accountId,
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
+                    updatedDateTime = updatedDateTime,
                     targetAccount = Id.Known(targetAccount),
                     targetAmount = targetAmount.convert()
                 )
@@ -154,7 +157,7 @@ internal class RoomTransactionRepository(
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
-                updatedDateTime = clock.localDateTime(),
+                updatedDateTime = updatedDateTime,
             )
 
             is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -170,7 +173,7 @@ internal class RoomTransactionRepository(
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
-                updatedDateTime = clock.localDateTime(),
+                updatedDateTime = updatedDateTime,
             )
 
             is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -186,7 +189,7 @@ internal class RoomTransactionRepository(
                 targetAmount = targetAmount.convert(),
                 enteredDateTime = dateTime,
                 creationDateTime = clock.localDateTime(),
-                updatedDateTime = clock.localDateTime(),
+                updatedDateTime = updatedDateTime,
             )
         }
 

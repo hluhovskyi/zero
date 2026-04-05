@@ -192,6 +192,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = currency?.id ?: account.currencyId,
                                 categoryId = category.id,
                                 dateTime = dateTime,
+                                updatedDateTime = clock.localDateTime(),
                                 rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
@@ -207,6 +208,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = currency?.id ?: account.currencyId,
                                 categoryId = category.id,
                                 dateTime = dateTime,
+                                updatedDateTime = clock.localDateTime(),
                                 rate = Rate(state.rate.toBigDecimalOrNull())
                             )
                         }
@@ -233,6 +235,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = account.currencyId,
                                 targetAccount = targetAccount.id,
                                 dateTime = dateTime,
+                                updatedDateTime = clock.localDateTime(),
                                 targetAmount = computedTargetAmount
                             )
                         }

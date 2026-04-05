@@ -6,4 +6,6 @@ Interface default methods with `@Composable` and default parameters: Kotlin's `D
 
 ## ComposeColor Constructor
 
-`ComposeColor(packedLong)` encodes colorspace index in lower 6 bits — invalid for arbitrary hex values. Always use `ComposeColor(argb: Int)`.
+`ComposeColor(packedLong)` encodes colorspace index in lower 6 bits — invalid for arbitrary hex values.
+
+To convert a `ColorValue` to Compose `Color`: `ComposeColor(colorValue.hex.toInt())`. This passes the ARGB int, not the raw ULong.
