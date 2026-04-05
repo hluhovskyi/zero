@@ -1,1 +1,1 @@
-/Users/google-mac/Projects/zero/.claude/plugins/zero-project/skills/retro/SKILL.md
+../../../.claude/plugins/zero-project/skills/retro/SKILL.md
