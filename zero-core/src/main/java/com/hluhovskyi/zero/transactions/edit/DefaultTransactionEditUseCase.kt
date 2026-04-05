@@ -241,14 +241,8 @@ internal class DefaultTransactionEditUseCase(
 
                                 when (transaction) {
                                     is TransactionRepository.Transaction.Expense -> {
-                                        val categoryToSelect =
-                                            state.categories.firstOrNull { it.id == transaction.categoryId }
-
-                                        val reorderedCategories = if (categoryToSelect != null) {
-                                            listOf(categoryToSelect) + state.categories.filter { it.id != categoryToSelect.id }
-                                        } else {
-                                            state.categories
-                                        }
+                                        val (categoryToSelect, reorderedCategories) =
+                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
 
                                         partialState.copy(
                                             transactionType = TransactionEditType.EXPENSE,
@@ -260,14 +254,8 @@ internal class DefaultTransactionEditUseCase(
                                     }
 
                                     is TransactionRepository.Transaction.Income -> {
-                                        val categoryToSelect =
-                                            state.categories.firstOrNull { it.id == transaction.categoryId }
-
-                                        val reorderedCategories = if (categoryToSelect != null) {
-                                            listOf(categoryToSelect) + state.categories.filter { it.id != categoryToSelect.id }
-                                        } else {
-                                            state.categories
-                                        }
+                                        val (categoryToSelect, reorderedCategories) =
+                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
 
                                         partialState.copy(
                                             transactionType = TransactionEditType.INCOME,
@@ -566,6 +554,19 @@ internal class DefaultTransactionEditUseCase(
                 targetAccount.currencyId
             )
         }
+    }
+
+    private fun resolveCategoryForEdit(
+        categories: List<TransactionEditCategory>,
+        categoryId: Id.Known,
+    ): Pair<TransactionEditCategory?, List<TransactionEditCategory>> {
+        val categoryToSelect = categories.firstOrNull { it.id == categoryId }
+        val reorderedCategories = if (categoryToSelect != null) {
+            listOf(categoryToSelect) + categories.filter { it.id != categoryToSelect.id }
+        } else {
+            categories
+        }
+        return categoryToSelect to reorderedCategories
     }
 
     private fun BigDecimal.format() = setScale(2, RoundingMode.HALF_UP)
