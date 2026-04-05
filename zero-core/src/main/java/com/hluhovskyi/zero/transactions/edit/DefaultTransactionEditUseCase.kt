@@ -330,7 +330,12 @@ internal class DefaultTransactionEditUseCase(
                     .distinctUntilChanged()
                     .map { CategoriesQueryUseCase.RankSignal.DateChanged(it) }
 
-                val signals = merge(accountSignals, dateSignals)
+                val amountSignals = mutableState
+                    .map { it.amount.toBigDecimalOrNull() }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.AmountChanged(it) }
+
+                val signals = merge(accountSignals, dateSignals, amountSignals)
 
                 categoriesQueryUseCase.queryRanked(signals)
                     .map { categories ->

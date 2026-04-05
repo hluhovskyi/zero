@@ -101,6 +101,15 @@ internal interface TransactionRoom {
     """)
     fun selectCategoryUsageStatisticByMonth(userId: String, month: Int): Flow<List<CategoryUsageStatistic>>
 
+    @Query("""
+        SELECT categoryId,
+               AVG(ABS(amount_value)) as averageAmount
+        FROM TransactionEntity
+        WHERE userId = :userId AND categoryId IS NOT NULL AND amount_value > 0
+        GROUP BY categoryId
+    """)
+    fun selectCategoryAmountStatistic(userId: String): Flow<List<CategoryAmountStatistic>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 

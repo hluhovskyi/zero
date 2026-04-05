@@ -16,10 +16,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.runningFold
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.exp
+import kotlin.math.ln
 
 internal class DefaultCategoriesQueryUseCase(
     private val categoryRepository: CategoryRepository,
@@ -62,6 +64,7 @@ internal class DefaultCategoriesQueryUseCase(
             when (signal) {
                 is CategoriesQueryUseCase.RankSignal.AccountChanged -> state.copy(accountId = signal.accountId)
                 is CategoriesQueryUseCase.RankSignal.DateChanged -> state.copy(date = signal.date)
+                is CategoriesQueryUseCase.RankSignal.AmountChanged -> state.copy(amount = signal.amount)
             }
         }
 
@@ -74,13 +77,18 @@ internal class DefaultCategoriesQueryUseCase(
                 transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatisticsByMonth(it.monthValue))
             } ?: flowOf(emptyList())
 
+            val amountStatsFlow = transactionRepository.query(
+                TransactionRepository.Criteria.CategoryAmountStatistics()
+            )
+
             combine(
                 queryAll,
                 transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatistics()),
                 accountStatsFlow,
                 monthStatsFlow,
-            ) { categories, globalStats, accountStats, monthStats ->
-                rankCategories(categories, globalStats, accountStats, monthStats)
+                amountStatsFlow,
+            ) { categories, globalStats, accountStats, monthStats, amountStats ->
+                rankCategories(categories, globalStats, accountStats, monthStats, amountStats, state.amount)
             }
         }
     }
@@ -90,10 +98,13 @@ internal class DefaultCategoriesQueryUseCase(
         globalStats: List<TransactionRepository.CategoryUsageStatistic>,
         accountStats: List<TransactionRepository.CategoryUsageStatistic>,
         monthStats: List<TransactionRepository.CategoryUsageStatistic>,
+        amountStats: List<TransactionRepository.CategoryAmountStatistic>,
+        enteredAmount: BigDecimal?,
     ): List<CategoriesQueryUseCase.Category> {
         val globalById = globalStats.associateBy { it.categoryId }
         val accountById = accountStats.associateBy { it.categoryId }
         val monthById = monthStats.associateBy { it.categoryId }
+        val amountById = amountStats.associateBy { it.categoryId }
         val now = LocalDateTime.now()
 
         val (used, unused) = categories.partition { globalById.containsKey(it.id) }
@@ -113,7 +124,9 @@ internal class DefaultCategoriesQueryUseCase(
                     1.0 + MONTH_WEIGHT * monthStat.transactionCount.toDouble() / globalStat.transactionCount
                 } ?: 1.0
 
-                val score = baseScore * accountMultiplier * monthMultiplier
+                val amountMultiplier = amountProximityMultiplier(enteredAmount, amountById[category.id])
+
+                val score = baseScore * accountMultiplier * monthMultiplier * amountMultiplier
                 category to score
             }
             .sortedByDescending { it.second }
@@ -122,6 +135,20 @@ internal class DefaultCategoriesQueryUseCase(
         val alphabetical = unused.sortedBy { it.name }
 
         return scored + alphabetical
+    }
+
+    private fun amountProximityMultiplier(
+        enteredAmount: BigDecimal?,
+        amountStat: TransactionRepository.CategoryAmountStatistic?,
+    ): Double {
+        if (enteredAmount == null || amountStat == null) return 1.0
+        val entered = enteredAmount.toDouble()
+        val average = amountStat.averageAmount.toDouble()
+        if (entered <= 0.0 || average <= 0.0) return 1.0
+
+        val logRatio = ln(entered / average)
+        val proximity = exp(-(logRatio * logRatio) / (2.0 * AMOUNT_SIGMA * AMOUNT_SIGMA))
+        return 1.0 + AMOUNT_WEIGHT * proximity
     }
 
     private fun resolve(
@@ -150,10 +177,13 @@ internal class DefaultCategoriesQueryUseCase(
     private data class SignalState(
         val accountId: Id.Known? = null,
         val date: LocalDate? = null,
+        val amount: BigDecimal? = null,
     )
 
     private companion object {
         const val DECAY_PERIOD_DAYS = 30.0
         const val MONTH_WEIGHT = 0.5
+        const val AMOUNT_WEIGHT = 0.75
+        const val AMOUNT_SIGMA = 1.0 // log-scale std dev — ~2.7x range for meaningful boost
     }
 }
