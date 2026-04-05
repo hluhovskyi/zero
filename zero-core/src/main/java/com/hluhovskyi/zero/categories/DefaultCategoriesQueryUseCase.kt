@@ -8,14 +8,19 @@ import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapNotNull
+import java.time.Duration
+import java.time.LocalDateTime
+import kotlin.math.exp
 
 internal class DefaultCategoriesQueryUseCase(
     private val categoryRepository: CategoryRepository,
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
+    private val transactionRepository: TransactionRepository,
 ) : CategoriesQueryUseCase {
 
     private val queryAll = combine(
@@ -44,6 +49,40 @@ internal class DefaultCategoriesQueryUseCase(
     override fun queryById(id: Id.Known): Flow<CategoriesQueryUseCase.Category> = queryAll
         .mapNotNull { categories -> categories.firstOrNull { it.id == id } }
 
+    override fun queryRanked(
+        signals: Flow<CategoriesQueryUseCase.RankSignal>,
+    ): Flow<List<CategoriesQueryUseCase.Category>> = combine(
+        queryAll,
+        transactionRepository.query(TransactionRepository.Criteria.CategoryUsageStatistics()),
+    ) { categories, usageStatistics ->
+        rankCategories(categories, usageStatistics)
+    }
+
+    private fun rankCategories(
+        categories: List<CategoriesQueryUseCase.Category>,
+        usageStatistics: List<TransactionRepository.CategoryUsageStatistic>,
+    ): List<CategoriesQueryUseCase.Category> {
+        val statsById = usageStatistics.associateBy { it.categoryId }
+        val now = LocalDateTime.now()
+
+        val (used, unused) = categories.partition { statsById.containsKey(it.id) }
+
+        val scored = used
+            .map { category ->
+                val stat = statsById.getValue(category.id)
+                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()
+                val recencyDecay = exp(-daysSinceLastUse / DECAY_PERIOD_DAYS)
+                val score = stat.transactionCount * recencyDecay
+                category to score
+            }
+            .sortedByDescending { it.second }
+            .map { it.first }
+
+        val alphabetical = unused.sortedBy { it.name }
+
+        return scored + alphabetical
+    }
+
     private fun resolve(
         category: CategoryRepository.Category,
         idToIcons: Map<Id.Known, Icon>,
@@ -65,5 +104,9 @@ internal class DefaultCategoriesQueryUseCase(
             icon = icon.image,
             colorScheme = colorScheme,
         )
+    }
+
+    private companion object {
+        const val DECAY_PERIOD_DAYS = 30.0
     }
 }
