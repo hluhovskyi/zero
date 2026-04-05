@@ -1,15 +1,16 @@
 package com.hluhovskyi.zero.categories.picker
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +45,7 @@ internal class CategoryPickerViewProvider(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CategoryPickerView(
     viewModel: CategoryPickerViewModel,
@@ -51,30 +53,18 @@ private fun CategoryPickerView(
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryPickerViewModel.State())
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-            .verticalScroll(rememberScrollState()),
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(GRID_COLUMNS),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        state.categories.chunked(GRID_COLUMNS).forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                row.forEach { category ->
-                    CategoryPickerGridItem(
-                        modifier = Modifier.weight(1f),
-                        imageLoader = imageLoader,
-                        category = category,
-                        onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) }
-                    )
-                }
-                repeat(GRID_COLUMNS - row.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
+        items(state.categories) { category ->
+            CategoryPickerGridItem(
+                imageLoader = imageLoader,
+                category = category,
+                onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) }
+            )
         }
     }
 }

@@ -52,9 +52,9 @@ abstract class TransactionEditIncomeComponent : AttachableViewComponent {
         @Provides
         @TransactionEditIncomeScope
         fun viewModel(
-            transactionEditUseCase: TransactionEditUseCase
+            transactionEditUseCase: TransactionEditUseCase,
         ): TransactionEditIncomeViewModel = DefaultTransactionEditIncomeViewModel(
-            useCase = transactionEditUseCase
+            useCase = transactionEditUseCase,
         )
 
         @Provides

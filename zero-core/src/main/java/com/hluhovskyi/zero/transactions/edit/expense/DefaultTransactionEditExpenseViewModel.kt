@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 internal class DefaultTransactionEditExpenseViewModel(
-    private val useCase: TransactionEditUseCase
-): TransactionEditExpenseViewModel {
+    private val useCase: TransactionEditUseCase,
+) : TransactionEditExpenseViewModel {
 
     override val state: Flow<TransactionEditExpenseViewModel.State> = useCase.state
         .filterIsInstance<TransactionEditUseCase.State.Expense>()

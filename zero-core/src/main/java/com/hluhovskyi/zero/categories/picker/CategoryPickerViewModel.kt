@@ -13,7 +13,7 @@ interface CategoryPickerViewModel
     }
 
     data class State(
-        val categories: List<CategoryPickerItem> = emptyList()
+        val categories: List<CategoryPickerItem> = emptyList(),
     )
 
     data class CategoryPickerItem(

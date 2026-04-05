@@ -53,9 +53,9 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
         @Provides
         @TransactionEditExpenseScope
         fun viewModel(
-            useCase: TransactionEditUseCase
+            useCase: TransactionEditUseCase,
         ): TransactionEditExpenseViewModel = DefaultTransactionEditExpenseViewModel(
-            useCase = useCase
+            useCase = useCase,
         )
 
         @Provides

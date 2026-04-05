@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
@@ -49,6 +51,7 @@ internal class DefaultTransactionEditUseCase(
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
+    private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
     private val clock: Clock,
     private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -71,7 +74,6 @@ internal class DefaultTransactionEditUseCase(
                     amount = state.amount,
                     rate = state.rate,
                     date = state.localDateTime ?: clock.localDateTime(),
-                    showCategoryPicker = state.showCategoryPicker
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -84,7 +86,6 @@ internal class DefaultTransactionEditUseCase(
                     amount = state.amount,
                     rate = state.rate,
                     date = state.localDateTime ?: clock.localDateTime(),
-                    showCategoryPicker = state.showCategoryPicker
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -133,27 +134,8 @@ internal class DefaultTransactionEditUseCase(
                 }
             }
 
-            is TransactionEditUseCase.Action.SelectCategoryById -> {
-                mutableState.update { state ->
-                    val category = state.categories.firstOrNull { it.id == action.categoryId }
-                    if (category != null) {
-                        state.copy(selectedCategory = category, showCategoryPicker = false)
-                    } else {
-                        state
-                    }
-                }
-            }
-
             is TransactionEditUseCase.Action.ShowAllCategories -> {
-                mutableState.update { state ->
-                    state.copy(showCategoryPicker = true)
-                }
-            }
-
-            is TransactionEditUseCase.Action.DismissCategoryPicker -> {
-                mutableState.update { state ->
-                    state.copy(showCategoryPicker = false)
-                }
+                transactionEditCategoryUseCase.perform(TransactionEditCategoryUseCase.Action.Request)
             }
 
             is TransactionEditUseCase.Action.SelectCurrency -> {
@@ -403,6 +385,17 @@ internal class DefaultTransactionEditUseCase(
                         }
                     }
             }
+
+            launch(context = Dispatchers.Main) {
+                transactionEditCategoryUseCase.state
+                    .filterIsInstance<TransactionEditCategoryUseCase.State.Picked>()
+                    .collectLatest { picked ->
+                        mutableState.update { state ->
+                            val category = state.categories.firstOrNull { it.id == picked.categoryId }
+                            if (category != null) state.copy(selectedCategory = category) else state
+                        }
+                    }
+            }
         }
     }
 
@@ -614,6 +607,5 @@ internal class DefaultTransactionEditUseCase(
         val rate: String = "",
         val targetAmount: String = "",
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
-        val showCategoryPicker: Boolean = false,
     )
 }

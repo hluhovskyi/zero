@@ -11,7 +11,6 @@ interface TransactionEditViewModel
         data class ChangeDate(val date: LocalDateTime) : Action
         object Save : Action
         object Discard : Action
-        object DismissCategoryPicker : Action
     }
 
     data class State(
@@ -19,6 +18,5 @@ interface TransactionEditViewModel
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val date: LocalDateTime = LocalDateTime.now(),
         val selectedCategory: TransactionEditCategory? = null,
-        val showCategoryPicker: Boolean = false,
     )
 }

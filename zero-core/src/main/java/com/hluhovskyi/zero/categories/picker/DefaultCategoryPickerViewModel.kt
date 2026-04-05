@@ -24,7 +24,7 @@ internal class DefaultCategoryPickerViewModel(
 
     override fun perform(action: CategoryPickerViewModel.Action) {
         when (action) {
-            is CategoryPickerViewModel.Action.SelectCategory -> coroutineScope.launch(context = Dispatchers.Main) {
+            is CategoryPickerViewModel.Action.SelectCategory -> coroutineScope.launch(Dispatchers.Main) {
                 onCategorySelectedHandler.onSelected(action.category.id)
             }
         }
@@ -46,9 +46,7 @@ internal class DefaultCategoryPickerViewModel(
                         }
                 }
                 .collectLatest { categories ->
-                    mutableState.update { state ->
-                        state.copy(categories = categories)
-                    }
+                    mutableState.update { it.copy(categories = categories) }
                 }
         }
     }

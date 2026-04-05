@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
-import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
@@ -53,7 +52,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         val imageLoader: ImageLoader
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
-        val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -69,6 +67,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
+            .transactionEditCategoryUseCase(TransactionEditCategoryUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -87,6 +86,9 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         @BindsInstance
         fun onDiscardHandler(handler: OnDiscardHandler): Builder
+
+        @BindsInstance
+        fun transactionEditCategoryUseCase(useCase: TransactionEditCategoryUseCase): Builder
     }
 
     @dagger.Module
@@ -105,6 +107,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
             logger: Logger,
@@ -119,6 +122,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
+            transactionEditCategoryUseCase = transactionEditCategoryUseCase,
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             logger = logger
@@ -136,26 +140,16 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
-            categoryPickerComponentBuilder: CategoryPickerComponent.Builder,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
-            useCase: TransactionEditUseCase,
             logger: Logger
-        ): ViewProvider {
-            val categoryPickerBuildable = categoryPickerComponentBuilder
-                .onCategorySelectedHandler { categoryId ->
-                    useCase.perform(TransactionEditUseCase.Action.SelectCategoryById(categoryId))
-                }
-
-            return TransactionEditViewProvider(
-                viewModel = viewModel,
-                categoryPickerComponent = categoryPickerBuildable.logging(logger),
-                expenseComponent = expenseComponentBuilder.logging(logger),
-                incomeComponent = incomeComponentBuilder.logging(logger),
-                transferComponent = transferComponentBuilder.logging(logger),
-            )
-        }
+        ): ViewProvider = TransactionEditViewProvider(
+            viewModel = viewModel,
+            expenseComponent = expenseComponentBuilder.logging(logger),
+            incomeComponent = incomeComponentBuilder.logging(logger),
+            transferComponent = transferComponentBuilder.logging(logger),
+        )
 
         @Provides
         @TransactionEditScope

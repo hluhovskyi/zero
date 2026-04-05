@@ -205,7 +205,7 @@ internal object MainActivityModule {
     fun viewProvider(
         screenComponent: MainActivityScreenComponent.Builder,
     ): ViewProvider = MainActivityViewProvider(
-        screenComponent = screenComponent
+        screenComponent = screenComponent,
     )
 
     @Provides
