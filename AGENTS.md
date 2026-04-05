@@ -11,6 +11,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 1. **Never commit directly to `master`** — feature branch + PR always. See [Branch Management](docs/agents/branch-management.md).
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
 3. **Execution workflow** — after writing an implementation plan, dispatch the entire plan to Gemini CLI in a single call. See [Execution Workflow](docs/agents/execution-workflow.md). After Gemini finishes, review the result and rate Gemini's work (what went well, what needed fixing).
+4. **Shared Agent Skills** — Always prefer workspace-scoped symlinks for skills shared between Gemini and Claude to maintain a single source of truth for both agents.
 
 ## Module Map
 
