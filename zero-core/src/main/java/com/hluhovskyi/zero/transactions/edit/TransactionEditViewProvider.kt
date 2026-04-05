@@ -21,7 +21,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,7 +33,6 @@ import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.LocalShowAllCategories
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
 import kotlinx.coroutines.launch
@@ -80,6 +78,19 @@ private fun TransactionEditView(
         }
     }
 
+    LaunchedEffect(state.showCategoryPicker) {
+        if (state.showCategoryPicker && !sheetState.isVisible) {
+            focusManager.clearFocus()
+            sheetState.show()
+        }
+    }
+
+    LaunchedEffect(sheetState.currentValue) {
+        if (sheetState.currentValue == ModalBottomSheetValue.Hidden && state.showCategoryPicker) {
+            viewModel.perform(TransactionEditViewModel.Action.DismissCategoryPicker)
+        }
+    }
+
     ModalBottomSheetLayout(
         sheetState = sheetState,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -88,19 +99,13 @@ private fun TransactionEditView(
             categoryPickerComponent.AttachWithView()
         }
     ) {
-        CompositionLocalProvider(
-            LocalShowAllCategories provides {
-                focusManager.clearFocus()
-                coroutineScope.launch { sheetState.show() }
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background)
+                .imePadding()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colors.background)
-                    .imePadding()
-            ) {
-                LazyColumn(
+            LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
@@ -155,7 +160,6 @@ private fun TransactionEditView(
                 onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
                 elevation = FloatingActionButtonDefaults.elevation(8.dp)
             )
-            }
         }
     }
 }
