@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,13 +35,17 @@ fun CategoryScrollRow(
     imageLoader: ImageLoader,
     categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
-    onCategorySelected: (TransactionEditCategory) -> Unit
+    onCategorySelected: (TransactionEditCategory) -> Unit,
+    onShowAll: () -> Unit = {},
 ) {
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
+        item(key = "show_all") {
+            ShowAllItem(onClick = onShowAll)
+        }
         items(categories, key = { it.id.value }) { category ->
             val isSelected = category.id == selectedCategory?.id
             CategoryItem(
@@ -49,6 +55,39 @@ fun CategoryScrollRow(
                 onClick = { onCategorySelected(category) }
             )
         }
+    }
+}
+
+@Composable
+private fun ShowAllItem(onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .width(72.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CategoryIconView(
+            color = MaterialTheme.colors.surface,
+            size = 48.dp,
+            contentPadding = 12.dp,
+        ) {
+            androidx.compose.material.Icon(
+                imageVector = Icons.Filled.Apps,
+                contentDescription = "Show all categories",
+                modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
+                tint = OnSurface,
+            )
+        }
+        Text(
+            modifier = Modifier.padding(top = 8.dp),
+            text = "All",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = OnSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
