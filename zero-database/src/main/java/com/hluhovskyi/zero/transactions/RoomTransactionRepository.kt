@@ -82,6 +82,17 @@ internal class RoomTransactionRepository(
                             )
                         }
                     }
+
+                is TransactionRepository.Criteria.CategoryAmountStatistics -> transactionRoom()
+                    .selectCategoryAmountStatistic(userId.value)
+                    .map { entities ->
+                        entities.map { entity ->
+                            TransactionRepository.CategoryAmountStatistic(
+                                categoryId = Id.Known(entity.categoryId),
+                                averageAmount = entity.averageAmount,
+                            )
+                        }
+                    }
             }
         }
         .uncheckedCast()
