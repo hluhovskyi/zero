@@ -24,10 +24,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -319,7 +320,19 @@ internal class DefaultTransactionEditUseCase(
             }
 
             launch {
-                categoriesQueryUseCase.queryRanked(emptyFlow())
+                val accountSignals = mutableState
+                    .map { it.selectedAccount?.id }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.AccountChanged(it) }
+
+                val dateSignals = mutableState
+                    .map { it.localDateTime?.toLocalDate() }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.DateChanged(it) }
+
+                val signals = merge(accountSignals, dateSignals)
+
+                categoriesQueryUseCase.queryRanked(signals)
                     .map { categories ->
                         categories.map { category ->
                             TransactionEditCategory(

@@ -80,6 +80,27 @@ internal interface TransactionRoom {
     """)
     fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
 
+    @Query("""
+        SELECT categoryId,
+               COUNT(*) as transactionCount,
+               MAX(enteredDateTime) as lastUsedDateTime
+        FROM TransactionEntity
+        WHERE userId = :userId AND categoryId IS NOT NULL AND accountId = :accountId
+        GROUP BY categoryId
+    """)
+    fun selectCategoryUsageStatisticByAccount(userId: String, accountId: String): Flow<List<CategoryUsageStatistic>>
+
+    @Query("""
+        SELECT categoryId,
+               COUNT(*) as transactionCount,
+               MAX(enteredDateTime) as lastUsedDateTime
+        FROM TransactionEntity
+        WHERE userId = :userId AND categoryId IS NOT NULL
+          AND CAST(strftime('%m', enteredDateTime) AS INTEGER) = :month
+        GROUP BY categoryId
+    """)
+    fun selectCategoryUsageStatisticByMonth(userId: String, month: Int): Flow<List<CategoryUsageStatistic>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 
