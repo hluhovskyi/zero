@@ -58,6 +58,41 @@ internal class RoomTransactionRepository(
                             )
                         }
                     }
+
+                is TransactionRepository.Criteria.CategoryUsageStatisticsByAccount -> transactionRoom()
+                    .selectCategoryUsageStatisticByAccount(userId.value, criteria.accountId.value)
+                    .map { entities ->
+                        entities.map { entity ->
+                            TransactionRepository.CategoryUsageStatistic(
+                                categoryId = Id.Known(entity.categoryId),
+                                transactionCount = entity.transactionCount,
+                                lastUsedDateTime = entity.lastUsedDateTime,
+                            )
+                        }
+                    }
+
+                is TransactionRepository.Criteria.CategoryUsageStatisticsByMonth -> transactionRoom()
+                    .selectCategoryUsageStatisticByMonth(userId.value, criteria.month)
+                    .map { entities ->
+                        entities.map { entity ->
+                            TransactionRepository.CategoryUsageStatistic(
+                                categoryId = Id.Known(entity.categoryId),
+                                transactionCount = entity.transactionCount,
+                                lastUsedDateTime = entity.lastUsedDateTime,
+                            )
+                        }
+                    }
+
+                is TransactionRepository.Criteria.CategoryAmountStatistics -> transactionRoom()
+                    .selectCategoryAmountStatistic(userId.value)
+                    .map { entities ->
+                        entities.map { entity ->
+                            TransactionRepository.CategoryAmountStatistic(
+                                categoryId = Id.Known(entity.categoryId),
+                                averageAmount = entity.averageAmount,
+                            )
+                        }
+                    }
             }
         }
         .uncheckedCast()

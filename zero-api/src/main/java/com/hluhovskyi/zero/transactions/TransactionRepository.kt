@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 interface TransactionRepository {
@@ -17,6 +18,9 @@ interface TransactionRepository {
         data class ById(val id: Id.Known) : Criteria<Transaction>
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
+        data class CategoryUsageStatisticsByAccount(val accountId: Id.Known) : Criteria<List<CategoryUsageStatistic>>
+        data class CategoryUsageStatisticsByMonth(val month: Int) : Criteria<List<CategoryUsageStatistic>>
+        class CategoryAmountStatistics : Criteria<List<CategoryAmountStatistic>>
     }
 
     sealed interface Trigger {
@@ -32,6 +36,11 @@ interface TransactionRepository {
         val categoryId: Id.Known,
         val transactionCount: Int,
         val lastUsedDateTime: LocalDateTime,
+    )
+
+    data class CategoryAmountStatistic(
+        val categoryId: Id.Known,
+        val averageAmount: BigDecimal,
     )
 
     sealed interface Transaction {
