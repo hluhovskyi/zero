@@ -37,4 +37,4 @@ Do not relay results through ViewModel state or shared flows on components.
 
 Use `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` for destinations that should appear as a bottom sheet overlay. In `MainActivityScreenViewProvider` these are registered as `dialog {}` destinations (so they overlay the current screen rather than replacing it), wrapped in `BottomSheetNavDestination` which owns the `ModalBottomSheetLayout` show/dismiss logic.
 
-**Known issue**: The dialog window background transparency is not yet resolved — the sheet renders full-screen instead of as an overlay. The `dialog {}` + `BottomSheetNavDestination` approach is in place but the visual result is wrong.
+**Known issue**: Sheet renders full-screen instead of as an overlay. Fix pending.

@@ -26,4 +26,4 @@ Bottom sheet screen for selecting a category. Used by the transaction edit flow 
 Navigate to `Destinations.Category.Picker` using a `XxxUseCase` that implements the Request / Pick / Picked pattern. The use case wires `onCategorySelectedHandler` to `perform(Pick(...))` and calls `navigator.back()` on result. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` for a concrete example, and `docs/agents/navigation.md` for the pattern.
 
 ## Known Issues
-- Displayed via `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` but currently renders full-screen. The `dialog {}` + `BottomSheetNavDestination` infrastructure is in place in `MainActivityScreenViewProvider`; the window transparency fix is pending.
+- Renders full-screen instead of as a bottom sheet. Fix pending.
