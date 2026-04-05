@@ -69,6 +69,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
+            .onShowAllCategoriesHandler(OnShowAllCategoriesHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -87,6 +88,9 @@ abstract class TransactionEditComponent : AttachableViewComponent,
 
         @BindsInstance
         fun onDiscardHandler(handler: OnDiscardHandler): Builder
+
+        @BindsInstance
+        fun onShowAllCategoriesHandler(handler: OnShowAllCategoriesHandler): Builder
     }
 
     @dagger.Module
