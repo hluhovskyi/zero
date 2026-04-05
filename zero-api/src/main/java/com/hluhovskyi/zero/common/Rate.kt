@@ -2,6 +2,12 @@ package com.hluhovskyi.zero.common
 
 import java.math.BigDecimal
 
+/**
+ * Currency exchange rate multiplier. Used with [Amount.withRate] for conversion display.
+ *
+ * - [Same] represents no conversion (rate = 1.0). Used when transaction currency matches account currency.
+ * - `Rate(null)` returns [Same].
+ */
 interface Rate {
 
     val value: BigDecimal

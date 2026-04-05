@@ -2,6 +2,12 @@ package com.hluhovskyi.zero.common
 
 import java.math.BigDecimal
 
+/**
+ * Money value wrapping [BigDecimal]. Supports arithmetic and currency conversion via [withRate].
+ *
+ * - `Amount(null)` returns [zero], not a crash — safe for `toBigDecimalOrNull()` results.
+ * - `Amount.zero()` is a shared singleton.
+ */
 interface Amount {
 
     val value: BigDecimal
