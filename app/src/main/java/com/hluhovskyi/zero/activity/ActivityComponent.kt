@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
@@ -59,6 +60,7 @@ abstract class ActivityComponent :
     AccountComponent.Dependencies,
     AccountEditComponent.Dependencies,
     CategoryComponent.Dependencies,
+    CategoryPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
@@ -136,6 +138,12 @@ abstract class ActivityComponent :
         fun categoryComponentBuilder(
             component: ActivityComponent
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun categoryPickerComponentBuilder(
+            component: ActivityComponent,
+        ): CategoryPickerComponent.Builder = CategoryPickerComponent.builder(component)
 
         @Provides
         @ActivityScope

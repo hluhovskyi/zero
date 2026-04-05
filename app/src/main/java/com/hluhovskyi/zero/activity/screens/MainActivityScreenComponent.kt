@@ -20,6 +20,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
@@ -78,6 +79,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
         val categoryComponentBuilder: CategoryComponent.Builder
+        val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
 
         val accountComponentBuilder: AccountComponent.Builder

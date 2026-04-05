@@ -38,8 +38,7 @@ private const val TAG = "TransactionEditComponent"
 abstract class TransactionEditComponent : AttachableViewComponent,
     TransactionEditExpenseComponent.Dependencies,
     TransactionEditIncomeComponent.Dependencies,
-    TransactionEditTransferComponent.Dependencies,
-    CategoryPickerComponent.Dependencies {
+    TransactionEditTransferComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
 
@@ -54,6 +53,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         val imageLoader: ImageLoader
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
+        val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -168,13 +168,6 @@ abstract class TransactionEditComponent : AttachableViewComponent,
                 transferComponent = transferComponentBuilder.logging(logger),
             )
         }
-
-        @Provides
-        @TransactionEditScope
-        fun categoryPickerComponentBuilder(
-            component: TransactionEditComponent,
-        ): CategoryPickerComponent.Builder =
-            CategoryPickerComponent.builder(component)
 
         @Provides
         @TransactionEditScope
