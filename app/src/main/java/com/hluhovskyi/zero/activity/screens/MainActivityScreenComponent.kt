@@ -20,6 +20,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
@@ -38,6 +39,7 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
+import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
@@ -78,6 +80,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
         val categoryComponentBuilder: CategoryComponent.Builder
+        val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
 
         val accountComponentBuilder: AccountComponent.Builder
@@ -217,10 +220,21 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
+        @MainActivityScreenScope
+        fun transactionEditCategoryUseCase(
+            navigator: Navigator,
+            idGenerator: IdGenerator,
+        ): TransactionEditCategoryUseCase = DefaultTransactionEditCategoryUseCase(
+            navigator = navigator,
+            requestIdGenerator = idGenerator,
+        )
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
             componentBuilder: TransactionEditComponent.Builder,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -232,6 +246,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
+                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
                 .logging(logger)
         }
 
@@ -240,6 +255,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun transactionItemEditNavigationEntry(
             componentBuilder: TransactionEditComponent.Builder,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
@@ -248,6 +264,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
+                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
                 .logging(logger)
         }
 
@@ -346,6 +363,27 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .accountEditIconUseCase(accountEditIconUseCase)
                 .onAccountSavedHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun categoryPickerNavigationEntry(
+            componentBuilder: CategoryPickerComponent.Builder,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Category.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            componentBuilder
+                .onCategorySelectedHandler { categoryId ->
+                    transactionEditCategoryUseCase.perform(
+                        TransactionEditCategoryUseCase.Action.Pick(categoryId)
+                    )
+                }
                 .logging(logger)
         }
 

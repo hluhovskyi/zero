@@ -1,14 +1,11 @@
 package com.hluhovskyi.zero.transactions.edit.income
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,7 +31,7 @@ internal class TransactionEditIncomeViewProvider(
     override fun View() {
         TransactionEditIncomeView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -42,7 +39,7 @@ internal class TransactionEditIncomeViewProvider(
 @Composable
 private fun TransactionEditIncomeView(
     viewModel: TransactionEditIncomeViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
@@ -79,6 +76,9 @@ private fun TransactionEditIncomeView(
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
                 viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(it))
+            },
+            onShowAll = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.ShowAllCategories)
             }
         )
 

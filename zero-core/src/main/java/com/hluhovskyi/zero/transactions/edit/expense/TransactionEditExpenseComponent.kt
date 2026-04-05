@@ -53,19 +53,19 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
         @Provides
         @TransactionEditExpenseScope
         fun viewModel(
-            useCase: TransactionEditUseCase
+            useCase: TransactionEditUseCase,
         ): TransactionEditExpenseViewModel = DefaultTransactionEditExpenseViewModel(
-            useCase = useCase
+            useCase = useCase,
         )
 
         @Provides
         @TransactionEditExpenseScope
         fun viewProvider(
             viewModel: TransactionEditExpenseViewModel,
-            imageLoader: ImageLoader
+            imageLoader: ImageLoader,
         ): ViewProvider = TransactionEditExpenseViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
