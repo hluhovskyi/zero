@@ -46,6 +46,18 @@ internal class RoomTransactionRepository(
                                 emit(transaction)
                             }
                     }
+
+                is TransactionRepository.Criteria.CategoryUsageStatistics -> transactionRoom()
+                    .selectCategoryUsageStatistic(userId.value)
+                    .map { entities ->
+                        entities.map { entity ->
+                            TransactionRepository.CategoryUsageStatistic(
+                                categoryId = Id.Known(entity.categoryId),
+                                transactionCount = entity.transactionCount,
+                                lastUsedDateTime = entity.lastUsedDateTime,
+                            )
+                        }
+                    }
             }
         }
         .uncheckedCast()

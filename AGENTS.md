@@ -10,6 +10,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 
 1. **Never commit directly to `master`** — feature branch + PR always. See [Branch Management](docs/agents/branch-management.md).
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
+3. **Execution workflow** — after writing an implementation plan, dispatch the entire plan to Gemini CLI in a single call. See [Execution Workflow](docs/agents/execution-workflow.md). After Gemini finishes, review the result and rate Gemini's work (what went well, what needed fixing).
 
 ## Module Map
 
@@ -52,3 +53,4 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — DefaultImpls dispatch bug, ComposeColor pitfall
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
 - [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
+- [Execution Workflow](docs/agents/execution-workflow.md) — Design with Claude, execute with Gemini CLI, review with Claude
