@@ -16,9 +16,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.transactions.edit.OnShowAllCategoriesHandler
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
 import com.hluhovskyi.zero.transactions.edit.common.CategoryScrollRow
-import com.hluhovskyi.zero.transactions.edit.common.LocalShowAllCategories
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
@@ -26,13 +26,15 @@ import com.hluhovskyi.zero.ui.SelectorCard
 internal class TransactionEditExpenseViewProvider(
     private val viewModel: TransactionEditExpenseViewModel,
     private val imageLoader: ImageLoader,
+    private val onShowAllCategoriesHandler: OnShowAllCategoriesHandler,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
         TransactionEditExpenseView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
+            onShowAll = { onShowAllCategoriesHandler.onShowAll() }
         )
     }
 }
@@ -40,11 +42,11 @@ internal class TransactionEditExpenseViewProvider(
 @Composable
 private fun TransactionEditExpenseView(
     viewModel: TransactionEditExpenseViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
+    onShowAll: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseViewModel.State())
     val focusRequester = remember { FocusRequester() }
-    val onShowAll = LocalShowAllCategories.current
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
