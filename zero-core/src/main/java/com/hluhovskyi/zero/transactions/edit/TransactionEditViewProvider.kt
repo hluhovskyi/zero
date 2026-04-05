@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -72,6 +73,7 @@ private fun TransactionEditView(
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
@@ -90,7 +92,10 @@ private fun TransactionEditView(
         }
     ) {
         CompositionLocalProvider(
-            LocalShowAllCategories provides { coroutineScope.launch { sheetState.show() } }
+            LocalShowAllCategories provides {
+                focusManager.clearFocus()
+                coroutineScope.launch { sheetState.show() }
+            }
         ) {
             Box(
                 modifier = Modifier
