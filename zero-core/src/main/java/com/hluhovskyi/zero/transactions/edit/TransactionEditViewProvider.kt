@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
     private val imageLoader: ImageLoader,
+    private val categoryPickerComponent: Buildable<out AttachableViewComponent>,
     private val expenseComponent: Buildable<out AttachableViewComponent>,
     private val incomeComponent: Buildable<out AttachableViewComponent>,
     private val transferComponent: Buildable<out AttachableViewComponent>,
@@ -54,6 +55,7 @@ internal class TransactionEditViewProvider(
         TransactionEditView(
             viewModel = viewModel,
             imageLoader = imageLoader,
+            categoryPickerComponent = categoryPickerComponent,
             expenseComponent = expenseComponent,
             incomeComponent = incomeComponent,
             transferComponent = transferComponent
@@ -66,6 +68,7 @@ internal class TransactionEditViewProvider(
 private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
     imageLoader: ImageLoader,
+    categoryPickerComponent: Buildable<out AttachableViewComponent>,
     expenseComponent: Buildable<out AttachableViewComponent>,
     incomeComponent: Buildable<out AttachableViewComponent>,
     transferComponent: Buildable<out AttachableViewComponent>

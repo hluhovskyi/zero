@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
@@ -37,7 +38,8 @@ private const val TAG = "TransactionEditComponent"
 abstract class TransactionEditComponent : AttachableViewComponent,
     TransactionEditExpenseComponent.Dependencies,
     TransactionEditIncomeComponent.Dependencies,
-    TransactionEditTransferComponent.Dependencies {
+    TransactionEditTransferComponent.Dependencies,
+    CategoryPickerComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
 
@@ -135,6 +137,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         fun viewProvider(
             viewModel: TransactionEditViewModel,
             imageLoader: ImageLoader,
+            categoryPickerComponentBuilder: CategoryPickerComponent.Builder,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
@@ -142,10 +145,18 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
+            categoryPickerComponent = categoryPickerComponentBuilder.logging(logger),
             expenseComponent = expenseComponentBuilder.logging(logger),
             incomeComponent = incomeComponentBuilder.logging(logger),
             transferComponent = transferComponentBuilder.logging(logger),
         )
+
+        @Provides
+        @TransactionEditScope
+        fun categoryPickerComponentBuilder(
+            component: TransactionEditComponent,
+        ): CategoryPickerComponent.Builder =
+            CategoryPickerComponent.builder(component)
 
         @Provides
         @TransactionEditScope
