@@ -1,29 +1,35 @@
 package com.hluhovskyi.zero.transactions.edit.expense
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
+import com.hluhovskyi.zero.transactions.edit.common.CategoryBottomSheetGrid
 import com.hluhovskyi.zero.transactions.edit.common.CategoryScrollRow
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
+import kotlinx.coroutines.launch
 
 internal class TransactionEditExpenseViewProvider(
     private val viewModel: TransactionEditExpenseViewModel,
@@ -39,6 +45,7 @@ internal class TransactionEditExpenseViewProvider(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun TransactionEditExpenseView(
     viewModel: TransactionEditExpenseViewModel,
@@ -46,76 +53,98 @@ private fun TransactionEditExpenseView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseViewModel.State())
     val focusRequester = remember { FocusRequester() }
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    Column(
-        modifier = Modifier.padding(horizontal = 24.dp)
-    ) {
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, bottom = 40.dp),
-            amount = state.amount,
-            currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
-            focusRequester = focusRequester,
-            onAmountChange = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeAmount(it))
-            },
-            currencies = state.currencies,
-            onCurrencySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCurrency(it))
-            }
-        )
-
-        CategoryScrollRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            imageLoader = imageLoader,
-            categories = state.categories,
-            selectedCategory = state.selectedCategory,
-            onCategorySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(it))
-            }
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            DatePickerCard(
-                modifier = Modifier.weight(1f),
-                label = "Date",
-                date = state.date,
-                onDateSelected = {
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeDate(it))
-                }
-            )
-            SelectorCard(
-                modifier = Modifier.weight(1f),
-                label = "Account",
-                value = state.selectedAccount?.name ?: "",
-                items = state.accounts,
-                nameMapping = { it.name },
-                onItemSelected = {
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.SelectAccount(it))
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        sheetBackgroundColor = MaterialTheme.colors.background,
+        sheetContent = {
+            CategoryBottomSheetGrid(
+                imageLoader = imageLoader,
+                categories = state.categories,
+                selectedCategory = state.selectedCategory,
+                onCategorySelected = { category ->
+                    viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(category))
+                    coroutineScope.launch { sheetState.hide() }
                 }
             )
         }
-
-        AnimatedVisibility(visible = state.showRate) {
-            TransactionEditRateTextField(
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp)
+        ) {
+            AmountDisplay(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
-                rate = state.rate,
-                onValueChange = { rate ->
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeRate(rate))
+                    .padding(top = 32.dp, bottom = 40.dp),
+                amount = state.amount,
+                currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
+                focusRequester = focusRequester,
+                onAmountChange = {
+                    viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeAmount(it))
+                },
+                currencies = state.currencies,
+                onCurrencySelected = {
+                    viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCurrency(it))
                 }
             )
+
+            CategoryScrollRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                imageLoader = imageLoader,
+                categories = state.categories,
+                selectedCategory = state.selectedCategory,
+                onCategorySelected = {
+                    viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(it))
+                },
+                onShowAll = {
+                    coroutineScope.launch { sheetState.show() }
+                }
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                DatePickerCard(
+                    modifier = Modifier.weight(1f),
+                    label = "Date",
+                    date = state.date,
+                    onDateSelected = {
+                        viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeDate(it))
+                    }
+                )
+                SelectorCard(
+                    modifier = Modifier.weight(1f),
+                    label = "Account",
+                    value = state.selectedAccount?.name ?: "",
+                    items = state.accounts,
+                    nameMapping = { it.name },
+                    onItemSelected = {
+                        viewModel.perform(TransactionEditExpenseViewModel.Action.SelectAccount(it))
+                    }
+                )
+            }
+
+            AnimatedVisibility(visible = state.showRate) {
+                TransactionEditRateTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    rate = state.rate,
+                    onValueChange = { rate ->
+                        viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeRate(rate))
+                    }
+                )
+            }
         }
     }
 }
