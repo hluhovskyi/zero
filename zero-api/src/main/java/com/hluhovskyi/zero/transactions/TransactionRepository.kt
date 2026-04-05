@@ -16,6 +16,7 @@ interface TransactionRepository {
         class All : Criteria<List<Transaction>>
         data class ById(val id: Id.Known) : Criteria<Transaction>
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
+        class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
     }
 
     sealed interface Trigger {
@@ -26,6 +27,12 @@ interface TransactionRepository {
     suspend fun insert(transaction: Transaction)
 
     suspend fun insert(transactions: List<Transaction>)
+
+    data class CategoryUsageStatistic(
+        val categoryId: Id.Known,
+        val transactionCount: Int,
+        val lastUsedDateTime: LocalDateTime,
+    )
 
     sealed interface Transaction {
 

@@ -233,10 +233,12 @@ abstract class ApplicationComponent :
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
+            transactionRepository: TransactionRepository,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
-            colorRepository = colorRepository
+            colorRepository = colorRepository,
+            transactionRepository = transactionRepository,
         )
 
         @Provides

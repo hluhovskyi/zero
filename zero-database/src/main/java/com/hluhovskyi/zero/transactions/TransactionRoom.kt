@@ -70,6 +70,16 @@ internal interface TransactionRoom {
     @Query("SELECT * FROM TransactionEntity WHERE id=:transactionId AND userId=:userId LIMIT 1")
     suspend fun selectById(transactionId: String, userId: String): TransactionEntity?
 
+    @Query("""
+        SELECT categoryId,
+               COUNT(*) as transactionCount,
+               MAX(enteredDateTime) as lastUsedDateTime
+        FROM TransactionEntity
+        WHERE userId = :userId AND categoryId IS NOT NULL
+        GROUP BY categoryId
+    """)
+    fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 

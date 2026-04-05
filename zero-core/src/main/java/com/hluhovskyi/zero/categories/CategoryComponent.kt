@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -40,11 +41,13 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun queryUseCase(
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
-            colorRepository: ColorRepository
+            colorRepository: ColorRepository,
+            transactionRepository: TransactionRepository,
         ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
-            colorRepository = colorRepository
+            colorRepository = colorRepository,
+            transactionRepository = transactionRepository,
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()

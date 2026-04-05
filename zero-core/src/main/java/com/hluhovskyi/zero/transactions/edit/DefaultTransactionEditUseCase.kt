@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -238,30 +239,32 @@ internal class DefaultTransactionEditUseCase(
                                 localDateTime = transaction.dateTime,
                             )
 
-                            when (transaction) {
-                                is TransactionRepository.Transaction.Expense -> {
-                                    val categoryToSelect =
-                                        state.categories.firstOrNull { it.id == transaction.categoryId }
+                                when (transaction) {
+                                    is TransactionRepository.Transaction.Expense -> {
+                                        val (categoryToSelect, reorderedCategories) =
+                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
 
-                                    partialState.copy(
-                                        transactionType = TransactionEditType.EXPENSE,
-                                        selectedCategory = categoryToSelect
-                                            ?: state.selectedCategory,
-                                        rate = transaction.rate.value.toString(),
-                                    )
-                                }
+                                        partialState.copy(
+                                            transactionType = TransactionEditType.EXPENSE,
+                                            categories = reorderedCategories,
+                                            selectedCategory = categoryToSelect
+                                                ?: state.selectedCategory,
+                                            rate = transaction.rate.value.toString(),
+                                        )
+                                    }
 
-                                is TransactionRepository.Transaction.Income -> {
-                                    val categoryToSelect =
-                                        state.categories.firstOrNull { it.id == transaction.categoryId }
+                                    is TransactionRepository.Transaction.Income -> {
+                                        val (categoryToSelect, reorderedCategories) =
+                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
 
-                                    partialState.copy(
-                                        transactionType = TransactionEditType.INCOME,
-                                        selectedCategory = categoryToSelect
-                                            ?: state.selectedCategory,
-                                        rate = transaction.rate.value.toString()
-                                    )
-                                }
+                                        partialState.copy(
+                                            transactionType = TransactionEditType.INCOME,
+                                            categories = reorderedCategories,
+                                            selectedCategory = categoryToSelect
+                                                ?: state.selectedCategory,
+                                            rate = transaction.rate.value.toString()
+                                        )
+                                    }
 
                                 is TransactionRepository.Transaction.Transfer -> {
                                     val targetAccountToSelect =
@@ -316,7 +319,7 @@ internal class DefaultTransactionEditUseCase(
             }
 
             launch {
-                categoriesQueryUseCase.queryAll()
+                categoriesQueryUseCase.queryRanked(emptyFlow())
                     .map { categories ->
                         categories.map { category ->
                             TransactionEditCategory(
@@ -551,6 +554,19 @@ internal class DefaultTransactionEditUseCase(
                 targetAccount.currencyId
             )
         }
+    }
+
+    private fun resolveCategoryForEdit(
+        categories: List<TransactionEditCategory>,
+        categoryId: Id.Known,
+    ): Pair<TransactionEditCategory?, List<TransactionEditCategory>> {
+        val categoryToSelect = categories.firstOrNull { it.id == categoryId }
+        val reorderedCategories = if (categoryToSelect != null) {
+            listOf(categoryToSelect) + categories.filter { it.id != categoryToSelect.id }
+        } else {
+            categories
+        }
+        return categoryToSelect to reorderedCategories
     }
 
     private fun BigDecimal.format() = setScale(2, RoundingMode.HALF_UP)
