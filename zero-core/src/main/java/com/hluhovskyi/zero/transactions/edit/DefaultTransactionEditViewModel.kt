@@ -10,6 +10,11 @@ internal class DefaultTransactionEditViewModel(
 ) : TransactionEditViewModel {
     override val state: Flow<TransactionEditViewModel.State> = useCase.state
         .map { state ->
+            val (categories, selectedCategory) = when (state) {
+                is TransactionEditUseCase.State.Expense -> state.categories to state.selectedCategory
+                is TransactionEditUseCase.State.Income -> state.categories to state.selectedCategory
+                is TransactionEditUseCase.State.Transfer -> emptyList<TransactionEditCategory>() to null
+            }
             TransactionEditViewModel.State(
                 transactionTypes = TransactionEditType.values().toList(),
                 selectedTransactionType = when (state) {
@@ -17,7 +22,9 @@ internal class DefaultTransactionEditViewModel(
                     is TransactionEditUseCase.State.Income -> TransactionEditType.INCOME
                     is TransactionEditUseCase.State.Transfer -> TransactionEditType.TRANSFER
                 },
-                date = state.date
+                date = state.date,
+                categories = categories,
+                selectedCategory = selectedCategory,
             )
         }
 
@@ -27,6 +34,8 @@ internal class DefaultTransactionEditViewModel(
                 TransactionEditUseCase.Action.SwitchTransaction(action.type)
             is TransactionEditViewModel.Action.ChangeDate ->
                 TransactionEditUseCase.Action.ChangeDate(action.date)
+            is TransactionEditViewModel.Action.SelectCategory ->
+                TransactionEditUseCase.Action.SelectCategory(action.category)
             is TransactionEditViewModel.Action.Save ->
                 TransactionEditUseCase.Action.Save
             is TransactionEditViewModel.Action.Discard ->

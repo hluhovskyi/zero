@@ -6,30 +6,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
-import com.hluhovskyi.zero.transactions.edit.common.CategoryBottomSheetGrid
 import com.hluhovskyi.zero.transactions.edit.common.CategoryScrollRow
+import com.hluhovskyi.zero.transactions.edit.common.LocalShowAllCategories
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
-import kotlinx.coroutines.launch
 
 internal class TransactionEditIncomeViewProvider(
     private val viewModel: TransactionEditIncomeViewModel,
@@ -45,7 +37,6 @@ internal class TransactionEditIncomeViewProvider(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun TransactionEditIncomeView(
     viewModel: TransactionEditIncomeViewModel,
@@ -53,98 +44,78 @@ private fun TransactionEditIncomeView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
-    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val coroutineScope = rememberCoroutineScope()
+    val onShowAll = LocalShowAllCategories.current
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    ModalBottomSheetLayout(
-        sheetState = sheetState,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetBackgroundColor = MaterialTheme.colors.background,
-        sheetContent = {
-            CategoryBottomSheetGrid(
-                imageLoader = imageLoader,
-                categories = state.categories,
-                selectedCategory = state.selectedCategory,
-                onCategorySelected = { category ->
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(category))
-                    coroutineScope.launch { sheetState.hide() }
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp)
+    ) {
+        AmountDisplay(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp, bottom = 40.dp),
+            amount = state.amount,
+            currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
+            focusRequester = focusRequester,
+            onAmountChange = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
+            },
+            currencies = state.currencies,
+            onCurrencySelected = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
+            }
+        )
+
+        CategoryScrollRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
+            imageLoader = imageLoader,
+            categories = state.categories,
+            selectedCategory = state.selectedCategory,
+            onCategorySelected = {
+                viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(it))
+            },
+            onShowAll = onShowAll
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            DatePickerCard(
+                modifier = Modifier.weight(1f),
+                label = "Date",
+                date = state.date,
+                onDateSelected = {
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
+                }
+            )
+            SelectorCard(
+                modifier = Modifier.weight(1f),
+                label = "Account",
+                value = state.selectedAccount?.name ?: "",
+                items = state.accounts,
+                nameMapping = { it.name },
+                onItemSelected = {
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectAccount(it))
                 }
             )
         }
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 24.dp)
-        ) {
-            AmountDisplay(
+
+        AnimatedVisibility(visible = state.showRate) {
+            TransactionEditRateTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 40.dp),
-                amount = state.amount,
-                currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
-                focusRequester = focusRequester,
-                onAmountChange = {
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeAmount(it))
-                },
-                currencies = state.currencies,
-                onCurrencySelected = {
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCurrency(it))
+                    .padding(top = 16.dp),
+                rate = state.rate,
+                onValueChange = { rate ->
+                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeRate(rate))
                 }
             )
-
-            CategoryScrollRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-                imageLoader = imageLoader,
-                categories = state.categories,
-                selectedCategory = state.selectedCategory,
-                onCategorySelected = {
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.SelectCategory(it))
-                },
-                onShowAll = {
-                    coroutineScope.launch { sheetState.show() }
-                }
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                DatePickerCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Date",
-                    date = state.date,
-                    onDateSelected = {
-                        viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
-                    }
-                )
-                SelectorCard(
-                    modifier = Modifier.weight(1f),
-                    label = "Account",
-                    value = state.selectedAccount?.name ?: "",
-                    items = state.accounts,
-                    nameMapping = { it.name },
-                    onItemSelected = {
-                        viewModel.perform(TransactionEditIncomeViewModel.Action.SelectAccount(it))
-                    }
-                )
-            }
-
-            AnimatedVisibility(visible = state.showRate) {
-                TransactionEditRateTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    rate = state.rate,
-                    onValueChange = { rate ->
-                        viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeRate(rate))
-                    }
-                )
-            }
         }
     }
 }

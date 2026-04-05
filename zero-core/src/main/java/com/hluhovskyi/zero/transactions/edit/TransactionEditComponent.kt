@@ -134,12 +134,14 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
+            imageLoader: ImageLoader,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
             logger: Logger
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
+            imageLoader = imageLoader,
             expenseComponent = expenseComponentBuilder.logging(logger),
             incomeComponent = incomeComponentBuilder.logging(logger),
             transferComponent = transferComponentBuilder.logging(logger),
