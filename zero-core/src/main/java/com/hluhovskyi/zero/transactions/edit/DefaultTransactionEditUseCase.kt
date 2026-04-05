@@ -131,6 +131,13 @@ internal class DefaultTransactionEditUseCase(
                 }
             }
 
+            is TransactionEditUseCase.Action.SelectCategoryById -> {
+                mutableState.update { state ->
+                    val category = state.categories.firstOrNull { it.id == action.categoryId }
+                    if (category != null) state.copy(selectedCategory = category) else state
+                }
+            }
+
             is TransactionEditUseCase.Action.SelectCurrency -> {
                 mutableState.update { state ->
                     state.copy(

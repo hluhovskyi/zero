@@ -17,6 +17,7 @@ interface TransactionEditUseCase :
         data class SelectTargetAccount(val account: TransactionEditAccount) : Action
         data class SelectCurrency(val currency: TransactionEditCurrency) : Action
         data class SelectCategory(val category: TransactionEditCategory) : Action
+        data class SelectCategoryById(val categoryId: com.hluhovskyi.zero.common.Id.Known) : Action
         data class ChangeAmount(val amount: String) : Action
         data class ChangeRate(val rate: String) : Action
         data class ChangeDate(val date: LocalDateTime) : Action

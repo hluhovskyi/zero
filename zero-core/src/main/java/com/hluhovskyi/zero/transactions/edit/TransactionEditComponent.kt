@@ -136,20 +136,26 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
-            imageLoader: ImageLoader,
             categoryPickerComponentBuilder: CategoryPickerComponent.Builder,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
+            useCase: TransactionEditUseCase,
             logger: Logger
-        ): ViewProvider = TransactionEditViewProvider(
-            viewModel = viewModel,
-            imageLoader = imageLoader,
-            categoryPickerComponent = categoryPickerComponentBuilder.logging(logger),
-            expenseComponent = expenseComponentBuilder.logging(logger),
-            incomeComponent = incomeComponentBuilder.logging(logger),
-            transferComponent = transferComponentBuilder.logging(logger),
-        )
+        ): ViewProvider {
+            val categoryPickerBuildable = categoryPickerComponentBuilder
+                .onCategorySelectedHandler { categoryId ->
+                    useCase.perform(TransactionEditUseCase.Action.SelectCategoryById(categoryId))
+                }
+
+            return TransactionEditViewProvider(
+                viewModel = viewModel,
+                categoryPickerComponent = categoryPickerBuildable.logging(logger),
+                expenseComponent = expenseComponentBuilder.logging(logger),
+                incomeComponent = incomeComponentBuilder.logging(logger),
+                transferComponent = transferComponentBuilder.logging(logger),
+            )
+        }
 
         @Provides
         @TransactionEditScope
