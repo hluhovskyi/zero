@@ -29,14 +29,9 @@ Data flows as navigation arguments — not stored state on use cases or view mod
 
 ## Returning a Result from a Screen
 
-When screen A navigates to screen B and needs a result back (a selected value, a confirmation, etc.), use the Request / Pick / Picked use case pattern. Canonical examples: `CategoryEditIconUseCase` + `DefaultCategoryEditIconUseCase`, `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase`.
+Use a scoped use case (`Action.Request` / `Action.Pick` / `State.Picked`) — interface in `zero-core`, navigation-aware implementation in `app`. See `CategoryEditIconUseCase` + `DefaultCategoryEditIconUseCase` as the canonical example.
 
-1. **Interface in `zero-core`** — `XxxUseCase` with `Action.Request`, `Action.Pick(value)`, `State.Picked(value)`. Implement `Noop`. The interface has no knowledge of navigation.
-2. **Implementation in `app`** — navigates to screen B on `Request` (passing a generated `requestId` as nav argument), buffers `Pick` events in a `MutableSharedFlow`, emits `Picked` only when the `requestId` matches (guards against stale results from previous navigations). Calls `navigator.back()` on emit.
-3. **Wire in `MainActivityScreenComponent.Module`** — scope to `@MainActivityScreenScope`. Screen B's `onXxxSelectedHandler` calls `perform(Pick(...))`. Screen A's component receives the use case via `@BindsInstance`.
-4. **Caller (screen A)** — calls `perform(Request)` to open screen B; observes `state` for `Picked` in `attach()`.
-
-Do not relay results through ViewModel state, shared flows on the component, or any other mechanism. Navigation is the source of truth.
+Do not relay results through ViewModel state or shared flows on components.
 
 ## Bottom Sheet Destinations
 
