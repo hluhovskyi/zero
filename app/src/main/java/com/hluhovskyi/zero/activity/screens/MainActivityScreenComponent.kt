@@ -396,7 +396,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             categoryEditIconUseCase: CategoryEditIconUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Icon.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Icon.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
                 .onIconSelectedHandler { icon ->
@@ -428,7 +431,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Color.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Color.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .onColorSelectedHandler { color ->
                     categoryEditColorUseCase.perform(
