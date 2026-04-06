@@ -9,7 +9,7 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 3. **`@BindsInstance` for lightweight values only** — handler callbacks (`OnXxxHandler`), IDs (`Id`). Never domain objects, repositories, or formatters. See [Dependency Injection](../docs/agents/dependency-injection.md).
 4. **Resolve runtime state in `attach()`, not constructors** — repositories, data lookups, etc.
 5. **Handler callbacks dispatch on `Dispatchers.Main`** — handlers often trigger navigation which requires the main thread.
-6. **`internal` visibility for implementations** — `DefaultFeatureViewModel`, `DefaultFeatureUseCase`, `FeatureViewProvider` are all `internal`.
+6. **`internal` visibility for implementations** — `DefaultFeatureViewModel`, `DefaultFeatureUseCase`, `FeatureViewProvider` are all `internal`. (Enforced by Android Lint).
 
 ## What Lives Here
 
