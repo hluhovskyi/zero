@@ -8,6 +8,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.material.navigation.rememberBottomSheetNavigator
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
@@ -27,8 +28,12 @@ internal class MainActivityViewProvider(
                     .navigationBarsPadding(),
                 color = MaterialTheme.colors.background
             ) {
+                val bottomSheetNavigator = rememberBottomSheetNavigator()
+                val navController = rememberNavController(bottomSheetNavigator)
+                
                 screenComponent
-                    .navHostController(rememberNavController())
+                    .navHostController(navController)
+                    .bottomSheetNavigator(bottomSheetNavigator)
                     .AttachWithView()
             }
         }
