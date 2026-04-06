@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.activity.screens
 
+import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
@@ -106,6 +107,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @BindsInstance
         fun navHostController(navHostController: NavHostController): Builder
+
+        @BindsInstance
+        fun bottomSheetNavigator(bottomSheetNavigator: BottomSheetNavigator): Builder
     }
 
     @dagger.Module
@@ -156,6 +160,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun viewProvider(
             navHostController: NavHostController,
+            bottomSheetNavigator: BottomSheetNavigator,
             navigator: Navigator,
             logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
@@ -168,7 +173,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 bottomBarComponent.navigator(navigator)
                     .logging(logger)
                     .AttachWithView()
-            }
+            },
+            bottomSheetNavigator = bottomSheetNavigator,
         )
 
         @Provides
@@ -396,7 +402,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             categoryEditIconUseCase: CategoryEditIconUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Icon.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Icon.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
                 .onIconSelectedHandler { icon ->
@@ -428,7 +437,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Color.Picker) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Color.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .onColorSelectedHandler { color ->
                     categoryEditColorUseCase.perform(

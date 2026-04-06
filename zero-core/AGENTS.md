@@ -4,7 +4,7 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 
 ## Rules
 
-1. **Cannot import from `app`** — no `Navigator`, no `Destinations`, no navigation types. Screen communication goes through handler callbacks.
+1. **Cannot import from `app`** — no `Navigator`, no `Destinations`, no navigation types. Screen communication goes through handler callbacks. If a feature needs to open another screen and receive a result, read `docs/agents/navigation.md` before building anything.
 2. **Follow the Component pattern** — every feature needs `FeatureComponent`, `FeatureViewModel` (interface + `Default` impl), `FeatureViewProvider`. See [Architecture Patterns](../docs/agents/architecture.md).
 3. **`@BindsInstance` for lightweight values only** — handler callbacks (`OnXxxHandler`), IDs (`Id`). Never domain objects, repositories, or formatters. See [Dependency Injection](../docs/agents/dependency-injection.md).
 4. **Resolve runtime state in `attach()`, not constructors** — repositories, data lookups, etc.
