@@ -6,7 +6,7 @@
     "zero-project": {
       "source": {
         "source": "directory",
-        "path": "/Users/google-mac/Projects/zero/.claude/marketplace"
+        "path": ".claude/marketplace"
       }
     }
   }
