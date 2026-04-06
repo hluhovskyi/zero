@@ -12,6 +12,8 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
 3. **Execution workflow** — after writing an implementation plan, dispatch the entire plan to Gemini CLI in a single call. See [Execution Workflow](docs/agents/execution-workflow.md). After Gemini finishes, review the result and rate Gemini's work (what went well, what needed fixing).
 4. **Shared Agent Skills** — Always prefer workspace-scoped symlinks for skills shared between Gemini and Claude to maintain a single source of truth for both agents.
+5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing.
+6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 
 ## Module Map
 
