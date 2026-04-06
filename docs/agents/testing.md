@@ -51,5 +51,11 @@ class MyViewModelTest {
 
 *   **`runTest`:** Always use `runTest` for testing suspending functions or `Flow` collections.
 *   **`runCurrent()`:** Use to trigger any pending tasks in the current dispatcher (useful after `attach()` or `perform()`).
-*   **`advanceUntilIdle()`:** Use when you need to wait for all asynchronous launches to complete.
-*   **Dispatcher Injection:** Prefer injecting a `CoroutineScope` or `DispatcherProvider` into your components to allow the test to control execution timing.
+## Manual & UI Verification
+
+When fixing UI, layout, or interaction bugs (e.g., bottom sheets, overlapping views):
+
+1.  **Compilation is not validation.** Do not claim success just because the project builds.
+2.  **Verify via ADB.** Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to dump the view hierarchy and empirically verify `bounds="[x,y][w,h]"` and visibility.
+3.  **Library updates first.** Before implementing complex UI workarounds, check if a minor version bump of the relevant library (e.g., `navigation-compose`) provides a native API fix.
+
