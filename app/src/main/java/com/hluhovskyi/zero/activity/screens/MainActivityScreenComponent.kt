@@ -1,6 +1,10 @@
+@file:OptIn(ExperimentalMaterialNavigationApi::class)
+
 package com.hluhovskyi.zero.activity.screens
 
 import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.material.BottomSheetNavigator
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
@@ -99,6 +103,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             .dependencies(dependencies)
     }
 
+// ...
     @dagger.Component.Builder
     interface Builder : Buildable<MainActivityScreenComponent> {
 
@@ -106,6 +111,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @BindsInstance
         fun navHostController(navHostController: NavHostController): Builder
+
+        @BindsInstance
+        fun bottomSheetNavigator(bottomSheetNavigator: BottomSheetNavigator): Builder
     }
 
     @dagger.Module
@@ -156,6 +164,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun viewProvider(
             navHostController: NavHostController,
+            bottomSheetNavigator: BottomSheetNavigator,
             navigator: Navigator,
             logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
@@ -168,7 +177,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 bottomBarComponent.navigator(navigator)
                     .logging(logger)
                     .AttachWithView()
-            }
+            },
+            bottomSheetNavigator = bottomSheetNavigator,
         )
 
         @Provides

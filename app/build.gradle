@@ -66,6 +66,7 @@ dependencies {
     implementation deps.kotlin.serialization
 
     implementation deps.android.compose.navigation
+    implementation deps.android.compose.accompanistNavigationMaterial
 
     implementation deps.javax.inject
     implementation deps.dagger.runtime
