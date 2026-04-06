@@ -57,3 +57,4 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
 - [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
 - [Execution Workflow](docs/agents/execution-workflow.md) — Design with Claude, execute with Gemini CLI, review with Claude
+- [Skills](docs/agents/skills.md) — Adding skills, plugin loader setup, troubleshooting
