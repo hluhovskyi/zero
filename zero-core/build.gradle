@@ -29,6 +29,9 @@ android {
     namespace 'com.hluhovskyi.zero'
     lint {
         targetSdk 32
+        baseline = file("lint-baseline.xml")
+        abortOnError true
+        checkReleaseBuilds false
     }
     testOptions {
         targetSdk 32
@@ -36,7 +39,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":zero-api"))
+    lintChecks project(":lint-rules")
+    implementation project(':zero-api')
+
     implementation(project(":zero-ui"))
     implementation(project(":zero-image-loading"))
 

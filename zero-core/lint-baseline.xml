@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.1.0" type="baseline" client="gradle" dependencies="false" name="AGP (9.1.0)" variant="all" version="9.1.0">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val now = LocalDateTime.now()"
+        errorLine2="                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/categories/DefaultCategoriesQueryUseCase.kt"
+            line="66"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.Duration#between`"
+        errorLine1="                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()"
+        errorLine2="                                                ~~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/categories/DefaultCategoriesQueryUseCase.kt"
+            line="73"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.Duration#toDays`"
+        errorLine1="                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()"
+        errorLine2="                                                                                    ~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/categories/DefaultCategoriesQueryUseCase.kt"
+            line="73"
+            column="85"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Implicit cast from `LocalDateTime` to `Temporal` requires API level 26, or core library desugaring (current min is 23)"
+        errorLine1="                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()"
+        errorLine2="                                                                               ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/categories/DefaultCategoriesQueryUseCase.kt"
+            line="73"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            val initialTimestamp = LocalDateTime.now()"
+        errorLine2="                                                 ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/DefaultTransactionViewModel.kt"
+            line="70"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#compareTo`"
+        errorLine1="                        if (fresh != null &amp;&amp; fresh.updatedDateTime >= transaction.updatedDateTime) {"
+        errorLine2="                                                                   ~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/DefaultTransactionViewModel.kt"
+            line="86"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#toLocalDate`"
+        errorLine1="                    .groupBy { it.date.toLocalDate() }"
+        errorLine2="                                       ~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/DefaultTransactionViewModel.kt"
+            line="121"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/expense/TransactionEditExpenseViewModel.kt"
+            line="32"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/expense/TransactionEditExpenseViewModel.kt"
+            line="32"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/income/TransactionEditIncomeViewModel.kt"
+            line="32"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/income/TransactionEditIncomeViewModel.kt"
+            line="32"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/transfer/TransactionEditTransferViewModel.kt"
+            line="33"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/transfer/TransactionEditTransferViewModel.kt"
+            line="33"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="46"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="46"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="58"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="58"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="71"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="            override val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                             ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditUseCase.kt"
+            line="71"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditViewModel.kt"
+            line="19"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#now`"
+        errorLine1="        val date: LocalDateTime = LocalDateTime.now(),"
+        errorLine2="                                                ~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditViewModel.kt"
+            line="19"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#MIN`"
+        errorLine1="        val dateTime: LocalDateTime = LocalDateTime.MIN"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/preview/TransactionPreviewViewModel.kt"
+            line="24"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires API level 26, or core library desugaring (current min is 23): `java.time.LocalDateTime#MIN`"
+        errorLine1="        val dateTime: LocalDateTime = LocalDateTime.MIN"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/transactions/preview/TransactionPreviewViewModel.kt"
+            line="24"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            request.uri.isAndroid -> context.contentResolver.openInputStream(android.net.Uri.parse(uri.value))"
+        errorLine2="                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/hluhovskyi/zero/resource/UriResourceResolver.kt"
+            line="28"
+            column="78"/>
+    </issue>
+
+</issues>
