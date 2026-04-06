@@ -10,6 +10,7 @@ class ZeroIssueRegistry : IssueRegistry() {
     override val issues: List<Issue> = listOf(
         DefaultImplVisibilityDetector.ISSUE,
         ViewProviderVisibilityDetector.ISSUE,
+        ViewProviderDependencyDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
