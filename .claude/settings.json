@@ -1,4 +1,7 @@
 {
+  "enabledPlugins": {
+    "zero-project@zero-project": true
+  },
   "extraKnownMarketplaces": {
     "zero-project": {
       "source": {
@@ -6,8 +9,5 @@
         "path": "/Users/google-mac/Projects/zero/.claude/marketplace"
       }
     }
-  },
-  "enabledPlugins": {
-    "zero-project@zero-project": true
   }
 }
