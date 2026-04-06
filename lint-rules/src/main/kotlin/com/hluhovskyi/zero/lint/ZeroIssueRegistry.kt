@@ -7,7 +7,9 @@ import com.android.tools.lint.detector.api.Issue
 
 class ZeroIssueRegistry : IssueRegistry() {
 
-    override val issues: List<Issue> = emptyList()
+    override val issues: List<Issue> = listOf(
+        DefaultImplVisibilityDetector.ISSUE,
+    )
 
     override val api: Int = CURRENT_API
 
