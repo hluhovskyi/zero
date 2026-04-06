@@ -11,6 +11,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         DefaultImplVisibilityDetector.ISSUE,
         ViewProviderVisibilityDetector.ISSUE,
         ViewProviderDependencyDetector.ISSUE,
+        HandlerFunInterfaceDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
