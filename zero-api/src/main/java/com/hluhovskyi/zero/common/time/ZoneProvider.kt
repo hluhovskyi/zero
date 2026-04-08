@@ -1,8 +1,7 @@
 package com.hluhovskyi.zero.common.time
 
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 interface ZoneProvider {
-
-    fun zoneId(): ZoneId
+    fun timeZone(): TimeZone
 }

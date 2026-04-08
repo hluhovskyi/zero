@@ -5,7 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionRepository {
 
