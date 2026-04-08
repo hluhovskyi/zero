@@ -4,7 +4,7 @@ import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrency
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionEditExpenseViewModel
     : ActionStateModel<TransactionEditExpenseViewModel.Action, TransactionEditExpenseViewModel.State> {
@@ -29,7 +29,7 @@ interface TransactionEditExpenseViewModel
         val selectedCurrency: TransactionEditCurrency? = null,
         val amount: String = "",
         val rate: String = "",
-        val date: LocalDateTime = LocalDateTime.now(),
+        val date: LocalDateTime = LocalDateTime(1970, 1, 1, 0, 0, 0),
     ) {
 
         val showRate: Boolean = if (selectedCurrency != null && selectedAccount != null) {

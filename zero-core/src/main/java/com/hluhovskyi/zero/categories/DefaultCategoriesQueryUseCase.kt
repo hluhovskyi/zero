@@ -6,14 +6,15 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapNotNull
-import java.time.Duration
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toInstant
 import kotlin.math.exp
 
 internal class DefaultCategoriesQueryUseCase(
@@ -21,6 +22,7 @@ internal class DefaultCategoriesQueryUseCase(
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
     private val transactionRepository: TransactionRepository,
+    private val clock: Clock,
 ) : CategoriesQueryUseCase {
 
     private val queryAll = combine(
@@ -45,7 +47,6 @@ internal class DefaultCategoriesQueryUseCase(
 
     override fun queryAll(): Flow<List<CategoriesQueryUseCase.Category>> = queryAll
 
-    // TODO: Either share queryAll or use more specific queries
     override fun queryById(id: Id.Known): Flow<CategoriesQueryUseCase.Category> = queryAll
         .mapNotNull { categories -> categories.firstOrNull { it.id == id } }
 
@@ -63,14 +64,16 @@ internal class DefaultCategoriesQueryUseCase(
         usageStatistics: List<TransactionRepository.CategoryUsageStatistic>,
     ): List<CategoriesQueryUseCase.Category> {
         val statsById = usageStatistics.associateBy { it.categoryId }
-        val now = LocalDateTime.now()
+        val nowInstant = clock.now()
+        val timeZone = clock.timeZone()
 
         val (used, unused) = categories.partition { statsById.containsKey(it.id) }
 
         val scored = used
             .map { category ->
                 val stat = statsById.getValue(category.id)
-                val daysSinceLastUse = Duration.between(stat.lastUsedDateTime, now).toDays().toDouble()
+                val daysSinceLastUse = (nowInstant - stat.lastUsedDateTime.toInstant(timeZone))
+                    .inWholeDays.toDouble()
                 val recencyDecay = exp(-daysSinceLastUse / DECAY_PERIOD_DAYS)
                 val score = stat.transactionCount * recencyDecay
                 category to score

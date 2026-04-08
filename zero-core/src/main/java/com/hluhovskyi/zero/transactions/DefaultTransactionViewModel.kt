@@ -16,6 +16,8 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +31,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -40,6 +42,7 @@ internal class DefaultTransactionViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
+    private val clock: Clock,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : TransactionViewModel {
 
@@ -67,7 +70,7 @@ internal class DefaultTransactionViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            val initialTimestamp = LocalDateTime.now()
+            val initialTimestamp = clock.localDateTime()
             combine(
                 combine(
                     transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
@@ -118,7 +121,7 @@ internal class DefaultTransactionViewModel(
                             idToIcons = idToIcons,
                         )
                     }
-                    .groupBy { it.date.toLocalDate() }
+                    .groupBy { it.date.date }
                     .flatMap { (date, transactions) ->
                         val amount: Amount = transactions.fold(Amount.zero()) { amount, transaction ->
                             when (transaction) {

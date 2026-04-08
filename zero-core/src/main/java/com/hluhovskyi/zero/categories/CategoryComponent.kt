@@ -12,6 +12,8 @@ import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
 
+import com.hluhovskyi.zero.common.time.Clock
+
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class CategoryScope
@@ -43,11 +45,13 @@ abstract class CategoryComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            clock: Clock,
         ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            clock = clock,
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()

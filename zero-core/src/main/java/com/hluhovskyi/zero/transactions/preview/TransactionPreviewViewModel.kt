@@ -4,7 +4,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Image
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionPreviewViewModel
     : AttachableActionStateModel<TransactionPreviewViewModel.Action, TransactionPreviewViewModel.State> {
@@ -21,6 +21,6 @@ interface TransactionPreviewViewModel
         val categoryColor: ColorValue = ColorValue.unspecified(),
         val accountName: String = "",
         val accountIcon: Image = Image.empty(),
-        val dateTime: LocalDateTime = LocalDateTime.MIN
+        val dateTime: LocalDateTime = LocalDateTime(1970, 1, 1, 0, 0, 0)
     )
 }

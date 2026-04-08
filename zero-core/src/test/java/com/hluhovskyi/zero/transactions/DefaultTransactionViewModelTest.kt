@@ -33,7 +33,13 @@ import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import org.junit.Assert.assertEquals
+
+import com.hluhovskyi.zero.common.time.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
@@ -47,6 +53,14 @@ class DefaultTransactionViewModelTest {
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
     @Mock private lateinit var currencyConvertUseCase: CurrencyConvertUseCase
     @Mock private lateinit var onTransactionSelectedHandler: OnTransactionSelectedHandler
+
+    private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
+    private val testTimeZone = TimeZone.UTC
+    private val fakeClock = object : Clock {
+        override fun now() = fixedInstant
+        override fun timeZone() = testTimeZone
+    }
+    private val now: LocalDateTime = fixedInstant.toLocalDateTime(testTimeZone)
 
     @Before
     fun setUp() {
@@ -103,8 +117,8 @@ class DefaultTransactionViewModelTest {
     fun `attach maps Transfer repository items to ViewModel Transfer items`() = runTest {
         val transaction = TransactionRepository.Transaction.Transfer(
             id = Id.Known("t1"),
-            dateTime = LocalDateTime.now(),
-            updatedDateTime = LocalDateTime.now(),
+            dateTime = now,
+            updatedDateTime = now,
             amount = Amount(BigDecimal.TEN),
             currencyId = Id.Known("c1"),
             accountId = Id.Known("a1"),
@@ -161,6 +175,7 @@ class DefaultTransactionViewModelTest {
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
+        clock = fakeClock,
         coroutineScope = coroutineScope
     )
 }
