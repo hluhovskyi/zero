@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation deps.kotlinxDatetime
 
     coreLibraryDesugaring deps.android.tools.desugar
 
