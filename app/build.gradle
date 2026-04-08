@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.hluhovskyi.zero"
         minSdk versions.minSdk
-        targetSdk 32
+        targetSdk versions.targetSdk
         versionCode 1
         versionName "1.0"
 

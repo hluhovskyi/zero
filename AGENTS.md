@@ -14,6 +14,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 4. **Shared Agent Skills** — Always prefer workspace-scoped symlinks for skills shared between Gemini and Claude to maintain a single source of truth for both agents.
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
+7. **No git worktrees** — This is an Android/Gradle project. Worktrees break Gradle daemon and build cache. Never create worktrees; always work on a regular branch checkout.
 
 ## Module Map
 

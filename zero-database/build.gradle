@@ -21,15 +21,16 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
     namespace 'com.hluhovskyi.zero'
     lint {
-        targetSdk 32
+        targetSdk versions.targetSdk
     }
     testOptions {
-        targetSdk 32
+        targetSdk versions.targetSdk
     }
     room {
         schemaDirectory "$projectDir/schemas"
@@ -37,6 +38,8 @@ android {
 }
 
 dependencies {
+
+    coreLibraryDesugaring deps.android.tools.desugar
 
     implementation(project(":zero-api"))
 
