@@ -20,6 +20,7 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
@@ -28,17 +29,17 @@ android {
     }
     namespace 'com.hluhovskyi.zero'
     lint {
-        targetSdk 32
-        baseline = file("lint-baseline.xml")
+        targetSdk versions.targetSdk
         abortOnError true
         checkReleaseBuilds false
     }
     testOptions {
-        targetSdk 32
+        targetSdk versions.targetSdk
     }
 }
 
 dependencies {
+    coreLibraryDesugaring deps.android.tools.desugar
     lintChecks project(":lint-rules")
     implementation project(':zero-api')
 

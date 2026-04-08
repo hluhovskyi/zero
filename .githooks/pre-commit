@@ -7,4 +7,13 @@ if [ "$current_branch" = "$protected_branch" ]; then
     exit 1
 fi
 
+# Block committing build/ directories (generated artifacts)
+staged_build_files=$(git diff --cached --name-only | grep -E '(^|/)build/')
+if [ -n "$staged_build_files" ]; then
+    echo "ERROR: Staged files include build/ artifacts:"
+    echo "$staged_build_files"
+    echo "Run 'git reset HEAD <file>' to unstage them."
+    exit 1
+fi
+
 exit 0
