@@ -5,8 +5,21 @@ Conventions to keep code consistent across the codebase.
 ## Imports vs Fully Qualified Class Names
 Always use imports instead of fully qualified class names.
 
-## Use `Clock` for Timestamps
-Never call `LocalDateTime.now()` directly. Inject `Clock` and use `clock.localDateTime()`.
+## Date / Time
+Use `kotlinx.datetime` types throughout the codebase:
+- `kotlinx.datetime.LocalDateTime` — timestamps stored in DB, passed between layers
+- `kotlinx.datetime.LocalDate` — calendar dates (e.g. transaction date filter)
+- `kotlinx.datetime.Instant` — what `Clock.now()` returns
+- `kotlinx.datetime.TimeZone` — what `ZoneProvider.timeZone()` returns
+- `kotlin.time.Duration` — durations (Kotlin stdlib, no extra import needed)
+
+Do NOT use `java.time.*` in domain code (`zero-api`, `zero-core`, `zero-database`).
+`java.time.format.DateTimeFormatter` is allowed only in `app` (for locale-aware formatting)
+and `zero-ui` (via `toJavaLocalDateTime()` bridge). This boundary is intentional — it will
+become an `expect/actual` when the project goes KMP.
+
+Always inject `Clock` from `com.hluhovskyi.zero.common.time.Clock` instead of calling
+`LocalDateTime.now()` or `kotlinx.datetime.Clock.System.now()` directly. This keeps code testable.
 
 ## Use `Id.Unknown` Instead of `null`
 For missing or unset identifiers, use `Id.Unknown` — never `null`.
