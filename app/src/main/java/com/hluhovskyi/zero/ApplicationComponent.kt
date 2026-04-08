@@ -229,17 +229,20 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun categoriesQueryUseCase(
+        fun categoryQueryUseCase(
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            clock: Clock,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            clock = clock,
         )
+
 
         @Provides
         @ApplicationScope
