@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -21,7 +22,7 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
@@ -30,13 +31,14 @@ class RoomTransactionRepositoryPaginationTest {
     @Mock private lateinit var transactionRoom: TransactionRoom
     @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
     @Mock private lateinit var clock: Clock
+    @Mock private lateinit var zoneProvider: ZoneProvider
 
     private lateinit var repo: RoomTransactionRepository
 
     private val userId = Id.Known("user1")
-    private val jan15_10h = LocalDateTime.of(2024, 1, 15, 10, 0)
-    private val jan15_8h  = LocalDateTime.of(2024, 1, 15, 8, 0)
-    private val jan14_18h = LocalDateTime.of(2024, 1, 14, 18, 0)
+    private val jan15_10h = LocalDateTime(2024, 1, 15, 10, 0)
+    private val jan15_8h  = LocalDateTime(2024, 1, 15, 8, 0)
+    private val jan14_18h = LocalDateTime(2024, 1, 14, 18, 0)
 
     @Before
     fun setUp() {
@@ -45,6 +47,7 @@ class RoomTransactionRepositoryPaginationTest {
             currentUserId = flowOf(userId),
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
+            zoneProvider = zoneProvider,
         )
     }
 
@@ -82,7 +85,7 @@ class RoomTransactionRepositoryPaginationTest {
         assertEquals(listOf("t1"), results.last().map { it.id.value })
 
         // Simulate new insert — Room re-emits
-        roomFlow.emit(listOf(expenseEntity("t2", jan15_10h.plusHours(1)), expenseEntity("t1", jan15_10h)))
+        roomFlow.emit(listOf(expenseEntity("t2", LocalDateTime(2024, 1, 15, 11, 0)), expenseEntity("t1", jan15_10h)))
         advanceUntilIdle()
         assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
 

@@ -10,6 +10,7 @@ java {
 }
 
 dependencies {
+    implementation deps.kotlinxDatetime
     implementation(project(":zero-api"))
 
     implementation deps.kotlin.coroutines

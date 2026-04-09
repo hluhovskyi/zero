@@ -12,9 +12,10 @@ import com.hluhovskyi.zero.resource.UriRequest
 import com.hluhovskyi.zero.resource.UriResult
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.LocalDate as JavaLocalDate
 
 private const val TAG = "ZenMoneyImportSourceUseCase"
 
@@ -25,7 +26,7 @@ internal class ZenMoneyImportSourceUseCase(
     private val idGenerator: IdGenerator,
     logger: Logger,
     private val dateParser: (String) -> LocalDateTime = {
-        LocalDate.parse(it, DATE_PARSER).atStartOfDay()
+        JavaLocalDate.parse(it, DATE_PARSER).atStartOfDay().toKotlinLocalDateTime()
     }
 ) : ImportSourceUseCase {
 
@@ -45,12 +46,19 @@ internal class ZenMoneyImportSourceUseCase(
             return ImportSourceUseCase.Result.empty()
         }
 
-        val rawData = resolveResult.result.inputStream.bufferedReader().use { reader ->
-            val indices = reader.readLine().removePrefix("\uFEFF").parseIndices()
-
-            reader.lineSequence()
-                .mapNotNull { line -> line.parseRawData(indices) }
-                .toList()
+        val reader = resolveResult.result.inputStream.bufferedReader()
+        val rawData = try {
+            val header = reader.readLine()
+            if (header == null) {
+                emptyList()
+            } else {
+                val indices = header.removePrefix("\uFEFF").parseIndices()
+                reader.lineSequence()
+                    .mapNotNull { line -> line.parseRawData(indices) }
+                    .toList()
+            }
+        } finally {
+            reader.close()
         }
 
         val nameToAccounts = LinkedHashMap<String, ImportAccount>()
@@ -65,7 +73,7 @@ internal class ZenMoneyImportSourceUseCase(
                             ImportAccount(
                                 id = idGenerator(),
                                 name = name,
-                                currencyId = Id(currency),
+                                currencyId = Id.Known(currency),
                             )
                         }
                     }
@@ -77,7 +85,7 @@ internal class ZenMoneyImportSourceUseCase(
                             ImportAccount(
                                 id = idGenerator(),
                                 name = name,
-                                currencyId = Id(currency)
+                                currencyId = Id.Known(currency)
                             )
                         }
                     }
@@ -87,12 +95,12 @@ internal class ZenMoneyImportSourceUseCase(
                 return@forEach
             }
 
-            val outcomeAmount = data.outcome?.toDoubleOrNull()?.let {
-                Amount(it)
-            }
-            val incomeAmount = data.income?.toDoubleOrNull()?.let {
-                Amount(it)
-            }
+            val outcomeAmountValue = data.outcome?.toDoubleOrNull()
+            val outcomeAmount = outcomeAmountValue?.let { Amount(it) }
+
+            val incomeAmountValue = data.income?.toDoubleOrNull()
+            val incomeAmount = incomeAmountValue?.let { Amount(it) }
+
             if (outcomeAmount == null && incomeAmount == null) {
                 logger.d("loadFromFile, outcomeAmount=null and incomeAmount=null, data=$data")
                 return@forEach
@@ -134,26 +142,26 @@ internal class ZenMoneyImportSourceUseCase(
                 return@forEach
             }
 
-            if (outcomeAccount != null && outcomeAmount?.let { it > 0 } == true) {
+            if (outcomeAccount != null && outcomeAmountValue != null && outcomeAmountValue > 0) {
                 transactions += ImportTransaction.Expense(
                     id = idGenerator(),
                     accountId = outcomeAccount.id,
-                    amount = outcomeAmount,
+                    amount = outcomeAmount!!,
                     currencyId = outcomeAccount.currencyId,
                     categoryId = category.id,
                     dateTime = createdDate,
                 )
-                if (incomeAmount?.let { it > 0 } == true) {
+                if (incomeAmountValue != null && incomeAmountValue > 0) {
                     logger.d("loadFromFile, expense is created, but income is greater ")
                 }
                 return@forEach
             }
 
-            if (incomeAccount != null && incomeAmount?.let { it > 0 } == true) {
+            if (incomeAccount != null && incomeAmountValue != null && incomeAmountValue > 0) {
                 transactions += ImportTransaction.Income(
                     id = idGenerator(),
                     accountId = incomeAccount.id,
-                    amount = incomeAmount,
+                    amount = incomeAmount!!,
                     currencyId = incomeAccount.currencyId,
                     categoryId = category.id,
                     dateTime = createdDate,
@@ -172,15 +180,15 @@ internal class ZenMoneyImportSourceUseCase(
     private fun String.parseRawData(indices: Indices): RawData {
         val cells = split(';')
         return RawData(
-            categoryName = cells[indices.categoryName].withoutBrackets(),
-            outcomeAccountName = cells[indices.outcomeAccountName].withoutBrackets(),
-            outcome = cells[indices.outcome].withoutBrackets(),
-            outcomeCurrencyShortTitle = cells[indices.outcomeCurrencyShortTitle],
-            incomeAccountName = cells[indices.incomeAccountName].withoutBrackets(),
-            income = cells[indices.income].withoutBrackets(),
-            incomeCurrencyShortTitle = cells[indices.incomeCurrencyShortTitle],
-            date = cells[indices.date],
-            createdDate = cells[indices.createdDate],
+            categoryName = cells.getOrNull(indices.categoryName)?.withoutBrackets(),
+            outcomeAccountName = cells.getOrNull(indices.outcomeAccountName)?.withoutBrackets(),
+            outcome = cells.getOrNull(indices.outcome)?.withoutBrackets(),
+            outcomeCurrencyShortTitle = cells.getOrNull(indices.outcomeCurrencyShortTitle),
+            incomeAccountName = cells.getOrNull(indices.incomeAccountName)?.withoutBrackets(),
+            income = cells.getOrNull(indices.income)?.withoutBrackets(),
+            incomeCurrencyShortTitle = cells.getOrNull(indices.incomeCurrencyShortTitle),
+            date = cells.getOrNull(indices.date),
+            createdDate = cells.getOrNull(indices.createdDate),
         )
     }
 

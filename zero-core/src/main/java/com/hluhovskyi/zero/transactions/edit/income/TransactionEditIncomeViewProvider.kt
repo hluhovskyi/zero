@@ -86,14 +86,16 @@ private fun TransactionEditIncomeView(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            DatePickerCard(
-                modifier = Modifier.weight(1f),
-                label = "Date",
-                date = state.date,
-                onDateSelected = {
-                    viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
-                }
-            )
+            state.date?.let { date ->
+                DatePickerCard(
+                    modifier = Modifier.weight(1f),
+                    label = "Date",
+                    date = date,
+                    onDateSelected = {
+                        viewModel.perform(TransactionEditIncomeViewModel.Action.ChangeDate(it))
+                    }
+                )
+            }
             SelectorCard(
                 modifier = Modifier.weight(1f),
                 label = "Account",

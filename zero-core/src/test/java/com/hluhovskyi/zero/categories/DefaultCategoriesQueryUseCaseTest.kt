@@ -4,6 +4,8 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -11,6 +13,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -19,8 +25,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
-import kotlinx.coroutines.test.runTest
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
@@ -30,6 +34,16 @@ class DefaultCategoriesQueryUseCaseTest {
     @Mock private lateinit var iconRepository: IconRepository
     @Mock private lateinit var colorRepository: ColorRepository
     @Mock private lateinit var transactionRepository: TransactionRepository
+
+    // Fixed clock: 2024-06-01T12:00:00Z in UTC
+    private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
+    private val testTimeZone = TimeZone.UTC
+    private val fakeClock = object : Clock {
+        override fun now() = fixedInstant
+    }
+    private val fakeZoneProvider = object : ZoneProvider {
+        override fun timeZone() = testTimeZone
+    }
 
     @Before
     fun setUp() {
@@ -45,6 +59,8 @@ class DefaultCategoriesQueryUseCaseTest {
         iconRepository = iconRepository,
         colorRepository = colorRepository,
         transactionRepository = transactionRepository,
+        clock = fakeClock,
+        zoneProvider = fakeZoneProvider,
     )
 
     @Test
@@ -60,26 +76,24 @@ class DefaultCategoriesQueryUseCaseTest {
         whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
             .thenReturn(flowOf(listOf(catA, catB)))
 
-        val now = LocalDateTime.now()
         whenever(transactionRepository.query(any<TransactionRepository.Criteria<List<TransactionRepository.CategoryUsageStatistic>>>(), any()))
             .thenReturn(flowOf(listOf(
                 TransactionRepository.CategoryUsageStatistic(
                     categoryId = Id.Known("a"),
                     transactionCount = 5,
-                    lastUsedDateTime = now.minusDays(60),
+                    lastUsedDateTime = LocalDateTime(2024, 4, 2, 12, 0, 0), // 60 days before fixedInstant
                 ),
                 TransactionRepository.CategoryUsageStatistic(
                     categoryId = Id.Known("b"),
                     transactionCount = 3,
-                    lastUsedDateTime = now,
+                    lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0), // same as fixedInstant (0 days)
                 ),
             )))
 
         val useCase = createUseCase()
         val result = useCase.queryRanked(emptyFlow()).first()
 
-        // B should rank higher: used today (decay ~1.0) * 3 = ~3.0
-        // A: used 60 days ago (decay ~0.135) * 5 = ~0.67
+        // B: decay ~1.0 * 3 = ~3.0; A: decay ~exp(-2) * 5 = ~0.68
         assertEquals(Id.Known("b"), result[0].id)
         assertEquals(Id.Known("a"), result[1].id)
     }
@@ -101,22 +115,20 @@ class DefaultCategoriesQueryUseCaseTest {
         whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
             .thenReturn(flowOf(listOf(catA, catB, catC)))
 
-        val now = LocalDateTime.now()
-        // Only catC has usage
         whenever(transactionRepository.query(any<TransactionRepository.Criteria<List<TransactionRepository.CategoryUsageStatistic>>>(), any()))
             .thenReturn(flowOf(listOf(
                 TransactionRepository.CategoryUsageStatistic(
                     categoryId = Id.Known("c"),
                     transactionCount = 1,
-                    lastUsedDateTime = now,
+                    lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0),
                 ),
             )))
 
         val useCase = createUseCase()
         val result = useCase.queryRanked(emptyFlow()).first()
 
-        assertEquals("Cherry", result[0].name)  // used category first
-        assertEquals("Apple", result[1].name)    // unused, alphabetical
-        assertEquals("Zebra", result[2].name)    // unused, alphabetical
+        assertEquals("Cherry", result[0].name)
+        assertEquals("Apple", result[1].name)
+        assertEquals("Zebra", result[2].name)
     }
 }

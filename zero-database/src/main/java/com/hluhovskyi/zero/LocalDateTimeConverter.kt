@@ -1,8 +1,7 @@
 package com.hluhovskyi.zero
 
 import androidx.room.TypeConverter
-import java.time.LocalDateTime
-
+import kotlinx.datetime.LocalDateTime
 
 internal object LocalDateTimeConverter {
 

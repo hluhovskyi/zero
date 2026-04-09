@@ -1,6 +1,6 @@
 package com.hluhovskyi.zero.common
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface DateFormatter {
 

@@ -39,6 +39,7 @@ android {
 }
 
 dependencies {
+    implementation deps.kotlinxDatetime
     coreLibraryDesugaring deps.android.tools.desugar
     lintChecks project(":lint-rules")
     implementation project(':zero-api')

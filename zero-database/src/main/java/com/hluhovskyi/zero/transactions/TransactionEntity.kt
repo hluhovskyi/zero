@@ -4,11 +4,10 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.RateEntity
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 @Entity(
     indices = [Index("userId")]
@@ -28,7 +27,6 @@ internal data class TransactionEntity(
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
 ) {
-
     enum class Type {
         EXPENSE,
         INCOME,

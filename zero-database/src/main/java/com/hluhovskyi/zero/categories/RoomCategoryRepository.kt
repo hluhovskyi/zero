@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ internal class RoomCategoryRepository(
     private val currentUserId: Flow<Id.Known>,
     private val idGenerator: IdGenerator,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : CategoryRepository {
 
@@ -71,7 +73,7 @@ internal class RoomCategoryRepository(
             name = name,
             iconId = iconId.valueOrNull(),
             colorId = colorId.valueOrNull(),
-            creationDateTime = clock.localDateTime(),
-            updatedDateTime = clock.localDateTime(),
+            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
         )
 }
