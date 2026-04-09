@@ -7,15 +7,14 @@ import com.hluhovskyi.zero.common.Identifiable
 /** A named color with a [ColorValue]. Used within [ColorScheme]. */
 data class Color(
     override val id: Id.Known,
-    val value: ColorValue
+    val value: ColorValue,
 ) : Identifiable {
 
     companion object {
 
         fun empty(): Color = Color(
             id = Id("empty_color"),
-            value = ColorValue.unspecified()
+            value = ColorValue.unspecified(),
         )
     }
 }
-

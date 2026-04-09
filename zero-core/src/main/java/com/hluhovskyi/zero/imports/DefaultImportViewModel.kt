@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero.imports
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 internal class DefaultImportViewModel(

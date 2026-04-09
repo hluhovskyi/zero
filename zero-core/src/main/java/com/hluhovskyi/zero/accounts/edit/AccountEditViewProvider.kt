@@ -42,14 +42,14 @@ private fun AccountEditView(
 ) {
     val state by viewModel.state.collectAsState(initial = AccountEditViewModel.State())
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .clickable { viewModel.perform(AccountEditViewModel.Action.SelectIcon) },
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             imageLoader.View(
                 image = state.selectedIcon,
@@ -63,7 +63,7 @@ private fun AccountEditView(
             label = { Text(text = "Name") },
             onValueChange = { name ->
                 viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
-            }
+            },
         )
         CurrencySelect(
             modifier = Modifier
@@ -73,7 +73,7 @@ private fun AccountEditView(
             selectedCurrency = state.selectedCurrency,
             onCurrencySelected = { currency ->
                 viewModel.perform(AccountEditViewModel.Action.SelectCurrency(currency))
-            }
+            },
         )
         OutlinedTextField(
             modifier = Modifier
@@ -83,11 +83,11 @@ private fun AccountEditView(
             label = { Text(text = "Balance") },
             onValueChange = { balance ->
                 viewModel.perform(AccountEditViewModel.Action.ChangeBalance(balance))
-            }
+            },
         )
         Button(
             modifier = Modifier.padding(top = 16.dp),
-            onClick = { viewModel.perform(AccountEditViewModel.Action.Save) }
+            onClick = { viewModel.perform(AccountEditViewModel.Action.Save) },
         ) {
             Text(text = "Save account")
         }
@@ -99,7 +99,7 @@ private fun CurrencySelect(
     modifier: Modifier = Modifier,
     currencies: List<Currency>,
     selectedCurrency: Currency?,
-    onCurrencySelected: (Currency) -> Unit
+    onCurrencySelected: (Currency) -> Unit,
 ) {
     TextFieldDropdownMenu(
         modifier = modifier,
@@ -109,6 +109,6 @@ private fun CurrencySelect(
         },
         nameMapping = { it.name },
         selectedItem = selectedCurrency,
-        onItemSelected = onCurrencySelected
+        onItemSelected = onCurrencySelected,
     )
 }

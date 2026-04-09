@@ -25,14 +25,14 @@ private const val MAIN_DATABASE_VERSION = 1
         CategoryEntity::class,
         ConfigurationEntity::class,
     ],
-    version = MAIN_DATABASE_VERSION
+    version = MAIN_DATABASE_VERSION,
 )
 @TypeConverters(
     value = [
         IdConverters::class,
         BigDecimalConverters::class,
-        LocalDateTimeConverter::class
-    ]
+        LocalDateTimeConverter::class,
+    ],
 )
 internal abstract class MainDatabase : RoomDatabase() {
 

@@ -4,7 +4,9 @@ import android.app.Application
 import android.content.Context
 import timber.log.Timber
 
-internal class MainApplication : Application(), HasApplicationComponent {
+internal class MainApplication :
+    Application(),
+    HasApplicationComponent {
 
     override val applicationComponent: ApplicationComponent by lazy {
         val dependencies = object : ApplicationComponent.Dependencies {

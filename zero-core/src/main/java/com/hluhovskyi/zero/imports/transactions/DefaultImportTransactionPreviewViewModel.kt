@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 internal class DefaultImportTransactionPreviewViewModel(
-    private val importUseCase: ImportUseCase
+    private val importUseCase: ImportUseCase,
 ) : ImportTransactionPreviewViewModel {
 
     override fun perform(action: ImportTransactionPreviewViewModel.Action) {
@@ -21,7 +21,7 @@ internal class DefaultImportTransactionPreviewViewModel(
             .filterIsInstance<ImportUseCase.State.TransactionsPreview>()
             .map { state ->
                 ImportTransactionPreviewViewModel.State(
-                    items = state.transactions
+                    items = state.transactions,
                 )
             }
 }

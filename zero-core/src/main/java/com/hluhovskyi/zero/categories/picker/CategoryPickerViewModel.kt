@@ -5,8 +5,7 @@ import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
-interface CategoryPickerViewModel
-    : AttachableActionStateModel<CategoryPickerViewModel.Action, CategoryPickerViewModel.State> {
+interface CategoryPickerViewModel : AttachableActionStateModel<CategoryPickerViewModel.Action, CategoryPickerViewModel.State> {
 
     sealed interface Action {
         data class SelectCategory(val category: CategoryPickerItem) : Action

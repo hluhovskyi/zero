@@ -8,24 +8,24 @@ import com.hluhovskyi.zero.common.coroutines.castingFlowOfNonNull
 import kotlinx.coroutines.flow.Flow
 
 internal class PredefinedIconRepository(
-    private val androidUriResourceFactory: AndroidUriResourceFactory
+    private val androidUriResourceFactory: AndroidUriResourceFactory,
 ) : IconRepository {
 
     private val icons: Map<Id.Known, Icon> = mapOf(
         iconOf(
             id = IconRepository.unknownCategoryIconId(),
             resourceName = "ic_unknown_category_24",
-            description = "Unknown"
+            description = "Unknown",
         ),
         iconOf(
             id = IconRepository.defaultAccountIconId(),
             resourceName = "ic_cash_24",
-            description = "Cash"
+            description = "Cash",
         ),
         iconOf(
             id = IconRepository.transferIconId(),
             resourceName = "ic_transfer_24",
-            description = "Transfer"
+            description = "Transfer",
         ),
 
         iconOf(id = KnownIconIds.cash, resourceName = "ic_cash_24", description = "Cash"),
@@ -45,21 +45,20 @@ internal class PredefinedIconRepository(
         // TODO: Add more starting from Відсотки і кешбек
     )
 
-    override fun <T> query(criteria: IconRepository.Criteria<T>): Flow<T> =
-        when (criteria) {
-            is IconRepository.Criteria.All -> castingFlowOf(icons.values.toList())
-            is IconRepository.Criteria.ById -> castingFlowOfNonNull(icons[criteria.id])
-        }
+    override fun <T> query(criteria: IconRepository.Criteria<T>): Flow<T> = when (criteria) {
+        is IconRepository.Criteria.All -> castingFlowOf(icons.values.toList())
+        is IconRepository.Criteria.ById -> castingFlowOfNonNull(icons[criteria.id])
+    }
 
     private fun iconOf(
         id: Id.Known,
         resourceName: String,
-        description: String
+        description: String,
     ) = id to Icon(
         id = id,
         image = Image(
             uri = androidUriResourceFactory.drawable(resourceName),
-            description = description
-        )
+            description = description,
+        ),
     )
 }

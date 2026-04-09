@@ -11,15 +11,15 @@ import kotlinx.coroutines.launch
 internal class DefaultTransactionPreviewViewModel(
     private val transactionId: Id,
     private val transactionRepository: TransactionRepository,
-    dispatchers: DispatcherProvider
-) : BaseViewModel(dispatchers), TransactionPreviewViewModel {
+    dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    TransactionPreviewViewModel {
 
     private val mutableState = MutableStateFlow(TransactionPreviewViewModel.State())
     override val state: Flow<TransactionPreviewViewModel.State> = mutableState
 
     override fun perform(action: TransactionPreviewViewModel.Action) {
         when (action) {
-
         }
     }
 

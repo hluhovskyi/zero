@@ -42,7 +42,7 @@ internal class SettingsViewProvider(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun SettingsView(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = SettingsViewModel.State())
     Column {
@@ -51,12 +51,12 @@ private fun SettingsView(
             secondaryText = "Transfer data from previously used apps",
             icon = painterResource(R.drawable.ic_import_24),
             iconDescription = "Import icon",
-            onClick = { viewModel.perform(SettingsViewModel.Action.Import) }
+            onClick = { viewModel.perform(SettingsViewModel.Action.Import) },
         )
         var currencyDropdownExpanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(
             expanded = currencyDropdownExpanded,
-            onExpandedChange = { currencyDropdownExpanded = it }
+            onExpandedChange = { currencyDropdownExpanded = it },
         ) {
             SettingsItem(
                 primaryText = "Primary currency",
@@ -66,20 +66,19 @@ private fun SettingsView(
             )
             ExposedDropdownMenu(
                 expanded = currencyDropdownExpanded,
-                onDismissRequest = { currencyDropdownExpanded = false }
+                onDismissRequest = { currencyDropdownExpanded = false },
             ) {
                 listOf("UAH", "USD", "EUR").forEach {
                     DropdownMenuItem(
                         onClick = {
                             currencyDropdownExpanded = false
-                        }
+                        },
                     ) {
                         Text(text = it)
                     }
                 }
             }
         }
-
     }
 }
 
@@ -97,7 +96,7 @@ private fun SettingsItem(
             .clickable { onClick?.invoke() }
             .padding(
                 vertical = 16.dp,
-                horizontal = 16.dp
+                horizontal = 16.dp,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -105,10 +104,10 @@ private fun SettingsItem(
             modifier = Modifier
                 .size(24.dp),
             painter = icon,
-            contentDescription = iconDescription
+            contentDescription = iconDescription,
         )
         Column(
-            modifier = Modifier.padding(start = 24.dp)
+            modifier = Modifier.padding(start = 24.dp),
         ) {
             Text(
                 text = primaryText,
@@ -117,7 +116,7 @@ private fun SettingsItem(
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
                     modifier = Modifier.padding(top = 2.dp),
-                    text = secondaryText
+                    text = secondaryText,
                 )
             }
         }

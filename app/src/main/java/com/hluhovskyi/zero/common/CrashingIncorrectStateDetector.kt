@@ -2,13 +2,9 @@ package com.hluhovskyi.zero.common
 
 internal object CrashingIncorrectStateDetector : IncorrectStateDetector {
 
-    override fun assert(message: String) {
-        throw IllegalStateException(message)
-    }
+    override fun assert(message: String): Unit = throw IllegalStateException(message)
 
-    override fun <T> assertOrValue(message: String, value: T): T {
-        throw IllegalStateException(message)
-    }
+    override fun <T> assertOrValue(message: String, value: T): T = throw IllegalStateException(message)
 
     override fun <T> requireNonNull(value: T?, message: String?, block: (T) -> Unit) {
         if (value == null) {
@@ -20,7 +16,7 @@ internal object CrashingIncorrectStateDetector : IncorrectStateDetector {
     override suspend fun <T> asyncRequireNonNull(
         value: T?,
         message: String?,
-        block: suspend (T) -> Unit
+        block: suspend (T) -> Unit,
     ) {
         if (value == null) {
             assertNull(message)

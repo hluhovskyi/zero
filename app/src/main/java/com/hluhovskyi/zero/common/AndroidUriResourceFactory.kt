@@ -10,15 +10,12 @@ interface AndroidUriResourceFactory {
 }
 
 internal class DefaultAndroidUriResourceFactory(
-    private val packageName: String
+    private val packageName: String,
 ) : AndroidUriResourceFactory {
 
-    override fun asset(path: String): Uri =
-        Uri("file:///android_asset/$path")
+    override fun asset(path: String): Uri = Uri("file:///android_asset/$path")
 
-    override fun drawable(name: String): Uri =
-        Uri("android.resource://$packageName/drawable/$name")
+    override fun drawable(name: String): Uri = Uri("android.resource://$packageName/drawable/$name")
 
-    override fun raw(name: String): Uri =
-        Uri("android.resource://$packageName/raw/$name")
+    override fun raw(name: String): Uri = Uri("android.resource://$packageName/raw/$name")
 }

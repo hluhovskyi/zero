@@ -29,17 +29,17 @@ internal class JavaCurrencyRepository(
             .associateBy { it.id }
     }
 
-    override fun <T> query(criteria: CurrencyRepository.Criteria<T>): Flow<T> =
-        when (criteria) {
-            is CurrencyRepository.Criteria.All -> flow {
-                val availableCurrencies = currencyLoader.availableCurrencies()
+    override fun <T> query(criteria: CurrencyRepository.Criteria<T>): Flow<T> = when (criteria) {
+        is CurrencyRepository.Criteria.All -> flow {
+            val availableCurrencies = currencyLoader.availableCurrencies()
 
-                emit(currencies.value
+            emit(
+                currencies.value
                     .mapNotNull { (id, currency) -> currency.takeIf { id in availableCurrencies } }
-                    .toList()
-                )
-            }.uncheckedCast()
-            is CurrencyRepository.Criteria.InUse -> emptyFlow()
-            is CurrencyRepository.Criteria.ById -> flow { currencies.value[criteria.id]?.let { emit(it) } }.uncheckedCast()
-        }
+                    .toList(),
+            )
+        }.uncheckedCast()
+        is CurrencyRepository.Criteria.InUse -> emptyFlow()
+        is CurrencyRepository.Criteria.ById -> flow { currencies.value[criteria.id]?.let { emit(it) } }.uncheckedCast()
+    }
 }

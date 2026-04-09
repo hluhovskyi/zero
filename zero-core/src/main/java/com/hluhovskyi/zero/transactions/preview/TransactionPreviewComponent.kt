@@ -29,7 +29,7 @@ private const val TAG = "TransactionPreviewComponent"
 @TransactionPreviewScope
 @dagger.Component(
     dependencies = [TransactionPreviewComponent.Dependencies::class],
-    modules = [TransactionPreviewComponent.Module::class]
+    modules = [TransactionPreviewComponent.Module::class],
 )
 abstract class TransactionPreviewComponent : AttachableViewComponent {
 
@@ -77,7 +77,7 @@ abstract class TransactionPreviewComponent : AttachableViewComponent {
         ): TransactionPreviewViewModel = DefaultTransactionPreviewViewModel(
             transactionId = transactionId,
             transactionRepository = transactionRepository,
-            dispatchers = dispatcherProvider
+            dispatchers = dispatcherProvider,
         )
 
         @Provides

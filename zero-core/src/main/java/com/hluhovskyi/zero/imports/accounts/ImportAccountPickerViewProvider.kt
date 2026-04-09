@@ -19,20 +19,20 @@ import androidx.compose.ui.Modifier
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class ImportAccountPickerViewProvider(
-    private val viewModel: ImportAccountPickerViewModel
+    private val viewModel: ImportAccountPickerViewModel,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
         ImportAccountPickerView(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }
 
 @Composable
 private fun ImportAccountPickerView(
-    viewModel: ImportAccountPickerViewModel
+    viewModel: ImportAccountPickerViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = ImportAccountPickerViewModel.State())
     Column(modifier = Modifier.fillMaxSize()) {
@@ -42,20 +42,20 @@ private fun ImportAccountPickerView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { viewModel.perform(ImportAccountPickerViewModel.Action.ChangeSelection(item)) },
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(
                         checked = item.selected,
                         onCheckedChange = {
                             viewModel.perform(ImportAccountPickerViewModel.Action.ChangeSelection(item))
-                        }
+                        },
                     )
                     Text(text = item.name)
                 }
             }
         }
         Row(
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.End,
         ) {
             Button(onClick = { viewModel.perform(ImportAccountPickerViewModel.Action.Submit) }) {
                 Text(text = "Next")

@@ -14,7 +14,6 @@ import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toInstant
 import kotlin.math.exp
 
@@ -42,7 +41,7 @@ internal class DefaultCategoriesQueryUseCase(
             resolve(
                 category = category,
                 idToIcons = idToIcons,
-                idToColors = idToColors
+                idToColors = idToColors,
             )
         }
     }
@@ -91,7 +90,7 @@ internal class DefaultCategoriesQueryUseCase(
     private fun resolve(
         category: CategoryRepository.Category,
         idToIcons: Map<Id.Known, Icon>,
-        idToColors: Map<Id.Known, Color>
+        idToColors: Map<Id.Known, Color>,
     ): CategoriesQueryUseCase.Category {
         val icon = idToIcons[category.iconId]
             ?: idToIcons[IconRepository.unknownCategoryIconId()]

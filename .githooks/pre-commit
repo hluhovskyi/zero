@@ -16,4 +16,16 @@ if [ -n "$staged_build_files" ]; then
     exit 1
 fi
 
+# Format staged files
+echo "Running Spotless formatting..."
+./gradlew spotlessApply
+
+# Re-stage files that were modified by Spotless
+# Use --diff-filter=d to only re-stage files that still exist on disk (exclude deleted files)
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+if [ -n "$staged_files" ]; then
+    echo "Re-staging formatted files..."
+    git add $staged_files
+fi
+
 exit 0

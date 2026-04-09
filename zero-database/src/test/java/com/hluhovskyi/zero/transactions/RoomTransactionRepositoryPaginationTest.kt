@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -22,23 +23,25 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
-import kotlinx.datetime.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class RoomTransactionRepositoryPaginationTest {
 
     @Mock private lateinit var transactionRoom: TransactionRoom
+
     @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
+
     @Mock private lateinit var clock: Clock
+
     @Mock private lateinit var zoneProvider: ZoneProvider
 
     private lateinit var repo: RoomTransactionRepository
 
     private val userId = Id.Known("user1")
-    private val jan15_10h = LocalDateTime(2024, 1, 15, 10, 0)
-    private val jan15_8h  = LocalDateTime(2024, 1, 15, 8, 0)
-    private val jan14_18h = LocalDateTime(2024, 1, 14, 18, 0)
+    private val jan15h10 = LocalDateTime(2024, 1, 15, 10, 0)
+    private val jan15h08 = LocalDateTime(2024, 1, 15, 8, 0)
+    private val jan14h18 = LocalDateTime(2024, 1, 14, 18, 0)
 
     @Before
     fun setUp() {
@@ -72,20 +75,20 @@ class RoomTransactionRepositoryPaginationTest {
     @Test
     fun `Criteria_After emits transactions newer than given datetime`() = runTest {
         val roomFlow = MutableSharedFlow<List<TransactionEntity>>(replay = 1)
-        whenever(transactionRoom.selectAfter("user1", jan15_8h.toString()))
+        whenever(transactionRoom.selectAfter("user1", jan15h08.toString()))
             .thenReturn(roomFlow)
 
         val results = mutableListOf<List<TransactionRepository.Transaction>>()
         val job = launch {
-            repo.query(TransactionRepository.Criteria.After(jan15_8h)).collect { results.add(it) }
+            repo.query(TransactionRepository.Criteria.After(jan15h08)).collect { results.add(it) }
         }
 
-        roomFlow.emit(listOf(expenseEntity("t1", jan15_10h)))
+        roomFlow.emit(listOf(expenseEntity("t1", jan15h10)))
         advanceUntilIdle()
         assertEquals(listOf("t1"), results.last().map { it.id.value })
 
         // Simulate new insert — Room re-emits
-        roomFlow.emit(listOf(expenseEntity("t2", LocalDateTime(2024, 1, 15, 11, 0)), expenseEntity("t1", jan15_10h)))
+        roomFlow.emit(listOf(expenseEntity("t2", LocalDateTime(2024, 1, 15, 11, 0)), expenseEntity("t1", jan15h10)))
         advanceUntilIdle()
         assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
 
@@ -97,9 +100,9 @@ class RoomTransactionRepositoryPaginationTest {
     @Test
     fun `Criteria_All initial page is padded to complete the last day`() = runTest {
         whenever(transactionRoom.selectFirstPage("user1", 100))
-            .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
-        whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15_10h.toString()))
-            .thenReturn(listOf(expenseEntity("t2", jan15_8h)))
+            .thenReturn(listOf(expenseEntity("t1", jan15h10)))
+        whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15h10.toString()))
+            .thenReturn(listOf(expenseEntity("t2", jan15h08)))
 
         val result = repo.query(TransactionRepository.Criteria.All()).first()
 
@@ -110,11 +113,11 @@ class RoomTransactionRepositoryPaginationTest {
     fun `Criteria_All trigger loads next cursor page appended to first`() = runTest {
         val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         whenever(transactionRoom.selectFirstPage("user1", 100))
-            .thenReturn(listOf(expenseEntity("t1", jan15_10h)))
+            .thenReturn(listOf(expenseEntity("t1", jan15h10)))
         whenever(transactionRoom.selectRemainingOnDay(any(), any(), any()))
             .thenReturn(emptyList())
         whenever(transactionRoom.selectNextPage("user1", "2024-01-15", 100))
-            .thenReturn(listOf(expenseEntity("t2", jan14_18h)))
+            .thenReturn(listOf(expenseEntity("t2", jan14h18)))
 
         val results = mutableListOf<List<TransactionRepository.Transaction>>()
         val job = launch {

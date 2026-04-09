@@ -29,11 +29,8 @@ interface ImportSourceUseCase {
     }
 }
 
-fun (() -> ImportSourceUseCase).lazy(): ImportSourceUseCase {
-    return lazy(this).let {
-        object : ImportSourceUseCase {
-            override suspend fun load(request: ImportSourceUseCase.Request): ImportSourceUseCase.Result =
-                it.value.load(request)
-        }
+fun (() -> ImportSourceUseCase).lazy(): ImportSourceUseCase = lazy(this).let {
+    object : ImportSourceUseCase {
+        override suspend fun load(request: ImportSourceUseCase.Request): ImportSourceUseCase.Result = it.value.load(request)
     }
 }

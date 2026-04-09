@@ -6,8 +6,7 @@ import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-interface CategoryEditColorUseCase
-    : ActionStateModel<CategoryEditColorUseCase.Action, CategoryEditColorUseCase.State> {
+interface CategoryEditColorUseCase : ActionStateModel<CategoryEditColorUseCase.Action, CategoryEditColorUseCase.State> {
 
     sealed interface Action {
         object Request : Action
@@ -27,7 +26,7 @@ interface CategoryEditColorUseCase
 
             private val EMPTY = Color(
                 id = Id("empty_color"),
-                color = ColorValue.unspecified()
+                color = ColorValue.unspecified(),
             )
 
             fun empty(): Color = EMPTY

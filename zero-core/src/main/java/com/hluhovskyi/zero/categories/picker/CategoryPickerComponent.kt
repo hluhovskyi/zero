@@ -20,7 +20,7 @@ private const val TAG = "CategoryPickerComponent"
 @CategoryPickerScope
 @dagger.Component(
     dependencies = [CategoryPickerComponent.Dependencies::class],
-    modules = [CategoryPickerComponent.Module::class]
+    modules = [CategoryPickerComponent.Module::class],
 )
 abstract class CategoryPickerComponent : AttachableViewComponent {
 

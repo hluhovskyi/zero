@@ -4,8 +4,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -63,7 +61,7 @@ private fun CategoryPickerView(
             CategoryPickerGridItem(
                 imageLoader = imageLoader,
                 category = category,
-                onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) }
+                onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) },
             )
         }
     }

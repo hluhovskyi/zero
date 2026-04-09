@@ -9,5 +9,5 @@ data class TransactionEditCategory(
     override val id: Id.Known,
     val name: String,
     val colorScheme: ColorScheme,
-    val icon: Image
+    val icon: Image,
 ) : Identifiable

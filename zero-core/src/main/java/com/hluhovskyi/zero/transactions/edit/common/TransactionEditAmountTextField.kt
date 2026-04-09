@@ -11,15 +11,15 @@ import androidx.compose.ui.text.input.KeyboardType
 fun TransactionEditAmountTextField(
     modifier: Modifier,
     amount: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
 ) {
     OutlinedTextField(
         modifier = modifier,
         value = amount,
         label = { Text(text = "Amount") },
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Number,
         ),
-        onValueChange = onValueChange
+        onValueChange = onValueChange,
     )
 }

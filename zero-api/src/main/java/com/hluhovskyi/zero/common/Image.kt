@@ -17,22 +17,22 @@ interface Image {
 
         operator fun invoke(
             uri: Uri,
-            description: String
+            description: String,
         ): Image = if (uri is Uri.NonEmpty) {
             UriImage(
                 uri = uri,
-                description = description
+                description = description,
             )
         } else {
             EmptyImage(
-                description = description
+                description = description,
             )
         }
     }
 }
 
 private class EmptyImage(
-    override val description: String
+    override val description: String,
 ) : Image {
     override val uri: Uri = Uri.Empty
 }
@@ -40,4 +40,4 @@ private class EmptyImage(
 private class UriImage(
     override val uri: Uri.NonEmpty,
     override val description: String,
-): Image
+) : Image

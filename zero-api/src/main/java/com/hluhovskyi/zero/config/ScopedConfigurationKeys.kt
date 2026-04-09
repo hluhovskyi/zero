@@ -4,7 +4,9 @@ interface Scope {
     val scope: String
 }
 
-interface ScopedConfigurationKey<Value> : ConfigurationKey<Value>, Scope
+interface ScopedConfigurationKey<Value> :
+    ConfigurationKey<Value>,
+    Scope
 
 fun scopeOf(name: String): Scope = ValueScope(name)
 

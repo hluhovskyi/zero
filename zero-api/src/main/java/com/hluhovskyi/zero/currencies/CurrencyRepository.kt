@@ -4,7 +4,6 @@ import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 
 interface CurrencyRepository {
 
@@ -20,7 +19,7 @@ interface CurrencyRepository {
 
         class InUse : Criteria<List<Currency>>
 
-        data class ById(val id: Id.Known): Criteria<Currency>
+        data class ById(val id: Id.Known) : Criteria<Currency>
     }
 
     object Noop : CurrencyRepository {

@@ -8,12 +8,11 @@ import kotlin.coroutines.CoroutineContext
 internal fun viewModelScope(
     dispatchers: DispatcherProvider,
     rootExceptionHandler: CoroutineExceptionHandler? = null,
-): CloseableCoroutineScope =
-    ViewModelCoroutineScope(dispatchers, rootExceptionHandler)
+): CloseableCoroutineScope = ViewModelCoroutineScope(dispatchers, rootExceptionHandler)
 
 private class ViewModelCoroutineScope(
     dispatchers: DispatcherProvider,
-    rootExceptionHandler: CoroutineExceptionHandler?
+    rootExceptionHandler: CoroutineExceptionHandler?,
 ) : CloseableCoroutineScope {
 
     private val supervisorJob = SupervisorJob()

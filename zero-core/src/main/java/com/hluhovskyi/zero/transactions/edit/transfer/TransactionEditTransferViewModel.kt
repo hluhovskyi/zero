@@ -6,8 +6,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
 import kotlinx.datetime.LocalDateTime
 
-interface TransactionEditTransferViewModel
-    : ActionStateModel<TransactionEditTransferViewModel.Action, TransactionEditTransferViewModel.State> {
+interface TransactionEditTransferViewModel : ActionStateModel<TransactionEditTransferViewModel.Action, TransactionEditTransferViewModel.State> {
 
     sealed interface Action {
         data class SelectAccount(val account: TransactionEditAccount) : Action

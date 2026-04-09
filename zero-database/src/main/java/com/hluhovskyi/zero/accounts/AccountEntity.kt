@@ -8,7 +8,7 @@ import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
 
 @Entity(
-    indices = [Index("userId")]
+    indices = [Index("userId")],
 )
 internal data class AccountEntity(
     @PrimaryKey val id: Id.Known,

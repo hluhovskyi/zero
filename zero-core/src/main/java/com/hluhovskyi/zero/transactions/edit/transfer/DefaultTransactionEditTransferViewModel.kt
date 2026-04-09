@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 internal class DefaultTransactionEditTransferViewModel(
-    private val useCase: TransactionEditUseCase
+    private val useCase: TransactionEditUseCase,
 ) : TransactionEditTransferViewModel {
 
     override val state: Flow<TransactionEditTransferViewModel.State> = useCase.state

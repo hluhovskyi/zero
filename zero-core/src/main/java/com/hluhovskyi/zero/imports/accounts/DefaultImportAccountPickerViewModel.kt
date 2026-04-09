@@ -14,7 +14,7 @@ import java.io.Closeable
 
 internal class DefaultImportAccountPickerViewModel(
     private val importUseCase: ImportUseCase,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : ImportAccountPickerViewModel {
 
     private val mutableState = MutableStateFlow(ImportAccountPickerViewModel.State())
@@ -28,22 +28,24 @@ internal class DefaultImportAccountPickerViewModel(
                         items = state.items.map { account ->
                             if (account.id == action.item.id) {
                                 account.copy(
-                                    selected = !account.selected
+                                    selected = !account.selected,
                                 )
                             } else {
                                 account
                             }
-                        }
+                        },
                     )
                 }
             }
 
             is ImportAccountPickerViewModel.Action.Submit -> {
-                importUseCase.perform(ImportUseCase.Action.SelectAccounts(
-                    accountIds = mutableState.value.items
-                        .filter { it.selected }
-                        .map { it.id }
-                ))
+                importUseCase.perform(
+                    ImportUseCase.Action.SelectAccounts(
+                        accountIds = mutableState.value.items
+                            .filter { it.selected }
+                            .map { it.id },
+                    ),
+                )
             }
         }
     }
@@ -57,7 +59,7 @@ internal class DefaultImportAccountPickerViewModel(
                             ImportAccountPickerViewModel.AccountItem(
                                 id = account.id,
                                 name = account.name,
-                                selected = true
+                                selected = true,
                             )
                         }
                     } else {

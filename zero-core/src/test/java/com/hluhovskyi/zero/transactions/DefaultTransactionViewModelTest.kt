@@ -6,6 +6,8 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -21,6 +23,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -33,26 +39,25 @@ import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
-import kotlinx.datetime.LocalDateTime
-import org.junit.Assert.assertEquals
-
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class DefaultTransactionViewModelTest {
 
     @Mock private lateinit var transactionRepository: TransactionRepository
+
     @Mock private lateinit var accountRepository: AccountRepository
+
     @Mock private lateinit var currencyRepository: CurrencyRepository
+
     @Mock private lateinit var iconRepository: IconRepository
+
     @Mock private lateinit var categoriesQueryUseCase: CategoriesQueryUseCase
+
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
+
     @Mock private lateinit var currencyConvertUseCase: CurrencyConvertUseCase
+
     @Mock private lateinit var onTransactionSelectedHandler: OnTransactionSelectedHandler
 
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
@@ -88,10 +93,10 @@ class DefaultTransactionViewModelTest {
         val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
 
         val emissions = mutableListOf<Unit>()
-        val collectJob = launch { 
-            trigger.collect { 
-                emissions.add(it) 
-            } 
+        val collectJob = launch {
+            trigger.collect {
+                emissions.add(it)
+            }
         }
 
         viewModel.perform(TransactionViewModel.Action.LoadMore)
@@ -180,6 +185,6 @@ class DefaultTransactionViewModelTest {
         onTransactionSelectedHandler = onTransactionSelectedHandler,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
-        coroutineScope = coroutineScope
+        coroutineScope = coroutineScope,
     )
 }

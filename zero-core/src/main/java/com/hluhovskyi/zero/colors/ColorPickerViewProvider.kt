@@ -28,7 +28,7 @@ internal class ColorPickerViewProvider(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ColorPickerView(
-    viewModel: ColorPickerViewModel
+    viewModel: ColorPickerViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = ColorPickerViewModel.State())
     LazyVerticalGrid(columns = GridCells.Fixed(5)) {
@@ -39,7 +39,7 @@ private fun ColorPickerView(
                     .background(item.value.toCompose())
                     .clickable {
                         viewModel.perform(ColorPickerViewModel.Action.SelectColor(item))
-                    }
+                    },
             )
         }
     }

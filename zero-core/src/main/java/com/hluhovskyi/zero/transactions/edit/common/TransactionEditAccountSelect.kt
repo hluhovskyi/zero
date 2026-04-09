@@ -11,7 +11,7 @@ fun TransactionEditAccountSelect(
     modifier: Modifier = Modifier,
     accounts: List<TransactionEditAccount>,
     selectedAccount: TransactionEditAccount?,
-    onAccountSelected: (TransactionEditAccount) -> Unit
+    onAccountSelected: (TransactionEditAccount) -> Unit,
 ) {
     TextFieldDropdownMenu(
         modifier = modifier,
@@ -21,6 +21,6 @@ fun TransactionEditAccountSelect(
         },
         nameMapping = { it.name },
         selectedItem = selectedAccount,
-        onItemSelected = onAccountSelected
+        onItemSelected = onAccountSelected,
     )
 }

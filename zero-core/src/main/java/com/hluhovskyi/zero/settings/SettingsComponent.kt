@@ -56,15 +56,15 @@ abstract class SettingsComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
-            currencyPrimaryUseCase = currencyPrimaryUseCase
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
         )
 
         @Provides
         @SettingsScope
         fun viewProvider(
-            viewModel: SettingsViewModel
+            viewModel: SettingsViewModel,
         ): ViewProvider = SettingsViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

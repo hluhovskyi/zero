@@ -26,9 +26,7 @@ internal abstract class ImportFilePickerComponent : AttachableViewComponent {
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
 
-    interface Dependencies {
-
-    }
+    interface Dependencies
 
     companion object {
 
@@ -52,17 +50,17 @@ internal abstract class ImportFilePickerComponent : AttachableViewComponent {
         @Provides
         @ImportFilePickerScope
         fun viewModel(
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportFilePickerViewModel = DefaultImportFilePickerViewModel(
-            importUseCase = importUseCase
+            importUseCase = importUseCase,
         )
 
         @Provides
         @ImportFilePickerScope
         fun viewProvider(
-            viewModel: ImportFilePickerViewModel
+            viewModel: ImportFilePickerViewModel,
         ): ViewProvider = ImportFilePickerViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

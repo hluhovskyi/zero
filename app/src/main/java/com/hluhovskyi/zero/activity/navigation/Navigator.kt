@@ -24,7 +24,7 @@ internal interface Navigator : ActionStateModel<Navigator.Action, Navigator.Stat
     fun <T : Any> observeArgumentValue(
         destination: Destination,
         argument: Argument<T>,
-        argumentClass: KClass<T>
+        argumentClass: KClass<T>,
     ): Flow<ArgumentValue<T>>
 
     fun startDestination(): Destination
@@ -36,7 +36,7 @@ internal inline fun <reified T : Any> Navigator.observeArgumentValue(
 ): Flow<ArgumentValue<T>> = observeArgumentValue(
     destination = destination,
     argument = argument,
-    argumentClass = T::class
+    argumentClass = T::class,
 )
 
 internal fun Navigator.navigateTo(
@@ -46,8 +46,8 @@ internal fun Navigator.navigateTo(
     perform(
         Navigator.Action.NavigateTo(
             destination = destination,
-            arguments = arguments.toList()
-        )
+            arguments = arguments.toList(),
+        ),
     )
 }
 

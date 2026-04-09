@@ -18,7 +18,7 @@ private const val TAG = "ImportAccountPickerComponent"
 @ImportAccountPickerScope
 @dagger.Component(
     modules = [ImportAccountPickerComponent.Module::class],
-    dependencies = [ImportAccountPickerComponent.Dependencies::class]
+    dependencies = [ImportAccountPickerComponent.Dependencies::class],
 )
 internal abstract class ImportAccountPickerComponent : AttachableViewComponent {
 
@@ -27,9 +27,7 @@ internal abstract class ImportAccountPickerComponent : AttachableViewComponent {
     internal abstract val viewModel: ImportAccountPickerViewModel
     override fun attach(): Closeable = viewModel.attach()
 
-    interface Dependencies {
-
-    }
+    interface Dependencies
 
     companion object {
 
@@ -53,17 +51,17 @@ internal abstract class ImportAccountPickerComponent : AttachableViewComponent {
         @Provides
         @ImportAccountPickerScope
         fun viewModel(
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportAccountPickerViewModel = DefaultImportAccountPickerViewModel(
-            importUseCase = importUseCase
+            importUseCase = importUseCase,
         )
 
         @Provides
         @ImportAccountPickerScope
         fun viewProvider(
-            viewModel: ImportAccountPickerViewModel
+            viewModel: ImportAccountPickerViewModel,
         ): ViewProvider = ImportAccountPickerViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

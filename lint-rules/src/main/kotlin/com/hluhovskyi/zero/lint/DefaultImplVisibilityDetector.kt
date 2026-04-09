@@ -12,7 +12,9 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.uast.UClass
 
-class DefaultImplVisibilityDetector : Detector(), Detector.UastScanner {
+class DefaultImplVisibilityDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
@@ -30,7 +32,7 @@ class DefaultImplVisibilityDetector : Detector(), Detector.UastScanner {
                     node,
                     context.getLocation(node as org.jetbrains.uast.UElement),
                     "DefaultXxx implementations must be internal. " +
-                        "See zero-core/AGENTS.md naming conventions table."
+                        "See zero-core/AGENTS.md naming conventions table.",
                 )
             }
         }
@@ -47,8 +49,8 @@ class DefaultImplVisibilityDetector : Detector(), Detector.UastScanner {
             severity = Severity.ERROR,
             implementation = Implementation(
                 DefaultImplVisibilityDetector::class.java,
-                Scope.JAVA_FILE_SCOPE
-            )
+                Scope.JAVA_FILE_SCOPE,
+            ),
         )
     }
 }

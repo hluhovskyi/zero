@@ -4,8 +4,7 @@ import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
-internal interface BottomBarViewModel
-    : AttachableActionStateModel<BottomBarViewModel.Action, BottomBarViewModel.State> {
+internal interface BottomBarViewModel : AttachableActionStateModel<BottomBarViewModel.Action, BottomBarViewModel.State> {
 
     sealed interface Action {
         data class SelectItem(val item: Item) : Action
@@ -17,6 +16,6 @@ internal interface BottomBarViewModel
         val id: Id.Known,
         val name: String,
         val icon: Image,
-        val selected: Boolean
+        val selected: Boolean,
     )
 }

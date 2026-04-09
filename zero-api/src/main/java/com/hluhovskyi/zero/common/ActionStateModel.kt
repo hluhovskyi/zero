@@ -15,10 +15,14 @@ interface StateModel<State> {
 }
 
 /** Combines action handling and reactive state — the base contract for UseCases. */
-interface ActionStateModel<Action, State> : ActionModel<Action>, StateModel<State>
+interface ActionStateModel<Action, State> :
+    ActionModel<Action>,
+    StateModel<State>
 
 /**
  * The standard ViewModel contract: actions in, state out, lifecycle managed.
  * Every feature ViewModel interface extends this.
  */
-interface AttachableActionStateModel<Action, State> : ActionStateModel<Action, State>, Attachable
+interface AttachableActionStateModel<Action, State> :
+    ActionStateModel<Action, State>,
+    Attachable

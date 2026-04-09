@@ -3,7 +3,7 @@ package com.hluhovskyi.zero.common
 import java.math.BigDecimal
 
 internal data class AmountEntity(
-    val value: BigDecimal
+    val value: BigDecimal,
 ) {
 
     companion object {

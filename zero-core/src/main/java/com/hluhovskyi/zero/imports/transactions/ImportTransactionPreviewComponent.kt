@@ -19,7 +19,7 @@ private const val TAG = "ImportTransactionPreviewComponent"
 @ImportTransactionPreviewScope
 @dagger.Component(
     dependencies = [ImportTransactionPreviewComponent.Dependencies::class],
-    modules = [ImportTransactionPreviewComponent.Module::class]
+    modules = [ImportTransactionPreviewComponent.Module::class],
 )
 internal abstract class ImportTransactionPreviewComponent : AttachableViewComponent {
 
@@ -27,9 +27,7 @@ internal abstract class ImportTransactionPreviewComponent : AttachableViewCompon
 
     override fun attach(): Closeable = Closeables.empty()
 
-    interface Dependencies {
-
-    }
+    interface Dependencies
 
     companion object {
 
@@ -53,17 +51,17 @@ internal abstract class ImportTransactionPreviewComponent : AttachableViewCompon
         @Provides
         @ImportTransactionPreviewScope
         fun viewModel(
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportTransactionPreviewViewModel = DefaultImportTransactionPreviewViewModel(
-            importUseCase = importUseCase
+            importUseCase = importUseCase,
         )
 
         @Provides
         @ImportTransactionPreviewScope
         fun viewProvider(
-            viewModel: ImportTransactionPreviewViewModel
+            viewModel: ImportTransactionPreviewViewModel,
         ): ViewProvider = ImportTransactionPreviewViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

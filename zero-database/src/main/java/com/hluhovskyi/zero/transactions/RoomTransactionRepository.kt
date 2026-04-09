@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.transactions
 
-import android.util.Log
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
@@ -10,20 +9,14 @@ import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
-
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom,
@@ -126,7 +119,7 @@ internal class RoomTransactionRepository(
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
-                    rate = rate.convert()
+                    rate = rate.convert(),
                 )
             }
 
@@ -141,7 +134,7 @@ internal class RoomTransactionRepository(
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
-                    rate = rate.convert()
+                    rate = rate.convert(),
                 )
             }
 
@@ -155,63 +148,61 @@ internal class RoomTransactionRepository(
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
                     targetAccount = Id.Known(targetAccount),
-                    targetAmount = targetAmount.convert()
+                    targetAmount = targetAmount.convert(),
                 )
             }
         }
     }
 
-    private fun TransactionRepository.Transaction.toEntity(userId: Id.Known): TransactionEntity =
-        when (this) {
-            is TransactionRepository.Transaction.Expense -> TransactionEntity(
-                id = id,
-                userId = userId,
-                type = TransactionEntity.Type.EXPENSE,
-                currencyId = currencyId,
-                accountId = accountId,
-                categoryId = categoryId.value,
-                amount = amount.convert(),
-                rate = rate.convert(),
-                targetAccount = null,
-                targetAmount = AmountEntity.empty(),
-                enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                updatedDateTime = updatedDateTime,
-            )
+    private fun TransactionRepository.Transaction.toEntity(userId: Id.Known): TransactionEntity = when (this) {
+        is TransactionRepository.Transaction.Expense -> TransactionEntity(
+            id = id,
+            userId = userId,
+            type = TransactionEntity.Type.EXPENSE,
+            currencyId = currencyId,
+            accountId = accountId,
+            categoryId = categoryId.value,
+            amount = amount.convert(),
+            rate = rate.convert(),
+            targetAccount = null,
+            targetAmount = AmountEntity.empty(),
+            enteredDateTime = dateTime,
+            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            updatedDateTime = updatedDateTime,
+        )
 
-            is TransactionRepository.Transaction.Income -> TransactionEntity(
-                id = id,
-                userId = userId,
-                type = TransactionEntity.Type.INCOME,
-                currencyId = currencyId,
-                accountId = accountId,
-                categoryId = categoryId.value,
-                amount = amount.convert(),
-                rate = rate.convert(),
-                targetAccount = null,
-                targetAmount = AmountEntity.empty(),
-                enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                updatedDateTime = updatedDateTime,
-            )
+        is TransactionRepository.Transaction.Income -> TransactionEntity(
+            id = id,
+            userId = userId,
+            type = TransactionEntity.Type.INCOME,
+            currencyId = currencyId,
+            accountId = accountId,
+            categoryId = categoryId.value,
+            amount = amount.convert(),
+            rate = rate.convert(),
+            targetAccount = null,
+            targetAmount = AmountEntity.empty(),
+            enteredDateTime = dateTime,
+            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            updatedDateTime = updatedDateTime,
+        )
 
-            is TransactionRepository.Transaction.Transfer -> TransactionEntity(
-                id = id,
-                userId = userId,
-                type = TransactionEntity.Type.TRANSFER,
-                currencyId = currencyId,
-                accountId = accountId,
-                categoryId = null,
-                amount = amount.convert(),
-                rate = RateEntity.empty(),
-                targetAccount = targetAccount.value,
-                targetAmount = targetAmount.convert(),
-                enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                updatedDateTime = updatedDateTime,
-            )
-        }
-
+        is TransactionRepository.Transaction.Transfer -> TransactionEntity(
+            id = id,
+            userId = userId,
+            type = TransactionEntity.Type.TRANSFER,
+            currencyId = currencyId,
+            accountId = accountId,
+            categoryId = null,
+            amount = amount.convert(),
+            rate = RateEntity.empty(),
+            targetAccount = targetAccount.value,
+            targetAmount = targetAmount.convert(),
+            enteredDateTime = dateTime,
+            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            updatedDateTime = updatedDateTime,
+        )
+    }
 
     private fun AmountEntity.convert(): Amount = Amount(value)
 

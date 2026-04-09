@@ -13,7 +13,9 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 
-class HandlerFunInterfaceDetector : Detector(), Detector.UastScanner {
+class HandlerFunInterfaceDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
@@ -30,7 +32,7 @@ class HandlerFunInterfaceDetector : Detector(), Detector.UastScanner {
                     node,
                     context.getLocation(node as UElement),
                     "OnXxxHandler must be a fun interface to allow lambda syntax at call sites. " +
-                        "See docs/agents/architecture.md."
+                        "See docs/agents/architecture.md.",
                 )
             }
         }
@@ -47,8 +49,8 @@ class HandlerFunInterfaceDetector : Detector(), Detector.UastScanner {
             severity = Severity.ERROR,
             implementation = Implementation(
                 HandlerFunInterfaceDetector::class.java,
-                Scope.JAVA_FILE_SCOPE
-            )
+                Scope.JAVA_FILE_SCOPE,
+            ),
         )
     }
 }

@@ -5,17 +5,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.navigation.rememberBottomSheetNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.material.navigation.rememberBottomSheetNavigator
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class MainActivityViewProvider(
-    private val screenComponent: MainActivityScreenComponent.Builder
+    private val screenComponent: MainActivityScreenComponent.Builder,
 ) : ViewProvider {
 
     @Composable
@@ -26,11 +26,11 @@ internal class MainActivityViewProvider(
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding(),
-                color = MaterialTheme.colors.background
+                color = MaterialTheme.colors.background,
             ) {
                 val bottomSheetNavigator = rememberBottomSheetNavigator()
                 val navController = rememberNavController(bottomSheetNavigator)
-                
+
                 screenComponent
                     .navHostController(navController)
                     .bottomSheetNavigator(bottomSheetNavigator)

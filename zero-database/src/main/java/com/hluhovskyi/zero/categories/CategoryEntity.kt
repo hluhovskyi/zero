@@ -7,7 +7,7 @@ import com.hluhovskyi.zero.common.Id
 import kotlinx.datetime.LocalDateTime
 
 @Entity(
-    indices = [Index("userId")]
+    indices = [Index("userId")],
 )
 data class CategoryEntity(
     @PrimaryKey val id: Id.Known,

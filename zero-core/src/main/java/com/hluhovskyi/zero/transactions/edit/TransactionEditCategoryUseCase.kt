@@ -5,8 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-interface TransactionEditCategoryUseCase
-    : ActionStateModel<TransactionEditCategoryUseCase.Action, TransactionEditCategoryUseCase.State> {
+interface TransactionEditCategoryUseCase : ActionStateModel<TransactionEditCategoryUseCase.Action, TransactionEditCategoryUseCase.State> {
 
     sealed interface Action {
         object Request : Action

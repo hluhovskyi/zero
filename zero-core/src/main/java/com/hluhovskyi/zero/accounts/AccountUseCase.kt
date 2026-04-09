@@ -6,9 +6,7 @@ import com.hluhovskyi.zero.common.Currency
 
 interface AccountUseCase : ActionStateModel<AccountUseCase.Action, AccountUseCase.State> {
 
-    sealed interface Action {
-
-    }
+    sealed interface Action
 
     data class State(
         val balance: Amount = Amount.zero(),

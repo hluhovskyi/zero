@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.categories
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 
 interface CategoryRepository {
 
@@ -12,7 +11,7 @@ interface CategoryRepository {
     sealed interface Criteria<T> {
 
         class All : Criteria<List<Category>>
-        data class ById(val categoryId: Id.Known): Criteria<Category>
+        data class ById(val categoryId: Id.Known) : Criteria<Category>
     }
 
     data class Category(
@@ -32,7 +31,7 @@ interface CategoryRepository {
         val parentCategoryId: Id,
         val name: String,
         val iconId: Id,
-        val colorId: Id
+        val colorId: Id,
     )
 
     object Noop : CategoryRepository {

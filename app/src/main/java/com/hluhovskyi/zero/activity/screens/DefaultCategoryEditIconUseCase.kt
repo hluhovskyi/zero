@@ -34,7 +34,7 @@ internal class DefaultCategoryEditIconUseCase(
     private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<CategoryEditIconUseCase.Action.Pick>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     override fun perform(action: CategoryEditIconUseCase.Action) {
@@ -51,7 +51,7 @@ internal class DefaultCategoryEditIconUseCase(
                 }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
-                    *args.toTypedArray()
+                    *args.toTypedArray(),
                 )
             }
             is CategoryEditIconUseCase.Action.Pick -> {
@@ -63,7 +63,7 @@ internal class DefaultCategoryEditIconUseCase(
     override val state: Flow<CategoryEditIconUseCase.State> =
         navigator.observeArgumentValue(
             destination = Destinations.Icon.Picker,
-            argument = Destinations.Icon.Picker.RequestId
+            argument = Destinations.Icon.Picker.RequestId,
         )
             .flatMapLatest { requestId ->
                 pickAction.map { pick ->

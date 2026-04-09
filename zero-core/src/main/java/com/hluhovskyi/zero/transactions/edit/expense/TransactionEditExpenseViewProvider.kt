@@ -49,7 +49,7 @@ private fun TransactionEditExpenseView(
     }
 
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp)
+        modifier = Modifier.padding(horizontal = 24.dp),
     ) {
         AmountDisplay(
             modifier = Modifier
@@ -64,7 +64,7 @@ private fun TransactionEditExpenseView(
             currencies = state.currencies,
             onCurrencySelected = {
                 viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCurrency(it))
-            }
+            },
         )
 
         CategoryScrollRow(
@@ -79,7 +79,7 @@ private fun TransactionEditExpenseView(
             },
             onShowAll = {
                 viewModel.perform(TransactionEditExpenseViewModel.Action.ShowAllCategories)
-            }
+            },
         )
 
         Row(
@@ -93,7 +93,7 @@ private fun TransactionEditExpenseView(
                     date = date,
                     onDateSelected = {
                         viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeDate(it))
-                    }
+                    },
                 )
             }
             SelectorCard(
@@ -104,7 +104,7 @@ private fun TransactionEditExpenseView(
                 nameMapping = { it.name },
                 onItemSelected = {
                     viewModel.perform(TransactionEditExpenseViewModel.Action.SelectAccount(it))
-                }
+                },
             )
         }
 
@@ -116,7 +116,7 @@ private fun TransactionEditExpenseView(
                 rate = state.rate,
                 onValueChange = { rate ->
                     viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeRate(rate))
-                }
+                },
             )
         }
     }

@@ -14,8 +14,7 @@ internal interface AccountRoom {
     @Query("SELECT * FROM AccountEntity WHERE userId=:userId")
     fun selectByUserId(userId: String): Flow<List<AccountEntity>>
 
-    fun selectByUserId(userId: Id.Known): Flow<List<AccountEntity>> =
-        selectByUserId(userId.value)
+    fun selectByUserId(userId: Id.Known): Flow<List<AccountEntity>> = selectByUserId(userId.value)
 
     @Query("SELECT DISTINCT currencyId FROM AccountEntity WHERE userId=:userId")
     fun selectInUseCurrencyIds(userId: String): Flow<List<Id.Known>>

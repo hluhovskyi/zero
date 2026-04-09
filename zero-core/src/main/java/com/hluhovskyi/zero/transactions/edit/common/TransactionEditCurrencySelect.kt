@@ -11,7 +11,7 @@ internal fun TransactionEditCurrencySelect(
     modifier: Modifier = Modifier,
     currencies: List<TransactionEditCurrency>,
     selectedCurrency: TransactionEditCurrency?,
-    onCurrencySelected: (TransactionEditCurrency) -> Unit
+    onCurrencySelected: (TransactionEditCurrency) -> Unit,
 ) {
     TextFieldDropdownMenu(
         modifier = modifier,
@@ -21,6 +21,6 @@ internal fun TransactionEditCurrencySelect(
         },
         nameMapping = { "${it.currencySymbol} - ${it.name}" },
         selectedItem = selectedCurrency,
-        onItemSelected = onCurrencySelected
+        onItemSelected = onCurrencySelected,
     )
 }

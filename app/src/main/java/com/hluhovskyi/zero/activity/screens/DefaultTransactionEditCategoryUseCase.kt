@@ -27,7 +27,7 @@ internal class DefaultTransactionEditCategoryUseCase(
     private val requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<TransactionEditCategoryUseCase.Action.Pick>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     override fun perform(action: TransactionEditCategoryUseCase.Action) {
@@ -37,7 +37,7 @@ internal class DefaultTransactionEditCategoryUseCase(
                 requestId.set(id)
                 navigator.navigateTo(
                     destination = Destinations.Category.Picker,
-                    Destinations.Category.Picker.RequestId.withValue(id)
+                    Destinations.Category.Picker.RequestId.withValue(id),
                 )
             }
             is TransactionEditCategoryUseCase.Action.Pick -> {
@@ -49,7 +49,7 @@ internal class DefaultTransactionEditCategoryUseCase(
     override val state: Flow<TransactionEditCategoryUseCase.State> =
         navigator.observeArgumentValue(
             destination = Destinations.Category.Picker,
-            argument = Destinations.Category.Picker.RequestId
+            argument = Destinations.Category.Picker.RequestId,
         )
             .flatMapLatest { requestId ->
                 pickAction.map { pick -> requestId to pick }

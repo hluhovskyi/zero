@@ -13,7 +13,7 @@ import java.io.Closeable
 internal class DefaultColorPickerViewModel(
     private val colorRepository: ColorRepository,
     private val onColorSelectedHandler: OnColorSelectedHandler,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : ColorPickerViewModel {
 
     private val mutableState = MutableStateFlow(ColorPickerViewModel.State())
@@ -33,7 +33,7 @@ internal class DefaultColorPickerViewModel(
                 .collectLatest { colors ->
                     mutableState.update { state ->
                         state.copy(
-                            colors = colors
+                            colors = colors,
                         )
                     }
                 }

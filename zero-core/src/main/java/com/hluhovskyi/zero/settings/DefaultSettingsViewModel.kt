@@ -13,7 +13,7 @@ import java.io.Closeable
 internal class DefaultSettingsViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onImportSelected: OnImportSelectedHandler,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : SettingsViewModel {
 
     private val mutableState = MutableStateFlow(SettingsViewModel.State())
@@ -27,12 +27,11 @@ internal class DefaultSettingsViewModel(
         }
     }
 
-
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             mutableState.update { state ->
                 state.copy(
-                    selectedCurrency = currencyPrimaryUseCase.getPrimaryCurrency().name
+                    selectedCurrency = currencyPrimaryUseCase.getPrimaryCurrency().name,
                 )
             }
         }

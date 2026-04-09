@@ -1,8 +1,8 @@
 package com.hluhovskyi.zero.common
 
 import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
@@ -21,7 +21,7 @@ internal class LocaleBasedDateFormatter(
         date: LocalDate,
         dayConfig: DateFormatter.DayConfig,
         monthConfig: DateFormatter.MonthConfig,
-        yearConfig: DateFormatter.YearConfig
+        yearConfig: DateFormatter.YearConfig,
     ): String {
         val patternBuilder = StringBuilder()
 
@@ -41,7 +41,7 @@ internal class LocaleBasedDateFormatter(
 
         return DateTimeFormatter.ofPattern(
             patternBuilder.toString(),
-            localeProvider.locale()
+            localeProvider.locale(),
         ).format(date.toJavaLocalDate())
     }
 }

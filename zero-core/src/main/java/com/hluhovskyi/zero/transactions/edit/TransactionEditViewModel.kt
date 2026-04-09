@@ -3,8 +3,7 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.common.ActionStateModel
 import kotlinx.datetime.LocalDateTime
 
-interface TransactionEditViewModel
-    : ActionStateModel<TransactionEditViewModel.Action, TransactionEditViewModel.State> {
+interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.Action, TransactionEditViewModel.State> {
 
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action
@@ -19,4 +18,4 @@ interface TransactionEditViewModel
         val date: LocalDateTime? = null,
         val selectedCategory: TransactionEditCategory? = null,
     )
-    }
+}

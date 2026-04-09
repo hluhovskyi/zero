@@ -76,10 +76,10 @@ abstract class IconPickerComponent : AttachableViewComponent {
         @IconPickerScope
         fun viewProvider(
             viewModel: IconPickerViewModel,
-            imageLoader: ImageLoader
+            imageLoader: ImageLoader,
         ): ViewProvider = IconPickerViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }

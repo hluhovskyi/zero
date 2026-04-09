@@ -5,15 +5,14 @@ import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 
-interface CategoryViewModel
-    : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
+interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
 
     sealed interface Action {
         data class SelectCategory(val category: CategoryItem) : Action
     }
 
     data class State(
-        val categories: List<CategoryItem> = emptyList()
+        val categories: List<CategoryItem> = emptyList(),
     )
 
     data class CategoryItem(
