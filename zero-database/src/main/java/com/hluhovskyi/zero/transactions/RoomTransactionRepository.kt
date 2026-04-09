@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -28,7 +29,8 @@ internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom,
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
-    private val clock: Clock
+    private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
 ) : TransactionRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -173,7 +175,7 @@ internal class RoomTransactionRepository(
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
 
@@ -189,7 +191,7 @@ internal class RoomTransactionRepository(
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
 
@@ -205,7 +207,7 @@ internal class RoomTransactionRepository(
                 targetAccount = targetAccount.value,
                 targetAmount = targetAmount.convert(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
         }

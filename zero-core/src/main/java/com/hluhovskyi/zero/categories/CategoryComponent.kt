@@ -13,6 +13,7 @@ import java.io.Closeable
 import javax.inject.Scope
 
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -46,12 +47,14 @@ abstract class CategoryComponent : AttachableViewComponent {
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
             clock: Clock,
+            zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
             clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()

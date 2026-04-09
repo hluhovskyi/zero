@@ -18,6 +18,7 @@ import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +44,7 @@ internal class DefaultTransactionViewModel(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : TransactionViewModel {
 
@@ -70,7 +72,7 @@ internal class DefaultTransactionViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            val initialTimestamp = clock.localDateTime()
+            val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
             combine(
                 combine(
                     transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))

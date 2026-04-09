@@ -21,6 +21,6 @@ interface TransactionPreviewViewModel
         val categoryColor: ColorValue = ColorValue.unspecified(),
         val accountName: String = "",
         val accountIcon: Image = Image.empty(),
-        val dateTime: LocalDateTime = LocalDateTime(1970, 1, 1, 0, 0, 0)
+        val dateTime: LocalDateTime? = null
     )
 }

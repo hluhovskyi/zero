@@ -30,6 +30,6 @@ interface TransactionEditTransferViewModel
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val sourceCurrencySymbol: String = "",
         val targetCurrencySymbol: String = "",
-        val date: LocalDateTime = LocalDateTime(1970, 1, 1, 0, 0, 0),
+        val date: LocalDateTime? = null,
     )
 }

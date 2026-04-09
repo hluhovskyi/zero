@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -39,6 +40,8 @@ class DefaultCategoriesQueryUseCaseTest {
     private val testTimeZone = TimeZone.UTC
     private val fakeClock = object : Clock {
         override fun now() = fixedInstant
+    }
+    private val fakeZoneProvider = object : ZoneProvider {
         override fun timeZone() = testTimeZone
     }
 
@@ -57,6 +60,7 @@ class DefaultCategoriesQueryUseCaseTest {
         colorRepository = colorRepository,
         transactionRepository = transactionRepository,
         clock = fakeClock,
+        zoneProvider = fakeZoneProvider,
     )
 
     @Test

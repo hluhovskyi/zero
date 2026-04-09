@@ -29,7 +29,7 @@ interface TransactionEditExpenseViewModel
         val selectedCurrency: TransactionEditCurrency? = null,
         val amount: String = "",
         val rate: String = "",
-        val date: LocalDateTime = LocalDateTime(1970, 1, 1, 0, 0, 0),
+        val date: LocalDateTime? = null,
     ) {
 
         val showRate: Boolean = if (selectedCurrency != null && selectedAccount != null) {

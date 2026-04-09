@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -30,6 +31,7 @@ class RoomTransactionRepositoryPaginationTest {
     @Mock private lateinit var transactionRoom: TransactionRoom
     @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
     @Mock private lateinit var clock: Clock
+    @Mock private lateinit var zoneProvider: ZoneProvider
 
     private lateinit var repo: RoomTransactionRepository
 
@@ -45,6 +47,7 @@ class RoomTransactionRepositoryPaginationTest {
             currentUserId = flowOf(userId),
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
+            zoneProvider = zoneProvider,
         )
     }
 

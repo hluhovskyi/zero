@@ -11,8 +11,7 @@ import kotlinx.datetime.toLocalDateTime
  */
 interface Clock {
     fun now(): Instant
-    fun timeZone(): TimeZone
 }
 
-/** Convenience extension — the most common usage throughout the codebase. */
-fun Clock.localDateTime(): LocalDateTime = now().toLocalDateTime(timeZone())
+/** Convenience extension — requires explicit timezone from ZoneProvider. */
+fun Clock.localDateTime(timeZone: TimeZone): LocalDateTime = now().toLocalDateTime(timeZone)

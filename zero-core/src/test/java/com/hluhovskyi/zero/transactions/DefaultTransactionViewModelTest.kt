@@ -37,6 +37,7 @@ import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
 
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -58,6 +59,8 @@ class DefaultTransactionViewModelTest {
     private val testTimeZone = TimeZone.UTC
     private val fakeClock = object : Clock {
         override fun now() = fixedInstant
+    }
+    private val fakeZoneProvider = object : ZoneProvider {
         override fun timeZone() = testTimeZone
     }
     private val now: LocalDateTime = fixedInstant.toLocalDateTime(testTimeZone)
@@ -176,6 +179,7 @@ class DefaultTransactionViewModelTest {
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
         clock = fakeClock,
+        zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope
     )
 }

@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -23,6 +24,7 @@ internal class DefaultCategoriesQueryUseCase(
     private val colorRepository: ColorRepository,
     private val transactionRepository: TransactionRepository,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
 ) : CategoriesQueryUseCase {
 
     private val queryAll = combine(
@@ -65,7 +67,7 @@ internal class DefaultCategoriesQueryUseCase(
     ): List<CategoriesQueryUseCase.Category> {
         val statsById = usageStatistics.associateBy { it.categoryId }
         val nowInstant = clock.now()
-        val timeZone = clock.timeZone()
+        val timeZone = zoneProvider.timeZone()
 
         val (used, unused) = categories.partition { statsById.containsKey(it.id) }
 

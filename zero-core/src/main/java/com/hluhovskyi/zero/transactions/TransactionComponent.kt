@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -40,6 +41,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
         val clock: Clock
+        val zoneProvider: ZoneProvider
 
         val transactionRepository: TransactionRepository
         val accountRepository: AccountRepository
@@ -81,6 +83,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyConvertUseCase: CurrencyConvertUseCase,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
             clock: Clock,
+            zoneProvider: ZoneProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
             accountRepository = accountRepository,
@@ -91,6 +94,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyConvertUseCase = currencyConvertUseCase,
             onTransactionSelectedHandler = onTransactionSelectedHandler,
             clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides

@@ -13,6 +13,7 @@ import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.common.joinIdsToString
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.toBigDecimalOrZero
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -53,6 +54,7 @@ internal class DefaultTransactionEditUseCase(
     private val onDiscardHandler: OnDiscardHandler,
     private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
     private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
@@ -73,7 +75,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime(),
+                    date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -85,7 +87,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
-                    date = state.localDateTime ?: clock.localDateTime(),
+                    date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -105,7 +107,7 @@ internal class DefaultTransactionEditUseCase(
                         transferRateMode = state.transferRateMode,
                         sourceCurrencySymbol = sourceCurrencySymbol,
                         targetCurrencySymbol = targetCurrencySymbol,
-                        date = state.localDateTime ?: clock.localDateTime()
+                        date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
                     )
                 }
             }
@@ -421,7 +423,7 @@ internal class DefaultTransactionEditUseCase(
         coroutineScope.launch(context = Dispatchers.IO) {
             val state = mutableState.value
             val transactionId = (transactionId as? Id.Known) ?: idGenerator()
-            val dateTime = state.localDateTime ?: clock.localDateTime()
+            val dateTime = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
             val account = state.selectedAccount ?: return@launch //TODO: Validation message
 
             val transaction = when (state.transactionType) {
@@ -436,7 +438,7 @@ internal class DefaultTransactionEditUseCase(
                         currencyId = currency?.id ?: account.currencyId,
                         categoryId = category.id,
                         dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(),
+                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         rate = Rate(state.rate.toBigDecimalOrNull())
                     )
                 }
@@ -452,7 +454,7 @@ internal class DefaultTransactionEditUseCase(
                         currencyId = currency?.id ?: account.currencyId,
                         categoryId = category.id,
                         dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(),
+                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         rate = Rate(state.rate.toBigDecimalOrNull())
                     )
                 }
@@ -480,7 +482,7 @@ internal class DefaultTransactionEditUseCase(
                         currencyId = account.currencyId,
                         targetAccount = targetAccount.id,
                         dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(),
+                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         targetAmount = computedTargetAmount
                     )
                 }
