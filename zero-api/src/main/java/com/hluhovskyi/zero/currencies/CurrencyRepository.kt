@@ -10,6 +10,10 @@ interface CurrencyRepository {
 
     fun <T> query(criteria: Criteria<T>): Flow<T>
 
+    fun interface Transformer {
+        fun transform(repository: CurrencyRepository): CurrencyRepository
+    }
+
     sealed interface Criteria<T> {
 
         class All : Criteria<List<Currency>>

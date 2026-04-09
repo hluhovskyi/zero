@@ -17,6 +17,9 @@ internal interface AccountRoom {
     fun selectByUserId(userId: Id.Known): Flow<List<AccountEntity>> =
         selectByUserId(userId.value)
 
+    @Query("SELECT DISTINCT currencyId FROM AccountEntity WHERE userId=:userId")
+    fun selectInUseCurrencyIds(userId: String): Flow<List<Id.Known>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(accountEntity: AccountEntity)
 

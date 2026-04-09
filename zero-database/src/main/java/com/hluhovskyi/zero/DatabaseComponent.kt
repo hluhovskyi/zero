@@ -14,6 +14,8 @@ import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.RoomConfigurationRepository
+import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.currencies.InUseCurrencyRepository
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
@@ -46,6 +48,11 @@ interface DatabaseComponent {
     val transactionRepository: TransactionRepository
     val categoryRepository: CategoryRepository
     val configurationRepository: ConfigurationRepository
+
+    val currencyRepositoryTransformer: CurrencyRepository.Transformer
+
+    fun transform(repository: CurrencyRepository): CurrencyRepository =
+        currencyRepositoryTransformer.transform(repository)
 
     interface Dependencies {
 
@@ -170,5 +177,23 @@ interface DatabaseComponent {
             incorrectStateDetector = incorrectStateDetector,
             logger = logger,
         )
+
+        @Provides
+        @DatabaseScope
+        internal fun currencyRepositoryTransformer(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): CurrencyRepository.Transformer = CurrencyRepository.Transformer { baseRepository ->
+            InUseCurrencyRepository(
+                accountRoom = { database.get().account() },
+                transactionRoom = { database.get().transaction() },
+                baseRepository = baseRepository,
+                currentUserId = currentUserId,
+                clock = clock,
+                zoneProvider = zoneProvider,
+            )
+        }
     }
 }

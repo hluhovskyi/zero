@@ -3,7 +3,7 @@
 Conventions to keep code consistent across the codebase.
 
 ## Imports vs Fully Qualified Class Names
-Always use imports instead of fully qualified class names.
+Always use specific imports. NEVER use fully qualified class names in code bodies. NEVER use wildcard imports (`import com.package.*`).
 
 ## Date / Time
 Use `kotlinx.datetime` types throughout the codebase:
