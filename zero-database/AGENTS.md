@@ -11,6 +11,7 @@ Android library module. Room database implementation — DAOs, Entities, and Rep
 5. **Entities use `@Embedded` with prefix** for composite types — `@Embedded(prefix = "amount_") val amount: AmountEntity`.
 6. **User-scoped data** — all queries filter by `userId`. Use `currentUserId.take(1).flatMapConcat { ... }` pattern.
 7. **Lazy DAO access** — repositories receive `() -> FeatureRoom` (lambda), not `FeatureRoom` directly, to avoid DB init on main thread.
+8. **Hard Encapsulation**: Interface `DatabaseComponent` MUST NOT return Room DAOs (`@Dao`) or Entities (`@Entity`). Custom logic (decorators/transformers) must be provided by the component directly using `zero-api` types.
 
 ## What Lives Here
 

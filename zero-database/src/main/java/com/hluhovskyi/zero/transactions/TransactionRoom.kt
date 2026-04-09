@@ -71,6 +71,13 @@ internal interface TransactionRoom {
     suspend fun selectById(transactionId: String, userId: String): TransactionEntity?
 
     @Query("""
+        SELECT DISTINCT currencyId FROM TransactionEntity 
+        WHERE userId = :userId 
+          AND datetime(enteredDateTime) >= datetime(:since)
+    """)
+    fun selectInUseCurrencyIds(userId: String, since: String): Flow<List<Id.Known>>
+
+    @Query("""
         SELECT categoryId,
                COUNT(*) as transactionCount,
                MAX(enteredDateTime) as lastUsedDateTime

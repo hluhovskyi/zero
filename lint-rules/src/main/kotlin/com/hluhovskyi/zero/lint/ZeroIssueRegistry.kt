@@ -12,6 +12,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         ViewProviderVisibilityDetector.ISSUE,
         ViewProviderDependencyDetector.ISSUE,
         HandlerFunInterfaceDetector.ISSUE,
+        DatabaseComponentEncapsulationDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API

@@ -35,7 +35,7 @@ Look for signals of friction:
 - **User Course-Correction:** Patterns the user corrected or tools they suggested mid-session.
 - **Blind Operation:** Commits made without running a tool that could actually verify the behavioral change (e.g. fixing UI without dumping hierarchy).
 
-## Step 3 — Analyze
+## Step 3 — Analyze (Internal Questions & 5 Whys)
 
 Answer these questions internally before writing anything:
 
@@ -44,19 +44,30 @@ Answer these questions internally before writing anything:
 3. **Assumption Traps:** Did you stay within the "existing code's box" too long? Did a dependency bump or architectural change solve a problem you were trying to "hack" your way through?
 4. **The Short-Circuit Rule:** What single rule or pointer would have reduced the turn count to 1?
 
-## Step 4 — Propose
+Perform a root-cause analysis on the session friction. You MUST answer "Why?" five times for any major pivot or failure. Do not settle for "I made a mistake" summaries.
 
-Present findings concisely and token-efficiently:
+1. **Why** did the friction or failure occur?
+2. **Why** did the initial research or strategy fail to account for it?
+3. **Why** was the erroneous assumption made?
+4. **Why** did the current process/tools allow the assumption to persist?
+5. **Why** did the environment (docs, linters, types) not prevent the error?
+
+**Goal:** Identify why the process or environment allowed the failure to happen.
+
+## Step 4 — Propose (Actionable Safeguards)
+
+Present findings concisely. A retrospective is ONLY complete if it results in an actionable documentation update or a programmatic safeguard (e.g., a lint rule) that makes the error impossible to repeat.
 
 ```
 ## Final Achieved Architecture
 - [one-sentence summary of the final solution]
 
 ## The "One Rule" to skip iterations
-- [the most impactful rule derived from the Pivot Point or Success Chasing audit]
+- [the most impactful rule derived from the 5 Whys]
 
 ## What's worth documenting
 - [insight] → suggest: add to [file] under [section]
+- [safeguard] → suggest: implement linter/static check for [rule]
 ```
 
 Keep it short. No padding. Then ask: **"Want me to write these updates?"**
