@@ -52,6 +52,7 @@ fun TransactionIncomeView(
         modifier = modifier,
         primaryText = categoryName,
         primaryAmount = "+$amount",
+        amountColor = Color(0xFF006C4A),
         secondaryText = accountName,
         secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
@@ -65,6 +66,7 @@ fun TransactionView(
     modifier: Modifier,
     primaryText: String,
     primaryAmount: String,
+    amountColor: Color = Color(0xFF1B1B1F),
     secondaryText: String,
     secondaryAmount: String? = null,
     iconColorScheme: UiColorScheme? = null,
@@ -94,7 +96,7 @@ fun TransactionView(
                 Text(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1B1B1F),
+                    color = amountColor,
                     text = primaryAmount,
                 )
             }

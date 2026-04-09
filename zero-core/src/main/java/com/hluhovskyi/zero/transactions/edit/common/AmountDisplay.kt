@@ -4,11 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DropdownMenu
@@ -76,27 +79,26 @@ fun AmountDisplay(
             letterSpacing = 3.sp,
         )
 
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 8.dp)
         ) {
-            Box {
+            // Currency pinned to left — fixed position regardless of amount width
+            Box(
+                modifier = Modifier.align(Alignment.CenterStart)
+                    .then(
+                        if (showCurrencySelector) Modifier.clickable { expanded = true }
+                        else Modifier
+                    ),
+            ) {
                 Row(
-                    modifier = Modifier
-                        .then(
-                            if (showCurrencySelector) Modifier.clickable { expanded = true }
-                            else Modifier
-                        )
-                        .padding(end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
                         text = currencySymbol,
-                        fontSize = 20.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                     )
@@ -104,7 +106,7 @@ fun AmountDisplay(
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = OnSurfaceVariant,
                         )
                     }
@@ -129,6 +131,7 @@ fun AmountDisplay(
                 }
             }
 
+            // Amount centered on screen — independent of currency position
             BasicTextField(
                 value = textFieldValue,
                 onValueChange = {
@@ -136,17 +139,31 @@ fun AmountDisplay(
                     onAmountChange(it.text)
                 },
                 modifier = Modifier
-                    .widthIn(min = 40.dp)
+                    .fillMaxWidth()
+                    .padding(start = 70.dp)
                     .focusRequester(focusRequester),
                 textStyle = TextStyle(
                     fontSize = 56.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colors.primary,
-                    textAlign = TextAlign.Start,
+                    textAlign = TextAlign.Right,
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 cursorBrush = SolidColor(MaterialTheme.colors.primary),
                 singleLine = true,
+                decorationBox = { innerTextField ->
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = "0.00",
+                            fontSize = 56.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    innerTextField()
+                },
             )
         }
     }
