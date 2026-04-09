@@ -11,28 +11,25 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
-import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEmpty
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
-import kotlinx.datetime.LocalDateTime
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -45,7 +42,7 @@ internal class DefaultTransactionViewModel(
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : TransactionViewModel {
 
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
@@ -80,7 +77,7 @@ internal class DefaultTransactionViewModel(
                         .onEmptyReturnEmptyList(),
                     transactionRepository.query(
                         TransactionRepository.Criteria.All(),
-                        trigger = loadMoreTrigger
+                        trigger = loadMoreTrigger,
                     )
                         .onStartWithEmptyList()
                         .onEmptyReturnEmptyList(),
@@ -135,7 +132,7 @@ internal class DefaultTransactionViewModel(
                                     } else {
                                         currencyConvertUseCase.convertToPrimary(
                                             transaction.amount,
-                                            transaction.currencyId
+                                            transaction.currencyId,
                                         )
                                     }
                                 }
@@ -147,16 +144,16 @@ internal class DefaultTransactionViewModel(
                                     } else {
                                         currencyConvertUseCase.convertToPrimary(
                                             transaction.amount,
-                                            transaction.currencyId
+                                            transaction.currencyId,
                                         )
                                     }
                                 }
                                 is TransactionViewModel.Item.Transaction.Transfer -> amount - currencyConvertUseCase.convertToPrimary(
                                     transaction.amount,
-                                    transaction.currencyId
+                                    transaction.currencyId,
                                 ) + currencyConvertUseCase.convertToPrimary(
                                     transaction.targetAmount,
-                                    transaction.targetCurrencyId
+                                    transaction.targetCurrencyId,
                                 )
                             }
                         }
@@ -166,13 +163,13 @@ internal class DefaultTransactionViewModel(
                                 date = date,
                                 total = amount,
                                 currencySymbol = primaryCurrency.symbol,
-                            )
+                            ),
                         ) + transactions
                     }
             }.collectLatest { items ->
                 mutableState.update { state ->
                     state.copy(
-                        transactions = items
+                        transactions = items,
                     )
                 }
             }
@@ -202,7 +199,7 @@ internal class DefaultTransactionViewModel(
                         TransactionViewModel.Conversion.WithAmount(
                             amount = transaction.amount.withRate(transaction.rate),
                             currencyId = account.currencyId,
-                            currencySymbol = symbol.orEmpty()
+                            currencySymbol = symbol.orEmpty(),
                         )
                     } else {
                         TransactionViewModel.Conversion.None
@@ -237,7 +234,7 @@ internal class DefaultTransactionViewModel(
                         TransactionViewModel.Conversion.WithAmount(
                             amount = transaction.amount.withRate(transaction.rate),
                             currencyId = account.currencyId,
-                            currencySymbol = symbol.orEmpty()
+                            currencySymbol = symbol.orEmpty(),
                         )
                     } else {
                         TransactionViewModel.Conversion.None

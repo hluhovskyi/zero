@@ -8,10 +8,11 @@ import com.hluhovskyi.zero.config.scopeOf
 internal sealed class CurrencyConfigurationKey<Type>(
     override val name: String,
     override val defaultValue: Type,
-) : ScopedConfigurationKey<Type>, Scope by scopeOf("currency") {
+) : ScopedConfigurationKey<Type>,
+    Scope by scopeOf("currency") {
 
     object PrimaryCurrency : CurrencyConfigurationKey<Id>(
         name = "primary_currency",
-        defaultValue = Id.Unknown
+        defaultValue = Id.Unknown,
     )
 }

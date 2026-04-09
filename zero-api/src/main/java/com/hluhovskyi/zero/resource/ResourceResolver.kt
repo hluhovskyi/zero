@@ -8,8 +8,7 @@ interface ResourceResolver {
     fun <Request : ResourceRequest<Result>, Result> resolve(request: Request): Flow<ResourceStatus<Result>>
 
     object Noop : ResourceResolver {
-        override fun <Request : ResourceRequest<Result>, Result> resolve(request: Request): Flow<ResourceStatus<Result>> =
-            emptyFlow()
+        override fun <Request : ResourceRequest<Result>, Result> resolve(request: Request): Flow<ResourceStatus<Result>> = emptyFlow()
     }
 }
 

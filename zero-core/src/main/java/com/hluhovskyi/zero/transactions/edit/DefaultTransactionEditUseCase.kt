@@ -12,32 +12,30 @@ import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.common.joinIdsToString
 import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.toBigDecimalOrZero
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import java.io.Closeable
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlinx.datetime.LocalDateTime
 
 private const val TAG = "DefaultTransactionEditUseCase"
 
@@ -107,7 +105,7 @@ internal class DefaultTransactionEditUseCase(
                         transferRateMode = state.transferRateMode,
                         sourceCurrencySymbol = sourceCurrencySymbol,
                         targetCurrencySymbol = targetCurrencySymbol,
-                        date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
+                        date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                     )
                 }
             }
@@ -154,14 +152,14 @@ internal class DefaultTransactionEditUseCase(
                     val currentState = mutableState.value
                     val rate = fetchRateIfTransfer(
                         state = currentState,
-                        targetAccount = action.account
+                        targetAccount = action.account,
                     )
 
                     mutableState.update { state ->
                         state.copy(
                             selectedTargetAccount = action.account,
                             transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                                ?: state.transferRateMode
+                                ?: state.transferRateMode,
                         )
                     }
                 }
@@ -200,7 +198,7 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.ChangeTransferRate -> {
                 mutableState.update { state ->
                     state.copy(
-                        transferRateMode = TransferRateMode.CustomRate(action.rate)
+                        transferRateMode = TransferRateMode.CustomRate(action.rate),
                     )
                 }
             }
@@ -218,8 +216,8 @@ internal class DefaultTransactionEditUseCase(
                     incorrectStateDetector.asyncRequireNonNull(
                         value = transactionRepository.query(
                             TransactionRepository.Criteria.ById(
-                                transactionId
-                            )
+                                transactionId,
+                            ),
                         )
                             .firstOrNull(),
                         message = "Transaction is not resolved with transactionId=$transactionId",
@@ -229,8 +227,8 @@ internal class DefaultTransactionEditUseCase(
                         mutableState
                             .filter { state ->
                                 state.accounts.isNotEmpty() &&
-                                        state.categories.isNotEmpty() &&
-                                        state.currencies.isNotEmpty()
+                                    state.categories.isNotEmpty() &&
+                                    state.currencies.isNotEmpty()
                             }
                             .take(1)
                             .collect()
@@ -248,32 +246,32 @@ internal class DefaultTransactionEditUseCase(
                                 localDateTime = transaction.dateTime,
                             )
 
-                                when (transaction) {
-                                    is TransactionRepository.Transaction.Expense -> {
-                                        val (categoryToSelect, reorderedCategories) =
-                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
+                            when (transaction) {
+                                is TransactionRepository.Transaction.Expense -> {
+                                    val (categoryToSelect, reorderedCategories) =
+                                        resolveCategoryForEdit(state.categories, transaction.categoryId)
 
-                                        partialState.copy(
-                                            transactionType = TransactionEditType.EXPENSE,
-                                            categories = reorderedCategories,
-                                            selectedCategory = categoryToSelect
-                                                ?: state.selectedCategory,
-                                            rate = transaction.rate.value.toString(),
-                                        )
-                                    }
+                                    partialState.copy(
+                                        transactionType = TransactionEditType.EXPENSE,
+                                        categories = reorderedCategories,
+                                        selectedCategory = categoryToSelect
+                                            ?: state.selectedCategory,
+                                        rate = transaction.rate.value.toString(),
+                                    )
+                                }
 
-                                    is TransactionRepository.Transaction.Income -> {
-                                        val (categoryToSelect, reorderedCategories) =
-                                            resolveCategoryForEdit(state.categories, transaction.categoryId)
+                                is TransactionRepository.Transaction.Income -> {
+                                    val (categoryToSelect, reorderedCategories) =
+                                        resolveCategoryForEdit(state.categories, transaction.categoryId)
 
-                                        partialState.copy(
-                                            transactionType = TransactionEditType.INCOME,
-                                            categories = reorderedCategories,
-                                            selectedCategory = categoryToSelect
-                                                ?: state.selectedCategory,
-                                            rate = transaction.rate.value.toString()
-                                        )
-                                    }
+                                    partialState.copy(
+                                        transactionType = TransactionEditType.INCOME,
+                                        categories = reorderedCategories,
+                                        selectedCategory = categoryToSelect
+                                            ?: state.selectedCategory,
+                                        rate = transaction.rate.value.toString(),
+                                    )
+                                }
 
                                 is TransactionRepository.Transaction.Transfer -> {
                                     val targetAccountToSelect =
@@ -303,7 +301,7 @@ internal class DefaultTransactionEditUseCase(
                             TransactionEditAccount(
                                 id = account.id,
                                 name = account.name,
-                                currencyId = account.currencyId
+                                currencyId = account.currencyId,
                             )
                         }
                     }
@@ -321,7 +319,7 @@ internal class DefaultTransactionEditUseCase(
                                     state.selectedCurrency
                                 } else {
                                     accountToSelect?.let { account -> state.currencies.firstOrNull { it.id == account.currencyId } }
-                                }
+                                },
                             )
                         }
                     }
@@ -354,7 +352,7 @@ internal class DefaultTransactionEditUseCase(
                                     }
                                 } else {
                                     state.selectedCategory ?: categories.firstOrNull()
-                                }
+                                },
                             )
                         }
                     }
@@ -367,7 +365,7 @@ internal class DefaultTransactionEditUseCase(
                             TransactionEditCurrency(
                                 id = currency.id,
                                 name = currency.name,
-                                currencySymbol = currency.symbol
+                                currencySymbol = currency.symbol,
                             )
                         }
                     }
@@ -406,14 +404,14 @@ internal class DefaultTransactionEditUseCase(
             val currentState = mutableState.value
             val rate = fetchRateIfTransfer(
                 state = currentState,
-                sourceAccount = action.account
+                sourceAccount = action.account,
             )
 
             mutableState.update { state ->
                 state.copy(
                     selectedAccount = action.account,
                     transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                        ?: state.transferRateMode
+                        ?: state.transferRateMode,
                 )
             }
         }
@@ -424,7 +422,7 @@ internal class DefaultTransactionEditUseCase(
             val state = mutableState.value
             val transactionId = (transactionId as? Id.Known) ?: idGenerator()
             val dateTime = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
-            val account = state.selectedAccount ?: return@launch //TODO: Validation message
+            val account = state.selectedAccount ?: return@launch // TODO: Validation message
 
             val transaction = when (state.transactionType) {
                 TransactionEditType.EXPENSE -> {
@@ -439,7 +437,7 @@ internal class DefaultTransactionEditUseCase(
                         categoryId = category.id,
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        rate = Rate(state.rate.toBigDecimalOrNull())
+                        rate = Rate(state.rate.toBigDecimalOrNull()),
                     )
                 }
 
@@ -455,7 +453,7 @@ internal class DefaultTransactionEditUseCase(
                         categoryId = category.id,
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        rate = Rate(state.rate.toBigDecimalOrNull())
+                        rate = Rate(state.rate.toBigDecimalOrNull()),
                     )
                 }
 
@@ -483,7 +481,7 @@ internal class DefaultTransactionEditUseCase(
                         targetAccount = targetAccount.id,
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        targetAmount = computedTargetAmount
+                        targetAmount = computedTargetAmount,
                     )
                 }
             }
@@ -501,7 +499,7 @@ internal class DefaultTransactionEditUseCase(
             val rate = if (currentState.transferRateMode is TransferRateMode.CustomAmount) {
                 fetchRate(
                     sourceAccount = currentState.selectedAccount,
-                    targetAccount = currentState.selectedTargetAccount
+                    targetAccount = currentState.selectedTargetAccount,
                 )
             } else {
                 null
@@ -528,7 +526,7 @@ internal class DefaultTransactionEditUseCase(
 
                 state.copy(
                     transferRateMode = nextMode,
-                    targetAmount = nextTargetAmount
+                    targetAmount = nextTargetAmount,
                 )
             }
         }
@@ -546,7 +544,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedAccount = state.selectedTargetAccount,
                     selectedTargetAccount = state.selectedAccount,
                     transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                        ?: state.transferRateMode
+                        ?: state.transferRateMode,
                 )
             }
         }
@@ -565,15 +563,13 @@ internal class DefaultTransactionEditUseCase(
     private suspend fun fetchRate(
         sourceAccount: TransactionEditAccount?,
         targetAccount: TransactionEditAccount?,
-    ): Rate? {
-        return when {
-            sourceAccount == null || targetAccount == null -> null
-            sourceAccount.currencyId == targetAccount.currencyId -> Rate.Same
-            else -> currencyConvertUseCase.getRate(
-                sourceAccount.currencyId,
-                targetAccount.currencyId
-            )
-        }
+    ): Rate? = when {
+        sourceAccount == null || targetAccount == null -> null
+        sourceAccount.currencyId == targetAccount.currencyId -> Rate.Same
+        else -> currencyConvertUseCase.getRate(
+            sourceAccount.currencyId,
+            targetAccount.currencyId,
+        )
     }
 
     private fun resolveCategoryForEdit(

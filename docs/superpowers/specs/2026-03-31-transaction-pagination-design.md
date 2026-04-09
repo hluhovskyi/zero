@@ -1,6 +1,6 @@
 # Transaction Pagination Design
 
-**Date:** 2026-03-31  
+**Date:** 2026-03-31
 **Goal:** Load only an initial batch of transactions on app start (faster startup), then load more on demand as the user scrolls down.
 
 ---

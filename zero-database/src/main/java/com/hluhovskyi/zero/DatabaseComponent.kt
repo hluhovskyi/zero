@@ -39,7 +39,7 @@ private annotation class CurrentUserId
 @DatabaseScope
 @dagger.Component(
     modules = [DatabaseComponent.Module::class],
-    dependencies = [DatabaseComponent.Dependencies::class]
+    dependencies = [DatabaseComponent.Dependencies::class],
 )
 interface DatabaseComponent {
 
@@ -51,8 +51,7 @@ interface DatabaseComponent {
 
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
 
-    fun transform(repository: CurrencyRepository): CurrencyRepository =
-        currencyRepositoryTransformer.transform(repository)
+    fun transform(repository: CurrencyRepository): CurrencyRepository = currencyRepositoryTransformer.transform(repository)
 
     interface Dependencies {
 
@@ -97,11 +96,11 @@ interface DatabaseComponent {
         @Provides
         @DatabaseScope
         internal fun mainDatabase(
-            context: Context
+            context: Context,
         ): MainDatabase = Room.databaseBuilder(
             context,
             MainDatabase::class.java,
-            "MainDatabase"
+            "MainDatabase",
         ).build()
 
         @Provides
@@ -125,11 +124,11 @@ interface DatabaseComponent {
         internal fun currentUserRepository(
             idGenerator: IdGenerator,
             logger: Logger,
-            database: Provider<MainDatabase>
+            database: Provider<MainDatabase>,
         ): CurrentUserRepository = RoomCurrentUserRepository(
             idGenerator = idGenerator,
             logger = logger,
-            currentUserRoom = { database.get().currentUser() }
+            currentUserRoom = { database.get().currentUser() },
         )
 
         @Provides
@@ -143,7 +142,7 @@ interface DatabaseComponent {
             accountRoom = { database.get().account() },
             currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
-            idGenerator = idGenerator
+            idGenerator = idGenerator,
         )
 
         @Provides

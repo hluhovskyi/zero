@@ -4,12 +4,9 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 
-interface AccountViewModel
-    : AttachableActionStateModel<AccountViewModel.Action, AccountViewModel.State> {
+interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action, AccountViewModel.State> {
 
-    sealed interface Action {
-
-    }
+    sealed interface Action
 
     data class State(
         val balance: Amount = Amount.zero(),

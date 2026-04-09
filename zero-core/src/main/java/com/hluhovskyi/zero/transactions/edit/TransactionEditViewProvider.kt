@@ -42,7 +42,7 @@ internal class TransactionEditViewProvider(
             viewModel = viewModel,
             expenseComponent = expenseComponent,
             incomeComponent = incomeComponent,
-            transferComponent = transferComponent
+            transferComponent = transferComponent,
         )
     }
 }
@@ -53,7 +53,7 @@ private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
     expenseComponent: Buildable<out AttachableViewComponent>,
     incomeComponent: Buildable<out AttachableViewComponent>,
-    transferComponent: Buildable<out AttachableViewComponent>
+    transferComponent: Buildable<out AttachableViewComponent>,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
 
@@ -61,16 +61,16 @@ private fun TransactionEditView(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colors.background)
-            .imePadding()
+            .imePadding(),
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 120.dp)
+            contentPadding = PaddingValues(bottom = 120.dp),
         ) {
             item {
                 ModalHeader(
                     title = "New Transaction",
-                    onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) }
+                    onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
                 )
             }
             item {
@@ -90,7 +90,7 @@ private fun TransactionEditView(
                             TransactionEditType.INCOME -> "Income"
                             TransactionEditType.TRANSFER -> "Transfer"
                         }
-                    }
+                    },
                 )
             }
             item {
@@ -109,14 +109,14 @@ private fun TransactionEditView(
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Check,
-                    contentDescription = null
+                    contentDescription = null,
                 )
             },
             text = {
                 Text(text = "Save Transaction")
             },
             onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
     }
 }

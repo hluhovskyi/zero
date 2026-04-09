@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -93,7 +93,7 @@ private fun TransactionView(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp)
+                            .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp),
                     ) {
                         Text(
                             modifier = Modifier.weight(1f),
@@ -106,7 +106,7 @@ private fun TransactionView(
                         Text(
                             text = amountFormatter.format(
                                 amount = transaction.total,
-                                currencySymbol = transaction.currencySymbol
+                                currencySymbol = transaction.currencySymbol,
                             ),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -136,7 +136,7 @@ private fun TransactionView(
                                     categoryName = transaction.categoryName,
                                     amount = amountFormatter.format(
                                         amount = transaction.amount,
-                                        currencySymbol = transaction.currencySymbol
+                                        currencySymbol = transaction.currencySymbol,
                                     ),
                                     accountName = transaction.accountName,
                                     iconColorScheme = transaction.categoryColorScheme.toUi(),
@@ -199,7 +199,7 @@ private fun TransactionView(
 }
 
 private fun TransactionViewModel.Conversion.format(
-    amountFormatter: AmountFormatter
+    amountFormatter: AmountFormatter,
 ): String? = if (this is TransactionViewModel.Conversion.WithAmount) {
     amountFormatter.format(
         amount = amount,
@@ -210,7 +210,7 @@ private fun TransactionViewModel.Conversion.format(
 }
 
 private fun DateFormatter.format(
-    transaction: TransactionViewModel.Item.Summary
+    transaction: TransactionViewModel.Item.Summary,
 ): String = format(
     date = transaction.date,
     dayConfig = DateFormatter.DayConfig.WithoutZero,
@@ -220,7 +220,7 @@ private fun DateFormatter.format(
 
 private fun Image.toComposable(
     imageLoader: ImageLoader,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ): @Composable () -> Unit = {
     imageLoader.View(
         image = this,
@@ -230,7 +230,7 @@ private fun Image.toComposable(
 
 private fun Image.toTintedComposable(
     imageLoader: ImageLoader,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ): @Composable (tint: Color) -> Unit = { tint ->
     imageLoader.View(
         image = this,

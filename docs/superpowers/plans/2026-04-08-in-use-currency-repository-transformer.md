@@ -4,7 +4,7 @@
 
 **Goal:** Implement `InUseCurrencyRepository` and expose a `transform` method on `DatabaseComponent` to wrap any `CurrencyRepository` with in-use logic.
 
-**Architecture:** 
+**Architecture:**
 1. `CurrencyRepository.Transformer` functional interface added to `zero-api`.
 2. `InUseCurrencyRepository` implemented as a decorator in `zero-database`.
 3. `DatabaseComponent` exposes `CurrencyRepository.Transformer`.
@@ -49,8 +49,8 @@ fun selectInUseCurrencyIds(userId: String): Flow<List<Id.Known>>
 // zero-database/src/main/java/com/hluhovskyi/zero/transactions/TransactionRoom.kt
 
 @Query("""
-    SELECT DISTINCT currencyId FROM TransactionEntity 
-    WHERE userId = :userId 
+    SELECT DISTINCT currencyId FROM TransactionEntity
+    WHERE userId = :userId
       AND datetime(enteredDateTime) >= datetime(:since)
 """)
 fun selectInUseCurrencyIds(userId: String, since: String): Flow<List<Id.Known>>
@@ -144,7 +144,7 @@ interface DatabaseComponent {
     // ...
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
 
-    fun transform(repository: CurrencyRepository): CurrencyRepository = 
+    fun transform(repository: CurrencyRepository): CurrencyRepository =
         currencyRepositoryTransformer.transform(repository)
 }
 ```
@@ -161,7 +161,7 @@ interface DatabaseComponent {
             @CurrentUserId currentUserId: Flow<Id.Known>,
             clock: Clock,
             zoneProvider: ZoneProvider,
-        ): com.hluhovskyi.zero.currencies.CurrencyRepository.Transformer = 
+        ): com.hluhovskyi.zero.currencies.CurrencyRepository.Transformer =
             com.hluhovskyi.zero.currencies.CurrencyRepository.Transformer { baseRepository ->
                 com.hluhovskyi.zero.currencies.InUseCurrencyRepository(
                     accountRoom = { database.get().account() },

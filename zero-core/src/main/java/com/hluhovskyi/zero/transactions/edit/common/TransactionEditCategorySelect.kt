@@ -29,7 +29,7 @@ fun TransactionEditCategorySelect(
     modifier: Modifier = Modifier,
     categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
-    onCategorySelected: (TransactionEditCategory) -> Unit
+    onCategorySelected: (TransactionEditCategory) -> Unit,
 ) {
     TextFieldDropdownMenu(
         modifier = modifier,
@@ -66,7 +66,7 @@ fun TransactionEditCategorySelect(
                 imageLoader.View(image = category.icon, tint = tint)
             }
         },
-        onItemSelected = onCategorySelected
+        onItemSelected = onCategorySelected,
     )
 }
 
@@ -80,26 +80,26 @@ fun TransactionEditCategorySelectWithEditButton(
     onCategoryEdit: () -> Unit,
 ) {
     Row(
-        modifier = modifier.height(IntrinsicSize.Min)
+        modifier = modifier.height(IntrinsicSize.Min),
     ) {
         TransactionEditCategorySelect(
             modifier = Modifier.weight(1f),
             imageLoader = imageLoader,
             categories = categories,
             selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected
+            onCategorySelected = onCategorySelected,
         )
         Button(
             modifier = Modifier
                 .padding(start = 16.dp, top = 8.dp)
                 .sizeIn(maxHeight = 54.dp)
                 .aspectRatio(1f, true),
-            onClick = onCategoryEdit
+            onClick = onCategoryEdit,
         ) {
             Icon(
                 imageVector = Icons.Filled.Edit,
                 contentDescription = "Edit categories",
-                tint = Color.White
+                tint = Color.White,
             )
         }
     }

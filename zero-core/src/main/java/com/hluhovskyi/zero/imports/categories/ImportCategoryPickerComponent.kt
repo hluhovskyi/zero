@@ -27,9 +27,7 @@ internal abstract class ImportCategoriesPickerComponent : AttachableViewComponen
     internal abstract val viewModel: ImportCategoryPickerViewModel
     override fun attach(): Closeable = viewModel.attach()
 
-    interface Dependencies {
-
-    }
+    interface Dependencies
 
     companion object {
 
@@ -53,18 +51,17 @@ internal abstract class ImportCategoriesPickerComponent : AttachableViewComponen
         @Provides
         @ImportCategoriesPickerScope
         fun viewModel(
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportCategoryPickerViewModel = DefaultImportCategoryPickerViewModel(
-            importUseCase = importUseCase
+            importUseCase = importUseCase,
         )
 
         @Provides
         @ImportCategoriesPickerScope
         fun viewProvider(
-            viewModel: ImportCategoryPickerViewModel
+            viewModel: ImportCategoryPickerViewModel,
         ): ViewProvider = ImportCategoryPickerViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
-
     }
 }

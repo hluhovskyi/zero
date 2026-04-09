@@ -9,5 +9,5 @@ private const val INTERNAL_CURRENT_USER_ID = "INTERNAL_CURRENT_USER_ID"
 @Entity
 internal data class CurrentUserEntity(
     @PrimaryKey val id: String = INTERNAL_CURRENT_USER_ID,
-    val userId: Id.Known
+    val userId: Id.Known,
 )

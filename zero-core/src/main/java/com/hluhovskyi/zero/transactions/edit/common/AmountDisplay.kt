@@ -4,12 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
@@ -82,19 +78,22 @@ fun AmountDisplay(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp)
+                .padding(top = 8.dp),
         ) {
             // Currency pinned to left — fixed position regardless of amount width
             Box(
                 modifier = Modifier.align(Alignment.CenterStart)
                     .then(
-                        if (showCurrencySelector) Modifier.clickable { expanded = true }
-                        else Modifier
+                        if (showCurrencySelector) {
+                            Modifier.clickable { expanded = true }
+                        } else {
+                            Modifier
+                        },
                     ),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
                         text = currencySymbol,
@@ -115,14 +114,14 @@ fun AmountDisplay(
                 if (showCurrencySelector) {
                     DropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
                     ) {
                         currencies.forEach { currencyItem ->
                             DropdownMenuItem(
                                 onClick = {
                                     onCurrencySelected(currencyItem)
                                     expanded = false
-                                }
+                                },
                             ) {
                                 Text(text = "${currencyItem.currencySymbol} - ${currencyItem.name}")
                             }

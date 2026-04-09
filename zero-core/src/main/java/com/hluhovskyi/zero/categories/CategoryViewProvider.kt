@@ -24,14 +24,14 @@ import com.hluhovskyi.zero.ui.common.toUi
 
 internal class CategoryViewProvider(
     private val viewModel: CategoryViewModel,
-    private val imageLoader: ImageLoader
+    private val imageLoader: ImageLoader,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
         CategoryView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -43,7 +43,7 @@ private fun CategoryView(
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
     LazyColumn(
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
     ) {
         items(state.categories) { category ->
             Row(
@@ -51,7 +51,7 @@ private fun CategoryView(
                     .fillMaxWidth()
                     .clickable { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CategoryIconView(colorScheme = category.colorScheme.toUi()) { tint ->
                     imageLoader.View(
@@ -65,7 +65,7 @@ private fun CategoryView(
                 }
                 Text(
                     text = category.name,
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 12.dp),
                 )
             }
         }

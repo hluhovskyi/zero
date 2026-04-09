@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,7 +27,7 @@ fun <T> SegmentedToggle(
     items: List<T>,
     selectedItem: T?,
     onItemSelected: (T) -> Unit,
-    labelMapping: (T) -> String
+    labelMapping: (T) -> String,
 ) {
     Row(
         modifier = modifier

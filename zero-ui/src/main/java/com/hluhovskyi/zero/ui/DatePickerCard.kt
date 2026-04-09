@@ -35,7 +35,7 @@ fun DatePickerCard(
     modifier: Modifier = Modifier,
     label: String,
     date: LocalDateTime,
-    onDateSelected: (LocalDateTime) -> Unit
+    onDateSelected: (LocalDateTime) -> Unit,
 ) {
     val context = LocalContext.current
     val formattedDate = remember(date) {
@@ -53,10 +53,10 @@ fun DatePickerCard(
                     },
                     date.year,
                     date.monthNumber - 1,
-                    date.dayOfMonth
+                    date.dayOfMonth,
                 ).show()
             }
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = label.uppercase(),

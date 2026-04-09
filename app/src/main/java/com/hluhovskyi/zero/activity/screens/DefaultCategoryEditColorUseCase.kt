@@ -34,7 +34,7 @@ internal class DefaultCategoryEditColorUseCase(
     private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<CategoryEditColorUseCase.Action.Pick>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     override fun perform(action: CategoryEditColorUseCase.Action) {
@@ -45,7 +45,7 @@ internal class DefaultCategoryEditColorUseCase(
                 logger.d("perform, requestId=$requestId")
                 navigator.navigateTo(
                     destination = Destinations.Color.Picker,
-                    Destinations.Color.Picker.RequestId.withValue(id)
+                    Destinations.Color.Picker.RequestId.withValue(id),
                 )
             }
             is CategoryEditColorUseCase.Action.Pick -> {
@@ -57,7 +57,7 @@ internal class DefaultCategoryEditColorUseCase(
     override val state: Flow<CategoryEditColorUseCase.State> =
         navigator.observeArgumentValue(
             destination = Destinations.Color.Picker,
-            argument = Destinations.Color.Picker.RequestId
+            argument = Destinations.Color.Picker.RequestId,
         )
             .flatMapLatest { requestId ->
                 pickAction.map { pick ->

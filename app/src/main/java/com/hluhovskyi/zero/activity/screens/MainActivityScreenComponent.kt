@@ -21,10 +21,10 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
-import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -62,7 +62,7 @@ private const val TAG = "MainActivityScreenComponent"
 @MainActivityScreenScope
 @dagger.Component(
     dependencies = [MainActivityScreenComponent.Dependencies::class],
-    modules = [MainActivityScreenComponent.Module::class]
+    modules = [MainActivityScreenComponent.Module::class],
 )
 internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
@@ -143,7 +143,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger = logger,
             incorrectStateDetector = incorrectStateDetector,
             navigationArgumentSerializer = navigationArgumentSerializer,
-            navigationRouteResolver = navigationRouteResolver
+            navigationRouteResolver = navigationRouteResolver,
         )
 
         @Provides
@@ -153,7 +153,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigationRouteResolver: NavigationRouteResolver,
         ): NavigatorScope = DefaultNavigatorScope(
             navigator = navigator,
-            navigationRouteResolver = navigationRouteResolver
+            navigationRouteResolver = navigationRouteResolver,
         )
 
         @Provides
@@ -164,7 +164,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigator: Navigator,
             logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
-            bottomBarComponent: BottomBarComponent.Builder
+            bottomBarComponent: BottomBarComponent.Builder,
         ): ViewProvider = MainActivityScreenViewProvider(
             navController = navHostController,
             startDestination = Destinations.Transaction.All,
@@ -186,7 +186,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): CategoryEditIconUseCase = DefaultCategoryEditIconUseCase(
             navigator = navigator,
             requestIdGenerator = idGenerator,
-            inputLogger = logger
+            inputLogger = logger,
         )
 
         @Provides
@@ -198,7 +198,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): CategoryEditColorUseCase = DefaultCategoryEditColorUseCase(
             navigator = navigator,
             requestIdGenerator = idGenerator,
-            logger
+            logger,
         )
 
         @Provides
@@ -217,11 +217,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     .onTransactionSelectHandler { transactionId ->
                         navigator.navigateTo(
                             Destinations.Transaction.Item.Edit,
-                            Destinations.Transaction.Item.TransactionId.withValue(transactionId)
+                            Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                         )
                     }
                     .logging(logger),
-                onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) }
+                onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) },
             )
         }
 
@@ -287,11 +287,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     .onCategorySelectedHandler { categoryId ->
                         navigator.navigateTo(
                             Destinations.Category.Item.Edit,
-                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId)
+                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId),
                         )
                     }
                     .logging(logger),
-                onCategoriesEdit = { navigator.navigateTo(Destinations.Category.Edit) }
+                onCategoriesEdit = { navigator.navigateTo(Destinations.Category.Edit) },
             )
         }
 
@@ -341,7 +341,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.composable(Destinations.Account.All) {
             AccountsScreen(
                 component = componentBuilder.logging(logger),
-                onAccountEdit = { navigator.navigateTo(Destinations.Account.Edit) }
+                onAccountEdit = { navigator.navigateTo(Destinations.Account.Edit) },
             )
         }
 
@@ -387,7 +387,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .onCategorySelectedHandler { categoryId ->
                     transactionEditCategoryUseCase.perform(
-                        TransactionEditCategoryUseCase.Action.Pick(categoryId)
+                        TransactionEditCategoryUseCase.Action.Pick(categoryId),
                     )
                 }
                 .logging(logger)
@@ -414,16 +414,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             icon = AccountEditIconUseCase.Icon(
                                 id = icon.id,
                                 image = icon.image,
-                            )
-                        )
+                            ),
+                        ),
                     )
                     categoryEditIconUseCase.perform(
                         CategoryEditIconUseCase.Action.Pick(
                             icon = CategoryEditIconUseCase.Icon(
                                 id = icon.id,
-                                image = icon.image
-                            )
-                        )
+                                image = icon.image,
+                            ),
+                        ),
                     )
                 }
                 .logging(logger)
@@ -448,8 +448,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             color = CategoryEditColorUseCase.Color(
                                 id = color.id,
                                 color = color.value,
-                            )
-                        )
+                            ),
+                        ),
                     )
                 }
                 .logging(logger)
@@ -487,7 +487,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun transactionPreviewEntry(
             componentBuilder: TransactionPreviewComponent.Builder,
             navigatorScope: NavigatorScope,
-            logger: Logger
+            logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Preview) {
             componentBuilder
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))

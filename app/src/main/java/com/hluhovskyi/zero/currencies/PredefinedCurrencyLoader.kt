@@ -33,25 +33,23 @@ internal class PredefinedCurrencyLoader(
     private val availableCurrencies = AtomicReference<Set<Id.Known>>(emptySet())
     private val currencyRates = ConcurrentHashMap<Id.Known, Map<Id.Known, Rate>>()
 
-    override suspend fun availableCurrencies(): Set<Id.Known> {
-        return availableCurrencies.get().ifEmpty {
-            val uri = androidUriResourceFactory.asset("currencies.min.json")
-            val status = resourceResolver.resolve(UriRequest(uri))
-                .filterIsInstance<ResourceStatus.Result<UriResult>>()
-                .firstOrNull()
+    override suspend fun availableCurrencies(): Set<Id.Known> = availableCurrencies.get().ifEmpty {
+        val uri = androidUriResourceFactory.asset("currencies.min.json")
+        val status = resourceResolver.resolve(UriRequest(uri))
+            .filterIsInstance<ResourceStatus.Result<UriResult>>()
+            .firstOrNull()
 
-            if (status == null) {
-                emptySet()
-            } else {
-                status.result.inputStream
-                    .use { stream ->
-                        Json.decodeFromStream<Map<String, String>>(stream).let {
-                            it.keys.mapTo(LinkedHashSet(it.size)) { id -> Id(id.uppercase(localeProvider.locale())) }
-                        }
+        if (status == null) {
+            emptySet()
+        } else {
+            status.result.inputStream
+                .use { stream ->
+                    Json.decodeFromStream<Map<String, String>>(stream).let {
+                        it.keys.mapTo(LinkedHashSet(it.size)) { id -> Id(id.uppercase(localeProvider.locale())) }
                     }
-                    .also { logger.d("availableCurrencies, ids=$it") }
-                    .also(availableCurrencies::set)
-            }
+                }
+                .also { logger.d("availableCurrencies, ids=$it") }
+                .also(availableCurrencies::set)
         }
     }
 

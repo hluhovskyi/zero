@@ -5,15 +5,14 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
-
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -24,7 +23,7 @@ private const val TAG = "CategoryComponent"
 @CategoryScope
 @dagger.Component(
     dependencies = [CategoryComponent.Dependencies::class],
-    modules = [CategoryComponent.Module::class]
+    modules = [CategoryComponent.Module::class],
 )
 abstract class CategoryComponent : AttachableViewComponent {
 
@@ -91,7 +90,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             imageLoader: ImageLoader,
         ): ViewProvider = CategoryViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }

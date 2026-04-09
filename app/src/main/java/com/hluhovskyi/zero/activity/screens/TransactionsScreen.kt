@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
@@ -14,6 +13,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -22,12 +22,12 @@ import com.hluhovskyi.zero.common.Buildable
 @Composable
 fun TransactionScreen(
     component: Buildable<out AttachableViewComponent>,
-    onTransactionEdit: () -> Unit
+    onTransactionEdit: () -> Unit,
 ) {
     Box(
-       modifier = Modifier
-           .fillMaxSize()
-           .background(Color(0xFFF5F3F7))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F3F7)),
     ) {
         component.AttachWithView()
         ExtendedFloatingActionButton(
@@ -37,7 +37,7 @@ fun TransactionScreen(
             icon = { Icon(Icons.Filled.Add, "Add transaction") },
             text = { Text("Add transaction") },
             onClick = onTransactionEdit,
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
     }
 }

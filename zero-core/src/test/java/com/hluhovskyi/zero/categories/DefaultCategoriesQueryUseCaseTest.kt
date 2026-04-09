@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.categories
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.icons.Icon
@@ -31,8 +30,11 @@ import org.mockito.kotlin.whenever
 class DefaultCategoriesQueryUseCaseTest {
 
     @Mock private lateinit var categoryRepository: CategoryRepository
+
     @Mock private lateinit var iconRepository: IconRepository
+
     @Mock private lateinit var colorRepository: ColorRepository
+
     @Mock private lateinit var transactionRepository: TransactionRepository
 
     // Fixed clock: 2024-06-01T12:00:00Z in UTC
@@ -77,18 +79,22 @@ class DefaultCategoriesQueryUseCaseTest {
             .thenReturn(flowOf(listOf(catA, catB)))
 
         whenever(transactionRepository.query(any<TransactionRepository.Criteria<List<TransactionRepository.CategoryUsageStatistic>>>(), any()))
-            .thenReturn(flowOf(listOf(
-                TransactionRepository.CategoryUsageStatistic(
-                    categoryId = Id.Known("a"),
-                    transactionCount = 5,
-                    lastUsedDateTime = LocalDateTime(2024, 4, 2, 12, 0, 0), // 60 days before fixedInstant
+            .thenReturn(
+                flowOf(
+                    listOf(
+                        TransactionRepository.CategoryUsageStatistic(
+                            categoryId = Id.Known("a"),
+                            transactionCount = 5,
+                            lastUsedDateTime = LocalDateTime(2024, 4, 2, 12, 0, 0), // 60 days before fixedInstant
+                        ),
+                        TransactionRepository.CategoryUsageStatistic(
+                            categoryId = Id.Known("b"),
+                            transactionCount = 3,
+                            lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0), // same as fixedInstant (0 days)
+                        ),
+                    ),
                 ),
-                TransactionRepository.CategoryUsageStatistic(
-                    categoryId = Id.Known("b"),
-                    transactionCount = 3,
-                    lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0), // same as fixedInstant (0 days)
-                ),
-            )))
+            )
 
         val useCase = createUseCase()
         val result = useCase.queryRanked(emptyFlow()).first()
@@ -116,13 +122,17 @@ class DefaultCategoriesQueryUseCaseTest {
             .thenReturn(flowOf(listOf(catA, catB, catC)))
 
         whenever(transactionRepository.query(any<TransactionRepository.Criteria<List<TransactionRepository.CategoryUsageStatistic>>>(), any()))
-            .thenReturn(flowOf(listOf(
-                TransactionRepository.CategoryUsageStatistic(
-                    categoryId = Id.Known("c"),
-                    transactionCount = 1,
-                    lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0),
+            .thenReturn(
+                flowOf(
+                    listOf(
+                        TransactionRepository.CategoryUsageStatistic(
+                            categoryId = Id.Known("c"),
+                            transactionCount = 1,
+                            lastUsedDateTime = LocalDateTime(2024, 6, 1, 12, 0, 0),
+                        ),
+                    ),
                 ),
-            )))
+            )
 
         val useCase = createUseCase()
         val result = useCase.queryRanked(emptyFlow()).first()

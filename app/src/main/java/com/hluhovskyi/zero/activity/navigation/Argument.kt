@@ -14,7 +14,7 @@ internal fun stringValueOf(key: String): Argument<String> = StringArgument(key)
 
 internal fun stringOptionalValueOf(key: String): Argument<String> = StringArgument(
     key = key,
-    optional = true
+    optional = true,
 )
 
 private data class StringArgument(
@@ -26,15 +26,15 @@ private data class StringArgument(
 
 internal fun idValueOf(
     key: String,
-    fallback: Id = Id.Unknown
+    fallback: Id = Id.Unknown,
 ): Argument<Id> = IdArgument(
     key = key,
-    fallback = fallback
+    fallback = fallback,
 )
 
 internal fun idOptionalValueOf(
     key: String,
-    fallback: Id = Id.Unknown
+    fallback: Id = Id.Unknown,
 ): Argument<Id> = IdArgument(
     key = key,
     fallback = fallback,
@@ -45,5 +45,5 @@ private data class IdArgument(
     override val key: String,
     override val optional: Boolean = false,
     override val fallback: Id = Id.Unknown,
-    override val argumentClass: KClass<Id> = Id::class
+    override val argumentClass: KClass<Id> = Id::class,
 ) : Argument<Id>

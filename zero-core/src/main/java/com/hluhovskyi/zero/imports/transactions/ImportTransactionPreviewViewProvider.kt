@@ -13,7 +13,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.ImportTransaction
 
 internal class ImportTransactionPreviewViewProvider(
-    private val viewModel: ImportTransactionPreviewViewModel
+    private val viewModel: ImportTransactionPreviewViewModel,
 ) : ViewProvider {
 
     @Composable
@@ -24,7 +24,7 @@ internal class ImportTransactionPreviewViewProvider(
 
 @Composable
 private fun ImportTransactionPreviewView(
-    viewModel: ImportTransactionPreviewViewModel
+    viewModel: ImportTransactionPreviewViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = ImportTransactionPreviewViewModel.State())
     Column {
@@ -47,6 +47,4 @@ private fun ImportTransactionPreviewView(
             Text(text = "Submit")
         }
     }
-
-
 }

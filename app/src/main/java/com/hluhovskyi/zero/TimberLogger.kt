@@ -10,7 +10,7 @@ class TimberLogger(private val tag: String = "") : Logger {
             tag
         } else {
             this.tag + "." + tag
-        }
+        },
     )
 
     override fun log(priority: Logger.Priority, message: String, throwable: Throwable?) {

@@ -7,10 +7,10 @@ internal interface NavigationRouteResolver {
 
     fun resolve(
         destination: Destination,
-        argumentValues: List<ArgumentValue<*>>
+        argumentValues: List<ArgumentValue<*>>,
     ): String
 
     fun resolveWithPlaceholders(
-        destination: Destination
+        destination: Destination,
     ): String
 }

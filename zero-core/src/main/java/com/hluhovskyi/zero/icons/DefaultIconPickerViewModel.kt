@@ -46,7 +46,7 @@ internal class DefaultIconPickerViewModel(
                     icons.map { icon ->
                         Icon(
                             id = icon.id,
-                            image = icon.image
+                            image = icon.image,
                         )
                     }
                 }

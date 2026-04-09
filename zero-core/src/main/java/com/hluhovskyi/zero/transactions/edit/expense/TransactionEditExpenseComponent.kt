@@ -33,9 +33,8 @@ abstract class TransactionEditExpenseComponent : AttachableViewComponent {
 
     companion object {
 
-        fun builder(dependencies: Dependencies): Builder =
-            DaggerTransactionEditExpenseComponent.builder()
-                .dependencies(dependencies)
+        fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditExpenseComponent.builder()
+            .dependencies(dependencies)
     }
 
     @dagger.Component.Builder

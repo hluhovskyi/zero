@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.map
 private const val TAG = "DefaultTransactionEditViewModel"
 
 internal class DefaultTransactionEditViewModel(
-    private val useCase: TransactionEditUseCase
+    private val useCase: TransactionEditUseCase,
 ) : TransactionEditViewModel {
 
     override val state: Flow<TransactionEditViewModel.State> = useCase.state

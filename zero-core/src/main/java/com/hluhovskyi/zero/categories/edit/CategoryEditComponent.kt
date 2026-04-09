@@ -27,7 +27,7 @@ private const val TAG = "CategoryEditComponent"
 @CategoryEditScope
 @dagger.Component(
     dependencies = [CategoryEditComponent.Dependencies::class],
-    modules = [CategoryEditComponent.Module::class]
+    modules = [CategoryEditComponent.Module::class],
 )
 abstract class CategoryEditComponent : AttachableViewComponent {
 
@@ -90,7 +90,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             colorRepository = colorRepository,
             categoryEditIconUseCase = categoryEditIconUseCase,
             categoryEditColorUseCase = categoryEditColorUseCase,
-            onCategorySavedHandler = onCategorySavedHandler
+            onCategorySavedHandler = onCategorySavedHandler,
         )
 
         @Provides
@@ -100,7 +100,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             imageLoader: ImageLoader,
         ): ViewProvider = CategoriesEditViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }

@@ -18,15 +18,15 @@ internal class DefaultImportFilePickerViewModel(
             ImportFilePickerViewModel.Action.Pick -> {
                 mutableState.update { state ->
                     state.copy(
-                        fileName = "zenmoney.csv"
+                        fileName = "zenmoney.csv",
                     )
                 }
             }
             ImportFilePickerViewModel.Action.Submit -> {
                 importUseCase.perform(
                     ImportUseCase.Action.SelectFile(
-                        Uri("android.resource://com.hluhovskyi.zero/raw/zenmoney") as Uri.NonEmpty
-                    )
+                        Uri("android.resource://com.hluhovskyi.zero/raw/zenmoney") as Uri.NonEmpty,
+                    ),
                 )
             }
         }

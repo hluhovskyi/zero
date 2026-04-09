@@ -11,12 +11,10 @@ internal class PredefinedCurrencyConvertUseCase(
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : CurrencyConvertUseCase {
 
-    override suspend fun getRate(fromId: Id.Known, toId: Id.Known): Rate {
-        return currencyLoader.ratesFor(fromId)[toId] ?: incorrectStateDetector.assertOrValue(
-            message = "No rate is available from ${fromId.value} to ${toId.value}",
-            value = Rate.Same,
-        )
-    }
+    override suspend fun getRate(fromId: Id.Known, toId: Id.Known): Rate = currencyLoader.ratesFor(fromId)[toId] ?: incorrectStateDetector.assertOrValue(
+        message = "No rate is available from ${fromId.value} to ${toId.value}",
+        value = Rate.Same,
+    )
 
     override suspend fun convertToPrimary(amount: Amount, currencyId: Id.Known): Amount {
         val primary = currencyPrimaryUseCase.getPrimaryCurrency().id
@@ -27,7 +25,7 @@ internal class PredefinedCurrencyConvertUseCase(
 
         val rate = getRate(
             fromId = currencyId,
-            toId = primary
+            toId = primary,
         )
 
         return amount.withRate(rate)

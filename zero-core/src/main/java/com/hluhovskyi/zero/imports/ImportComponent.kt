@@ -5,12 +5,12 @@ import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.imports.accounts.ImportAccountPickerComponent
 import com.hluhovskyi.zero.imports.categories.ImportCategoriesPickerComponent
 import com.hluhovskyi.zero.imports.filepicker.ImportFilePickerComponent
 import com.hluhovskyi.zero.imports.transactions.ImportTransactionPreviewComponent
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -28,7 +28,8 @@ private const val TAG = "ImportComponent"
     modules = [ImportComponent.Module::class],
     dependencies = [ImportComponent.Dependencies::class],
 )
-abstract class ImportComponent : AttachableViewComponent,
+abstract class ImportComponent :
+    AttachableViewComponent,
     ImportFilePickerComponent.Dependencies,
     ImportCategoriesPickerComponent.Dependencies,
     ImportAccountPickerComponent.Dependencies,
@@ -93,16 +94,16 @@ abstract class ImportComponent : AttachableViewComponent,
         @Provides
         @ImportScope
         fun viewModel(
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportViewModel = DefaultImportViewModel(
-            importUseCase = importUseCase
+            importUseCase = importUseCase,
         )
 
         @Provides
         @ImportScope
         internal fun filePickerComponentBuilder(
             component: ImportComponent,
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportFilePickerComponent.Builder = ImportFilePickerComponent.builder(component)
             .importUseCase(importUseCase)
 
@@ -110,7 +111,7 @@ abstract class ImportComponent : AttachableViewComponent,
         @ImportScope
         internal fun accountPickerComponentBuilder(
             component: ImportComponent,
-            importUseCase: ImportUseCase
+            importUseCase: ImportUseCase,
         ): ImportAccountPickerComponent.Builder = ImportAccountPickerComponent.builder(component)
             .importUseCase(importUseCase)
 

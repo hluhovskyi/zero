@@ -24,7 +24,7 @@ internal class DefaultAccountEditViewModel(
     private val currencyRepository: CurrencyRepository,
     private val accountEditIconUseCase: AccountEditIconUseCase,
     private val onAccountSavedHandler: OnAccountSavedHandler,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : AccountEditViewModel {
 
     private val mutableState = MutableStateFlow(CompositeState())
@@ -61,8 +61,8 @@ internal class DefaultAccountEditViewModel(
                         name = state.name,
                         currencyId = selectedCurrency.id,
                         iconId = state.iconId,
-                        initialBalance = Amount(state.balance.toDoubleOrNull() ?: 0.0)
-                    )
+                        initialBalance = Amount(state.balance.toDoubleOrNull() ?: 0.0),
+                    ),
                 )
                 launch(context = Dispatchers.Main) {
                     onAccountSavedHandler.onSaved()
@@ -79,7 +79,7 @@ internal class DefaultAccountEditViewModel(
                         mutableState.update { state ->
                             state.copy(
                                 currencies = currencies,
-                                selectedCurrency = state.selectedCurrency ?: currencies.firstOrNull()
+                                selectedCurrency = state.selectedCurrency ?: currencies.firstOrNull(),
                             )
                         }
                     }

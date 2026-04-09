@@ -52,4 +52,3 @@ class MyViewModelTest {
 *   **`runTest`:** Always use `runTest` for testing suspending functions or `Flow` collections.
 *   **runCurrent()**: Use to trigger any pending tasks in the current dispatcher (useful after `attach()` or `perform()`).
 *   **advanceUntilIdle()**: Use when you need to wait for all asynchronous launches to complete.
-

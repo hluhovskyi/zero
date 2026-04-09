@@ -16,7 +16,7 @@ import java.io.Closeable
 internal class DefaultCategoryPickerViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val onCategorySelectedHandler: OnCategorySelectedHandler,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : CategoryPickerViewModel {
 
     private val mutableState = MutableStateFlow(CategoryPickerViewModel.State())

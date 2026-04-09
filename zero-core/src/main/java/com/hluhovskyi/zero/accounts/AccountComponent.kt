@@ -24,7 +24,7 @@ private const val TAG = "AccountComponent"
 @AccountScope
 @dagger.Component(
     modules = [AccountComponent.Module::class],
-    dependencies = [AccountComponent.Dependencies::class]
+    dependencies = [AccountComponent.Dependencies::class],
 )
 abstract class AccountComponent : AttachableViewComponent {
 
@@ -87,7 +87,7 @@ abstract class AccountComponent : AttachableViewComponent {
             dispatcherProvider: DispatcherProvider,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
-            dispatchers = dispatcherProvider
+            dispatchers = dispatcherProvider,
         )
 
         @Provides

@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.transactions.edit.transfer
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -37,21 +35,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.hluhovskyi.zero.common.Rate
+import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
-import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerHigh
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 
 internal class TransactionEditTransferViewProvider(
-    private val viewModel: TransactionEditTransferViewModel
+    private val viewModel: TransactionEditTransferViewModel,
 ) : ViewProvider {
 
     @Composable
@@ -62,7 +60,7 @@ internal class TransactionEditTransferViewProvider(
 
 @Composable
 private fun TransactionEditTransferView(
-    viewModel: TransactionEditTransferViewModel
+    viewModel: TransactionEditTransferViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditTransferViewModel.State())
     val focusRequester = remember { FocusRequester() }
@@ -72,7 +70,7 @@ private fun TransactionEditTransferView(
     }
 
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp)
+        modifier = Modifier.padding(horizontal = 24.dp),
     ) {
         // Amount display
         AmountDisplay(
@@ -119,7 +117,7 @@ private fun TransactionEditTransferView(
             },
             onSwap = {
                 viewModel.perform(TransactionEditTransferViewModel.Action.SwapAccounts)
-            }
+            },
         )
 
         // Date picker (full width)
@@ -130,7 +128,7 @@ private fun TransactionEditTransferView(
                 date = date,
                 onDateSelected = {
                     viewModel.perform(TransactionEditTransferViewModel.Action.ChangeDate(it))
-                }
+                },
             )
         }
     }
@@ -152,7 +150,7 @@ private fun RateModePill(
         when (val mode = state.transferRateMode) {
             is TransferRateMode.Default -> {
                 Column(
-                    modifier = Modifier.clickable { onCycleMode() }
+                    modifier = Modifier.clickable { onCycleMode() },
                 ) {
                     val pillText = formatDefaultPillText(
                         amount = state.amount,
@@ -173,7 +171,7 @@ private fun RateModePill(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "RATE",
@@ -187,7 +185,7 @@ private fun RateModePill(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,
-                        modifier = Modifier.clickable { onCycleMode() }
+                        modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
                 BasicTextField(
@@ -214,7 +212,7 @@ private fun RateModePill(
                             )
                         }
                         innerTextField()
-                    }
+                    },
                 )
                 // Show computed destination amount read-only
                 val computedTarget = computeTargetFromRate(state.amount, mode.rate, state.targetCurrencySymbol)
@@ -232,7 +230,7 @@ private fun RateModePill(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "DESTINATION AMOUNT",
@@ -246,7 +244,7 @@ private fun RateModePill(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,
-                        modifier = Modifier.clickable { onCycleMode() }
+                        modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
                 BasicTextField(
@@ -288,7 +286,7 @@ private fun RateModePill(
                                 innerTextField()
                             }
                         }
-                    }
+                    },
                 )
             }
         }

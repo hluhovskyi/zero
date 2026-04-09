@@ -17,42 +17,50 @@ internal interface TransactionRoom {
 
     // Reactive — Room re-emits when any matching row is inserted/updated/deleted
     // after: ISO datetime string e.g. "2024-01-15T10:30:00"
-    @Query("""
+    @Query(
+        """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND datetime(updatedDateTime) > datetime(:after)
         ORDER BY datetime(enteredDateTime) DESC
-    """)
+    """,
+    )
     fun selectAfter(userId: String, after: String): Flow<List<TransactionEntity>>
 
     // One-shot — first page, most recent :limit transactions
-    @Query("""
+    @Query(
+        """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
         ORDER BY datetime(enteredDateTime) DESC
         LIMIT :limit
-    """)
+    """,
+    )
     suspend fun selectFirstPage(userId: String, limit: Int): List<TransactionEntity>
 
     // One-shot — next cursor page, strictly before cursorDate "YYYY-MM-DD"
-    @Query("""
+    @Query(
+        """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND date(enteredDateTime) < date(:cursorDate)
         ORDER BY datetime(enteredDateTime) DESC
         LIMIT :limit
-    """)
+    """,
+    )
     suspend fun selectNextPage(userId: String, cursorDate: String, limit: Int): List<TransactionEntity>
 
     // One-shot — all transactions on :day older than :beforeDateTime (day padding)
     // day: "YYYY-MM-DD", beforeDateTime: ISO datetime string
-    @Query("""
+    @Query(
+        """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND date(enteredDateTime) = date(:day)
           AND datetime(enteredDateTime) < datetime(:beforeDateTime)
         ORDER BY datetime(enteredDateTime) DESC
-    """)
+    """,
+    )
     suspend fun selectRemainingOnDay(
         userId: String,
         day: String,
@@ -64,27 +72,30 @@ internal interface TransactionRoom {
         return selectByUserId(userId.value)
     }
 
-    suspend fun selectById(transactionId: Id.Known, userId: Id.Known): TransactionEntity? =
-        selectById(transactionId.value, userId.value)
+    suspend fun selectById(transactionId: Id.Known, userId: Id.Known): TransactionEntity? = selectById(transactionId.value, userId.value)
 
     @Query("SELECT * FROM TransactionEntity WHERE id=:transactionId AND userId=:userId LIMIT 1")
     suspend fun selectById(transactionId: String, userId: String): TransactionEntity?
 
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT currencyId FROM TransactionEntity 
         WHERE userId = :userId 
           AND datetime(enteredDateTime) >= datetime(:since)
-    """)
+    """,
+    )
     fun selectInUseCurrencyIds(userId: String, since: String): Flow<List<Id.Known>>
 
-    @Query("""
+    @Query(
+        """
         SELECT categoryId,
                COUNT(*) as transactionCount,
                MAX(enteredDateTime) as lastUsedDateTime
         FROM TransactionEntity
         WHERE userId = :userId AND categoryId IS NOT NULL
         GROUP BY categoryId
-    """)
+    """,
+    )
     fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

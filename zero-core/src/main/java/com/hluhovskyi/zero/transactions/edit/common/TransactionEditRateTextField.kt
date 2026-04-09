@@ -18,8 +18,8 @@ fun TransactionEditRateTextField(
         value = rate,
         label = { Text(text = "Rate") },
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Number,
         ),
-        onValueChange = onValueChange
+        onValueChange = onValueChange,
     )
 }

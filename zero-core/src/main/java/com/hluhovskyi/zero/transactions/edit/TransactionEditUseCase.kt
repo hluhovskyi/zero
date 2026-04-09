@@ -5,11 +5,10 @@ import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import java.io.Closeable
 import kotlinx.datetime.LocalDateTime
+import java.io.Closeable
 
-interface TransactionEditUseCase :
-    AttachableActionStateModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
+interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
 
     sealed interface Action {
         data class SwitchTransaction(val type: TransactionEditType) : Action

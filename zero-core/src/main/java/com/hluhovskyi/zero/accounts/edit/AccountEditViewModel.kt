@@ -4,8 +4,7 @@ import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Image
 
-interface AccountEditViewModel
-    : AttachableActionStateModel<AccountEditViewModel.Action, AccountEditViewModel.State> {
+interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel.Action, AccountEditViewModel.State> {
 
     sealed interface Action {
         data class ChangeName(val name: String) : Action

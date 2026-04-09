@@ -47,7 +47,7 @@ internal class DefaultCategoryEditViewModel(
             is CategoryEditViewModel.Action.ChangeName ->
                 mutableState.update { state ->
                     state.copy(
-                        name = action.name
+                        name = action.name,
                     )
                 }
             is CategoryEditViewModel.Action.SelectIcon ->
@@ -63,7 +63,7 @@ internal class DefaultCategoryEditViewModel(
                         name = state.name,
                         iconId = state.iconId,
                         colorId = state.colorId,
-                    )
+                    ),
                 )
                 launch(context = Dispatchers.Main) {
                     onCategorySavedHandler.onSaved()
@@ -106,7 +106,7 @@ internal class DefaultCategoryEditViewModel(
                             mutableState.update { state ->
                                 state.copy(
                                     iconId = icon.id,
-                                    icon = icon.image
+                                    icon = icon.image,
                                 )
                             }
                         }

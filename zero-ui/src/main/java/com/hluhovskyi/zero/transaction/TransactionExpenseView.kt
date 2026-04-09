@@ -83,7 +83,7 @@ fun TransactionView(
             }
         }
         Column(
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp),
         ) {
             Row {
                 Text(
@@ -91,7 +91,7 @@ fun TransactionView(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF1B1B1F),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 Text(
                     fontSize = 16.sp,
@@ -101,7 +101,7 @@ fun TransactionView(
                 )
             }
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 secondaryIcon?.invoke()
                 Text(

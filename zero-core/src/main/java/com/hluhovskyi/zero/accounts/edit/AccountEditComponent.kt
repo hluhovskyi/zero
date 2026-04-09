@@ -21,7 +21,7 @@ private const val TAG = "AccountEditComponent"
 @AccountEditScope
 @dagger.Component(
     modules = [AccountEditComponent.Module::class],
-    dependencies = [AccountEditComponent.Dependencies::class]
+    dependencies = [AccountEditComponent.Dependencies::class],
 )
 abstract class AccountEditComponent : AttachableViewComponent {
 

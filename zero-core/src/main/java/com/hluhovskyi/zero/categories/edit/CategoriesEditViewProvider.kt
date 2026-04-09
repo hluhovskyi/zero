@@ -32,7 +32,7 @@ internal class CategoriesEditViewProvider(
     override fun View() {
         CategoryEditView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -40,7 +40,7 @@ internal class CategoriesEditViewProvider(
 @Composable
 private fun CategoryEditView(
     viewModel: CategoryEditViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
 ) {
     Column(
         modifier = Modifier.padding(16.dp),
@@ -63,21 +63,21 @@ private fun CategoryEditView(
         }
 
         Row(
-            modifier = Modifier.padding(top = 24.dp)
+            modifier = Modifier.padding(top = 24.dp),
         ) {
             val modifier = Modifier
                 .weight(1f)
                 .sizeIn(minHeight = 48.dp)
             OutlinedButton(
                 modifier = modifier,
-                onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectIcon) }
+                onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectIcon) },
             ) {
                 Text(text = "Select icon")
             }
             Spacer(modifier = Modifier.sizeIn(minWidth = 16.dp))
             OutlinedButton(
                 modifier = modifier,
-                onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectColor) }
+                onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectColor) },
             ) {
                 Text(text = "Select color")
             }
@@ -90,7 +90,7 @@ private fun CategoryEditView(
             value = state.name,
             onValueChange = { name ->
                 viewModel.perform(CategoryEditViewModel.Action.ChangeName(name))
-            }
+            },
         )
 
         Button(
@@ -98,7 +98,7 @@ private fun CategoryEditView(
                 .padding(top = 16.dp)
                 .sizeIn(minHeight = 48.dp)
                 .fillMaxWidth(),
-            onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) }
+            onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) },
         ) {
             Text(text = "Save category")
         }

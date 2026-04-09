@@ -15,7 +15,7 @@ internal class ImportFilePickerViewProvider(
     @Composable
     override fun View() {
         ImportFilePickerView(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

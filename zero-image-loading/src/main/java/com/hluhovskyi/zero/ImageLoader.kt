@@ -20,7 +20,7 @@ interface ImageLoader {
 
     enum class Scale {
         Fit,
-        Crop
+        Crop,
     }
 
     interface Factory {
@@ -33,7 +33,7 @@ interface ImageLoader {
         fun empty(): ImageLoader = EmptyImageLoader
 
         fun factory(
-            context: Context
+            context: Context,
         ): Factory = CoilImageLoaderFactory(context)
     }
 }

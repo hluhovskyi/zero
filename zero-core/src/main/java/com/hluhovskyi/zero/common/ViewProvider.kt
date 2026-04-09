@@ -9,12 +9,10 @@ interface ViewProvider {
 
     companion object {
 
-        inline operator fun invoke(crossinline provider: @Composable () -> Unit): ViewProvider {
-            return object : ViewProvider {
-                @Composable
-                override fun View() {
-                    provider()
-                }
+        inline operator fun invoke(crossinline provider: @Composable () -> Unit): ViewProvider = object : ViewProvider {
+            @Composable
+            override fun View() {
+                provider()
             }
         }
     }

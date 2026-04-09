@@ -14,7 +14,7 @@ import java.io.Closeable
 
 internal class DefaultImportCategoryPickerViewModel(
     private val importUseCase: ImportUseCase,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : ImportCategoryPickerViewModel {
 
     private val mutableState = MutableStateFlow(ImportCategoryPickerViewModel.State())
@@ -28,22 +28,24 @@ internal class DefaultImportCategoryPickerViewModel(
                         items = state.items.map { category ->
                             if (category.id == action.item.id) {
                                 category.copy(
-                                    selected = !category.selected
+                                    selected = !category.selected,
                                 )
                             } else {
                                 category
                             }
-                        }
+                        },
                     )
                 }
             }
 
             is ImportCategoryPickerViewModel.Action.Submit -> {
-                importUseCase.perform(ImportUseCase.Action.SelectCategories(
-                    categoryIds = mutableState.value.items
-                        .filter { it.selected }
-                        .map { it.id }
-                ))
+                importUseCase.perform(
+                    ImportUseCase.Action.SelectCategories(
+                        categoryIds = mutableState.value.items
+                            .filter { it.selected }
+                            .map { it.id },
+                    ),
+                )
             }
         }
     }
@@ -57,7 +59,7 @@ internal class DefaultImportCategoryPickerViewModel(
                             ImportCategoryPickerViewModel.CategoryItem(
                                 id = category.id,
                                 name = category.name,
-                                selected = true
+                                selected = true,
                             )
                         }
                     } else {

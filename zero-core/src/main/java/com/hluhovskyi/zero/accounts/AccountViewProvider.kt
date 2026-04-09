@@ -43,7 +43,7 @@ private fun AccountView(
 ) {
     val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
     LazyColumn(
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
     ) {
         items(state.accounts) { account ->
             Row(
@@ -60,13 +60,13 @@ private fun AccountView(
                     text = account.name,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp)
+                        .padding(start = 12.dp),
                 )
                 Text(
                     text = amountFormatter.format(
                         amount = account.balance,
-                        currencySymbol = account.currencySymbol
-                    )
+                        currencySymbol = account.currencySymbol,
+                    ),
                 )
             }
         }

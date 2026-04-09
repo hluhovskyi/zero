@@ -13,7 +13,9 @@ import com.intellij.psi.util.PsiUtil
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 
-class DatabaseComponentEncapsulationDetector : Detector(), Detector.UastScanner {
+class DatabaseComponentEncapsulationDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
@@ -39,10 +41,8 @@ class DatabaseComponentEncapsulationDetector : Detector(), Detector.UastScanner 
         }
     }
 
-    private fun isDatabaseInternal(psiClass: PsiClass): Boolean {
-        return psiClass.hasAnnotation("androidx.room.Dao") ||
-            psiClass.hasAnnotation("androidx.room.Entity")
-    }
+    private fun isDatabaseInternal(psiClass: PsiClass): Boolean = psiClass.hasAnnotation("androidx.room.Dao") ||
+        psiClass.hasAnnotation("androidx.room.Entity")
 
     private fun reportIssue(context: JavaContext, element: UElement, typeName: String) {
         context.report(
@@ -50,7 +50,7 @@ class DatabaseComponentEncapsulationDetector : Detector(), Detector.UastScanner 
             element,
             context.getLocation(element),
             "DatabaseComponent must not expose database internals ($typeName). " +
-                "Only repositories should be exposed. See zero-database/AGENTS.md."
+                "Only repositories should be exposed. See zero-database/AGENTS.md.",
         )
     }
 
@@ -66,8 +66,8 @@ class DatabaseComponentEncapsulationDetector : Detector(), Detector.UastScanner 
             severity = Severity.ERROR,
             implementation = Implementation(
                 DatabaseComponentEncapsulationDetector::class.java,
-                Scope.JAVA_FILE_SCOPE
-            )
+                Scope.JAVA_FILE_SCOPE,
+            ),
         )
     }
 }

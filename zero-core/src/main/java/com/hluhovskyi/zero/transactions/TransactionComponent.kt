@@ -28,7 +28,7 @@ private const val TAG = "TransactionComponent"
 @TransactionScope
 @dagger.Component(
     modules = [TransactionComponent.Module::class],
-    dependencies = [TransactionComponent.Dependencies::class]
+    dependencies = [TransactionComponent.Dependencies::class],
 )
 abstract class TransactionComponent : AttachableViewComponent {
 
@@ -112,4 +112,3 @@ abstract class TransactionComponent : AttachableViewComponent {
         )
     }
 }
-

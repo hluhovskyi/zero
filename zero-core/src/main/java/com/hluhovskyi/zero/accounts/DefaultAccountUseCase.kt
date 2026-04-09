@@ -50,19 +50,18 @@ internal class DefaultAccountUseCase(
         val balance = accounts.fold(Amount.zero()) { total, account ->
             total + currencyConvertUseCase.convertToPrimary(
                 amount = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
-                currencyId = account.currencyId
+                currencyId = account.currencyId,
             )
         }
 
         AccountUseCase.State(
             balance = balance,
             currency = currencyPrimaryUseCase.getPrimaryCurrency(),
-            accounts = resultAccounts
+            accounts = resultAccounts,
         )
     }
 
     override fun perform(action: AccountUseCase.Action) {
-
     }
 
     private fun List<TransactionRepository.Transaction>.calculateBalance(): Map<Id.Known, Amount> {

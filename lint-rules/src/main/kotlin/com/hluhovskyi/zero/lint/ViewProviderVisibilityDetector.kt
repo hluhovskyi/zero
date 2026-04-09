@@ -13,7 +13,9 @@ import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 
-class ViewProviderVisibilityDetector : Detector(), Detector.UastScanner {
+class ViewProviderVisibilityDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
@@ -29,7 +31,7 @@ class ViewProviderVisibilityDetector : Detector(), Detector.UastScanner {
                     node,
                     context.getLocation(node as UElement),
                     "*ViewProvider is internal by convention — it is wired by its FeatureComponent, " +
-                        "never called directly. See zero-core/AGENTS.md."
+                        "never called directly. See zero-core/AGENTS.md.",
                 )
             }
         }
@@ -46,8 +48,8 @@ class ViewProviderVisibilityDetector : Detector(), Detector.UastScanner {
             severity = Severity.ERROR,
             implementation = Implementation(
                 ViewProviderVisibilityDetector::class.java,
-                Scope.JAVA_FILE_SCOPE
-            )
+                Scope.JAVA_FILE_SCOPE,
+            ),
         )
     }
 }

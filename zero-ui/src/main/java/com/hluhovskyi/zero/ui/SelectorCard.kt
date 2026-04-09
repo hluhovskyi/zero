@@ -40,7 +40,7 @@ fun <T> SelectorCard(
     value: String,
     items: List<T>,
     nameMapping: (T) -> String,
-    onItemSelected: (T) -> Unit
+    onItemSelected: (T) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -50,7 +50,7 @@ fun <T> SelectorCard(
                 .fillMaxWidth()
                 .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
                 .clickable { expanded = true }
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Text(
                 text = label.uppercase(),
@@ -86,14 +86,14 @@ fun <T> SelectorCard(
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
                     onClick = {
                         onItemSelected(item)
                         expanded = false
-                    }
+                    },
                 ) {
                     Text(text = nameMapping(item))
                 }

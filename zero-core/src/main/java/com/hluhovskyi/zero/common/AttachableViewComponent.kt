@@ -11,13 +11,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.Closeable
 import java.util.concurrent.atomic.AtomicReference
 
-interface AttachableViewComponent : Attachable, Tagged {
+interface AttachableViewComponent :
+    Attachable,
+    Tagged {
 
     val viewProvider: ViewProvider
 }
 
-fun Buildable<out AttachableViewComponent>.logging(logger: Logger): Buildable<out AttachableViewComponent> =
-    LoggingAttachableViewComponent(delegate = this, logger = logger)
+fun Buildable<out AttachableViewComponent>.logging(logger: Logger): Buildable<out AttachableViewComponent> = LoggingAttachableViewComponent(delegate = this, logger = logger)
 
 @Composable
 fun <T : AttachableViewComponent> T.AttachWithView(
@@ -46,14 +47,14 @@ fun <Component : AttachableViewComponent> Buildable<out Component>.AttachWithVie
 private fun <Component : AttachableViewComponent> Component.AttachAndRetainWithView(
     holder: ComponentHolderViewModel<Component> = viewModel(
         key = this.tag,
-        factory = ComponentHolderViewModel.Factory(this)
+        factory = ComponentHolderViewModel.Factory(this),
     ),
 ) {
     holder.component.viewProvider()
 }
 
 private class ComponentHolderViewModel<T : AttachableViewComponent>(
-    private val componentInput: T
+    private val componentInput: T,
 ) : ViewModel() {
 
     private val closeable = AtomicReference<Closeable>(Closeables.empty())
@@ -67,12 +68,11 @@ private class ComponentHolderViewModel<T : AttachableViewComponent>(
     }
 
     class Factory<Component : AttachableViewComponent>(
-        val component: Component
+        val component: Component,
     ) : ViewModelProvider.Factory {
 
         @Suppress("unchecked_cast")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ComponentHolderViewModel<Component>(component) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>): T = ComponentHolderViewModel<Component>(component) as T
     }
 }
 

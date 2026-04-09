@@ -9,8 +9,8 @@ import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
-import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
+import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
@@ -52,7 +52,7 @@ private const val TAG = "ActivityComponent"
 @ActivityScope
 @dagger.Component(
     modules = [ActivityComponent.Module::class],
-    dependencies = [ActivityComponent.Dependencies::class]
+    dependencies = [ActivityComponent.Dependencies::class],
 )
 abstract class ActivityComponent :
     AttachableViewComponent,
@@ -119,7 +119,7 @@ abstract class ActivityComponent :
     }
 
     @dagger.Module(
-        includes = [MainActivityModule::class]
+        includes = [MainActivityModule::class],
     )
     object Module {
 
@@ -138,7 +138,7 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun categoryComponentBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
 
         @Provides
@@ -174,13 +174,13 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun colorPickerComponentBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
         ): ColorPickerComponent.Builder = ColorPickerComponent.builder(component)
 
         @Provides
         @ActivityScope
         fun settingsComponentBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
@@ -194,7 +194,7 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun transactionPreviewBuilder(
-            component: ActivityComponent
+            component: ActivityComponent,
         ): TransactionPreviewComponent.Builder = TransactionPreviewComponent.builder(component)
     }
 }
@@ -213,7 +213,7 @@ internal object MainActivityModule {
     @Provides
     @ActivityScope
     fun bottomBarComponentBuilder(
-        component: ActivityComponent
+        component: ActivityComponent,
     ): BottomBarComponent.Builder = BottomBarComponent.builder(component)
 
     @Provides

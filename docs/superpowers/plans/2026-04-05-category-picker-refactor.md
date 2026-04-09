@@ -367,12 +367,12 @@ fun categoryPickerComponentBuilder(
 The `onCategorySelectedHandler` wired in the component builder will handle routing the selection back. The sheet hide + keyboard dismiss stays in the `LocalShowAllCategories` provider.
 
 For the selection callback: the `CategoryPickerComponent.Builder.onCategorySelectedHandler` needs to both:
-- Route the selected category ID back to `TransactionEditUseCase.Action.SelectCategory`  
+- Route the selected category ID back to `TransactionEditUseCase.Action.SelectCategory`
 - Hide the bottom sheet
 
 Since the handler is set at build time (not in Compose), and hiding the sheet needs a `CoroutineScope` + `ModalBottomSheetState`, we need to handle sheet dismissal separately. Use a `LaunchedEffect` that watches `sheetState.currentValue` — when it transitions to `Hidden` after a selection, it's already handled by the sheet's swipe-to-dismiss. For programmatic hide after selection, set a flag.
 
-**Simpler approach:** Keep the `onCategorySelectedHandler` purely for routing the category ID to the use case. For dismissing the sheet, observe the handler's callback in Compose and hide the sheet. 
+**Simpler approach:** Keep the `onCategorySelectedHandler` purely for routing the category ID to the use case. For dismissing the sheet, observe the handler's callback in Compose and hide the sheet.
 
 **Simplest approach:** The `onCategorySelectedHandler` fires on Main thread. Wire it to:
 1. Find the selected category from the use case state and perform `SelectCategory` on the use case
@@ -482,7 +482,7 @@ is TransactionEditUseCase.Action.SelectCategoryById -> {
 
 ## Task 5: Revert unnecessary changes to TransactionEditViewModel
 
-**File:** `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditViewModel.kt`  
+**File:** `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditViewModel.kt`
 **File:** `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/DefaultTransactionEditViewModel.kt`
 
 Remove `categories`, `selectedCategory`, and `SelectCategory` action from `TransactionEditViewModel` — they were only added to support the inline grid which is now gone. The `TransactionEditViewModel.State` goes back to:
