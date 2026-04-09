@@ -37,6 +37,7 @@ android {
 }
 
 dependencies {
+    implementation deps.kotlinxDatetime
     coreLibraryDesugaring deps.android.tools.desugar
 
     implementation deps.android.compose.foundation

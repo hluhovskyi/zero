@@ -68,6 +68,7 @@ abstract class ApplicationComponent :
     ZenMoneyImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
+    override abstract val zoneProvider: ZoneProvider
 
     interface Dependencies {
         val context: Context
@@ -132,9 +133,11 @@ abstract class ApplicationComponent :
         fun dateFormatter(
             localeProvider: LocaleProvider,
             clock: Clock,
+            zoneProvider: ZoneProvider,
         ): DateFormatter = LocaleBasedDateFormatter(
             localeProvider = localeProvider,
             clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides
@@ -229,17 +232,22 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun categoriesQueryUseCase(
+        fun categoryQueryUseCase(
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            clock = clock,
+            zoneProvider = zoneProvider,
         )
+
 
         @Provides
         @ApplicationScope

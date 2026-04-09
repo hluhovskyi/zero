@@ -123,14 +123,16 @@ private fun TransactionEditTransferView(
         )
 
         // Date picker (full width)
-        DatePickerCard(
-            modifier = Modifier.fillMaxWidth(),
-            label = "Date",
-            date = state.date,
-            onDateSelected = {
-                viewModel.perform(TransactionEditTransferViewModel.Action.ChangeDate(it))
-            }
-        )
+        state.date?.let { date ->
+            DatePickerCard(
+                modifier = Modifier.fillMaxWidth(),
+                label = "Date",
+                date = date,
+                onDateSelected = {
+                    viewModel.perform(TransactionEditTransferViewModel.Action.ChangeDate(it))
+                }
+            )
+        }
     }
 }
 

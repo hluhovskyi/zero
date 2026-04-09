@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -47,6 +48,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
     interface Dependencies {
         val idGenerator: IdGenerator
         val clock: Clock
+        val zoneProvider: ZoneProvider
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
         val imageLoader: ImageLoader
@@ -110,6 +112,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
+            zoneProvider: ZoneProvider,
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             transactionId = transactionId,
@@ -125,6 +128,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             transactionEditCategoryUseCase = transactionEditCategoryUseCase,
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
+            zoneProvider = zoneProvider,
             logger = logger
         )
 

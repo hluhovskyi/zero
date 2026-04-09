@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -19,11 +20,17 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
 internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom,
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
-    private val clock: Clock
+    private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
 ) : TransactionRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -74,7 +81,7 @@ internal class RoomTransactionRepository(
 
         trigger.collect {
             val oldest = accumulated.lastOrNull() ?: return@collect
-            val cursorDate = oldest.enteredDateTime.toLocalDate().toString()
+            val cursorDate = oldest.enteredDateTime.date.toString()
             val nextPage = transactionRoom().selectNextPage(userId.value, cursorDate, PAGE_SIZE)
             if (nextPage.isEmpty()) return@collect
             accumulated.addAll(nextPage + loadDayPadding(userId, nextPage))
@@ -89,7 +96,7 @@ internal class RoomTransactionRepository(
         val oldest = page.lastOrNull() ?: return emptyList()
         return transactionRoom().selectRemainingOnDay(
             userId = userId.value,
-            day = oldest.enteredDateTime.toLocalDate().toString(),
+            day = oldest.enteredDateTime.date.toString(),
             beforeDateTime = oldest.enteredDateTime.toString(),
         )
     }
@@ -168,7 +175,7 @@ internal class RoomTransactionRepository(
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
 
@@ -184,7 +191,7 @@ internal class RoomTransactionRepository(
                 targetAccount = null,
                 targetAmount = AmountEntity.empty(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
 
@@ -200,7 +207,7 @@ internal class RoomTransactionRepository(
                 targetAccount = targetAccount.value,
                 targetAmount = targetAmount.convert(),
                 enteredDateTime = dateTime,
-                creationDateTime = clock.localDateTime(),
+                creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
                 updatedDateTime = updatedDateTime,
             )
         }

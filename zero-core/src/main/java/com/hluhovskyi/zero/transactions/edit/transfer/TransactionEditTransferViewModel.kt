@@ -4,7 +4,7 @@ import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionEditTransferViewModel
     : ActionStateModel<TransactionEditTransferViewModel.Action, TransactionEditTransferViewModel.State> {
@@ -30,6 +30,6 @@ interface TransactionEditTransferViewModel
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val sourceCurrencySymbol: String = "",
         val targetCurrencySymbol: String = "",
-        val date: LocalDateTime = LocalDateTime.now(),
+        val date: LocalDateTime? = null,
     )
 }

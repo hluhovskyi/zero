@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 sealed interface ImportTransaction {
 
@@ -37,6 +37,6 @@ sealed interface ImportTransaction {
         override val accountId: Id.Known,
         override val dateTime: LocalDateTime,
         val targetAccount: Id.Known,
-        val targetAmount: Amount
+        val targetAmount: Amount,
     ) : ImportTransaction
 }

@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.common.ActionStateModel
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionEditViewModel
     : ActionStateModel<TransactionEditViewModel.Action, TransactionEditViewModel.State> {
@@ -16,7 +16,7 @@ interface TransactionEditViewModel
     data class State(
         val transactionTypes: List<TransactionEditType> = emptyList(),
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
-        val date: LocalDateTime = LocalDateTime.now(),
+        val date: LocalDateTime? = null,
         val selectedCategory: TransactionEditCategory? = null,
     )
-}
+    }

@@ -1,9 +1,9 @@
 package com.hluhovskyi.zero.common.time
 
-import java.time.ZonedDateTime
+import kotlinx.datetime.Instant
 
 internal class ZoneBasedClock(
-    private val zoneProvider: ZoneProvider
-): Clock {
-    override fun now(): ZonedDateTime = ZonedDateTime.now(zoneProvider.zoneId())
+    private val zoneProvider: ZoneProvider,
+) : Clock {
+    override fun now(): Instant = kotlinx.datetime.Clock.System.now()
 }

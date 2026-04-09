@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.common.time
 
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
-internal object SystemZoneProvider : ZoneProvider{
-    override fun zoneId(): ZoneId = ZoneId.systemDefault()
+internal object SystemZoneProvider : ZoneProvider {
+    override fun timeZone(): TimeZone = TimeZone.currentSystemDefault()
 }

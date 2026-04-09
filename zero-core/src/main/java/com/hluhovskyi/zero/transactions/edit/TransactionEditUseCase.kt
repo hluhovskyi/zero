@@ -6,7 +6,7 @@ import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.io.Closeable
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionEditUseCase :
     AttachableActionStateModel<TransactionEditUseCase.Action, TransactionEditUseCase.State> {
@@ -43,7 +43,7 @@ interface TransactionEditUseCase :
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
-            override val date: LocalDateTime = LocalDateTime.now(),
+            override val date: LocalDateTime,
         ) : State
 
         data class Income(
@@ -55,7 +55,7 @@ interface TransactionEditUseCase :
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
-            override val date: LocalDateTime = LocalDateTime.now(),
+            override val date: LocalDateTime,
         ) : State
 
         data class Transfer(
@@ -68,7 +68,7 @@ interface TransactionEditUseCase :
             val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
             val sourceCurrencySymbol: String = "",
             val targetCurrencySymbol: String = "",
-            override val date: LocalDateTime = LocalDateTime.now(),
+            override val date: LocalDateTime,
         ) : State
     }
 

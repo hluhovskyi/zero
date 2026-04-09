@@ -1,16 +1,20 @@
 package com.hluhovskyi.zero.common
 
 import com.hluhovskyi.zero.common.time.Clock
-import java.time.LocalDate
+import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 
 internal class LocaleBasedDateFormatter(
     private val localeProvider: LocaleProvider,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
 ) : DateFormatter {
 
     private val currentYear by lazy {
-        clock.now().year
+        clock.localDateTime(zoneProvider.timeZone()).year
     }
 
     override fun format(
@@ -38,6 +42,6 @@ internal class LocaleBasedDateFormatter(
         return DateTimeFormatter.ofPattern(
             patternBuilder.toString(),
             localeProvider.locale()
-        ).format(date)
+        ).format(date.toJavaLocalDate())
     }
 }

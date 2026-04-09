@@ -5,8 +5,8 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 interface TransactionViewModel
     : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {

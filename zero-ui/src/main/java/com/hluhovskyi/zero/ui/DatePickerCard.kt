@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -38,7 +39,7 @@ fun DatePickerCard(
 ) {
     val context = LocalContext.current
     val formattedDate = remember(date) {
-        date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+        date.toJavaLocalDateTime().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
     }
 
     Column(
@@ -48,10 +49,10 @@ fun DatePickerCard(
                 DatePickerDialog(
                     context,
                     { _, year, month, dayOfMonth ->
-                        onDateSelected(LocalDateTime.of(year, month + 1, dayOfMonth, 0, 0))
+                        onDateSelected(LocalDateTime(year, month + 1, dayOfMonth, 0, 0, 0))
                     },
                     date.year,
-                    date.monthValue - 1,
+                    date.monthNumber - 1,
                     date.dayOfMonth
                 ).show()
             }

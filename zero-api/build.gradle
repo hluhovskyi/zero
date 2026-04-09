@@ -9,5 +9,6 @@ java {
 }
 
 dependencies {
+    implementation deps.kotlinxDatetime
     implementation deps.kotlin.coroutines
 }

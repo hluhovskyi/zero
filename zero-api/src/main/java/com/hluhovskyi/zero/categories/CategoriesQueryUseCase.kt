@@ -5,14 +5,12 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Identifiable
 import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface CategoriesQueryUseCase {
 
     fun queryById(id: Id.Known): Flow<Category>
-
     fun queryAll(): Flow<List<Category>>
-
     fun queryRanked(signals: Flow<RankSignal>): Flow<List<Category>>
 
     data class Category(

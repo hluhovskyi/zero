@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.hluhovskyi.zero.common.Id
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 @Entity(
     indices = [Index("userId")]

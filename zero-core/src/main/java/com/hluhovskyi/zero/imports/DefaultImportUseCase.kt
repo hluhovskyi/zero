@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import java.io.Closeable
 
 internal class DefaultImportUseCase(
@@ -27,6 +28,7 @@ internal class DefaultImportUseCase(
     private val transactionRepository: TransactionRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
     private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
 ) : ImportUseCase {
 
@@ -93,7 +95,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     categoryId = transaction.categoryId,
                                     dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(),
+                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     // TODO: Handle rate
                                     rate = Rate.Same
                                 )
@@ -104,7 +106,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     categoryId = transaction.categoryId,
                                     dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(),
+                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     // TODO: Handle rate
                                     rate = Rate.Same
                                 )
@@ -114,7 +116,7 @@ internal class DefaultImportUseCase(
                                     currencyId = transaction.currencyId,
                                     accountId = transaction.accountId,
                                     dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(),
+                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     targetAmount = transaction.targetAmount,
                                     targetAccount = transaction.targetAccount
                                 )

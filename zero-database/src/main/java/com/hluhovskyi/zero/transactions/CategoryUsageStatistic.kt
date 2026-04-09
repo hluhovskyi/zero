@@ -1,6 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 internal data class CategoryUsageStatistic(
     val categoryId: String,
