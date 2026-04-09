@@ -46,7 +46,7 @@ abstract class ZenMoneyImportComponent {
         fun importSourceUseCase(
             idGenerator: IdGenerator,
             logger: Logger,
-            resolver: ResourceResolver
+            resolver: ResourceResolver,
         ): ImportSourceUseCase = ZenMoneyImportSourceUseCase(
             resourceResolver = resolver,
             idGenerator = idGenerator,

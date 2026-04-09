@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 internal class DefaultAccountViewModel(
     private val useCase: AccountUseCase,
     private val dispatchers: DispatcherProvider,
-) : BaseViewModel(dispatchers), AccountViewModel {
+) : BaseViewModel(dispatchers),
+    AccountViewModel {
 
     private val mutableState = MutableStateFlow(AccountViewModel.State())
     override val state: Flow<AccountViewModel.State> = mutableState
@@ -30,7 +31,7 @@ internal class DefaultAccountViewModel(
                 .collectLatest { accounts ->
                     mutableState.update { state ->
                         state.copy(
-                            accounts = accounts
+                            accounts = accounts,
                         )
                     }
                 }

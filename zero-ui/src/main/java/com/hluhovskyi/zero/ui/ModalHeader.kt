@@ -24,7 +24,7 @@ import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 fun ModalHeader(
     modifier: Modifier = Modifier,
     title: String,
-    onClose: () -> Unit
+    onClose: () -> Unit,
 ) {
     Row(
         modifier = modifier

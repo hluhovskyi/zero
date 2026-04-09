@@ -6,8 +6,7 @@ import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-interface AccountEditIconUseCase
-    : ActionStateModel<AccountEditIconUseCase.Action, AccountEditIconUseCase.State> {
+interface AccountEditIconUseCase : ActionStateModel<AccountEditIconUseCase.Action, AccountEditIconUseCase.State> {
 
     sealed interface Action {
         object Request : Action
@@ -27,7 +26,7 @@ interface AccountEditIconUseCase
 
             private val EMPTY = Icon(
                 id = Id("empty_icon"),
-                image = Image.empty()
+                image = Image.empty(),
             )
 
             fun empty(): Icon = EMPTY

@@ -19,20 +19,20 @@ import androidx.compose.ui.Modifier
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class ImportCategoryPickerViewProvider(
-    private val viewModel: ImportCategoryPickerViewModel
+    private val viewModel: ImportCategoryPickerViewModel,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
         ImportCategoryPickerView(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }
 
 @Composable
 private fun ImportCategoryPickerView(
-    viewModel: ImportCategoryPickerViewModel
+    viewModel: ImportCategoryPickerViewModel,
 ) {
     val state by viewModel.state.collectAsState(initial = ImportCategoryPickerViewModel.State())
     Column(modifier = Modifier.fillMaxSize()) {
@@ -42,20 +42,20 @@ private fun ImportCategoryPickerView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { viewModel.perform(ImportCategoryPickerViewModel.Action.ChangeSelection(item)) },
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(
                         checked = item.selected,
                         onCheckedChange = {
                             viewModel.perform(ImportCategoryPickerViewModel.Action.ChangeSelection(item))
-                        }
+                        },
                     )
                     Text(text = item.name)
                 }
             }
         }
         Row(
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.End,
         ) {
             Button(onClick = { viewModel.perform(ImportCategoryPickerViewModel.Action.Submit) }) {
                 Text(text = "Next")

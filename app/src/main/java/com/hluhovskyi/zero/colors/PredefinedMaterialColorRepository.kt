@@ -38,19 +38,17 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
         background = Color(id = Id("fallback_background"), value = ColorValue(0xFFF5F5F5UL)),
     )
 
-    override fun <T> query(criteria: ColorRepository.Criteria<T>): Flow<T> =
-        when (criteria) {
-            is ColorRepository.Criteria.All -> castingFlowOf(colors.values.toList())
-            is ColorRepository.Criteria.ById -> castingFlowOfNonNull(colors[criteria.id])
-        }
+    override fun <T> query(criteria: ColorRepository.Criteria<T>): Flow<T> = when (criteria) {
+        is ColorRepository.Criteria.All -> castingFlowOf(colors.values.toList())
+        is ColorRepository.Criteria.ById -> castingFlowOfNonNull(colors[criteria.id])
+    }
 
-    override fun schemeFor(colorId: Id.Known): ColorScheme =
-        schemes[colorId] ?: fallbackScheme
+    override fun schemeFor(colorId: Id.Known): ColorScheme = schemes[colorId] ?: fallbackScheme
 
     private fun color(id: String, hex: ULong) = Id(id).let { knownId ->
         knownId to Color(
             id = knownId,
-            value = ColorValue(hex = hex)
+            value = ColorValue(hex = hex),
         )
     }
 }

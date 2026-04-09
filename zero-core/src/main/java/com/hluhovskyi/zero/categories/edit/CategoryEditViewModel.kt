@@ -5,8 +5,7 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Image
 
-interface CategoryEditViewModel
-    : AttachableActionStateModel<CategoryEditViewModel.Action, CategoryEditViewModel.State> {
+interface CategoryEditViewModel : AttachableActionStateModel<CategoryEditViewModel.Action, CategoryEditViewModel.State> {
 
     sealed interface Action {
         data class ChangeName(val name: String) : Action

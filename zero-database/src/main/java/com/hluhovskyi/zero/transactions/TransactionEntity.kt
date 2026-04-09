@@ -10,7 +10,7 @@ import com.hluhovskyi.zero.common.RateEntity
 import kotlinx.datetime.LocalDateTime
 
 @Entity(
-    indices = [Index("userId")]
+    indices = [Index("userId")],
 )
 internal data class TransactionEntity(
     @PrimaryKey val id: Id.Known,
@@ -30,6 +30,6 @@ internal data class TransactionEntity(
     enum class Type {
         EXPENSE,
         INCOME,
-        TRANSFER
+        TRANSFER,
     }
 }

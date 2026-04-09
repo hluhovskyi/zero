@@ -19,14 +19,14 @@ internal class RoomConfigurationRepository(
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
     logger: Logger,
-    private val defaultScope: String = DEFAULT_SCOPE
+    private val defaultScope: String = DEFAULT_SCOPE,
 ) : ConfigurationRepository {
 
     private val logger = logger.withTag("RoomConfigurationRepository")
 
     override fun <Value : Any> observe(
         key: ConfigurationKey<Value>,
-        valueClass: KClass<Value>
+        valueClass: KClass<Value>,
     ): Flow<Value> = configurationRoom().observe(key.scope, key.name)
         .map { entity ->
             if (entity == null) {
@@ -47,8 +47,8 @@ internal class RoomConfigurationRepository(
                     mapToValue(
                         entity = entity,
                         key = key,
-                        klass = valueClass
-                    )
+                        klass = valueClass,
+                    ),
                 )
             }
         }
@@ -57,13 +57,14 @@ internal class RoomConfigurationRepository(
     override suspend fun <Value : Any> write(
         key: ConfigurationKey<Value>,
         valueClass: KClass<Value>,
-        value: Value
+        value: Value,
     ) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
             val rawValue = when (valueClass) {
                 Boolean::class,
                 Long::class,
-                Int::class -> value.toString()
+                Int::class,
+                -> value.toString()
 
                 String::class -> value as String
 
@@ -78,7 +79,7 @@ internal class RoomConfigurationRepository(
                     name = key.name,
                     userId = userId,
                     value = rawValue,
-                )
+                ),
             )
         }
     }
@@ -87,7 +88,7 @@ internal class RoomConfigurationRepository(
     private fun <Value : Any> mapToValue(
         entity: ConfigurationEntity,
         key: ConfigurationKey<Value>,
-        klass: KClass<Value>
+        klass: KClass<Value>,
     ): Value {
         val value = when (klass) {
             Boolean::class -> entity.value.toBoolean()

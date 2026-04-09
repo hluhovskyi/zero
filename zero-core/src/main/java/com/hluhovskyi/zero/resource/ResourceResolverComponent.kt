@@ -12,7 +12,7 @@ private annotation class ResourceResolverScope
 @ResourceResolverScope
 @dagger.Component(
     modules = [ResourceResolverComponent.Module::class],
-    dependencies = [ResourceResolverComponent.Dependencies::class]
+    dependencies = [ResourceResolverComponent.Dependencies::class],
 )
 abstract class ResourceResolverComponent {
 
@@ -40,15 +40,15 @@ abstract class ResourceResolverComponent {
         @Provides
         @ResourceResolverScope
         internal fun uriResourceResolver(
-            context: Context
+            context: Context,
         ): UriResourceResolver = UriResourceResolver(context)
 
         @Provides
         @ResourceResolverScope
         internal fun compositeResourceResolver(
-            uriResourceResolver: UriResourceResolver
+            uriResourceResolver: UriResourceResolver,
         ): ResourceResolver = CompositeResourceResolver(
-            mapOf(UriRequest::class to uriResourceResolver)
+            mapOf(UriRequest::class to uriResourceResolver),
         )
     }
 }

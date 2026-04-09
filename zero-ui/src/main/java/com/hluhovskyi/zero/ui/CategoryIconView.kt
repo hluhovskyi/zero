@@ -43,11 +43,11 @@ fun CategoryIconView(
                         .padding(2.dp)
                 } else {
                     Modifier.padding(4.dp)
-                }
+                },
             )
             .background(
                 color = color,
-                shape = shape
+                shape = shape,
             )
             .padding(contentPadding),
         contentAlignment = Alignment.Center,

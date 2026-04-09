@@ -56,20 +56,20 @@ internal abstract class BottomBarComponent : AttachableViewComponent {
         @BottomBarScope
         fun viewModel(
             androidUriResourceFactory: AndroidUriResourceFactory,
-            navigator: Navigator
+            navigator: Navigator,
         ): BottomBarViewModel = DefaultBottomBarViewModel(
             androidUriResourceFactory = androidUriResourceFactory,
-            navigator = navigator
+            navigator = navigator,
         )
 
         @Provides
         @BottomBarScope
         fun viewProvider(
             viewModel: BottomBarViewModel,
-            imageLoader: ImageLoader
+            imageLoader: ImageLoader,
         ): ViewProvider = BottomBarViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }

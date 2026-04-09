@@ -35,7 +35,7 @@ internal class BottomBarViewProvider(
     override fun View() {
         BottomBarView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -48,12 +48,12 @@ internal fun BottomBarView(
     val state by viewModel.state.collectAsState(initial = BottomBarViewModel.State())
     AnimatedVisibility(
         enter = fadeIn() + slideInVertically(
-            initialOffsetY = { it }
+            initialOffsetY = { it },
         ),
         exit = fadeOut() + slideOutVertically(
-            targetOffsetY = { it }
+            targetOffsetY = { it },
         ),
-        visible = state.items.isNotEmpty()
+        visible = state.items.isNotEmpty(),
     ) {
         BottomNavigation(
             modifier = Modifier.height(72.dp),
@@ -77,7 +77,7 @@ internal fun BottomBarView(
                             Box(
                                 modifier = Modifier
                                     .requiredSize(width = 56.dp, height = 32.dp)
-                                    .background(pillColor, RoundedCornerShape(50))
+                                    .background(pillColor, RoundedCornerShape(50)),
                             )
                             imageLoader.View(
                                 image = item.icon,
@@ -86,7 +86,7 @@ internal fun BottomBarView(
                             )
                         }
                     },
-                    label = { Text(text = item.name) }
+                    label = { Text(text = item.name) },
                 )
             }
         }

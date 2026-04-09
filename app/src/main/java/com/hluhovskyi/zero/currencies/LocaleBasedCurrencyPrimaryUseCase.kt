@@ -18,7 +18,7 @@ internal class LocaleBasedCurrencyPrimaryUseCase(
     private val currencyRepository: CurrencyRepository,
     private val localeProvider: LocaleProvider,
     logger: Logger,
-    private val currencyProvider: (Locale) -> JavaCurrency = JavaCurrency::getInstance
+    private val currencyProvider: (Locale) -> JavaCurrency = JavaCurrency::getInstance,
 ) : CurrencyPrimaryUseCase {
 
     private val logger = logger.withTag("LocaleBasedCurrencyPrimaryUseCase")
@@ -55,7 +55,7 @@ internal class LocaleBasedCurrencyPrimaryUseCase(
     override suspend fun setPrimaryCurrency(id: Id.Known) {
         configurationRepository.write(
             key = CurrencyConfigurationKey.PrimaryCurrency,
-            value = id
+            value = id,
         ).also {
             cachedPrimaryCurrency.set(null)
         }

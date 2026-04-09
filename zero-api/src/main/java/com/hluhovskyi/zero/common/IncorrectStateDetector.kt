@@ -6,19 +6,19 @@ interface IncorrectStateDetector {
 
     fun <T> assertOrValue(
         message: String,
-        value: T
+        value: T,
     ): T
 
     fun <T> requireNonNull(
         value: T?,
         message: String? = null,
-        block: (T) -> Unit
+        block: (T) -> Unit,
     )
 
     suspend fun <T> asyncRequireNonNull(
         value: T?,
         message: String? = null,
-        block: suspend (T) -> Unit
+        block: suspend (T) -> Unit,
     )
 
     companion object {
@@ -30,7 +30,6 @@ interface IncorrectStateDetector {
 private object IgnoreOnIncorrectStateDetector : IncorrectStateDetector {
 
     override fun assert(message: String) {
-
     }
 
     override fun <T> assertOrValue(message: String, value: T): T = value
@@ -44,7 +43,7 @@ private object IgnoreOnIncorrectStateDetector : IncorrectStateDetector {
     override suspend fun <T> asyncRequireNonNull(
         value: T?,
         message: String?,
-        block: suspend (T) -> Unit
+        block: suspend (T) -> Unit,
     ) {
         if (value != null) {
             block(value)

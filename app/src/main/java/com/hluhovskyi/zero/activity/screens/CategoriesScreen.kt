@@ -20,7 +20,7 @@ import com.hluhovskyi.zero.common.Buildable
 @Composable
 fun CategoriesScreen(
     component: Buildable<out AttachableViewComponent>,
-    onCategoriesEdit: () -> Unit
+    onCategoriesEdit: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         component.AttachWithView()
@@ -31,7 +31,7 @@ fun CategoriesScreen(
             icon = { Icon(Icons.Filled.Edit, "Edit categories") },
             text = { Text("Edit categories") },
             onClick = onCategoriesEdit,
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
     }
 }

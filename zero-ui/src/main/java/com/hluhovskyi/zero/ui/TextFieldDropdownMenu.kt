@@ -39,18 +39,18 @@ fun <T> TextFieldDropdownMenu(
                 selectedItemIcon?.let { { it.invoke(item) } }
             },
             onValueChange = { },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
                     onClick = {
                         onItemSelected(item)
                         expanded = false
-                    }
+                    },
                 ) {
                     menuItem(item)
                 }

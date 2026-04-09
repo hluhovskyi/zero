@@ -7,12 +7,12 @@ import java.io.Closeable
 
 internal abstract class BaseViewModel(
     dispatchers: DispatcherProvider,
-    logger: Logger = Logger.Noop
+    logger: Logger = Logger.Noop,
 ) : Attachable {
 
     private val closeableCoroutineScope: CloseableCoroutineScope = viewModelScope(
         dispatchers = dispatchers,
-        rootExceptionHandler = CoroutineExceptionHandler { _, exception -> handleException(exception) }
+        rootExceptionHandler = CoroutineExceptionHandler { _, exception -> handleException(exception) },
     )
     protected val scope: CoroutineScope
         get() = closeableCoroutineScope
@@ -25,7 +25,5 @@ internal abstract class BaseViewModel(
     protected open fun attachOnMain() {
     }
 
-    protected open fun handleException(throwable: Throwable) {
-        throw throwable
-    }
+    protected open fun handleException(throwable: Throwable): Unit = throw throwable
 }

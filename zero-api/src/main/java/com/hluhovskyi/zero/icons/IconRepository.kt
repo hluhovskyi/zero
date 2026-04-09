@@ -1,8 +1,6 @@
 package com.hluhovskyi.zero.icons
 
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Identifiable
-import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
 
 interface IconRepository {

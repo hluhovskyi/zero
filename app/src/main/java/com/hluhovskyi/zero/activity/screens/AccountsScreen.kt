@@ -9,7 +9,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +20,7 @@ import com.hluhovskyi.zero.common.Buildable
 @Composable
 fun AccountsScreen(
     component: Buildable<out AttachableViewComponent>,
-    onAccountEdit: () -> Unit
+    onAccountEdit: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         component.AttachWithView()
@@ -32,7 +31,7 @@ fun AccountsScreen(
             icon = { Icon(Icons.Filled.Add, "Add account") },
             text = { Text("Add account") },
             onClick = onAccountEdit,
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
     }
 }

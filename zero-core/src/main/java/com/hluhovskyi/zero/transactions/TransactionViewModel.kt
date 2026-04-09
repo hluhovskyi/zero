@@ -8,8 +8,7 @@ import com.hluhovskyi.zero.common.Image
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
-interface TransactionViewModel
-    : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
+interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
 
     sealed interface Action {
         data class SelectTransaction(val item: Item.Transaction) : Action
@@ -17,7 +16,7 @@ interface TransactionViewModel
     }
 
     data class State(
-        val transactions: List<Item> = emptyList()
+        val transactions: List<Item> = emptyList(),
     )
 
     sealed interface Item {
@@ -44,7 +43,7 @@ interface TransactionViewModel
                 val categoryName: String,
                 val categoryColorScheme: ColorScheme,
                 val categoryIcon: Image,
-                val conversion: Conversion
+                val conversion: Conversion,
             ) : Transaction
 
             data class Income(

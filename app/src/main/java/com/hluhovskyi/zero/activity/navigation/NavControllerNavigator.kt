@@ -34,7 +34,7 @@ internal class NavControllerNavigator(
             is Navigator.Action.NavigateTo -> {
                 val route = navigationRouteResolver.resolve(
                     destination = action.destination,
-                    argumentValues = action.arguments
+                    argumentValues = action.arguments,
                 )
                 if (action.clearBackStack && route == navController.graph.startDestinationRoute) {
                     navController.popBackStack(route, false)
@@ -56,7 +56,7 @@ internal class NavControllerNavigator(
             .map { backStack ->
                 Navigator.State(
                     destination = destinationOf(
-                        route = backStack.destination.route.orEmpty()
+                        route = backStack.destination.route.orEmpty(),
                     ),
                     arguments = backStack.arguments?.let { bundle ->
                         bundle.keySet().mapNotNull { key ->
@@ -68,7 +68,7 @@ internal class NavControllerNavigator(
                                 null
                             }
                         }
-                    } ?: emptyList()
+                    } ?: emptyList(),
                 )
             }
 
@@ -93,8 +93,8 @@ internal class NavControllerNavigator(
                 argument = argument,
                 rawValue = rawValue ?: incorrectStateDetector.assertOrValue(
                     message = "Argument with key ${argument.key} is required to be provided",
-                    value = ""
-                )
+                    value = "",
+                ),
             )
         }
 

@@ -20,7 +20,7 @@ private const val TAG = "TransactionEditIncomeComponent"
 @TransactionEditIncomeScope
 @dagger.Component(
     modules = [TransactionEditIncomeComponent.Module::class],
-    dependencies = [TransactionEditIncomeComponent.Dependencies::class]
+    dependencies = [TransactionEditIncomeComponent.Dependencies::class],
 )
 abstract class TransactionEditIncomeComponent : AttachableViewComponent {
 

@@ -16,25 +16,25 @@ internal interface NavigatorScope {
     fun composable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
-        view: @Composable Context.() -> Unit
+        view: @Composable Context.() -> Unit,
     ): NavigatorEntry
 
     fun buildable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
-        view: Context.() -> Buildable<out AttachableViewComponent>
+        view: Context.() -> Buildable<out AttachableViewComponent>,
     ): NavigatorEntry
 }
 
 internal class DefaultNavigatorScope(
     private val navigator: Navigator,
-    private val navigationRouteResolver: NavigationRouteResolver
+    private val navigationRouteResolver: NavigationRouteResolver,
 ) : NavigatorScope {
 
     override fun composable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
-        view: @Composable NavigatorScope.Context.() -> Unit
+        view: @Composable NavigatorScope.Context.() -> Unit,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
@@ -45,12 +45,12 @@ internal class DefaultNavigatorScope(
     override fun buildable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
-        view: NavigatorScope.Context.() -> Buildable<out AttachableViewComponent>
+        view: NavigatorScope.Context.() -> Buildable<out AttachableViewComponent>,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
         displayOption = displayOption,
-        view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() }
+        view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() },
     )
 
     private class NavigatorContext(
@@ -62,6 +62,6 @@ internal class DefaultNavigatorScope(
         override val route: String,
         override val destination: Destination,
         override val displayOption: NavigatorEntry.DisplayOption,
-        override val view: @Composable (arguments: NavigatorEntry.Arguments) -> Unit
+        override val view: @Composable (arguments: NavigatorEntry.Arguments) -> Unit,
     ) : NavigatorEntry
 }

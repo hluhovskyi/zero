@@ -4,7 +4,7 @@
 
 **Goal:** Style "Transfer" transactions to be visually consistent with "Expense" and "Income" types using a "destination-primary" double-entry layout.
 
-**Architecture:** 
+**Architecture:**
 1. Generalize `TransactionView` to accept generic parameters.
 2. Extend the ViewModel to provide necessary icon and color scheme for Transfers.
 3. Implement `TransactionTransferView` using the generalized `TransactionView`.

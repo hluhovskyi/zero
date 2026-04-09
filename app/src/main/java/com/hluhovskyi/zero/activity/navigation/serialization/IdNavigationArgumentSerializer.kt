@@ -10,9 +10,7 @@ import kotlin.reflect.KClass
 internal object IdNavigationArgumentSerializer : TypedNavigationArgumentSerializer<Id>() {
     override val actualClass: KClass<Id> = Id::class
 
-    override fun performDeserialization(argument: Argument<Id>, rawValue: String): ArgumentValue<Id> =
-        argument.withValue(Id(rawValue))
+    override fun performDeserialization(argument: Argument<Id>, rawValue: String): ArgumentValue<Id> = argument.withValue(Id(rawValue))
 
-    override fun performSerialization(argumentValue: ArgumentValue<Id>): String =
-        argumentValue.value.valueOrEmpty()
+    override fun performSerialization(argumentValue: ArgumentValue<Id>): String = argumentValue.value.valueOrEmpty()
 }

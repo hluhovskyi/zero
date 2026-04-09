@@ -24,7 +24,7 @@ internal class BundleArguments(
                 GenericArgumentValue(
                     argument = key,
                     // TODO: Add support for optional fallback in ArgumentValue
-                    value = value.orEmpty() as T
+                    value = value.orEmpty() as T,
                 )
             }
             Id::class -> {
@@ -36,7 +36,7 @@ internal class BundleArguments(
                 GenericArgumentValue(
                     argument = key,
                     // TODO: Add support for optional fallback in ArgumentValue
-                    value = Id(value) as T
+                    value = Id(value) as T,
                 )
             }
             else -> assertMissingArguments(key)
@@ -44,7 +44,5 @@ internal class BundleArguments(
     }
 
     // TODO: Fallback and report instead of crash
-    private fun assertMissingArguments(key: Argument<*>): Nothing {
-        throw IllegalStateException("Argument with key=${key.key} expected to be passed for destination=${destination.route}")
-    }
+    private fun assertMissingArguments(key: Argument<*>): Nothing = throw IllegalStateException("Argument with key=${key.key} expected to be passed for destination=${destination.route}")
 }

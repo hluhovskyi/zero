@@ -15,14 +15,11 @@ fun <T> castingFlowOf(value: Any): Flow<T> = flowOf(value as T)
 @Suppress("unchecked_cast")
 fun <T> castingFlowOfNonNull(value: Any?): Flow<T> = value?.let { flowOf(it as T) } ?: emptyFlow()
 
-fun <T> Flow<List<T>>.onStartWithEmptyList(): Flow<List<T>> =
-    onStart { emit(emptyList()) }
+fun <T> Flow<List<T>>.onStartWithEmptyList(): Flow<List<T>> = onStart { emit(emptyList()) }
 
-fun <T> Flow<List<T>>.onEmptyReturnEmptyList(): Flow<List<T>> =
-    onEmpty { emit(emptyList()) }
+fun <T> Flow<List<T>>.onEmptyReturnEmptyList(): Flow<List<T>> = onEmpty { emit(emptyList()) }
 
-fun <T : Identifiable> Flow<List<T>>.associateById(): Flow<Map<Id.Known, T>> =
-    map { list -> list.associateBy { it.id } }
+fun <T : Identifiable> Flow<List<T>>.associateById(): Flow<Map<Id.Known, T>> = map { list -> list.associateBy { it.id } }
 
 @Suppress("unchecked_cast")
 fun <T, R> Flow<T>.uncheckedCast(): Flow<R> = this as Flow<R>

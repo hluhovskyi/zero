@@ -47,11 +47,11 @@ private fun TransactionPreviewView(
                 .align(Alignment.CenterHorizontally)
                 .background(
                     color = state.categoryColor.toCompose(),
-                    shape = CircleShape
-                )
+                    shape = CircleShape,
+                ),
         ) {
             imageLoader.View(
-                image = state.categoryIcon
+                image = state.categoryIcon,
             )
         }
     }

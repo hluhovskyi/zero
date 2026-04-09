@@ -6,8 +6,8 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,24 +25,23 @@ internal class RoomCategoryRepository(
 ) : CategoryRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun <T> query(criteria: CategoryRepository.Criteria<T>): Flow<T> =
-        when (criteria) {
-            is CategoryRepository.Criteria.All -> currentUserId.take(1)
-                .flatMapConcat { userId ->
-                    categoryRoom().selectByUserId(userId)
-                        .map { categories ->
-                            categories.map { category -> category.toRepositoryModel() }
-                        }
-                }
-                .uncheckedCast()
+    override fun <T> query(criteria: CategoryRepository.Criteria<T>): Flow<T> = when (criteria) {
+        is CategoryRepository.Criteria.All -> currentUserId.take(1)
+            .flatMapConcat { userId ->
+                categoryRoom().selectByUserId(userId)
+                    .map { categories ->
+                        categories.map { category -> category.toRepositoryModel() }
+                    }
+            }
+            .uncheckedCast()
 
-            is CategoryRepository.Criteria.ById -> currentUserId.take(1)
-                .flatMapConcat { userId ->
-                    categoryRoom().selectById(id = criteria.categoryId, userId = userId)
-                        .map { it.toRepositoryModel() }
-                }
-                .uncheckedCast()
-        }
+        is CategoryRepository.Criteria.ById -> currentUserId.take(1)
+            .flatMapConcat { userId ->
+                categoryRoom().selectById(id = criteria.categoryId, userId = userId)
+                    .map { it.toRepositoryModel() }
+            }
+            .uncheckedCast()
+    }
 
     override suspend fun insert(category: CategoryRepository.CategoryInsert) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
@@ -56,24 +55,22 @@ internal class RoomCategoryRepository(
         }
     }
 
-    private fun CategoryEntity.toRepositoryModel(): CategoryRepository.Category =
-        CategoryRepository.Category(
-            id = id,
-            // TODO: Handle parent category
-            parentCategoryId = Id.Unknown,
-            name = name,
-            colorId = Id(colorId),
-            iconId = Id(iconId),
-        )
+    private fun CategoryEntity.toRepositoryModel(): CategoryRepository.Category = CategoryRepository.Category(
+        id = id,
+        // TODO: Handle parent category
+        parentCategoryId = Id.Unknown,
+        name = name,
+        colorId = Id(colorId),
+        iconId = Id(iconId),
+    )
 
-    private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity =
-        CategoryEntity(
-            id = (id as? Id.Known) ?: idGenerator(),
-            userId = userId,
-            name = name,
-            iconId = iconId.valueOrNull(),
-            colorId = colorId.valueOrNull(),
-            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
-            updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-        )
+    private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity = CategoryEntity(
+        id = (id as? Id.Known) ?: idGenerator(),
+        userId = userId,
+        name = name,
+        iconId = iconId.valueOrNull(),
+        colorId = colorId.valueOrNull(),
+        creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
+    )
 }

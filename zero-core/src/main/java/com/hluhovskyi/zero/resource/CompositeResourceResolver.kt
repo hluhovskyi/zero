@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 
 internal class CompositeResourceResolver(
-    private val resolvers: Map<KClass<out ResourceRequest<*>>, ResourceResolver>
+    private val resolvers: Map<KClass<out ResourceRequest<*>>, ResourceResolver>,
 ) : ResourceResolver {
 
     @Suppress("unchecked_cast")

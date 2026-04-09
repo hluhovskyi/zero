@@ -17,7 +17,7 @@ private const val TAG = "ColorPickerComponent"
 @ColorPickerScope
 @dagger.Component(
     modules = [ColorPickerComponent.Module::class],
-    dependencies = [ColorPickerComponent.Dependencies::class]
+    dependencies = [ColorPickerComponent.Dependencies::class],
 )
 abstract class ColorPickerComponent : AttachableViewComponent {
 
@@ -56,15 +56,15 @@ abstract class ColorPickerComponent : AttachableViewComponent {
             onColorSelectedHandler: OnColorSelectedHandler,
         ): ColorPickerViewModel = DefaultColorPickerViewModel(
             colorRepository = colorRepository,
-            onColorSelectedHandler = onColorSelectedHandler
+            onColorSelectedHandler = onColorSelectedHandler,
         )
 
         @Provides
         @ColorPickerScope
         fun viewProvider(
-            viewModel: ColorPickerViewModel
+            viewModel: ColorPickerViewModel,
         ): ViewProvider = ColorPickerViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

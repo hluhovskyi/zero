@@ -11,7 +11,9 @@ import com.android.tools.lint.detector.api.Severity
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 
-class ViewProviderDependencyDetector : Detector(), Detector.UastScanner {
+class ViewProviderDependencyDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
@@ -36,7 +38,7 @@ class ViewProviderDependencyDetector : Detector(), Detector.UastScanner {
                             param as UElement,
                             context.getLocation(param as UElement),
                             "ViewProvider must not depend on *Repository or *UseCase directly. " +
-                                "Pass state/actions through ViewModel. See docs/agents/architecture.md."
+                                "Pass state/actions through ViewModel. See docs/agents/architecture.md.",
                         )
                     }
                 }
@@ -55,8 +57,8 @@ class ViewProviderDependencyDetector : Detector(), Detector.UastScanner {
             severity = Severity.ERROR,
             implementation = Implementation(
                 ViewProviderDependencyDetector::class.java,
-                Scope.JAVA_FILE_SCOPE
-            )
+                Scope.JAVA_FILE_SCOPE,
+            ),
         )
     }
 }

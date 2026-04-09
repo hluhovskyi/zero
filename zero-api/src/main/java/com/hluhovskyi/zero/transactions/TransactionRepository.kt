@@ -73,7 +73,7 @@ interface TransactionRepository {
             override val dateTime: LocalDateTime,
             override val updatedDateTime: LocalDateTime,
             val targetAccount: Id.Known,
-            val targetAmount: Amount
+            val targetAmount: Amount,
         ) : Transaction
     }
 

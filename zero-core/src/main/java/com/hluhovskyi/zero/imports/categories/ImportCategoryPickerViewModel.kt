@@ -3,8 +3,7 @@ package com.hluhovskyi.zero.imports.categories
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 
-interface ImportCategoryPickerViewModel
-    : AttachableActionStateModel<ImportCategoryPickerViewModel.Action, ImportCategoryPickerViewModel.State> {
+interface ImportCategoryPickerViewModel : AttachableActionStateModel<ImportCategoryPickerViewModel.Action, ImportCategoryPickerViewModel.State> {
 
     sealed interface Action {
         data class ChangeSelection(val item: CategoryItem) : Action
@@ -12,7 +11,7 @@ interface ImportCategoryPickerViewModel
     }
 
     data class State(
-        val items: List<CategoryItem> = emptyList()
+        val items: List<CategoryItem> = emptyList(),
     )
 
     data class CategoryItem(

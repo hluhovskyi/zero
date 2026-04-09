@@ -27,15 +27,14 @@ internal class ZenMoneyImportSourceUseCase(
     logger: Logger,
     private val dateParser: (String) -> LocalDateTime = {
         JavaLocalDate.parse(it, DATE_PARSER).atStartOfDay().toKotlinLocalDateTime()
-    }
+    },
 ) : ImportSourceUseCase {
 
     private val logger = logger.withTag(TAG)
 
-    override suspend fun load(request: ImportSourceUseCase.Request): ImportSourceUseCase.Result =
-        when (request) {
-            is ImportSourceUseCase.Request.FromFile -> loadFromFile(request.uri)
-        }
+    override suspend fun load(request: ImportSourceUseCase.Request): ImportSourceUseCase.Result = when (request) {
+        is ImportSourceUseCase.Request.FromFile -> loadFromFile(request.uri)
+    }
 
     private suspend fun loadFromFile(uri: Uri): ImportSourceUseCase.Result {
         val resolveResult = resourceResolver.resolve(UriRequest(uri))
@@ -85,7 +84,7 @@ internal class ZenMoneyImportSourceUseCase(
                             ImportAccount(
                                 id = idGenerator(),
                                 name = name,
-                                currencyId = Id.Known(currency)
+                                currencyId = Id.Known(currency),
                             )
                         }
                     }
@@ -121,7 +120,7 @@ internal class ZenMoneyImportSourceUseCase(
                         currencyId = outcomeAccount.currencyId,
                         targetAccount = incomeAccount.id,
                         targetAmount = incomeAmount,
-                        dateTime = createdDate
+                        dateTime = createdDate,
                     )
                     return@forEach
                 } else {
@@ -173,7 +172,7 @@ internal class ZenMoneyImportSourceUseCase(
         return ImportSourceUseCase.Result(
             accounts = nameToAccounts.values.sortedBy { it.name },
             categories = nameToCategories.values.sortedBy { it.name },
-            transactions = transactions
+            transactions = transactions,
         )
     }
 
@@ -237,7 +236,7 @@ internal class ZenMoneyImportSourceUseCase(
         val incomeCurrencyShortTitle: Int,
         val createdDate: Int,
         val changedDate: Int,
-        val qrCode: Int
+        val qrCode: Int,
     )
 
     private fun String.withoutBrackets(): String {

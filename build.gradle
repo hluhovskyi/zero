@@ -61,6 +61,7 @@ buildscript {
 }
 
 plugins {
+    id 'com.diffplug.spotless' version '7.0.2'
     id 'com.android.application' version '9.1.0' apply false
     id 'com.android.library' version '9.1.0' apply false
     id 'androidx.room' version '2.8.4' apply false
@@ -70,6 +71,25 @@ plugins {
     id 'com.google.devtools.ksp' version '2.3.6' apply false
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+spotless {
+    kotlin {
+        target '**/*.kt'
+        targetExclude '**/build/**/*.kt', '**/.worktrees/**/*.kt'
+        ktlint('1.5.0').editorConfigOverride([
+            'ktlint_standard_function-naming': 'disabled',
+            'ktlint_standard_filename': 'disabled',
+            'ktlint_standard_multiline-expression-wrapping': 'disabled',
+            'ktlint_standard_argument-list-wrapping': 'disabled'
+        ])
+    }
+    kotlinGradle {
+        target '**/*.gradle.kts'
+        ktlint('1.5.0')
+    }
+    format 'misc', {
+        target '**/*.gradle', '**/.gitignore', '**/*.md'
+        leadingTabsToSpaces()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }

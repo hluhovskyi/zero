@@ -49,9 +49,9 @@ No other module needs `lintChecks` — all 4 rules target patterns exclusive to 
 
 ### Rule 1: `DefaultImplMustBeInternal`
 
-**Detector:** `UastScanner`, visits class declarations.  
-**Trigger:** Class name starts with `Default` in package `com.hluhovskyi.zero.**`.  
-**Check:** Class does not have `internal` visibility modifier.  
+**Detector:** `UastScanner`, visits class declarations.
+**Trigger:** Class name starts with `Default` in package `com.hluhovskyi.zero.**`.
+**Check:** Class does not have `internal` visibility modifier.
 **Error message:**
 ```
 DefaultXxx implementations must be internal.
@@ -60,9 +60,9 @@ See zero-core/AGENTS.md naming conventions table.
 
 ### Rule 2: `ViewProviderMustBeInternal`
 
-**Detector:** `UastScanner`, visits class declarations.  
-**Trigger:** Class name ends with `ViewProvider`.  
-**Check:** Class does not have `internal` visibility modifier.  
+**Detector:** `UastScanner`, visits class declarations.
+**Trigger:** Class name ends with `ViewProvider`.
+**Check:** Class does not have `internal` visibility modifier.
 **Error message:**
 ```
 *ViewProvider is internal by convention — it is wired by its FeatureComponent,
@@ -71,9 +71,9 @@ never called directly. See zero-core/AGENTS.md.
 
 ### Rule 3: `ViewProviderMustNotInjectRepository`
 
-**Detector:** `UastScanner`, visits class declarations.  
-**Trigger:** Class name ends with `ViewProvider`.  
-**Check:** No constructor parameter or property type name ends with `Repository` or `UseCase`.  
+**Detector:** `UastScanner`, visits class declarations.
+**Trigger:** Class name ends with `ViewProvider`.
+**Check:** No constructor parameter or property type name ends with `Repository` or `UseCase`.
 **Error message:**
 ```
 ViewProvider must not depend on *Repository or *UseCase directly.
@@ -82,9 +82,9 @@ Pass state/actions through ViewModel. See docs/agents/architecture.md.
 
 ### Rule 4: `HandlerMustBeFunInterface`
 
-**Detector:** `UastScanner`, visits class declarations.  
-**Trigger:** Interface name matches `On*Handler`.  
-**Check:** Interface is declared as a functional interface (has `@FunctionalInterface` annotation at UAST level, which Kotlin `fun interface` compiles to).  
+**Detector:** `UastScanner`, visits class declarations.
+**Trigger:** Interface name matches `On*Handler`.
+**Check:** Interface is declared as a functional interface (has `@FunctionalInterface` annotation at UAST level, which Kotlin `fun interface` compiles to).
 **Error message:**
 ```
 OnXxxHandler must be a fun interface to allow lambda syntax at call sites.

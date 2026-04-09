@@ -8,7 +8,7 @@ interface DateFormatter {
         date: LocalDate,
         dayConfig: DayConfig,
         monthConfig: MonthConfig,
-        yearConfig: YearConfig
+        yearConfig: YearConfig,
     ): String
 
     enum class DayConfig {

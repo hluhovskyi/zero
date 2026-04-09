@@ -30,7 +30,7 @@ internal class IconPickerViewProvider(
     override fun View() {
         IconPickerView(
             viewModel = viewModel,
-            imageLoader = imageLoader
+            imageLoader = imageLoader,
         )
     }
 }
@@ -39,7 +39,7 @@ internal class IconPickerViewProvider(
 @Composable
 private fun IconPickerView(
     viewModel: IconPickerViewModel,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = IconPickerViewModel.State())
     LazyVerticalGrid(columns = GridCells.Fixed(5)) {
@@ -48,7 +48,7 @@ private fun IconPickerView(
                 modifier = Modifier
                     .aspectRatio(1f)
                     .clickable { viewModel.perform(IconPickerViewModel.Action.SelectIcon(item)) },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 IconCell(
                     item = item,

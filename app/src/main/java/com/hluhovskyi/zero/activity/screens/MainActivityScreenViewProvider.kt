@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.ModalBottomSheetLayout
+import androidx.compose.material.navigation.bottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.navigation.BottomSheetNavigator
-import androidx.compose.material.navigation.ModalBottomSheetLayout
-import androidx.compose.material.navigation.bottomSheet
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,7 +40,7 @@ internal class MainActivityScreenViewProvider(
                 NavHost(
                     modifier = Modifier.padding(innerPadding),
                     navController = navController,
-                    startDestination = startDestination.route
+                    startDestination = startDestination.route,
                 ) {
                     navigationEntries.forEach { entry ->
                         val navArguments = entry.destination.arguments.map { argument ->
@@ -58,7 +58,7 @@ internal class MainActivityScreenViewProvider(
                                         BundleArguments(
                                             bundle = backStackEntry.arguments,
                                             destination = entry.destination,
-                                        )
+                                        ),
                                     )
                                 }
                             }
@@ -71,7 +71,7 @@ internal class MainActivityScreenViewProvider(
                                         BundleArguments(
                                             bundle = backStackEntry.arguments,
                                             destination = entry.destination,
-                                        )
+                                        ),
                                     )
                                 }
                             }

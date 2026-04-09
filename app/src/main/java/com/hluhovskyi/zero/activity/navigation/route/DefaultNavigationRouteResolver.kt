@@ -12,12 +12,12 @@ internal class DefaultNavigationRouteResolver(
 
     override fun resolve(
         destination: Destination,
-        argumentValues: List<ArgumentValue<*>>
+        argumentValues: List<ArgumentValue<*>>,
     ): String {
         argumentValues.forEach { value ->
             if (value.argument !in destination.arguments) {
                 incorrectStateDetector.assert(
-                    "Argument with ${value.argument.key} isn't defined in argument list for destination $this"
+                    "Argument with ${value.argument.key} isn't defined in argument list for destination $this",
                 )
             }
         }

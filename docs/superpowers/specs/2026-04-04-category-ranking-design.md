@@ -42,10 +42,10 @@ New DAO query on existing `TransactionEntity` — no new tables:
 
 ```kotlin
 @Query("""
-    SELECT categoryId, 
-           COUNT(*) as transactionCount, 
-           MAX(date) as lastUsedDate 
-    FROM TransactionEntity 
+    SELECT categoryId,
+           COUNT(*) as transactionCount,
+           MAX(date) as lastUsedDate
+    FROM TransactionEntity
     WHERE userId = :userId AND categoryId IS NOT NULL
     GROUP BY categoryId
 """)

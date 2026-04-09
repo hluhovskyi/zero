@@ -17,24 +17,23 @@ internal class RoomAccountRepository(
     private val idGenerator: IdGenerator,
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : AccountRepository {
-    override fun query(criteria: AccountRepository.Criteria): Flow<List<AccountRepository.Account>> =
-        when (criteria) {
-            is AccountRepository.Criteria.All -> currentUserId.take(1)
-                .flatMapConcat { userId ->
-                    accountRoom().selectByUserId(userId)
-                        .map { accounts ->
-                            accounts.map { account ->
-                                AccountRepository.Account(
-                                    id = account.id,
-                                    name = account.name,
-                                    currencyId = account.currencyId,
-                                    iconId = account.iconId,
-                                    initialBalance = Amount(account.initialBalance.value)
-                                )
-                            }
+    override fun query(criteria: AccountRepository.Criteria): Flow<List<AccountRepository.Account>> = when (criteria) {
+        is AccountRepository.Criteria.All -> currentUserId.take(1)
+            .flatMapConcat { userId ->
+                accountRoom().selectByUserId(userId)
+                    .map { accounts ->
+                        accounts.map { account ->
+                            AccountRepository.Account(
+                                id = account.id,
+                                name = account.name,
+                                currencyId = account.currencyId,
+                                iconId = account.iconId,
+                                initialBalance = Amount(account.initialBalance.value),
+                            )
                         }
-                }
-        }
+                    }
+            }
+    }
 
     override suspend fun insert(account: AccountRepository.AccountInsert) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
@@ -48,13 +47,12 @@ internal class RoomAccountRepository(
         }
     }
 
-    private fun AccountRepository.AccountInsert.toEntity(userId: Id.Known): AccountEntity =
-        AccountEntity(
-            id = (id as? Id.Known) ?: idGenerator(),
-            userId = userId,
-            currencyId = currencyId,
-            name = name,
-            iconId = iconId,
-            initialBalance = AmountEntity(initialBalance.value)
-        )
+    private fun AccountRepository.AccountInsert.toEntity(userId: Id.Known): AccountEntity = AccountEntity(
+        id = (id as? Id.Known) ?: idGenerator(),
+        userId = userId,
+        currencyId = currencyId,
+        name = name,
+        iconId = iconId,
+        initialBalance = AmountEntity(initialBalance.value),
+    )
 }

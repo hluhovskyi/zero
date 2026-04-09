@@ -153,7 +153,7 @@ Wait, this is essentially what LocalShowAllCategories does but worse. Let me ret
 **Alternative: keep the handler flow pure.** The expense/income ViewProviders call the handler. The handler triggers an action on the use case or a shared state. The TransactionEditViewProvider observes that state and opens the sheet.
 
 Add to `TransactionEditViewModel`:
-- `Action.ShowAllCategories`  
+- `Action.ShowAllCategories`
 - `State.showCategoryPicker: Boolean`
 
 When `ShowAllCategories` action fires, set `showCategoryPicker = true`. When sheet hides (or category selected), set back to `false`.
@@ -236,7 +236,7 @@ In `TransactionEditComponent.Module.viewProvider()`:
 val categoryPickerBuildable = categoryPickerComponentBuilder
     .onCategorySelectedHandler { categoryId ->
         useCase.perform(TransactionEditUseCase.Action.SelectCategoryById(categoryId))
-        viewModel.perform(TransactionEditViewModel.Action.DismissCategoryPicker)  
+        viewModel.perform(TransactionEditViewModel.Action.DismissCategoryPicker)
     }
 ```
 

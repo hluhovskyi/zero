@@ -7,10 +7,10 @@ internal interface Destination {
 
 internal fun destinationOf(
     route: String,
-    vararg arguments: Argument<*>
+    vararg arguments: Argument<*>,
 ): Destination = DestinationValue(
     route = route,
-    arguments = arguments.toList()
+    arguments = arguments.toList(),
 )
 
 private data class DestinationValue(

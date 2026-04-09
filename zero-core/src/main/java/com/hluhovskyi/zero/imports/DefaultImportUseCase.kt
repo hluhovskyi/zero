@@ -7,6 +7,9 @@ import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.Uri
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
@@ -16,9 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.localDateTime
-import com.hluhovskyi.zero.common.time.ZoneProvider
 import java.io.Closeable
 
 internal class DefaultImportUseCase(
@@ -29,7 +29,7 @@ internal class DefaultImportUseCase(
     private val onImportFinishedHandler: OnImportFinishedHandler,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : ImportUseCase {
 
     private val mutableState = MutableStateFlow(CompositeState())
@@ -97,7 +97,7 @@ internal class DefaultImportUseCase(
                                     dateTime = transaction.dateTime,
                                     updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     // TODO: Handle rate
-                                    rate = Rate.Same
+                                    rate = Rate.Same,
                                 )
                                 is ImportTransaction.Income -> TransactionRepository.Transaction.Income(
                                     id = transaction.id,
@@ -108,7 +108,7 @@ internal class DefaultImportUseCase(
                                     dateTime = transaction.dateTime,
                                     updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     // TODO: Handle rate
-                                    rate = Rate.Same
+                                    rate = Rate.Same,
                                 )
                                 is ImportTransaction.Transfer -> TransactionRepository.Transaction.Transfer(
                                     id = transaction.id,
@@ -118,7 +118,7 @@ internal class DefaultImportUseCase(
                                     dateTime = transaction.dateTime,
                                     updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                                     targetAmount = transaction.targetAmount,
-                                    targetAccount = transaction.targetAccount
+                                    targetAccount = transaction.targetAccount,
                                 )
                             }
                         }

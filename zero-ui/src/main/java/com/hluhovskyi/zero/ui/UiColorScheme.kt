@@ -4,5 +4,5 @@ import androidx.compose.ui.graphics.Color
 
 data class UiColorScheme(
     val primary: Color,
-    val background: Color
+    val background: Color,
 )

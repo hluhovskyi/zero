@@ -6,8 +6,8 @@ import com.hluhovskyi.zero.activity.navigation.ArgumentValue
 internal class CompositeNavigationArgumentSerializer(
     serializers: Set<TypedNavigationArgumentSerializer<*>> = setOf(
         StringNavigationArgumentSerializer,
-        IdNavigationArgumentSerializer
-    )
+        IdNavigationArgumentSerializer,
+    ),
 ) : NavigationArgumentSerializer {
 
     private val classToSerializer = serializers.associateBy { it.actualClass }
@@ -23,10 +23,8 @@ internal class CompositeNavigationArgumentSerializer(
         return serializer.deserialize(argument, rawValue)
     }
 
-    private fun assertNoSerializer(argument: Argument<*>): Nothing {
-        throw IllegalStateException(
-            "No serializer found for class ${argument.argumentClass}." +
-                    " Available serializers: ${classToSerializer.keys}"
-        )
-    }
+    private fun assertNoSerializer(argument: Argument<*>): Nothing = throw IllegalStateException(
+        "No serializer found for class ${argument.argumentClass}." +
+            " Available serializers: ${classToSerializer.keys}",
+    )
 }

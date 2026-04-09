@@ -19,16 +19,14 @@ private const val TAG = "TransactionEditTransferComponent"
 @TransactionEditTransferScope
 @dagger.Component(
     modules = [TransactionEditTransferComponent.Module::class],
-    dependencies = [TransactionEditTransferComponent.Dependencies::class]
+    dependencies = [TransactionEditTransferComponent.Dependencies::class],
 )
 abstract class TransactionEditTransferComponent : AttachableViewComponent {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
 
-    interface Dependencies {
-
-    }
+    interface Dependencies
 
     companion object {
 
@@ -51,17 +49,17 @@ abstract class TransactionEditTransferComponent : AttachableViewComponent {
         @Provides
         @TransactionEditTransferScope
         fun viewModel(
-            useCase: TransactionEditUseCase
+            useCase: TransactionEditUseCase,
         ): TransactionEditTransferViewModel = DefaultTransactionEditTransferViewModel(
-            useCase = useCase
+            useCase = useCase,
         )
 
         @Provides
         @TransactionEditTransferScope
         fun viewProvider(
-            viewModel: TransactionEditTransferViewModel
+            viewModel: TransactionEditTransferViewModel,
         ): ViewProvider = TransactionEditTransferViewProvider(
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }

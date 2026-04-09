@@ -34,7 +34,7 @@ internal class DefaultAccountEditIconUseCase(
     private var requestId = AtomicReference<Id>(Id.Unknown)
     private val pickAction = MutableSharedFlow<AccountEditIconUseCase.Action.Pick>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     override fun perform(action: AccountEditIconUseCase.Action) {
@@ -45,7 +45,7 @@ internal class DefaultAccountEditIconUseCase(
                 logger.d("perform, requestId=$requestId")
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
-                    Destinations.Icon.Picker.RequestId.withValue(id)
+                    Destinations.Icon.Picker.RequestId.withValue(id),
                 )
             }
             is AccountEditIconUseCase.Action.Pick -> {
@@ -57,7 +57,7 @@ internal class DefaultAccountEditIconUseCase(
     override val state: Flow<AccountEditIconUseCase.State> =
         navigator.observeArgumentValue(
             destination = Destinations.Icon.Picker,
-            argument = Destinations.Icon.Picker.RequestId
+            argument = Destinations.Icon.Picker.RequestId,
         )
             .flatMapLatest { requestId ->
                 pickAction.map { pick ->

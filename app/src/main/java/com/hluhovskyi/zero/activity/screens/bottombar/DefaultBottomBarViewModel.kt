@@ -34,34 +34,34 @@ internal class DefaultBottomBarViewModel(
             name = "Home",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_home_24"),
-                description = "Home icon"
+                description = "Home icon",
             ),
-            selected = false
+            selected = false,
         ),
         BottomBarViewModel.Item(
             id = accountsId,
             name = "Accounts",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_accounts_24"),
-                description = "Accounts icon"
+                description = "Accounts icon",
             ),
-            selected = false
+            selected = false,
         ),
         BottomBarViewModel.Item(
             id = budgetId,
             name = "Budget",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_budget_24"),
-                description = "Budget icon"
+                description = "Budget icon",
             ),
-            selected = false
+            selected = false,
         ),
         BottomBarViewModel.Item(
             id = categoriesId,
             name = "Categories",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_categories_24"),
-                description = "Category icon"
+                description = "Category icon",
             ),
             selected = false,
         ),
@@ -70,14 +70,14 @@ internal class DefaultBottomBarViewModel(
             name = "Settings",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_settings_24"),
-                description = "Settings icon"
+                description = "Settings icon",
             ),
-            selected = false
-        )
+            selected = false,
+        ),
     )
 
     private val mutableState = MutableStateFlow<BottomBarViewModel.State>(
-        BottomBarViewModel.State(bottomNavigationItems)
+        BottomBarViewModel.State(bottomNavigationItems),
     )
     override val state: Flow<BottomBarViewModel.State> = mutableState
 
@@ -98,7 +98,7 @@ internal class DefaultBottomBarViewModel(
                             destination = it,
                             clearBackStack = true,
                             arguments = emptyList(),
-                        )
+                        ),
                     )
                 }
             }
@@ -114,12 +114,12 @@ internal class DefaultBottomBarViewModel(
                         items = if (bottomBarId is Id.Known) {
                             bottomNavigationItems.map { item ->
                                 item.copy(
-                                    selected = item.id == bottomBarId
+                                    selected = item.id == bottomBarId,
                                 )
                             }
                         } else {
                             emptyList()
-                        }
+                        },
                     )
                 }
             }
@@ -131,7 +131,7 @@ internal class DefaultBottomBarViewModel(
         Destinations.Category.All.route -> categoriesId
         Destinations.Account.All.route -> accountsId
         Destinations.Settings.route -> settingsId
-        //Destinations.Budget.route -> budgetId
+        // Destinations.Budget.route -> budgetId
         else -> Id.Unknown
     }
 }

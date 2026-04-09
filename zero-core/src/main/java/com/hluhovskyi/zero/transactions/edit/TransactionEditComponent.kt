@@ -33,9 +33,10 @@ private const val TAG = "TransactionEditComponent"
 @TransactionEditScope
 @dagger.Component(
     modules = [TransactionEditComponent.Module::class],
-    dependencies = [TransactionEditComponent.Dependencies::class]
+    dependencies = [TransactionEditComponent.Dependencies::class],
 )
-abstract class TransactionEditComponent : AttachableViewComponent,
+abstract class TransactionEditComponent :
+    AttachableViewComponent,
     TransactionEditExpenseComponent.Dependencies,
     TransactionEditIncomeComponent.Dependencies,
     TransactionEditTransferComponent.Dependencies {
@@ -129,15 +130,15 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             zoneProvider = zoneProvider,
-            logger = logger
+            logger = logger,
         )
 
         @Provides
         @TransactionEditScope
         fun viewModel(
-            useCase: TransactionEditUseCase
+            useCase: TransactionEditUseCase,
         ): TransactionEditViewModel = DefaultTransactionEditViewModel(
-            useCase = useCase
+            useCase = useCase,
         )
 
         @Provides
@@ -147,7 +148,7 @@ abstract class TransactionEditComponent : AttachableViewComponent,
             expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
             incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
-            logger: Logger
+            logger: Logger,
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
             expenseComponent = expenseComponentBuilder.logging(logger),
@@ -160,26 +161,23 @@ abstract class TransactionEditComponent : AttachableViewComponent,
         fun transactionEditExpenseComponentBuilder(
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
-        ): TransactionEditExpenseComponent.Builder =
-            TransactionEditExpenseComponent.builder(component)
-                .transactionEditUseCase(useCase)
+        ): TransactionEditExpenseComponent.Builder = TransactionEditExpenseComponent.builder(component)
+            .transactionEditUseCase(useCase)
 
         @Provides
         @TransactionEditScope
         fun transactionEditTransferComponentBuilder(
             component: TransactionEditComponent,
-            useCase: TransactionEditUseCase
-        ): TransactionEditTransferComponent.Builder =
-            TransactionEditTransferComponent.builder(component)
-                .transactionEditUseCase(useCase)
+            useCase: TransactionEditUseCase,
+        ): TransactionEditTransferComponent.Builder = TransactionEditTransferComponent.builder(component)
+            .transactionEditUseCase(useCase)
 
         @Provides
         @TransactionEditScope
         fun transactionEditIncomeComponentBuilder(
             component: TransactionEditComponent,
-            useCase: TransactionEditUseCase
-        ): TransactionEditIncomeComponent.Builder =
-            TransactionEditIncomeComponent.builder(component)
-                .transactionEditUseCase(useCase)
+            useCase: TransactionEditUseCase,
+        ): TransactionEditIncomeComponent.Builder = TransactionEditIncomeComponent.builder(component)
+            .transactionEditUseCase(useCase)
     }
 }

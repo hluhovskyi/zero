@@ -59,7 +59,7 @@ private annotation class ApplicationScope
 @ApplicationScope
 @dagger.Component(
     modules = [ApplicationComponent.Module::class],
-    dependencies = [ApplicationComponent.Dependencies::class]
+    dependencies = [ApplicationComponent.Dependencies::class],
 )
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
@@ -68,7 +68,7 @@ abstract class ApplicationComponent :
     ZenMoneyImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
-    override abstract val zoneProvider: ZoneProvider
+    abstract override val zoneProvider: ZoneProvider
 
     interface Dependencies {
         val context: Context
@@ -90,7 +90,7 @@ abstract class ApplicationComponent :
         includes = [
             DatabaseModule::class,
             ImportModule::class,
-        ]
+        ],
     )
     object Module {
 
@@ -104,13 +104,12 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun incorrectStateDetector(): IncorrectStateDetector =
-            if (BuildConfig.DEBUG) {
-                CrashingIncorrectStateDetector
-            } else {
-                // TODO: Report and collect incorrect state
-                IncorrectStateDetector.ignoreIncorrect()
-            }
+        fun incorrectStateDetector(): IncorrectStateDetector = if (BuildConfig.DEBUG) {
+            CrashingIncorrectStateDetector
+        } else {
+            // TODO: Report and collect incorrect state
+            IncorrectStateDetector.ignoreIncorrect()
+        }
 
         @Provides
         @ApplicationScope
@@ -143,19 +142,19 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun clock(
-            zoneProvider: ZoneProvider
+            zoneProvider: ZoneProvider,
         ): Clock = ZoneBasedClock(zoneProvider = zoneProvider)
 
         @Provides
         @ApplicationScope
         fun imageLoader(
-            context: Context
+            context: Context,
         ): ImageLoader = ImageLoader.factory(context).create()
 
         @Provides
         @ApplicationScope
         fun resourceResolver(
-            component: ApplicationComponent
+            component: ApplicationComponent,
         ): ResourceResolver = ResourceResolverComponent.builder(component)
             .build()
             .resourceResolver
@@ -163,9 +162,9 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun androidUriResourceFactory(
-            context: Context
+            context: Context,
         ): AndroidUriResourceFactory = DefaultAndroidUriResourceFactory(
-            packageName = context.packageName
+            packageName = context.packageName,
         )
 
         @Provides
@@ -225,9 +224,9 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun iconRepository(
-            androidUriResourceFactory: AndroidUriResourceFactory
+            androidUriResourceFactory: AndroidUriResourceFactory,
         ): IconRepository = PredefinedIconRepository(
-            androidUriResourceFactory = androidUriResourceFactory
+            androidUriResourceFactory = androidUriResourceFactory,
         )
 
         @Provides
@@ -252,17 +251,15 @@ abstract class ApplicationComponent :
             zoneProvider = zoneProvider,
         )
 
-
         @Provides
         @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
             logger: Logger,
-            idGenerator: IdGenerator
+            idGenerator: IdGenerator,
         ): ActivityComponent.Builder = ActivityComponent.builder(component)
             .logger(logger)
             .idGenerator(idGenerator)
-
     }
 }
 
@@ -284,26 +281,26 @@ internal object DatabaseModule {
                 currentUserRepository.get().query()
                     .map { user -> user.id }
                     .collectLatest(this::send)
-            }
+            },
         )
         .build()
 
     @Provides
     @ApplicationScope
     fun currentUserRepository(
-        databaseComponent: DatabaseComponent
+        databaseComponent: DatabaseComponent,
     ): CurrentUserRepository = databaseComponent.currentUserRepository
 
     @Provides
     @ApplicationScope
     fun transactionRepository(
-        databaseComponent: DatabaseComponent
+        databaseComponent: DatabaseComponent,
     ): TransactionRepository = databaseComponent.transactionRepository
 
     @Provides
     @ApplicationScope
     fun accountRepository(
-        databaseComponent: DatabaseComponent
+        databaseComponent: DatabaseComponent,
     ): AccountRepository = databaseComponent.accountRepository
 
     @Provides
@@ -315,7 +312,7 @@ internal object DatabaseModule {
     @Provides
     @ApplicationScope
     fun configurationRepository(
-        databaseComponent: DatabaseComponent
+        databaseComponent: DatabaseComponent,
     ): ConfigurationRepository = databaseComponent.configurationRepository
 }
 
