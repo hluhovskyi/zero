@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -16,8 +17,9 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
-import com.hluhovskyi.zero.transactions.edit.income.TransactionEditIncomeComponent
+import com.hluhovskyi.zero.transactions.edit.common.DefaultTransactionEditCategoryViewModel
+import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCategoryViewModel
+import com.hluhovskyi.zero.transactions.edit.common.TransactionEditCategoryViewProvider
 import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -37,8 +39,6 @@ private const val TAG = "TransactionEditComponent"
 )
 abstract class TransactionEditComponent :
     AttachableViewComponent,
-    TransactionEditExpenseComponent.Dependencies,
-    TransactionEditIncomeComponent.Dependencies,
     TransactionEditTransferComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
@@ -95,7 +95,7 @@ abstract class TransactionEditComponent :
     }
 
     @dagger.Module
-    object Module {
+    internal object Module {
 
         @Provides
         @TransactionEditScope
@@ -143,26 +143,46 @@ abstract class TransactionEditComponent :
 
         @Provides
         @TransactionEditScope
-        fun viewProvider(
-            viewModel: TransactionEditViewModel,
-            expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
-            incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
-            transferComponentBuilder: TransactionEditTransferComponent.Builder,
-            logger: Logger,
-        ): ViewProvider = TransactionEditViewProvider(
-            viewModel = viewModel,
-            expenseComponent = expenseComponentBuilder.logging(logger),
-            incomeComponent = incomeComponentBuilder.logging(logger),
-            transferComponent = transferComponentBuilder.logging(logger),
+        fun categoryViewModel(
+            useCase: TransactionEditUseCase,
+        ): TransactionEditCategoryViewModel = DefaultTransactionEditCategoryViewModel(
+            useCase = useCase,
         )
 
         @Provides
         @TransactionEditScope
-        fun transactionEditExpenseComponentBuilder(
-            component: TransactionEditComponent,
-            useCase: TransactionEditUseCase,
-        ): TransactionEditExpenseComponent.Builder = TransactionEditExpenseComponent.builder(component)
-            .transactionEditUseCase(useCase)
+        fun categoryViewProvider(
+            viewModel: TransactionEditCategoryViewModel,
+            imageLoader: ImageLoader,
+        ): TransactionEditCategoryViewProvider = TransactionEditCategoryViewProvider(
+            viewModel = viewModel,
+            imageLoader = imageLoader,
+        )
+
+        @Provides
+        @TransactionEditScope
+        fun categoryComponent(
+            categoryViewProvider: TransactionEditCategoryViewProvider,
+        ): AttachableViewComponent = object : AttachableViewComponent {
+            override val tag: String = "TransactionEditCategoryComponent"
+            override val viewProvider: ViewProvider = categoryViewProvider
+            override fun attach(): Closeable = Closeables.empty()
+        }
+
+        @Provides
+        @TransactionEditScope
+        fun viewProvider(
+            viewModel: TransactionEditViewModel,
+            categoryComponent: AttachableViewComponent,
+            transferComponentBuilder: TransactionEditTransferComponent.Builder,
+            logger: Logger,
+        ): ViewProvider = TransactionEditViewProvider(
+            viewModel = viewModel,
+            categoryComponent = object : Buildable<AttachableViewComponent> {
+                override fun build() = categoryComponent
+            }.logging(logger),
+            transferComponent = transferComponentBuilder.logging(logger),
+        )
 
         @Provides
         @TransactionEditScope
@@ -170,14 +190,6 @@ abstract class TransactionEditComponent :
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
         ): TransactionEditTransferComponent.Builder = TransactionEditTransferComponent.builder(component)
-            .transactionEditUseCase(useCase)
-
-        @Provides
-        @TransactionEditScope
-        fun transactionEditIncomeComponentBuilder(
-            component: TransactionEditComponent,
-            useCase: TransactionEditUseCase,
-        ): TransactionEditIncomeComponent.Builder = TransactionEditIncomeComponent.builder(component)
             .transactionEditUseCase(useCase)
     }
 }
