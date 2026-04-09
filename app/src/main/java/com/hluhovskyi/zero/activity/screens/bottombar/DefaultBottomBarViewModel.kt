@@ -31,10 +31,10 @@ internal class DefaultBottomBarViewModel(
     private val bottomNavigationItems = listOf(
         BottomBarViewModel.Item(
             id = transactionsId,
-            name = "Transactions",
+            name = "Home",
             icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_transactions_24"),
-                description = "Transaction icon"
+                uri = androidUriResourceFactory.drawable("ic_home_24"),
+                description = "Home icon"
             ),
             selected = false
         ),

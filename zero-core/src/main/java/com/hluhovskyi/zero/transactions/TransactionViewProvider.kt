@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,23 +93,25 @@ private fun TransactionView(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 8.dp, start = 4.dp, end = 4.dp)
+                            .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp)
                     ) {
                         Text(
                             modifier = Modifier.weight(1f),
-                            text = dateFormatter.format(transaction),
-                            fontSize = 13.sp,
+                            text = dateFormatter.format(transaction).uppercase(),
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF44464F),
+                            letterSpacing = 0.8.sp,
                         )
                         Text(
                             text = amountFormatter.format(
                                 amount = transaction.total,
                                 currencySymbol = transaction.currencySymbol
                             ),
-                            fontSize = 13.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF44464F),
+                            letterSpacing = 0.8.sp,
                         )
                     }
                 }
@@ -119,19 +120,13 @@ private fun TransactionView(
                     val contentModifier = Modifier
                         .fillMaxWidth()
                         .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
 
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 12.dp)
-                            .graphicsLayer {
-                                shadowElevation = 1f
-                                shape = cardShape
-                                clip = true
-                                ambientShadowColor = Color(0x14000000)
-                                spotShadowColor = Color(0x14000000)
-                            }
+                            .clip(cardShape)
                             .background(Color(0xFFFFFFFF)),
                     ) {
                         when (transaction) {
