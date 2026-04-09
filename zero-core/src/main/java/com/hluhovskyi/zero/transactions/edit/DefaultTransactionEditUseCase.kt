@@ -361,7 +361,7 @@ internal class DefaultTransactionEditUseCase(
             }
 
             launch {
-                currencyRepository.query(CurrencyRepository.Criteria.All())
+                currencyRepository.query(CurrencyRepository.Criteria.InUse())
                     .map { currencies ->
                         currencies.map { currency ->
                             TransactionEditCurrency(

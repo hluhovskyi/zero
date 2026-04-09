@@ -187,10 +187,14 @@ abstract class ApplicationComponent :
         internal fun currencyRepository(
             localeProvider: LocaleProvider,
             currencyLoader: CurrencyLoader,
-        ): CurrencyRepository = JavaCurrencyRepository(
-            localeProvider = localeProvider,
-            currencyLoader = currencyLoader,
-        )
+            databaseComponent: DatabaseComponent,
+        ): CurrencyRepository {
+            val baseRepository = JavaCurrencyRepository(
+                localeProvider = localeProvider,
+                currencyLoader = currencyLoader,
+            )
+            return databaseComponent.transform(baseRepository)
+        }
 
         @Provides
         @ApplicationScope

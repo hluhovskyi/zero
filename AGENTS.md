@@ -6,11 +6,18 @@ Zero is a personal finance Android app (Kotlin, Jetpack Compose, Dagger, Room). 
 
 If you discover a non-obvious gotcha, a new pattern, or a rule that isn't documented — update the relevant doc file. Don't document things the code already says clearly. Only document the "why" and the traps.
 
+**Repo-First Documentation**: All plans and architectural docs MUST be saved directly to the repository (e.g. `docs/superpowers/plans/`). Never leave artifacts in temporary tool directories.
+
 ## Cross-Cutting Rules
 
-1. **Never commit directly to `master`** — feature branch + PR always. See [Branch Management](docs/agents/branch-management.md).
+1. **Branch Isolation** — Every distinct task MUST have a dedicated branch. Never commit directly to `master`. Verify current branch before every commit. See [Branch Management](docs/agents/branch-management.md).
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
-3. **Execution workflow** — after writing an implementation plan, dispatch the entire plan to Gemini CLI in a single call. See [Execution Workflow](docs/agents/execution-workflow.md). After Gemini finishes, review the result and rate Gemini's work (what went well, what needed fixing).
+3. **Strict Development Lifecycle**:
+    - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
+    - **Implicit Denial**: Technical feedback is NOT approval. Re-propose and wait for a fresh handshake after any plan update.
+    - **Minimalism**: Change ONLY what is in the approved plan. No unrelated refactors, visibility changes, or "cleanup".
+    - **Zero Deviation**: Approved plans are binding. Stop and re-propose if implementation requires any architectural or logic change.
+    - See [Execution Workflow](docs/agents/execution-workflow.md).
 4. **Shared Agent Skills** — Always prefer workspace-scoped symlinks for skills shared between Gemini and Claude to maintain a single source of truth for both agents.
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
