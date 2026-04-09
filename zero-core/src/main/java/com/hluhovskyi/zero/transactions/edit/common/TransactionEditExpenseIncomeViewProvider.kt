@@ -19,14 +19,14 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 
-internal class TransactionEditCategoryViewProvider(
-    private val viewModel: TransactionEditCategoryViewModel,
+internal class TransactionEditExpenseIncomeViewProvider(
+    private val viewModel: TransactionEditExpenseIncomeViewModel,
     private val imageLoader: ImageLoader,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditCategoryView(
+        TransactionEditExpenseIncomeView(
             viewModel = viewModel,
             imageLoader = imageLoader,
         )
@@ -34,11 +34,11 @@ internal class TransactionEditCategoryViewProvider(
 }
 
 @Composable
-private fun TransactionEditCategoryView(
-    viewModel: TransactionEditCategoryViewModel,
+private fun TransactionEditExpenseIncomeView(
+    viewModel: TransactionEditExpenseIncomeViewModel,
     imageLoader: ImageLoader,
 ) {
-    val state by viewModel.state.collectAsState(initial = TransactionEditCategoryViewModel.State())
+    val state by viewModel.state.collectAsState(initial = TransactionEditExpenseIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -56,11 +56,11 @@ private fun TransactionEditCategoryView(
             currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
             focusRequester = focusRequester,
             onAmountChange = {
-                viewModel.perform(TransactionEditCategoryViewModel.Action.ChangeAmount(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeAmount(it))
             },
             currencies = state.currencies,
             onCurrencySelected = {
-                viewModel.perform(TransactionEditCategoryViewModel.Action.SelectCurrency(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCurrency(it))
             },
         )
 
@@ -72,10 +72,10 @@ private fun TransactionEditCategoryView(
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
-                viewModel.perform(TransactionEditCategoryViewModel.Action.SelectCategory(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCategory(it))
             },
             onShowAll = {
-                viewModel.perform(TransactionEditCategoryViewModel.Action.ShowAllCategories)
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ShowAllCategories)
             },
         )
 
@@ -89,7 +89,7 @@ private fun TransactionEditCategoryView(
                     label = "Date",
                     date = date,
                     onDateSelected = {
-                        viewModel.perform(TransactionEditCategoryViewModel.Action.ChangeDate(it))
+                        viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeDate(it))
                     },
                 )
             }
@@ -100,7 +100,7 @@ private fun TransactionEditCategoryView(
                 items = state.accounts,
                 nameMapping = { it.name },
                 onItemSelected = {
-                    viewModel.perform(TransactionEditCategoryViewModel.Action.SelectAccount(it))
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectAccount(it))
                 },
             )
         }
@@ -112,7 +112,7 @@ private fun TransactionEditCategoryView(
                     .padding(top = 16.dp),
                 rate = state.rate,
                 onValueChange = { rate ->
-                    viewModel.perform(TransactionEditCategoryViewModel.Action.ChangeRate(rate))
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeRate(rate))
                 },
             )
         }

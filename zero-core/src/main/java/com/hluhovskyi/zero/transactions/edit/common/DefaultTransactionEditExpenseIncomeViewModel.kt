@@ -5,15 +5,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
-internal class DefaultTransactionEditCategoryViewModel(
+internal class DefaultTransactionEditExpenseIncomeViewModel(
     private val useCase: TransactionEditUseCase,
-) : TransactionEditCategoryViewModel {
+) : TransactionEditExpenseIncomeViewModel {
 
-    override val state: Flow<TransactionEditCategoryViewModel.State> = useCase.state
+    override val state: Flow<TransactionEditExpenseIncomeViewModel.State> = useCase.state
         .filter { it is TransactionEditUseCase.State.Expense || it is TransactionEditUseCase.State.Income }
         .map { state ->
             when (state) {
-                is TransactionEditUseCase.State.Expense -> TransactionEditCategoryViewModel.State(
+                is TransactionEditUseCase.State.Expense -> TransactionEditExpenseIncomeViewModel.State(
                     accounts = state.accounts,
                     selectedAccount = state.selectedAccount,
                     categories = state.categories,
@@ -24,7 +24,7 @@ internal class DefaultTransactionEditCategoryViewModel(
                     rate = state.rate,
                     date = state.date,
                 )
-                is TransactionEditUseCase.State.Income -> TransactionEditCategoryViewModel.State(
+                is TransactionEditUseCase.State.Income -> TransactionEditExpenseIncomeViewModel.State(
                     accounts = state.accounts,
                     selectedAccount = state.selectedAccount,
                     categories = state.categories,
@@ -39,23 +39,23 @@ internal class DefaultTransactionEditCategoryViewModel(
             }
         }
 
-    override fun perform(action: TransactionEditCategoryViewModel.Action) {
+    override fun perform(action: TransactionEditExpenseIncomeViewModel.Action) {
         val useCaseAction = when (action) {
-            is TransactionEditCategoryViewModel.Action.ChangeAmount ->
+            is TransactionEditExpenseIncomeViewModel.Action.ChangeAmount ->
                 TransactionEditUseCase.Action.ChangeAmount(action.amount)
-            is TransactionEditCategoryViewModel.Action.ChangeRate ->
+            is TransactionEditExpenseIncomeViewModel.Action.ChangeRate ->
                 TransactionEditUseCase.Action.ChangeRate(action.rate)
-            is TransactionEditCategoryViewModel.Action.ChangeDate ->
+            is TransactionEditExpenseIncomeViewModel.Action.ChangeDate ->
                 TransactionEditUseCase.Action.ChangeDate(action.date)
-            is TransactionEditCategoryViewModel.Action.EditCategories ->
+            is TransactionEditExpenseIncomeViewModel.Action.EditCategories ->
                 TransactionEditUseCase.Action.EditCategories
-            is TransactionEditCategoryViewModel.Action.SelectAccount ->
+            is TransactionEditExpenseIncomeViewModel.Action.SelectAccount ->
                 TransactionEditUseCase.Action.SelectAccount(action.account)
-            is TransactionEditCategoryViewModel.Action.SelectCategory ->
+            is TransactionEditExpenseIncomeViewModel.Action.SelectCategory ->
                 TransactionEditUseCase.Action.SelectCategory(action.category)
-            is TransactionEditCategoryViewModel.Action.SelectCurrency ->
+            is TransactionEditExpenseIncomeViewModel.Action.SelectCurrency ->
                 TransactionEditUseCase.Action.SelectCurrency(action.currency)
-            is TransactionEditCategoryViewModel.Action.ShowAllCategories ->
+            is TransactionEditExpenseIncomeViewModel.Action.ShowAllCategories ->
                 TransactionEditUseCase.Action.ShowAllCategories
         }
         useCase.perform(useCaseAction)

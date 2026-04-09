@@ -31,7 +31,7 @@ import com.hluhovskyi.zero.ui.SegmentedToggle
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
-    private val categoryComponent: Buildable<out AttachableViewComponent>,
+    private val expenseIncomeComponent: Buildable<out AttachableViewComponent>,
     private val transferComponent: Buildable<out AttachableViewComponent>,
 ) : ViewProvider {
 
@@ -39,7 +39,7 @@ internal class TransactionEditViewProvider(
     override fun View() {
         TransactionEditView(
             viewModel = viewModel,
-            categoryComponent = categoryComponent,
+            expenseIncomeComponent = expenseIncomeComponent,
             transferComponent = transferComponent,
         )
     }
@@ -49,7 +49,7 @@ internal class TransactionEditViewProvider(
 @Composable
 private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
-    categoryComponent: Buildable<out AttachableViewComponent>,
+    expenseIncomeComponent: Buildable<out AttachableViewComponent>,
     transferComponent: Buildable<out AttachableViewComponent>,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
@@ -94,7 +94,7 @@ private fun TransactionEditView(
                 when (state.selectedTransactionType) {
                     TransactionEditType.EXPENSE,
                     TransactionEditType.INCOME,
-                    -> categoryComponent.AttachWithView()
+                    -> expenseIncomeComponent.AttachWithView()
                     TransactionEditType.TRANSFER -> transferComponent.AttachWithView()
                 }
             }
