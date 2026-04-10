@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,11 +30,14 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.Error
+import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Primary
+import com.hluhovskyi.zero.ui.theme.Secondary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 import java.math.BigDecimal
 
 internal class AccountViewProvider(
@@ -104,6 +106,7 @@ private fun NetWorthHeader(balance: String) {
             .fillMaxWidth()
             .background(SurfaceContainerLow)
             .padding(horizontal = 20.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
@@ -146,20 +149,19 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
         )
         Box(
             modifier = Modifier
-                .border(
-                    width = 1.dp,
-                    color = Primary,
+                .background(
+                    color = Secondary,
                     shape = RoundedCornerShape(20.dp),
                 )
                 .clickable(onClick = onAddAccount)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
                 text = "Add Account",
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Primary,
+                    color = OnSecondary,
                 ),
             )
         }
@@ -189,7 +191,9 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .background(SurfaceContainerLowest, shape = RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
