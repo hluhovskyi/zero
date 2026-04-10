@@ -21,6 +21,8 @@ interface AccountRepository {
         val currencyId: Id.Known,
         val iconId: Id.Known,
         val initialBalance: Amount,
+        val category: AccountCategory,
+        val details: String?,
     ) : Identifiable
 
     suspend fun insert(account: AccountInsert)
@@ -33,6 +35,8 @@ interface AccountRepository {
         val currencyId: Id.Known,
         val iconId: Id.Known,
         val initialBalance: Amount,
+        val category: AccountCategory = AccountCategory.OTHER,
+        val details: String? = null,
     )
 
     object Noop : AccountRepository {
