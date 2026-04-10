@@ -340,8 +340,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Account.All) {
             AccountsScreen(
-                component = componentBuilder.logging(logger),
-                onAccountEdit = { navigator.navigateTo(Destinations.Account.Edit) },
+                component = componentBuilder
+                    .onAddAccountHandler { navigator.navigateTo(Destinations.Account.Edit) }
+                    .logging(logger),
             )
         }
 
