@@ -18,6 +18,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -63,6 +64,12 @@ private fun AccountView(
     onAddAccount: OnAddAccountHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
+    val grouped = remember(state.accounts) {
+        state.accounts
+            .groupBy { it.category }
+            .entries
+            .sortedBy { it.key.ordinal }
+    }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             NetWorthHeader(
@@ -75,10 +82,6 @@ private fun AccountView(
         item {
             MyAccountsSectionHeader(onAddAccount = { onAddAccount.onAddAccount() })
         }
-        val grouped = state.accounts
-            .groupBy { it.category }
-            .entries
-            .sortedBy { it.key.ordinal }
         grouped.forEach { (category, accounts) ->
             item(key = category.name) {
                 CategoryHeader(category = category)
@@ -186,7 +189,6 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
