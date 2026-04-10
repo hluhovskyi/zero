@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -51,12 +52,16 @@ abstract class AccountComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerAccountComponent.builder()
             .dependencies(dependencies)
+            .onAddAccountHandler(OnAddAccountHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<AccountComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun onAddAccountHandler(handler: OnAddAccountHandler): Builder
     }
 
     @dagger.Module
@@ -96,10 +101,12 @@ abstract class AccountComponent : AttachableViewComponent {
             viewModel: AccountViewModel,
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
+            onAddAccountHandler: OnAddAccountHandler,
         ): ViewProvider = AccountViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
+            onAddAccount = onAddAccountHandler,
         )
     }
 }
