@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
@@ -29,6 +30,10 @@ internal class RoomAccountRepository(
                                 currencyId = account.currencyId,
                                 iconId = account.iconId,
                                 initialBalance = Amount(account.initialBalance.value),
+                                category = runCatching {
+                                    AccountCategory.valueOf(account.category)
+                                }.getOrDefault(AccountCategory.OTHER),
+                                details = account.details,
                             )
                         }
                     }
@@ -54,5 +59,7 @@ internal class RoomAccountRepository(
         name = name,
         iconId = iconId,
         initialBalance = AmountEntity(initialBalance.value),
+        category = category.name,
+        details = details,
     )
 }
