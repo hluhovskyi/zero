@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.edit.income
+package com.hluhovskyi.zero.transactions.edit.common
 
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -13,16 +13,16 @@ import javax.inject.Scope
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
-private annotation class TransactionEditIncomeScope
+private annotation class TransactionEditExpenseIncomeScope
 
-private const val TAG = "TransactionEditIncomeComponent"
+private const val TAG = "TransactionEditExpenseIncomeComponent"
 
-@TransactionEditIncomeScope
+@TransactionEditExpenseIncomeScope
 @dagger.Component(
-    modules = [TransactionEditIncomeComponent.Module::class],
-    dependencies = [TransactionEditIncomeComponent.Dependencies::class],
+    dependencies = [TransactionEditExpenseIncomeComponent.Dependencies::class],
+    modules = [TransactionEditExpenseIncomeComponent.Module::class],
 )
-abstract class TransactionEditIncomeComponent : AttachableViewComponent {
+abstract class TransactionEditExpenseIncomeComponent : AttachableViewComponent {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -33,12 +33,12 @@ abstract class TransactionEditIncomeComponent : AttachableViewComponent {
 
     companion object {
 
-        fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditIncomeComponent.builder()
+        fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditExpenseIncomeComponent.builder()
             .dependencies(dependencies)
     }
 
     @dagger.Component.Builder
-    interface Builder : Buildable<TransactionEditIncomeComponent> {
+    interface Builder : Buildable<TransactionEditExpenseIncomeComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
 
@@ -47,22 +47,22 @@ abstract class TransactionEditIncomeComponent : AttachableViewComponent {
     }
 
     @dagger.Module
-    object Module {
+    internal object Module {
 
         @Provides
-        @TransactionEditIncomeScope
+        @TransactionEditExpenseIncomeScope
         fun viewModel(
-            transactionEditUseCase: TransactionEditUseCase,
-        ): TransactionEditIncomeViewModel = DefaultTransactionEditIncomeViewModel(
-            useCase = transactionEditUseCase,
+            useCase: TransactionEditUseCase,
+        ): TransactionEditExpenseIncomeViewModel = DefaultTransactionEditExpenseIncomeViewModel(
+            useCase = useCase,
         )
 
         @Provides
-        @TransactionEditIncomeScope
+        @TransactionEditExpenseIncomeScope
         fun viewProvider(
-            viewModel: TransactionEditIncomeViewModel,
+            viewModel: TransactionEditExpenseIncomeViewModel,
             imageLoader: ImageLoader,
-        ): ViewProvider = TransactionEditIncomeViewProvider(
+        ): ViewProvider = TransactionEditExpenseIncomeViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
         )

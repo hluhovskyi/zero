@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.edit.expense
+package com.hluhovskyi.zero.transactions.edit.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -16,20 +16,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
-import com.hluhovskyi.zero.transactions.edit.common.CategoryScrollRow
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateTextField
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 
-internal class TransactionEditExpenseViewProvider(
-    private val viewModel: TransactionEditExpenseViewModel,
+internal class TransactionEditExpenseIncomeViewProvider(
+    private val viewModel: TransactionEditExpenseIncomeViewModel,
     private val imageLoader: ImageLoader,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditExpenseView(
+        TransactionEditExpenseIncomeView(
             viewModel = viewModel,
             imageLoader = imageLoader,
         )
@@ -37,11 +34,11 @@ internal class TransactionEditExpenseViewProvider(
 }
 
 @Composable
-private fun TransactionEditExpenseView(
-    viewModel: TransactionEditExpenseViewModel,
+private fun TransactionEditExpenseIncomeView(
+    viewModel: TransactionEditExpenseIncomeViewModel,
     imageLoader: ImageLoader,
 ) {
-    val state by viewModel.state.collectAsState(initial = TransactionEditExpenseViewModel.State())
+    val state by viewModel.state.collectAsState(initial = TransactionEditExpenseIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -59,11 +56,11 @@ private fun TransactionEditExpenseView(
             currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
             focusRequester = focusRequester,
             onAmountChange = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeAmount(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeAmount(it))
             },
             currencies = state.currencies,
             onCurrencySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCurrency(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCurrency(it))
             },
         )
 
@@ -75,10 +72,10 @@ private fun TransactionEditExpenseView(
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             onCategorySelected = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.SelectCategory(it))
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCategory(it))
             },
             onShowAll = {
-                viewModel.perform(TransactionEditExpenseViewModel.Action.ShowAllCategories)
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ShowAllCategories)
             },
         )
 
@@ -92,7 +89,7 @@ private fun TransactionEditExpenseView(
                     label = "Date",
                     date = date,
                     onDateSelected = {
-                        viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeDate(it))
+                        viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeDate(it))
                     },
                 )
             }
@@ -103,7 +100,7 @@ private fun TransactionEditExpenseView(
                 items = state.accounts,
                 nameMapping = { it.name },
                 onItemSelected = {
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.SelectAccount(it))
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectAccount(it))
                 },
             )
         }
@@ -115,7 +112,7 @@ private fun TransactionEditExpenseView(
                     .padding(top = 16.dp),
                 rate = state.rate,
                 onValueChange = { rate ->
-                    viewModel.perform(TransactionEditExpenseViewModel.Action.ChangeRate(rate))
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeRate(rate))
                 },
             )
         }

@@ -16,8 +16,7 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.edit.expense.TransactionEditExpenseComponent
-import com.hluhovskyi.zero.transactions.edit.income.TransactionEditIncomeComponent
+import com.hluhovskyi.zero.transactions.edit.common.TransactionEditExpenseIncomeComponent
 import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -37,8 +36,7 @@ private const val TAG = "TransactionEditComponent"
 )
 abstract class TransactionEditComponent :
     AttachableViewComponent,
-    TransactionEditExpenseComponent.Dependencies,
-    TransactionEditIncomeComponent.Dependencies,
+    TransactionEditExpenseIncomeComponent.Dependencies,
     TransactionEditTransferComponent.Dependencies {
 
     internal abstract val useCase: TransactionEditUseCase
@@ -95,7 +93,7 @@ abstract class TransactionEditComponent :
     }
 
     @dagger.Module
-    object Module {
+    internal object Module {
 
         @Provides
         @TransactionEditScope
@@ -145,23 +143,21 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
-            expenseComponentBuilder: TransactionEditExpenseComponent.Builder,
-            incomeComponentBuilder: TransactionEditIncomeComponent.Builder,
+            expenseIncomeComponentBuilder: TransactionEditExpenseIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
             logger: Logger,
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
-            expenseComponent = expenseComponentBuilder.logging(logger),
-            incomeComponent = incomeComponentBuilder.logging(logger),
+            expenseIncomeComponent = expenseIncomeComponentBuilder.logging(logger),
             transferComponent = transferComponentBuilder.logging(logger),
         )
 
         @Provides
         @TransactionEditScope
-        fun transactionEditExpenseComponentBuilder(
+        fun transactionEditExpenseIncomeComponentBuilder(
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
-        ): TransactionEditExpenseComponent.Builder = TransactionEditExpenseComponent.builder(component)
+        ): TransactionEditExpenseIncomeComponent.Builder = TransactionEditExpenseIncomeComponent.builder(component)
             .transactionEditUseCase(useCase)
 
         @Provides
@@ -170,14 +166,6 @@ abstract class TransactionEditComponent :
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
         ): TransactionEditTransferComponent.Builder = TransactionEditTransferComponent.builder(component)
-            .transactionEditUseCase(useCase)
-
-        @Provides
-        @TransactionEditScope
-        fun transactionEditIncomeComponentBuilder(
-            component: TransactionEditComponent,
-            useCase: TransactionEditUseCase,
-        ): TransactionEditIncomeComponent.Builder = TransactionEditIncomeComponent.builder(component)
             .transactionEditUseCase(useCase)
     }
 }
