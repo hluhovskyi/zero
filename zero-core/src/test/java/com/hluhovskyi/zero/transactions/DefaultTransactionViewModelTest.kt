@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.colors.ColorScheme
@@ -139,6 +140,8 @@ class DefaultTransactionViewModelTest {
             currencyId = Id.Known("c1"),
             iconId = Id.Known("i1"),
             initialBalance = Amount.zero(),
+            category = AccountCategory.OTHER,
+            details = null,
         )
         val targetAccount = AccountRepository.Account(
             id = Id.Known("a2"),
@@ -146,6 +149,8 @@ class DefaultTransactionViewModelTest {
             currencyId = Id.Known("c2"),
             iconId = Id.Known("i2"),
             initialBalance = Amount.zero(),
+            category = AccountCategory.OTHER,
+            details = null,
         )
         val currency1 = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
         val currency2 = Currency(id = Id.Known("c2"), name = "Euro", symbol = "€")

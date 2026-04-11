@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
@@ -65,6 +66,25 @@ private fun AccountEditView(
                 viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
             },
         )
+        CategorySelect(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            selectedCategory = state.category,
+            onCategorySelected = { category ->
+                viewModel.perform(AccountEditViewModel.Action.ChangeCategory(category))
+            },
+        )
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            value = state.details,
+            label = { Text(text = "Details") },
+            onValueChange = { details ->
+                viewModel.perform(AccountEditViewModel.Action.ChangeDetails(details))
+            },
+        )
         CurrencySelect(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,5 +130,30 @@ private fun CurrencySelect(
         nameMapping = { it.name },
         selectedItem = selectedCurrency,
         onItemSelected = onCurrencySelected,
+    )
+}
+
+@Composable
+private fun CategorySelect(
+    modifier: Modifier = Modifier,
+    selectedCategory: AccountCategory,
+    onCategorySelected: (AccountCategory) -> Unit,
+) {
+    TextFieldDropdownMenu(
+        modifier = modifier,
+        items = AccountCategory.entries,
+        label = { Text(text = "Category") },
+        nameMapping = { category ->
+            when (category) {
+                AccountCategory.CASH -> "Cash"
+                AccountCategory.BANK -> "Bank"
+                AccountCategory.CREDIT_CARDS -> "Credit Cards"
+                AccountCategory.DIGITAL_WALLETS -> "Digital Wallets"
+                AccountCategory.CRYPTO -> "Crypto"
+                AccountCategory.OTHER -> "Other"
+            }
+        },
+        selectedItem = selectedCategory,
+        onItemSelected = onCategorySelected,
     )
 }

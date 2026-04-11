@@ -3,6 +3,7 @@ package com.hluhovskyi.zero
 import android.content.Context
 import androidx.room.Room
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.MIGRATION_1_2
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.RoomCategoryRepository
@@ -101,7 +102,9 @@ interface DatabaseComponent {
             context,
             MainDatabase::class.java,
             "MainDatabase",
-        ).build()
+        )
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
         @Provides
         @DatabaseScope

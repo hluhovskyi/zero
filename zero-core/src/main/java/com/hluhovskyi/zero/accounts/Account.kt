@@ -10,4 +10,6 @@ data class Account(
     val balance: Amount,
     val currencySymbol: String,
     val icon: Image,
+    val category: AccountCategory,
+    val details: String?,
 )
