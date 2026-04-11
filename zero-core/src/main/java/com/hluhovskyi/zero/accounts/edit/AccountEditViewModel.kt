@@ -14,6 +14,7 @@ interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel
         data class ChangeCategory(val category: AccountCategory) : Action
         object SelectIcon : Action
         data class SelectCurrency(val currency: Currency) : Action
+        object OpenCurrencyPicker : Action
         object Save : Action
     }
 

@@ -29,6 +29,7 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -62,6 +63,7 @@ abstract class ActivityComponent :
     AccountEditComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
+    CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
@@ -146,6 +148,12 @@ abstract class ActivityComponent :
         fun categoryPickerComponentBuilder(
             component: ActivityComponent,
         ): CategoryPickerComponent.Builder = CategoryPickerComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun currencyPickerComponentBuilder(
+            component: ActivityComponent,
+        ): CurrencyPickerComponent.Builder = CurrencyPickerComponent.builder(component)
 
         @Provides
         @ActivityScope

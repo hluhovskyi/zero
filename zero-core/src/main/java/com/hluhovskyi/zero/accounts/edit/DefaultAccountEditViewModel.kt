@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +24,9 @@ import java.io.Closeable
 internal class DefaultAccountEditViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
+    private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val accountEditIconUseCase: AccountEditIconUseCase,
+    private val accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
     private val onAccountSavedHandler: OnAccountSavedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : AccountEditViewModel {
@@ -59,6 +62,9 @@ internal class DefaultAccountEditViewModel(
             is AccountEditViewModel.Action.SelectCurrency -> mutableState.update { state ->
                 state.copy(selectedCurrency = action.currency)
             }
+            is AccountEditViewModel.Action.OpenCurrencyPicker -> {
+                accountEditCurrencyUseCase.perform(AccountEditCurrencyUseCase.Action.Request)
+            }
             is AccountEditViewModel.Action.SelectIcon -> {
                 accountEditIconUseCase.perform(AccountEditIconUseCase.Action.Request)
             }
@@ -84,13 +90,17 @@ internal class DefaultAccountEditViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            val primaryCurrency = runCatching { currencyPrimaryUseCase.getPrimaryCurrency() }.getOrNull()
             launch {
-                currencyRepository.query(CurrencyRepository.Criteria.All())
+                currencyRepository.query(CurrencyRepository.Criteria.InUse())
                     .collectLatest { currencies ->
                         mutableState.update { state ->
                             state.copy(
                                 currencies = currencies,
-                                selectedCurrency = state.selectedCurrency ?: currencies.firstOrNull(),
+                                selectedCurrency = state.selectedCurrency
+                                    ?: currencies.firstOrNull { it.id == primaryCurrency?.id }
+                                    ?: primaryCurrency
+                                    ?: currencies.firstOrNull(),
                             )
                         }
                     }
@@ -104,6 +114,15 @@ internal class DefaultAccountEditViewModel(
                                 iconId = iconState.icon.id,
                                 icon = iconState.icon.image,
                             )
+                        }
+                    }
+            }
+            launch(context = Dispatchers.Main) {
+                accountEditCurrencyUseCase.state
+                    .filterIsInstance<AccountEditCurrencyUseCase.State.Picked>()
+                    .collectLatest { currencyState ->
+                        mutableState.update { state ->
+                            state.copy(selectedCurrency = currencyState.currency)
                         }
                     }
             }

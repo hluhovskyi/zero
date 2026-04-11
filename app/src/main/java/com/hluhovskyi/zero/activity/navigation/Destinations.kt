@@ -35,6 +35,12 @@ internal object Destinations {
         }
     }
 
+    sealed interface Currency : Destination {
+        object Picker : Currency, Destination by destinationOf("currencies/picker", RequestId) {
+            object RequestId : Argument<Id> by idOptionalValueOf("requestId")
+        }
+    }
+
     sealed interface Icon : Destination {
         object Picker : Icon, Destination by destinationOf("icons/picker", RequestId, ColorId) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
