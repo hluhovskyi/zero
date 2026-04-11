@@ -97,11 +97,10 @@ private fun AccountEditView(
                         modifier = Modifier.weight(1f),
                         label = "Currency",
                         value = state.selectedCurrency?.name ?: "",
-                        items = state.currencies,
-                        nameMapping = { it.name },
-                        onItemSelected = { currency ->
-                            viewModel.perform(AccountEditViewModel.Action.SelectCurrency(currency))
-                        },
+                        items = emptyList<String>(),
+                        nameMapping = { it },
+                        onItemSelected = {},
+                        onClick = { viewModel.perform(AccountEditViewModel.Action.OpenCurrencyPicker) },
                     )
                     SelectorCard(
                         modifier = Modifier.weight(1f),

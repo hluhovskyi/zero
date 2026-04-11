@@ -45,6 +45,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
             .onAccountSavedHandler(OnAccountSavedHandler.Noop)
             .onCloseHandler(OnCloseHandler.Noop)
             .accountEditIconUseCase(AccountEditIconUseCase.Noop)
+            .accountEditCurrencyUseCase(AccountEditCurrencyUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -60,6 +61,9 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
         @BindsInstance
         fun accountEditIconUseCase(useCase: AccountEditIconUseCase): Builder
+
+        @BindsInstance
+        fun accountEditCurrencyUseCase(useCase: AccountEditCurrencyUseCase): Builder
     }
 
     @dagger.Module
@@ -72,12 +76,14 @@ abstract class AccountEditComponent : AttachableViewComponent {
             currencyRepository: CurrencyRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             accountEditIconUseCase = accountEditIconUseCase,
+            accountEditCurrencyUseCase = accountEditCurrencyUseCase,
             onAccountSavedHandler = onAccountSavedHandler,
         )
 
