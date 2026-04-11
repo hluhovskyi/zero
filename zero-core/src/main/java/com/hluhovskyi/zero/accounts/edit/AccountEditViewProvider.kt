@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,11 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -24,12 +26,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SelectorCard
+import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 internal class AccountEditViewProvider(
     private val viewModel: AccountEditViewModel,
@@ -67,11 +75,12 @@ private fun AccountEditView(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 AmountDisplay(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 32.dp, bottom = 40.dp),
+                        .padding(top = 16.dp, bottom = 8.dp),
                     amount = state.balance,
                     currencySymbol = state.selectedCurrency?.symbol ?: "",
                     focusRequester = focusRequester,
@@ -82,9 +91,7 @@ private fun AccountEditView(
                 )
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SelectorCard(
@@ -109,23 +116,20 @@ private fun AccountEditView(
                     )
                 }
 
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                InputCard(
+                    label = "Account Name",
                     value = state.name,
-                    label = { Text(text = "Account Name") },
+                    placeholder = "e.g. Everyday Checking",
                     onValueChange = { name ->
                         viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
                     },
                 )
 
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 96.dp),
+                InputCard(
+                    modifier = Modifier.padding(bottom = 96.dp),
+                    label = "Details",
                     value = state.details,
-                    label = { Text(text = "Details") },
+                    placeholder = "e.g. Chase Bank",
                     onValueChange = { details ->
                         viewModel.perform(AccountEditViewModel.Action.ChangeDetails(details))
                     },
@@ -141,6 +145,50 @@ private fun AccountEditView(
             text = { Text("Save") },
             onClick = { viewModel.perform(AccountEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
+        )
+    }
+}
+
+@Composable
+private fun InputCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    placeholder: String,
+    onValueChange: (String) -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = OnSurface,
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            textStyle = TextStyle(
+                fontSize = 15.sp,
+                color = OnSurface,
+            ),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                if (value.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        fontSize = 15.sp,
+                        color = OnSurfaceVariant,
+                    )
+                }
+                innerTextField()
+            },
         )
     }
 }
