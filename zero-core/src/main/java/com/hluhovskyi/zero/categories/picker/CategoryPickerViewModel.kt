@@ -9,10 +9,12 @@ interface CategoryPickerViewModel : AttachableActionStateModel<CategoryPickerVie
 
     sealed interface Action {
         data class SelectCategory(val category: CategoryPickerItem) : Action
+        data class UpdateSearchQuery(val query: String) : Action
     }
 
     data class State(
         val categories: List<CategoryPickerItem> = emptyList(),
+        val searchQuery: String = "",
     )
 
     data class CategoryPickerItem(

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 
@@ -44,17 +46,28 @@ internal class CurrencyPickerViewProvider(
 private fun CurrencyPickerView(viewModel: CurrencyPickerViewModel) {
     val state by viewModel.state.collectAsState(initial = CurrencyPickerViewModel.State())
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        items(state.currencies, key = { it.id.value }) { currency ->
-            CurrencyPickerGridItem(
-                currency = currency,
-                onClick = { viewModel.perform(CurrencyPickerViewModel.Action.SelectCurrency(currency)) },
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        SearchBar(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            query = state.searchQuery,
+            onQueryChange = { query ->
+                viewModel.perform(CurrencyPickerViewModel.Action.UpdateSearchQuery(query))
+            },
+            placeholder = "Search currencies…",
+        )
+        LazyVerticalGrid(
+            modifier = Modifier.weight(1f),
+            columns = GridCells.Fixed(GRID_COLUMNS),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(state.currencies, key = { it.id.value }) { currency ->
+                CurrencyPickerGridItem(
+                    currency = currency,
+                    onClick = { viewModel.perform(CurrencyPickerViewModel.Action.SelectCurrency(currency)) },
+                )
+            }
         }
     }
 }

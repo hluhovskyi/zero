@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,12 +28,15 @@ internal class DefaultCategoryPickerViewModel(
             is CategoryPickerViewModel.Action.SelectCategory -> coroutineScope.launch(Dispatchers.Main) {
                 onCategorySelectedHandler.onSelected(action.category.id)
             }
+            is CategoryPickerViewModel.Action.UpdateSearchQuery -> {
+                mutableState.update { it.copy(searchQuery = action.query) }
+            }
         }
     }
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            categoriesQueryUseCase.queryAll()
+            val allCategories = categoriesQueryUseCase.queryAll()
                 .map { categories ->
                     categories
                         .sortedBy { it.name }
@@ -45,9 +49,16 @@ internal class DefaultCategoryPickerViewModel(
                             )
                         }
                 }
-                .collectLatest { categories ->
-                    mutableState.update { it.copy(categories = categories) }
+            combine(allCategories, mutableState) { categories, state ->
+                if (state.searchQuery.isBlank()) {
+                    categories
+                } else {
+                    val q = state.searchQuery.trim().lowercase()
+                    categories.filter { it.name.lowercase().contains(q) }
                 }
+            }.collectLatest { filtered ->
+                mutableState.update { it.copy(categories = filtered) }
+            }
         }
     }
 }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -24,6 +26,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 
@@ -51,18 +54,29 @@ private fun CategoryPickerView(
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryPickerViewModel.State())
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        items(state.categories) { category ->
-            CategoryPickerGridItem(
-                imageLoader = imageLoader,
-                category = category,
-                onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) },
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        SearchBar(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            query = state.searchQuery,
+            onQueryChange = { query ->
+                viewModel.perform(CategoryPickerViewModel.Action.UpdateSearchQuery(query))
+            },
+            placeholder = "Search categories…",
+        )
+        LazyVerticalGrid(
+            modifier = Modifier.weight(1f),
+            columns = GridCells.Fixed(GRID_COLUMNS),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(state.categories) { category ->
+                CategoryPickerGridItem(
+                    imageLoader = imageLoader,
+                    category = category,
+                    onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) },
+                )
+            }
         }
     }
 }

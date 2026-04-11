@@ -7,9 +7,11 @@ interface CurrencyPickerViewModel : AttachableActionStateModel<CurrencyPickerVie
 
     sealed interface Action {
         data class SelectCurrency(val currency: Currency) : Action
+        data class UpdateSearchQuery(val query: String) : Action
     }
 
     data class State(
         val currencies: List<Currency> = emptyList(),
+        val searchQuery: String = "",
     )
 }
