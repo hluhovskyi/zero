@@ -41,6 +41,7 @@ fun <T> SelectorCard(
     items: List<T>,
     nameMapping: (T) -> String,
     onItemSelected: (T) -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -49,7 +50,7 @@ fun <T> SelectorCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
-                .clickable { expanded = true }
+                .clickable { if (onClick != null) onClick() else expanded = true }
                 .padding(16.dp),
         ) {
             Text(

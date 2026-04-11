@@ -4,6 +4,7 @@ import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
+import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
 import com.hluhovskyi.zero.activity.navigation.DefaultNavigatorScope
 import com.hluhovskyi.zero.activity.navigation.Destinations
@@ -36,6 +37,7 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
+import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -87,6 +89,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
 
+        val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
         val colorPickerComponentBuilder: ColorPickerComponent.Builder
 
@@ -359,6 +362,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         )
 
         @Provides
+        @MainActivityScreenScope
+        internal fun accountEditCurrencyUseCase(
+            navigator: Navigator,
+            requestIdGenerator: IdGenerator,
+        ): AccountEditCurrencyUseCase = DefaultAccountEditCurrencyUseCase(
+            navigator = navigator,
+            requestIdGenerator = requestIdGenerator,
+        )
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun accountEditNavigationEntry(
@@ -366,11 +379,34 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
             logger: Logger,
             accountEditIconUseCase: AccountEditIconUseCase,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Edit) {
             componentBuilder
                 .accountEditIconUseCase(accountEditIconUseCase)
+                .accountEditCurrencyUseCase(accountEditCurrencyUseCase)
                 .onAccountSavedHandler { navigator.back() }
                 .onCloseHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun currencyPickerNavigationEntry(
+            componentBuilder: CurrencyPickerComponent.Builder,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Currency.Picker,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            componentBuilder
+                .onCurrencyPickedHandler { currency ->
+                    accountEditCurrencyUseCase.perform(
+                        AccountEditCurrencyUseCase.Action.Pick(currency),
+                    )
+                }
                 .logging(logger)
         }
 
