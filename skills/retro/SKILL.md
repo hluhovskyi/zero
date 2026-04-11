@@ -70,13 +70,13 @@ Present findings concisely. A retrospective is ONLY complete if it results in an
 - [safeguard] → suggest: implement linter/static check for [rule]
 ```
 
-Keep it short. No padding. Then ask: **"Want me to write these updates?"**
+Keep it short. No padding. Then ask: **"Which of these would you like me to write?"** — let the user pick a subset rather than forcing all-or-nothing.
 
 ## Step 5 — Write (if confirmed)
 
 For each doc update:
 - Prefer editing existing files over creating new ones.
-- Keep additions tight — pointer + rule, not a tutorial.
+- Cast each rule in the format used throughout this codebase's AGENTS.md files: `**<imperative or trigger condition>** — <why or consequence>`. If the imperative part doesn't fit in a short bold phrase, it's two rules — split it.
 - Commit with message: `docs: <what was added and why>`
 
 ## Guardrails

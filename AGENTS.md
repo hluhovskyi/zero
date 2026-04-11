@@ -6,7 +6,7 @@ Zero is a personal finance Android app (Kotlin, Jetpack Compose, Dagger, Room). 
 
 If you discover a non-obvious gotcha, a new pattern, or a rule that isn't documented — update the relevant doc file. Don't document things the code already says clearly. Only document the "why" and the traps.
 
-**Repo-First Documentation**: All plans and architectural docs MUST be saved directly to the repository (e.g. `docs/superpowers/plans/`). Never leave artifacts in temporary tool directories.
+**Repo-First Documentation**: All plans and architectural docs MUST be saved directly to the repository (e.g. `docs/superpowers/plans/`). Never leave artifacts in temporary tool directories. **Commit the plan doc on the feature branch before starting implementation** — an untracked plan is a lost plan.
 
 ## Cross-Cutting Rules
 
@@ -19,7 +19,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
     - **Zero Deviation**: Approved plans are binding. Stop and re-propose if implementation requires any architectural or logic change.
     - See [Execution Workflow](docs/agents/execution-workflow.md).
 4. **Shared Agent Skills** — Always prefer workspace-scoped symlinks for skills shared between Gemini and Claude to maintain a single source of truth for both agents.
-5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing.
+5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **No git worktrees** — This is an Android/Gradle project. Worktrees break Gradle daemon and build cache. Never create worktrees; always work on a regular branch checkout.
 
