@@ -43,9 +43,15 @@ internal class DefaultAccountEditIconUseCase(
                 val id = requestIdGenerator()
                 requestId.set(id)
                 logger.d("perform, requestId=$requestId")
+                val args = buildList {
+                    add(Destinations.Icon.Picker.RequestId.withValue(id))
+                    (action.iconId as? Id.Known)?.let { selectedId ->
+                        add(Destinations.Icon.Picker.SelectedIconId.withValue(selectedId))
+                    }
+                }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
-                    Destinations.Icon.Picker.RequestId.withValue(id),
+                    *args.toTypedArray(),
                 )
             }
             is AccountEditIconUseCase.Action.Pick -> {

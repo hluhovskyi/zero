@@ -135,7 +135,11 @@ internal class DefaultTransactionEditUseCase(
             }
 
             is TransactionEditUseCase.Action.ShowAllCategories -> {
-                transactionEditCategoryUseCase.perform(TransactionEditCategoryUseCase.Action.Request)
+                transactionEditCategoryUseCase.perform(
+                    TransactionEditCategoryUseCase.Action.Request(
+                        selectedCategoryId = mutableState.value.selectedCategory?.id ?: Id.Unknown,
+                    ),
+                )
             }
 
             is TransactionEditUseCase.Action.SelectCurrency -> {

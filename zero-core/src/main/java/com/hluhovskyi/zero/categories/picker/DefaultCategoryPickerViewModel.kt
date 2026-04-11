@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.categories.picker
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.OnCategorySelectedHandler
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,10 +18,11 @@ import java.io.Closeable
 internal class DefaultCategoryPickerViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val onCategorySelectedHandler: OnCategorySelectedHandler,
+    private val selectedCategoryId: Id = Id.Unknown,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : CategoryPickerViewModel {
 
-    private val mutableState = MutableStateFlow(CategoryPickerViewModel.State())
+    private val mutableState = MutableStateFlow(CategoryPickerViewModel.State(selectedCategoryId = selectedCategoryId))
     override val state: Flow<CategoryPickerViewModel.State> = mutableState
 
     override fun perform(action: CategoryPickerViewModel.Action) {

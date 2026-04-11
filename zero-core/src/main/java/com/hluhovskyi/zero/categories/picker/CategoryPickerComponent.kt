@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.OnCategorySelectedHandler
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import dagger.BindsInstance
 import dagger.Provides
@@ -39,6 +40,7 @@ abstract class CategoryPickerComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryPickerComponent.builder()
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
+            .selectedCategoryId(Id.Unknown)
     }
 
     @dagger.Component.Builder
@@ -48,6 +50,9 @@ abstract class CategoryPickerComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCategorySelectedHandler(handler: OnCategorySelectedHandler): Builder
+
+        @BindsInstance
+        fun selectedCategoryId(id: Id): Builder
     }
 
     @dagger.Module
@@ -58,9 +63,11 @@ abstract class CategoryPickerComponent : AttachableViewComponent {
         fun viewModel(
             categoriesQueryUseCase: CategoriesQueryUseCase,
             onCategorySelectedHandler: OnCategorySelectedHandler,
+            selectedCategoryId: Id,
         ): CategoryPickerViewModel = DefaultCategoryPickerViewModel(
             categoriesQueryUseCase = categoriesQueryUseCase,
             onCategorySelectedHandler = onCategorySelectedHandler,
+            selectedCategoryId = selectedCategoryId,
         )
 
         @Provides

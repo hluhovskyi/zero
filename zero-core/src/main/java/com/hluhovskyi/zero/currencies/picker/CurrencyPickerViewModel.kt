@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.currencies.picker
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
+import com.hluhovskyi.zero.common.Id
 
 interface CurrencyPickerViewModel : AttachableActionStateModel<CurrencyPickerViewModel.Action, CurrencyPickerViewModel.State> {
 
@@ -13,5 +14,6 @@ interface CurrencyPickerViewModel : AttachableActionStateModel<CurrencyPickerVie
     data class State(
         val currencies: List<Currency> = emptyList(),
         val searchQuery: String = "",
+        val selectedCurrencyId: Id = Id.Unknown,
     )
 }

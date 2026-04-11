@@ -35,9 +35,15 @@ internal class DefaultTransactionEditCategoryUseCase(
             is TransactionEditCategoryUseCase.Action.Request -> {
                 val id = requestIdGenerator()
                 requestId.set(id)
+                val args = buildList {
+                    add(Destinations.Category.Picker.RequestId.withValue(id))
+                    (action.selectedCategoryId as? Id.Known)?.let { selectedId ->
+                        add(Destinations.Category.Picker.SelectedCategoryId.withValue(selectedId))
+                    }
+                }
                 navigator.navigateTo(
                     destination = Destinations.Category.Picker,
-                    Destinations.Category.Picker.RequestId.withValue(id),
+                    *args.toTypedArray(),
                 )
             }
             is TransactionEditCategoryUseCase.Action.Pick -> {

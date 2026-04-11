@@ -74,6 +74,7 @@ private fun CategoryPickerView(
                 CategoryPickerGridItem(
                     imageLoader = imageLoader,
                     category = category,
+                    isSelected = category.id == state.selectedCategoryId,
                     onClick = { viewModel.perform(CategoryPickerViewModel.Action.SelectCategory(category)) },
                 )
             }
@@ -86,6 +87,7 @@ private fun CategoryPickerGridItem(
     modifier: Modifier = Modifier,
     imageLoader: ImageLoader,
     category: CategoryPickerViewModel.CategoryPickerItem,
+    isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     Column(
@@ -96,6 +98,7 @@ private fun CategoryPickerGridItem(
             colorScheme = category.colorScheme.toUi(),
             size = 48.dp,
             contentPadding = 12.dp,
+            isSelected = isSelected,
         ) { iconTint ->
             imageLoader.View(
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),

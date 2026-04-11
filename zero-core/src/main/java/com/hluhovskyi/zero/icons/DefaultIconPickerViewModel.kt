@@ -19,6 +19,7 @@ internal class DefaultIconPickerViewModel(
     private val colorRepository: ColorRepository,
     private val onIconSelectedHandler: OnIconSelectedHandler,
     private val colorId: Id = Id.Unknown,
+    private val selectedIconId: Id = Id.Unknown,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : IconPickerViewModel {
 
@@ -51,8 +52,13 @@ internal class DefaultIconPickerViewModel(
                     }
                 }
                 .collectLatest { icons ->
+                    val selectedIcon = (selectedIconId as? Id.Known)
+                        ?.let { id -> icons.find { it.id == id } }
                     mutableState.update { state ->
-                        state.copy(icons = icons)
+                        state.copy(
+                            icons = icons,
+                            selectedIcon = selectedIcon,
+                        )
                     }
                 }
         }
