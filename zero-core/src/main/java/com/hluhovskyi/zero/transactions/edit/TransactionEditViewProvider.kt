@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExtendedFloatingActionButton
@@ -57,8 +56,7 @@ private fun TransactionEditView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.background)
-            .imePadding(),
+            .background(MaterialTheme.colors.background),
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
