@@ -45,6 +45,8 @@ internal class DefaultAccountUseCase(
                 balance = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
                 currencySymbol = idToCurrency[account.currencyId]?.symbol.orEmpty(),
                 icon = idToIcon[account.iconId]?.image ?: Image.empty(),
+                category = account.category,
+                details = account.details,
             )
         }
         val balance = accounts.fold(Amount.zero()) { total, account ->

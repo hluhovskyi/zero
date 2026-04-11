@@ -17,4 +17,6 @@ internal data class AccountEntity(
     val name: String,
     val iconId: Id.Known,
     @Embedded val initialBalance: AmountEntity,
+    val category: String = "OTHER",
+    val details: String? = null,
 )

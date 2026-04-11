@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
@@ -33,6 +34,8 @@ internal class DefaultAccountEditViewModel(
             AccountEditViewModel.State(
                 name = state.name,
                 balance = state.balance,
+                details = state.details,
+                category = state.category,
                 currencies = state.currencies,
                 selectedCurrency = state.selectedCurrency,
                 selectedIcon = state.icon,
@@ -46,6 +49,12 @@ internal class DefaultAccountEditViewModel(
             }
             is AccountEditViewModel.Action.ChangeBalance -> mutableState.update { state ->
                 state.copy(balance = action.balance)
+            }
+            is AccountEditViewModel.Action.ChangeDetails -> mutableState.update { state ->
+                state.copy(details = action.details)
+            }
+            is AccountEditViewModel.Action.ChangeCategory -> mutableState.update { state ->
+                state.copy(category = action.category)
             }
             is AccountEditViewModel.Action.SelectCurrency -> mutableState.update { state ->
                 state.copy(selectedCurrency = action.currency)
@@ -62,6 +71,8 @@ internal class DefaultAccountEditViewModel(
                         currencyId = selectedCurrency.id,
                         iconId = state.iconId,
                         initialBalance = Amount(state.balance.toDoubleOrNull() ?: 0.0),
+                        category = state.category,
+                        details = state.details.takeIf { it.isNotBlank() },
                     ),
                 )
                 launch(context = Dispatchers.Main) {
@@ -102,6 +113,8 @@ internal class DefaultAccountEditViewModel(
     private data class CompositeState(
         val name: String = "",
         val balance: String = "",
+        val details: String = "",
+        val category: AccountCategory = AccountCategory.OTHER,
         val selectedCurrency: Currency? = null,
         val currencies: List<Currency> = emptyList(),
         val iconId: Id.Known = IconRepository.defaultAccountIconId(),
