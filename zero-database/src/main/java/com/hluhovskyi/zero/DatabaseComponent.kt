@@ -104,7 +104,6 @@ interface DatabaseComponent {
             "MainDatabase",
         )
             .addMigrations(MIGRATION_1_2)
-            .fallbackToDestructiveMigrationOnDowngrade(true)
             .build()
 
         @Provides
