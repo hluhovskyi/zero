@@ -16,6 +16,6 @@ Android library module. Design system and dumb reusable Compose components.
 
 ## Adding a Shared Component
 
-1. Check if it's truly reusable across features — if only one feature uses it, keep it in `zero-core`
+1. If a second feature needs a component that lives in a feature package, move it here — never add a cross-feature import inside `zero-core`. Strip domain types via generics or primitives before moving.
 2. Components here must not reference any domain types — keep them dumb (accept primitives, strings, Compose types)
 3. Keep components stateless — accept data via parameters, emit events via callbacks
