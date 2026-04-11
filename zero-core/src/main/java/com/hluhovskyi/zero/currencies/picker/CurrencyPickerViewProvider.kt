@@ -76,7 +76,7 @@ private fun CurrencyPickerGridItem(
         ) {
             Text(
                 text = currency.symbol,
-                fontSize = 20.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface,
             )
