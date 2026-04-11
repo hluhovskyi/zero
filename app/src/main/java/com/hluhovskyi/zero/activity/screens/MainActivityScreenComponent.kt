@@ -370,6 +370,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .accountEditIconUseCase(accountEditIconUseCase)
                 .onAccountSavedHandler { navigator.back() }
+                .onCloseHandler { navigator.back() }
                 .logging(logger)
         }
 

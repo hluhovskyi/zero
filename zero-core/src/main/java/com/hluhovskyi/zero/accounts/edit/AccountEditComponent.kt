@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.accounts.edit
 
-import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -32,7 +31,6 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
     interface Dependencies {
         val idGenerator: IdGenerator
-        val imageLoader: ImageLoader
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -43,6 +41,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerAccountEditComponent.builder()
             .dependencies(dependencies)
             .onAccountSavedHandler(OnAccountSavedHandler.Noop)
+            .onCloseHandler(OnCloseHandler.Noop)
             .accountEditIconUseCase(AccountEditIconUseCase.Noop)
     }
 
@@ -53,6 +52,9 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAccountSavedHandler(handler: OnAccountSavedHandler): Builder
+
+        @BindsInstance
+        fun onCloseHandler(handler: OnCloseHandler): Builder
 
         @BindsInstance
         fun accountEditIconUseCase(useCase: AccountEditIconUseCase): Builder
@@ -79,10 +81,10 @@ abstract class AccountEditComponent : AttachableViewComponent {
         @AccountEditScope
         fun viewProvider(
             viewModel: AccountEditViewModel,
-            imageLoader: ImageLoader,
+            onCloseHandler: OnCloseHandler,
         ): ViewProvider = AccountEditViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader,
+            onClose = onCloseHandler,
         )
     }
 }
