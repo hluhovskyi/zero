@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -34,6 +35,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
     }
 
     companion object {
@@ -68,11 +70,13 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun viewModel(
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
             accountEditIconUseCase = accountEditIconUseCase,
             onAccountSavedHandler = onAccountSavedHandler,
         )

@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ import java.io.Closeable
 internal class DefaultAccountEditViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
+    private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val accountEditIconUseCase: AccountEditIconUseCase,
     private val onAccountSavedHandler: OnAccountSavedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -84,13 +86,17 @@ internal class DefaultAccountEditViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            val primaryCurrency = runCatching { currencyPrimaryUseCase.getPrimaryCurrency() }.getOrNull()
             launch {
-                currencyRepository.query(CurrencyRepository.Criteria.All())
+                currencyRepository.query(CurrencyRepository.Criteria.InUse())
                     .collectLatest { currencies ->
                         mutableState.update { state ->
                             state.copy(
                                 currencies = currencies,
-                                selectedCurrency = state.selectedCurrency ?: currencies.firstOrNull(),
+                                selectedCurrency = state.selectedCurrency
+                                    ?: currencies.firstOrNull { it.id == primaryCurrency?.id }
+                                    ?: primaryCurrency
+                                    ?: currencies.firstOrNull(),
                             )
                         }
                     }
