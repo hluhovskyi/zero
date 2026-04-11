@@ -6,9 +6,10 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
 
     sealed interface Action {
         object Import : Action
+        object OpenCurrencyPicker : Action
     }
 
     data class State(
-        val selectedCurrency: String = "",
+        val selectedCurrencyName: String = "",
     )
 }
