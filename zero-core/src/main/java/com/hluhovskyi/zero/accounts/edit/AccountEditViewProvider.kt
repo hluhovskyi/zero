@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
+import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -84,7 +84,6 @@ private fun AccountEditView(
                     amount = state.balance,
                     currencySymbol = state.selectedCurrency?.symbol ?: "",
                     focusRequester = focusRequester,
-                    showCurrencySelector = false,
                     onAmountChange = { balance ->
                         viewModel.perform(AccountEditViewModel.Action.ChangeBalance(balance))
                     },

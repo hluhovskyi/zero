@@ -38,7 +38,7 @@ import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
-import com.hluhovskyi.zero.transactions.edit.common.AmountDisplay
+import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
@@ -83,7 +83,6 @@ private fun TransactionEditTransferView(
             onAmountChange = {
                 viewModel.perform(TransactionEditTransferViewModel.Action.ChangeAmount(it))
             },
-            showCurrencySelector = false,
         )
 
         // Rate mode pill

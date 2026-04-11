@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 
@@ -59,6 +60,7 @@ private fun TransactionEditExpenseIncomeView(
                 viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeAmount(it))
             },
             currencies = state.currencies,
+            currencyLabel = { "${it.currencySymbol} - ${it.name}" },
             onCurrencySelected = {
                 viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCurrency(it))
             },
