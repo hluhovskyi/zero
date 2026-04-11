@@ -1,11 +1,11 @@
 package com.hluhovskyi.zero.accounts.edit
 
-import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -32,10 +32,10 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
     interface Dependencies {
         val idGenerator: IdGenerator
-        val imageLoader: ImageLoader
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
     }
 
     companion object {
@@ -43,7 +43,9 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerAccountEditComponent.builder()
             .dependencies(dependencies)
             .onAccountSavedHandler(OnAccountSavedHandler.Noop)
+            .onCloseHandler(OnCloseHandler.Noop)
             .accountEditIconUseCase(AccountEditIconUseCase.Noop)
+            .accountEditCurrencyUseCase(AccountEditCurrencyUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -55,7 +57,13 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun onAccountSavedHandler(handler: OnAccountSavedHandler): Builder
 
         @BindsInstance
+        fun onCloseHandler(handler: OnCloseHandler): Builder
+
+        @BindsInstance
         fun accountEditIconUseCase(useCase: AccountEditIconUseCase): Builder
+
+        @BindsInstance
+        fun accountEditCurrencyUseCase(useCase: AccountEditCurrencyUseCase): Builder
     }
 
     @dagger.Module
@@ -66,12 +74,16 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun viewModel(
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
             accountEditIconUseCase = accountEditIconUseCase,
+            accountEditCurrencyUseCase = accountEditCurrencyUseCase,
             onAccountSavedHandler = onAccountSavedHandler,
         )
 
@@ -79,10 +91,10 @@ abstract class AccountEditComponent : AttachableViewComponent {
         @AccountEditScope
         fun viewProvider(
             viewModel: AccountEditViewModel,
-            imageLoader: ImageLoader,
+            onCloseHandler: OnCloseHandler,
         ): ViewProvider = AccountEditViewProvider(
             viewModel = viewModel,
-            imageLoader = imageLoader,
+            onClose = onCloseHandler,
         )
     }
 }

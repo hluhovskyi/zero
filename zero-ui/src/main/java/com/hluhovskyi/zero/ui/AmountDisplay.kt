@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.edit.common
+package com.hluhovskyi.zero.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +37,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrency
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AmountDisplay(
     modifier: Modifier = Modifier,
@@ -48,11 +46,87 @@ fun AmountDisplay(
     currencySymbol: String,
     focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
-    currencies: List<TransactionEditCurrency> = emptyList(),
-    onCurrencySelected: (TransactionEditCurrency) -> Unit = {},
-    showCurrencySelector: Boolean = true,
+) {
+    AmountDisplayInternal(
+        modifier = modifier,
+        amount = amount,
+        currencySymbol = currencySymbol,
+        focusRequester = focusRequester,
+        onAmountChange = onAmountChange,
+        currencyContent = null,
+    )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun <T> AmountDisplay(
+    modifier: Modifier = Modifier,
+    amount: String,
+    currencySymbol: String,
+    focusRequester: FocusRequester,
+    onAmountChange: (String) -> Unit,
+    currencies: List<T>,
+    currencyLabel: (T) -> String = { it.toString() },
+    onCurrencySelected: (T) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    AmountDisplayInternal(
+        modifier = modifier,
+        amount = amount,
+        currencySymbol = currencySymbol,
+        focusRequester = focusRequester,
+        onAmountChange = onAmountChange,
+        currencyContent = {
+            Box(
+                modifier = Modifier.clickable { expanded = true },
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = currencySymbol,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = OnSurfaceVariant,
+                    )
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    currencies.forEach { item ->
+                        DropdownMenuItem(
+                            onClick = {
+                                onCurrencySelected(item)
+                                expanded = false
+                            },
+                        ) {
+                            Text(text = currencyLabel(item))
+                        }
+                    }
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun AmountDisplayInternal(
+    modifier: Modifier = Modifier,
+    amount: String,
+    currencySymbol: String,
+    focusRequester: FocusRequester,
+    onAmountChange: (String) -> Unit,
+    currencyContent: (@Composable () -> Unit)?,
+) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
     }
@@ -81,56 +155,20 @@ fun AmountDisplay(
                 .padding(top = 8.dp),
         ) {
             // Currency pinned to left — fixed position regardless of amount width
-            Box(
-                modifier = Modifier.align(Alignment.CenterStart)
-                    .then(
-                        if (showCurrencySelector) {
-                            Modifier.clickable { expanded = true }
-                        } else {
-                            Modifier
-                        },
-                    ),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
+            Box(modifier = Modifier.align(Alignment.CenterStart)) {
+                if (currencyContent != null) {
+                    currencyContent()
+                } else {
                     Text(
                         text = currencySymbol,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                     )
-                    if (showCurrencySelector) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowDropDown,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = OnSurfaceVariant,
-                        )
-                    }
-                }
-
-                if (showCurrencySelector) {
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                    ) {
-                        currencies.forEach { currencyItem ->
-                            DropdownMenuItem(
-                                onClick = {
-                                    onCurrencySelected(currencyItem)
-                                    expanded = false
-                                },
-                            ) {
-                                Text(text = "${currencyItem.currencySymbol} - ${currencyItem.name}")
-                            }
-                        }
-                    }
                 }
             }
 
-            // Amount centered on screen — independent of currency position
+            // Amount right-aligned, independent of currency position
             BasicTextField(
                 value = textFieldValue,
                 onValueChange = {
