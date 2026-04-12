@@ -68,7 +68,7 @@ private fun CategoryPickerView(
             columns = GridCells.Fixed(GRID_COLUMNS),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(state.categories) { category ->
                 CategoryPickerGridItem(

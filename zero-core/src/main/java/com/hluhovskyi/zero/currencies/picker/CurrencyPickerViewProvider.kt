@@ -62,7 +62,7 @@ private fun CurrencyPickerView(viewModel: CurrencyPickerViewModel) {
             columns = GridCells.Fixed(GRID_COLUMNS),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(state.currencies, key = { it.id.value }) { currency ->
                 CurrencyPickerGridItem(
@@ -87,10 +87,18 @@ private fun CurrencyPickerGridItem(
         modifier = Modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Outer box always 56dp; border drawn on outer ring, padding reserves space for it.
+        // Background fills the inner 48dp so the icon never shrinks.
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .then(if (isSelected) Modifier.border(2.dp, primary, shape) else Modifier)
+                .size(56.dp)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.dp, primary, shape).padding(2.dp)
+                    } else {
+                        Modifier.padding(4.dp)
+                    },
+                )
                 .background(SurfaceContainer, shape),
             contentAlignment = Alignment.Center,
         ) {
