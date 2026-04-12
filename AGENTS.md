@@ -43,7 +43,7 @@ Each module has its own `AGENTS.md` with module-specific rules.
 
 Every feature follows: **Component → ViewModel → ViewProvider** (+ optional UseCase).
 
-- **Component** (`@dagger.Component`): DI wiring. Has `Dependencies` interface + `Builder : Buildable<T>`.
+- **Component** (`@dagger.Component`): DI wiring. Has `Dependencies` interface + `Builder : Buildable<T>`. See [DI Migration](docs/agents/di-migration.md) for the experimental manual alternative.
 - **ViewModel** (`: AttachableActionStateModel<Action, State>`): Reactive state via `Flow<State>`, actions via `perform(Action)`, lifecycle via `attach() → Closeable`.
 - **ViewProvider** (`: ViewProvider`): Composable that collects state and dispatches actions.
 - **Handlers** (`fun interface OnXxxHandler`): Callbacks for screen-to-screen communication, passed via `@BindsInstance`.
@@ -57,6 +57,7 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Data Layer](docs/agents/data-layer.md) — Repository pattern, Room entities, query/insert conventions
 - [Navigation](docs/agents/navigation.md) — URL-based routing, Destination, Argument, Navigator, returning results between screens
 - [Dependency Injection](docs/agents/dependency-injection.md) — Dagger component structure, @BindsInstance, lifecycle timing
+- [DI Migration](docs/agents/di-migration.md) — Experimental: manual DI without Dagger for KMP readiness. Alternatives, migration pattern, checklist, order
 - [Module Boundaries](docs/agents/module-boundaries.md) — Module dependency rules
 - [ImageLoader](docs/agents/image-loading.md) — Interface design, tint handling
 - [ColorScheme](docs/agents/color-scheme.md) — ColorScheme, ColorValue, colorRepository

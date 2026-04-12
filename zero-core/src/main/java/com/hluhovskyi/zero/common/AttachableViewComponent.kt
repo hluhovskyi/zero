@@ -20,6 +20,11 @@ interface AttachableViewComponent :
 
 fun Buildable<out AttachableViewComponent>.logging(logger: Logger): Buildable<out AttachableViewComponent> = LoggingAttachableViewComponent(delegate = this, logger = logger)
 
+fun AttachableViewComponent.logging(logger: Logger): AttachableViewComponent = LoggingComponent(
+    delegate = this,
+    logger = logger.withTag("LoggingAttachableViewComponent"),
+)
+
 @Composable
 fun <T : AttachableViewComponent> T.AttachWithView(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
@@ -38,8 +43,8 @@ fun <T : AttachableViewComponent> T.AttachWithView(
 }
 
 @Composable
-fun <Component : AttachableViewComponent> Buildable<out Component>.AttachWithView() {
-    val component = remember { build() }
+fun <Component : AttachableViewComponent> (() -> Component).AttachWithView() {
+    val component = remember { invoke() }
     component.AttachAndRetainWithView()
 }
 
@@ -91,24 +96,24 @@ private class LoggingAttachableViewComponent(
             logger = logger,
         )
     }
+}
 
-    private class LoggingComponent(
-        private val delegate: AttachableViewComponent,
-        private val logger: Logger,
-    ) : AttachableViewComponent {
+private class LoggingComponent(
+    private val delegate: AttachableViewComponent,
+    private val logger: Logger,
+) : AttachableViewComponent {
 
-        override val tag: String = delegate.tag
+    override val tag: String = delegate.tag
 
-        override val viewProvider: ViewProvider = delegate.viewProvider
-            .also { logger.d("[$tag] viewProvider") }
+    override val viewProvider: ViewProvider = delegate.viewProvider
+        .also { logger.d("[$tag] viewProvider") }
 
-        override fun attach(): Closeable {
-            logger.d("[$tag] attach")
-            val closeable = delegate.attach()
-            return Closeables.from {
-                logger.d("[$tag] close")
-                closeable.close()
-            }
+    override fun attach(): Closeable {
+        logger.d("[$tag] attach")
+        val closeable = delegate.attach()
+        return Closeables.from {
+            logger.d("[$tag] close")
+            closeable.close()
         }
     }
 }
