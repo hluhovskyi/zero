@@ -77,7 +77,6 @@ abstract class IconPickerComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             onIconSelectedHandler: OnIconSelectedHandler,
-<<<<<<< HEAD
             @ColorId colorId: Id,
             @SelectedIconId selectedIconId: Id,
         ): IconPickerViewModel = DefaultIconPickerViewModel(
