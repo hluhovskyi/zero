@@ -35,25 +35,7 @@ Do not relay results through ViewModel state or shared flows on components.
 
 ## Preselecting an Item in a Picker
 
-When navigating to a picker that should highlight the currently selected item, pass the current selection as an additional optional `Argument<Id>` on the destination (e.g. `SelectedCategoryId`, `SelectedCurrencyId`, `SelectedIconId`). The caller encodes it in `Action.Request`; the `Default*UseCase` implementation reads it and appends it as a nav arg only when it is `Id.Known`:
-
-```kotlin
-// In Action.Request
-data class Request(val selectedCategoryId: Id = Id.Unknown) : Action
-
-// In DefaultTransactionEditCategoryUseCase.perform()
-val args = buildList {
-    add(Destinations.Category.Picker.RequestId.withValue(id))
-    (action.selectedCategoryId as? Id.Known)?.let { selectedId ->
-        add(Destinations.Category.Picker.SelectedCategoryId.withValue(selectedId))
-    }
-}
-navigator.navigateTo(Destinations.Category.Picker, *args.toTypedArray())
-```
-
-The picker's `NavigatorEntry` reads the arg and passes it to the component builder via `@BindsInstance`. The ViewModel stores it in initial state; the ViewProvider uses it to render a selection ring.
-
-The caller passes its current selection when performing `Action.Request` — not a hardcoded default. This way the ring appears on whatever was last picked, including across re-opens.
+**To open a picker with the current item highlighted, pass the selection as an optional `Argument<Id>` on the destination** — e.g. `SelectedCategoryId`, `SelectedCurrencyId`. Add it to `Action.Request`; the `Default*UseCase` appends it as a nav arg when `Id.Known`. The picker's `NavigatorEntry` reads it and passes it to the component via `@BindsInstance`; the ViewModel sets it as initial state; the ViewProvider renders the ring. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` as the canonical example.
 
 ## Bottom Sheet Destinations
 

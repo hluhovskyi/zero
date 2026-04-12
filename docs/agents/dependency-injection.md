@@ -9,29 +9,14 @@
 
 ## Qualifying Multiple Bindings of the Same Primitive Type
 
-When a component needs two or more `@BindsInstance` values of the same type (e.g. two `Id` parameters), use dedicated `@Qualifier` annotations — **not** `@Named("string")`. Declare them as `private` annotations in the same file as the component:
+**When a component needs two `@BindsInstance` values of the same type, use `@Qualifier` annotations — not `@Named("string")`** — typos in name strings are silent bugs; dedicated annotations are checked at compile time. Declare them `private` in the same file:
 
 ```kotlin
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-private annotation class ColorId
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-private annotation class SelectedIconId
+@Qualifier @Retention(AnnotationRetention.BINARY) private annotation class ColorId
+@Qualifier @Retention(AnnotationRetention.BINARY) private annotation class SelectedIconId
 ```
 
-Then annotate both the builder method parameter and the `@Provides` method parameter:
-
-```kotlin
-@BindsInstance
-fun colorId(@ColorId colorId: Id): Builder
-
-@Provides
-fun viewModel(@ColorId colorId: Id, @SelectedIconId selectedIconId: Id): ViewModel
-```
-
-This applies to any primitive type (`Id`, `String`, `Boolean`, etc.) — not just `Id`.
+Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
 
 ## Lifecycle Timing
 
