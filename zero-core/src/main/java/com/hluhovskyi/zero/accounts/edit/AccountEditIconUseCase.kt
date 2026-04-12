@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.emptyFlow
 interface AccountEditIconUseCase : ActionStateModel<AccountEditIconUseCase.Action, AccountEditIconUseCase.State> {
 
     sealed interface Action {
-        object Request : Action
+        data class Request(val iconId: Id = Id.Unknown) : Action
         data class Pick(val icon: Icon) : Action
     }
 

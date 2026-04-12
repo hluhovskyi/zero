@@ -9,7 +9,16 @@ import com.hluhovskyi.zero.common.ViewProvider
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
+import javax.inject.Qualifier
 import javax.inject.Scope
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+private annotation class ColorId
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+private annotation class SelectedIconId
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -41,6 +50,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onIconSelectedHandler(OnIconSelectedHandler.Noop)
             .colorId(Id.Unknown)
+            .selectedIconId(Id.Unknown)
     }
 
     @dagger.Component.Builder
@@ -52,7 +62,10 @@ abstract class IconPickerComponent : AttachableViewComponent {
         fun onIconSelectedHandler(handler: OnIconSelectedHandler): Builder
 
         @BindsInstance
-        fun colorId(colorId: Id): Builder
+        fun colorId(@ColorId colorId: Id): Builder
+
+        @BindsInstance
+        fun selectedIconId(@SelectedIconId selectedIconId: Id): Builder
     }
 
     @dagger.Module
@@ -64,12 +77,14 @@ abstract class IconPickerComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             onIconSelectedHandler: OnIconSelectedHandler,
-            colorId: Id,
+            @ColorId colorId: Id,
+            @SelectedIconId selectedIconId: Id,
         ): IconPickerViewModel = DefaultIconPickerViewModel(
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             onIconSelectedHandler = onIconSelectedHandler,
             colorId = colorId,
+            selectedIconId = selectedIconId,
         )
 
         @Provides

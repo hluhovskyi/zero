@@ -48,6 +48,9 @@ internal class DefaultCategoryEditIconUseCase(
                     (action.colorId as? Id.Known)?.let { colorId ->
                         add(Destinations.Icon.Picker.ColorId.withValue(colorId))
                     }
+                    (action.iconId as? Id.Known)?.let { selectedId ->
+                        add(Destinations.Icon.Picker.SelectedIconId.withValue(selectedId))
+                    }
                 }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,

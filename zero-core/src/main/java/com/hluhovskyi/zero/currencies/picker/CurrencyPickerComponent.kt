@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.currencies.picker
 
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import dagger.BindsInstance
@@ -36,6 +37,7 @@ abstract class CurrencyPickerComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCurrencyPickerComponent.builder()
             .dependencies(dependencies)
             .onCurrencyPickedHandler(OnCurrencyPickedHandler.Noop)
+            .selectedCurrencyId(Id.Unknown)
     }
 
     @dagger.Component.Builder
@@ -45,6 +47,9 @@ abstract class CurrencyPickerComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCurrencyPickedHandler(handler: OnCurrencyPickedHandler): Builder
+
+        @BindsInstance
+        fun selectedCurrencyId(id: Id): Builder
     }
 
     @dagger.Module
@@ -55,9 +60,11 @@ abstract class CurrencyPickerComponent : AttachableViewComponent {
         fun viewModel(
             currencyRepository: CurrencyRepository,
             onCurrencyPickedHandler: OnCurrencyPickedHandler,
+            selectedCurrencyId: Id,
         ): CurrencyPickerViewModel = DefaultCurrencyPickerViewModel(
             currencyRepository = currencyRepository,
             onCurrencyPickedHandler = onCurrencyPickedHandler,
+            selectedCurrencyId = selectedCurrencyId,
         )
 
         @Provides

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.emptyFlow
 interface TransactionEditCategoryUseCase : ActionStateModel<TransactionEditCategoryUseCase.Action, TransactionEditCategoryUseCase.State> {
 
     sealed interface Action {
-        object Request : Action
+        data class Request(val selectedCategoryId: Id = Id.Unknown) : Action
         data class Pick(val categoryId: Id.Known) : Action
     }
 
