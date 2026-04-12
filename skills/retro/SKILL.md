@@ -77,6 +77,7 @@ Keep it short. No padding. Then ask: **"Which of these would you like me to writ
 For each doc update:
 - Prefer editing existing files over creating new ones.
 - Cast each rule in the format used throughout this codebase's AGENTS.md files: `**<imperative or trigger condition>** — <why or consequence>`. If the imperative part doesn't fit in a short bold phrase, it's two rules — split it.
+- **Self-check before committing:** does each new rule fit in one bold phrase + one sentence? If not, compress or split. No tutorial prose, no code examples unless a snippet is the only way to convey the rule.
 - Commit with message: `docs: <what was added and why>`
 
 ## Guardrails

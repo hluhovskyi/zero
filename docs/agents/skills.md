@@ -22,6 +22,14 @@ skills/
 3. Symlink into the Gemini plugin if applicable (same pattern).
 4. Run `/reload-plugins` in Claude Code to pick it up.
 
+## Editing and committing skill files
+
+**Edit skill files via their real path (`skills/<name>/SKILL.md`), not through the `.claude/marketplace/` symlink** — `git add` refuses to stage paths that traverse a symlink, so staging via `.claude/marketplace/plugins/zero-project/skills/<name>/SKILL.md` will always fail with "beyond a symbolic link". Use the root-relative path instead:
+
+```bash
+git add skills/<name>/SKILL.md
+```
+
 ## Plugin loader trap
 
 The Claude Code plugin loader resolves plugins by looking for a directory at `<marketplace installLocation>/plugins/<plugin-name>/`. The `source` field in `marketplace.json` and `enabledPlugins` in `settings.json` are **necessary but not sufficient** — the directory must physically exist at that path (symlink is fine).

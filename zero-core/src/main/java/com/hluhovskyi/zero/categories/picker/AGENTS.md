@@ -5,6 +5,7 @@ Bottom sheet screen for selecting a category. Used by the transaction edit flow 
 
 ## Inputs
 - `OnCategorySelectedHandler` — callback invoked with the chosen `Id.Known`
+- `selectedCategoryId: Id` — optional; when `Id.Known`, the matching category is highlighted with a selection ring on open
 
 ## Outputs
 - Calls `OnCategorySelectedHandler.onSelected(categoryId)` on selection (dispatched on `Dispatchers.Main`)
@@ -24,6 +25,3 @@ Bottom sheet screen for selecting a category. Used by the transaction edit flow 
 
 ## Integration (how callers open this screen)
 Navigate to `Destinations.Category.Picker` using a `XxxUseCase` that implements the Request / Pick / Picked pattern. The use case wires `onCategorySelectedHandler` to `perform(Pick(...))` and calls `navigator.back()` on result. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` for a concrete example, and `docs/agents/navigation.md` for the pattern.
-
-## Known Issues
-- Renders full-screen instead of as a bottom sheet. Fix pending.
