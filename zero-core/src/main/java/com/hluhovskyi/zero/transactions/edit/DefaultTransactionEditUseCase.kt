@@ -51,6 +51,7 @@ internal class DefaultTransactionEditUseCase(
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
     private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+    private val transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val incorrectStateDetector: IncorrectStateDetector,
@@ -140,6 +141,10 @@ internal class DefaultTransactionEditUseCase(
                         selectedCategoryId = mutableState.value.selectedCategory?.id ?: Id.Unknown,
                     ),
                 )
+            }
+
+            is TransactionEditUseCase.Action.ShowAllCurrencies -> {
+                transactionEditCurrencyUseCase.perform(TransactionEditCurrencyUseCase.Action.Request)
             }
 
             is TransactionEditUseCase.Action.SelectCurrency -> {
@@ -397,6 +402,24 @@ internal class DefaultTransactionEditUseCase(
                         mutableState.update { state ->
                             val category = state.categories.firstOrNull { it.id == picked.categoryId }
                             if (category != null) state.copy(selectedCategory = category) else state
+                        }
+                    }
+            }
+
+            launch(context = Dispatchers.Main) {
+                transactionEditCurrencyUseCase.state
+                    .filterIsInstance<TransactionEditCurrencyUseCase.State.Picked>()
+                    .collectLatest { picked ->
+                        mutableState.update { state ->
+                            val currency = state.currencies.firstOrNull { it.id == picked.currency.id }
+                            if (currency != null) {
+                                state.copy(
+                                    manuallyChangedCurrency = true,
+                                    selectedCurrency = currency,
+                                )
+                            } else {
+                                state
+                            }
                         }
                     }
             }

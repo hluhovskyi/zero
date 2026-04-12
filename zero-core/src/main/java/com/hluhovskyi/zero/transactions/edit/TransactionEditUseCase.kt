@@ -27,6 +27,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         object CycleTransferRateMode : Action
         object SwapAccounts : Action
         object ShowAllCategories : Action
+        object ShowAllCurrencies : Action
     }
 
     sealed interface State {
