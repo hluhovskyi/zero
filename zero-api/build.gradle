@@ -1,6 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'java-library'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 java {
@@ -11,4 +12,5 @@ java {
 dependencies {
     implementation deps.kotlinxDatetime
     implementation deps.kotlin.coroutines
+    implementation deps.kotlin.serialization
 }
