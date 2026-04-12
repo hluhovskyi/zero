@@ -5,13 +5,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.hluhovskyi.zero.accounts.AccountEntity
 import com.hluhovskyi.zero.accounts.AccountRoom
+import com.hluhovskyi.zero.accounts.AccountSyncDao
 import com.hluhovskyi.zero.categories.CategoryEntity
 import com.hluhovskyi.zero.categories.CategoryRoom
+import com.hluhovskyi.zero.categories.CategorySyncDao
 import com.hluhovskyi.zero.config.ConfigurationEntity
 import com.hluhovskyi.zero.config.ConfigurationRoom
 import com.hluhovskyi.zero.currencies.CurrenciesRoom
 import com.hluhovskyi.zero.transactions.TransactionEntity
 import com.hluhovskyi.zero.transactions.TransactionRoom
+import com.hluhovskyi.zero.transactions.TransactionSyncDao
 import com.hluhovskyi.zero.users.CurrentUserEntity
 import com.hluhovskyi.zero.users.CurrentUserRoom
 
@@ -47,4 +50,10 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun configuration(): ConfigurationRoom
 
     abstract fun currenciesRoom(): CurrenciesRoom
+
+    abstract fun categorySync(): CategorySyncDao
+
+    abstract fun accountSync(): AccountSyncDao
+
+    abstract fun transactionSync(): TransactionSyncDao
 }
