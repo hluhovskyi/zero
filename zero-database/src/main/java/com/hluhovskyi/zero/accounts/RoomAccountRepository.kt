@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
+import kotlinx.datetime.LocalDateTime
 
 internal class RoomAccountRepository(
     private val accountRoom: () -> AccountRoom,
@@ -52,14 +53,19 @@ internal class RoomAccountRepository(
         }
     }
 
-    private fun AccountRepository.AccountInsert.toEntity(userId: Id.Known): AccountEntity = AccountEntity(
-        id = (id as? Id.Known) ?: idGenerator(),
-        userId = userId,
-        currencyId = currencyId,
-        name = name,
-        iconId = iconId,
-        initialBalance = AmountEntity(initialBalance.value),
-        category = category.name,
-        details = details,
-    )
+    private fun AccountRepository.AccountInsert.toEntity(userId: Id.Known): AccountEntity {
+        val sentinel = LocalDateTime(2000, 1, 1, 0, 0)
+        return AccountEntity(
+            id = (id as? Id.Known) ?: idGenerator(),
+            userId = userId,
+            currencyId = currencyId,
+            name = name,
+            iconId = iconId,
+            initialBalance = AmountEntity(initialBalance.value),
+            category = category.name,
+            details = details,
+            creationDateTime = sentinel,
+            updatedDateTime = sentinel,
+        )
+    }
 }

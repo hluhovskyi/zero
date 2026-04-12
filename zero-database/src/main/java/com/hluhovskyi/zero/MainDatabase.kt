@@ -15,7 +15,7 @@ import com.hluhovskyi.zero.transactions.TransactionRoom
 import com.hluhovskyi.zero.users.CurrentUserEntity
 import com.hluhovskyi.zero.users.CurrentUserRoom
 
-private const val MAIN_DATABASE_VERSION = 2
+private const val MAIN_DATABASE_VERSION = 3
 
 @Database(
     entities = [
