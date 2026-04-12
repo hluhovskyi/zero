@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -21,7 +22,8 @@ fun DragHandle(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(24.dp),
+            .height(24.dp)
+            .padding(top = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Box(
