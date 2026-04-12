@@ -290,7 +290,7 @@ class SyncComponent(private val dependencies: Dependencies) {
 }
 ```
 
-`DatabaseComponent` exposes the `RoomXxxSyncSource`/`Sink` instances it owns. `ApplicationComponent` constructs `DefaultSyncComponent` by passing an anonymous `SyncComponent.Dependencies` that delegates to `DatabaseComponent` — the Sources/Sinks are never wired inline in `app` directly.
+`DatabaseComponent` constructs `RoomXxxSyncSource`/`Sink` internally and exposes them **only as interface types** (`EntitySyncSource<T>`, `EntitySyncSink<T>`). No `Room*` implementation class name ever crosses a component boundary. `ApplicationComponent` is the mediator: it bridges `DatabaseComponent`'s interface-typed properties into `SyncComponent.Dependencies`, then constructs `DefaultSyncComponent`. `SyncComponent` sees only interfaces throughout.
 
 ---
 
