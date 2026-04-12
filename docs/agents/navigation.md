@@ -35,7 +35,7 @@ Do not relay results through ViewModel state or shared flows on components.
 
 ## Preselecting an Item in a Picker
 
-**To open a picker with the current item highlighted, pass the selection as an optional `Argument<Id>` on the destination** — e.g. `SelectedCategoryId`, `SelectedCurrencyId`. Add it to `Action.Request`; the `Default*UseCase` appends it as a nav arg when `Id.Known`. The picker's `NavigatorEntry` reads it and passes it to the component via `@BindsInstance`; the ViewModel sets it as initial state; the ViewProvider renders the ring. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` as the canonical example.
+**To preselect the current item in a picker, pass the selection as an optional `Argument<Id>` on the picker destination and thread it through the stack** — `Action.Request` carries the current selection; the `Default*UseCase` appends it as a nav arg only when `Id.Known`; the `NavigatorEntry` reads it and passes it via `@BindsInstance`; the ViewModel stores it as initial state; the ViewProvider renders the selection ring. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` as the canonical example.
 
 ## Bottom Sheet Destinations
 
