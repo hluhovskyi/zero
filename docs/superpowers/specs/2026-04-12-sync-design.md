@@ -149,11 +149,12 @@ The resolver is registered per entity type. This allows future customization: e.
 ```
 zero-sync/
   src/main/java/com/hluhovskyi/zero/sync/
-    SyncEngine.kt            — orchestrates export, import, and remote sync
+    DefaultSyncEngine.kt     — internal implementation of SyncEngine
     SyncSnapshot.kt          — top-level JSON envelope (version, userId, exportedAt, entity lists)
     SyncSerializer.kt        — JSON serialization / deserialization
     LastWriteWinsResolver.kt — default ConflictResolver implementation
     SyncPipeline.kt          — bundles Source + Sink + Resolver for one entity type
+    SyncComponent.kt         — wires DefaultSyncEngine from a Dependencies interface
   src/test/resources/fixtures/sync/
     v1-transaction-expense.json
     v1-transaction-income.json
@@ -200,6 +201,13 @@ interface EntitySyncSink<T : SyncEntity> {
 fun interface ConflictResolver<T : SyncEntity> {
     fun resolve(local: T?, incoming: T?): List<T>
 }
+
+// Engine interface — implemented internally by DefaultSyncEngine in zero-sync
+// Exposed here so zero-core can depend on it for SyncViewModel/SyncUseCase
+interface SyncEngine {
+    suspend fun export(userId: Id.Known): SyncSnapshot
+    suspend fun import(snapshot: SyncSnapshot, userId: Id.Known)
+}
 ```
 
 `zero-database` implements `EntitySyncSource<T>` and `EntitySyncSink<T>` via dedicated `SyncDao`s — raw `@Insert(onConflict = REPLACE)`, no timestamp overwriting, no ID generation. The existing repositories are untouched.
@@ -219,29 +227,19 @@ No circular dependencies. `zero-core` can see the sync interfaces in `zero-api` 
 
 ## Sync Engine
 
+`SyncEngine` is an interface in `zero-api`. The implementation `DefaultSyncEngine` is `internal` to `zero-sync`, enforced by the existing `DefaultImplMustBeInternal` lint rule.
+
 ```kotlin
-class SyncEngine(
-    private val pipelines: List<SyncPipeline<*>>,
-) {
-    /** Export all local data to a SyncSnapshot. */
+// zero-api — visible to zero-core for SyncViewModel/SyncUseCase
+interface SyncEngine {
     suspend fun export(userId: Id.Known): SyncSnapshot
-
-    /** Import a SyncSnapshot, applying ConflictResolver per entity type. */
     suspend fun import(snapshot: SyncSnapshot, userId: Id.Known)
-
-    /**
-     * Delta sync with a remote source.
-     * 1. Fetch remote entities updated since [lastSyncedAt].
-     * 2. Apply ConflictResolver against local state.
-     * 3. Push local entities updated since [lastSyncedAt] to remote.
-     * 4. Return the new high-water mark (max updatedDateTime seen).
-     */
-    suspend fun sync(
-        userId: Id.Known,
-        remote: List<SyncPipelineRemote<*>>,
-        lastSyncedAt: LocalDateTime?,
-    ): LocalDateTime
 }
+
+// zero-sync — internal, constructed by SyncComponent
+internal class DefaultSyncEngine(
+    private val pipelines: List<SyncPipeline<*>>,
+) : SyncEngine { ... }
 ```
 
 ### `SyncPipeline<T>`
@@ -263,6 +261,36 @@ Entities are processed in dependency order to avoid foreign-key-style dangling r
 1. Categories
 2. Accounts
 3. Transactions
+
+### `SyncComponent` — DI wiring
+
+`SyncComponent` lives in `zero-sync` and follows the manual DI pattern. It receives sync sources and sinks through a `Dependencies` interface, which `DatabaseComponent` satisfies. Nothing is constructed inline in `app`.
+
+```kotlin
+class SyncComponent(private val dependencies: Dependencies) {
+
+    interface Dependencies {
+        val categorySyncSource: EntitySyncSource<SyncCategory>
+        val categorySyncSink: EntitySyncSink<SyncCategory>
+        val accountSyncSource: EntitySyncSource<SyncAccount>
+        val accountSyncSink: EntitySyncSink<SyncAccount>
+        val transactionSyncSource: EntitySyncSource<SyncTransaction>
+        val transactionSyncSink: EntitySyncSink<SyncTransaction>
+    }
+
+    val syncEngine: SyncEngine by lazy {
+        DefaultSyncEngine(
+            pipelines = listOf(
+                SyncPipeline(dependencies.categorySyncSource, dependencies.categorySyncSink, LastWriteWinsResolver()),
+                SyncPipeline(dependencies.accountSyncSource, dependencies.accountSyncSink, LastWriteWinsResolver()),
+                SyncPipeline(dependencies.transactionSyncSource, dependencies.transactionSyncSink, LastWriteWinsResolver()),
+            )
+        )
+    }
+}
+```
+
+`DatabaseComponent` exposes the `RoomXxxSyncSource`/`Sink` instances it owns. `ApplicationComponent` constructs `DefaultSyncComponent` by passing an anonymous `SyncComponent.Dependencies` that delegates to `DatabaseComponent` — the Sources/Sinks are never wired inline in `app` directly.
 
 ---
 
