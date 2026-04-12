@@ -95,7 +95,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
-        val colorPickerComponentBuilder: ColorPickerComponent.Builder
+        val colorPickerComponentFactory: ColorPickerComponent.Factory
 
         val settingsComponentBuilder: SettingsComponent.Builder
         val importComponentBuilder: ImportComponent.Builder
@@ -517,16 +517,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun colorPickerNavigationEntry(
-            componentBuilder: ColorPickerComponent.Builder,
+            componentFactory: ColorPickerComponent.Factory,
             navigatorScope: NavigatorScope,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(
+        ): NavigatorEntry = navigatorScope.component(
             destination = Destinations.Color.Picker,
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
-            componentBuilder
-                .onColorSelectedHandler { color ->
+            componentFactory.create(
+                onColorSelectedHandler = { color ->
                     categoryEditColorUseCase.perform(
                         CategoryEditColorUseCase.Action.Pick(
                             color = CategoryEditColorUseCase.Color(
@@ -535,8 +535,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             ),
                         ),
                     )
-                }
-                .logging(logger)
+                },
+            ).logging(logger)
         }
 
         @Provides

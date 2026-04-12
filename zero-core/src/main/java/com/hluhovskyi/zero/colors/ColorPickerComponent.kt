@@ -1,70 +1,46 @@
 package com.hluhovskyi.zero.colors
 
 import com.hluhovskyi.zero.common.AttachableViewComponent
-import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import dagger.BindsInstance
-import dagger.Provides
 import java.io.Closeable
-import javax.inject.Scope
-
-@Scope
-@Retention(AnnotationRetention.SOURCE)
-private annotation class ColorPickerScope
 
 private const val TAG = "ColorPickerComponent"
 
-@ColorPickerScope
-@dagger.Component(
-    modules = [ColorPickerComponent.Module::class],
-    dependencies = [ColorPickerComponent.Dependencies::class],
-)
-abstract class ColorPickerComponent : AttachableViewComponent {
+class ColorPickerComponent private constructor(
+    colorRepository: ColorRepository,
+    onColorSelectedHandler: OnColorSelectedHandler,
+) : AttachableViewComponent {
 
     override val tag: String = TAG
 
-    internal abstract val viewModel: ColorPickerViewModel
+    private val viewModel: ColorPickerViewModel by lazy {
+        DefaultColorPickerViewModel(
+            colorRepository = colorRepository,
+            onColorSelectedHandler = onColorSelectedHandler,
+        )
+    }
+
+    override val viewProvider: ViewProvider by lazy {
+        ColorPickerViewProvider(viewModel = viewModel)
+    }
+
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
         val colorRepository: ColorRepository
     }
 
-    companion object {
+    class Factory(private val dependencies: Dependencies) {
 
-        fun builder(dependencies: Dependencies): Builder = DaggerColorPickerComponent.builder()
-            .dependencies(dependencies)
-            .onColorSelectedHandler(OnColorSelectedHandler.Noop)
-    }
-
-    @dagger.Component.Builder
-    interface Builder : Buildable<ColorPickerComponent> {
-
-        fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun onColorSelectedHandler(handler: OnColorSelectedHandler): Builder
-    }
-
-    @dagger.Module
-    object Module {
-
-        @Provides
-        @ColorPickerScope
-        fun viewModel(
-            colorRepository: ColorRepository,
-            onColorSelectedHandler: OnColorSelectedHandler,
-        ): ColorPickerViewModel = DefaultColorPickerViewModel(
-            colorRepository = colorRepository,
+        fun create(
+            onColorSelectedHandler: OnColorSelectedHandler = OnColorSelectedHandler.Noop,
+        ): ColorPickerComponent = ColorPickerComponent(
+            colorRepository = dependencies.colorRepository,
             onColorSelectedHandler = onColorSelectedHandler,
         )
+    }
 
-        @Provides
-        @ColorPickerScope
-        fun viewProvider(
-            viewModel: ColorPickerViewModel,
-        ): ViewProvider = ColorPickerViewProvider(
-            viewModel = viewModel,
-        )
+    companion object {
+        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
     }
 }
