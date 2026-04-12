@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.currencies.picker
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,11 +62,12 @@ private fun CurrencyPickerView(viewModel: CurrencyPickerViewModel) {
             columns = GridCells.Fixed(GRID_COLUMNS),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(state.currencies, key = { it.id.value }) { currency ->
                 CurrencyPickerGridItem(
                     currency = currency,
+                    isSelected = currency.id == state.selectedCurrencyId,
                     onClick = { viewModel.perform(CurrencyPickerViewModel.Action.SelectCurrency(currency)) },
                 )
             }
@@ -75,16 +78,28 @@ private fun CurrencyPickerView(viewModel: CurrencyPickerViewModel) {
 @Composable
 private fun CurrencyPickerGridItem(
     currency: Currency,
+    isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val primary = MaterialTheme.colors.primary
+    val shape = RoundedCornerShape(12.dp)
     Column(
         modifier = Modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Outer box always 56dp; border drawn on outer ring, padding reserves space for it.
+        // Background fills the inner 48dp so the icon never shrinks.
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .background(SurfaceContainer, RoundedCornerShape(12.dp)),
+                .size(56.dp)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.dp, primary, shape).padding(2.dp)
+                    } else {
+                        Modifier.padding(4.dp)
+                    },
+                )
+                .background(SurfaceContainer, shape),
             contentAlignment = Alignment.Center,
         ) {
             Text(

@@ -402,6 +402,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
             componentBuilder
+                .selectedCurrencyId(arguments.getValue(Destinations.Currency.Picker.SelectedCurrencyId))
                 .onCurrencyPickedHandler { currency ->
                     accountEditCurrencyUseCase.perform(
                         AccountEditCurrencyUseCase.Action.Pick(currency),
@@ -423,6 +424,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
             componentBuilder
+                .selectedCategoryId(arguments.getValue(Destinations.Category.Picker.SelectedCategoryId))
                 .onCategorySelectedHandler { categoryId ->
                     transactionEditCategoryUseCase.perform(
                         TransactionEditCategoryUseCase.Action.Pick(categoryId),
@@ -446,6 +448,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
+                .selectedIconId(arguments.getValue(Destinations.Icon.Picker.SelectedIconId))
                 .onIconSelectedHandler { icon ->
                     accountEditIconUseCase.perform(
                         AccountEditIconUseCase.Action.Pick(

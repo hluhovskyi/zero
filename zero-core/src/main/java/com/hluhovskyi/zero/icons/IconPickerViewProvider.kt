@@ -1,13 +1,19 @@
 package com.hluhovskyi.zero.icons
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,7 +48,11 @@ private fun IconPickerView(
     imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = IconPickerViewModel.State())
-    LazyVerticalGrid(columns = GridCells.Fixed(5)) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(5),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
         items(state.icons) { item ->
             Box(
                 modifier = Modifier
@@ -52,6 +62,7 @@ private fun IconPickerView(
             ) {
                 IconCell(
                     item = item,
+                    isSelected = item == state.selectedIcon,
                     colorScheme = state.colorScheme,
                     imageLoader = imageLoader,
                 )
@@ -63,6 +74,7 @@ private fun IconPickerView(
 @Composable
 private fun IconCell(
     item: Icon,
+    isSelected: Boolean,
     colorScheme: ColorScheme?,
     imageLoader: ImageLoader,
 ) {
@@ -71,6 +83,7 @@ private fun IconCell(
             colorScheme = colorScheme.toUi(),
             size = 48.dp,
             contentPadding = 10.dp,
+            isSelected = isSelected,
         ) { tint ->
             imageLoader.View(
                 modifier = Modifier.size(28.dp),
@@ -79,9 +92,24 @@ private fun IconCell(
             )
         }
     } else {
-        imageLoader.View(
-            modifier = Modifier.size(48.dp),
-            image = item.image,
-        )
+        val primary = MaterialTheme.colors.primary
+        val shape = RoundedCornerShape(12.dp)
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.dp, primary, shape).padding(2.dp)
+                    } else {
+                        Modifier.padding(4.dp)
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            imageLoader.View(
+                modifier = Modifier.size(48.dp),
+                image = item.image,
+            )
+        }
     }
 }

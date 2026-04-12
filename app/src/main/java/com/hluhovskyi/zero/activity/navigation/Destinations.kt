@@ -24,8 +24,9 @@ internal object Destinations {
     sealed interface Category : Destination {
         object All : Category, Destination by destinationOf("categories")
         object Edit : Category, Destination by destinationOf("categories/edit")
-        object Picker : Category, Destination by destinationOf("categories/picker", RequestId) {
+        object Picker : Category, Destination by destinationOf("categories/picker", RequestId, SelectedCategoryId) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
+            object SelectedCategoryId : Argument<Id> by idOptionalValueOf("selectedCategoryId")
         }
 
         sealed interface Item : Category {
@@ -36,15 +37,17 @@ internal object Destinations {
     }
 
     sealed interface Currency : Destination {
-        object Picker : Currency, Destination by destinationOf("currencies/picker", RequestId) {
+        object Picker : Currency, Destination by destinationOf("currencies/picker", RequestId, SelectedCurrencyId) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
+            object SelectedCurrencyId : Argument<Id> by idOptionalValueOf("selectedCurrencyId")
         }
     }
 
     sealed interface Icon : Destination {
-        object Picker : Icon, Destination by destinationOf("icons/picker", RequestId, ColorId) {
+        object Picker : Icon, Destination by destinationOf("icons/picker", RequestId, ColorId, SelectedIconId) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
             object ColorId : Argument<Id> by idOptionalValueOf("colorId")
+            object SelectedIconId : Argument<Id> by idOptionalValueOf("selectedIconId")
         }
     }
 

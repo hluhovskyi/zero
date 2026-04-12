@@ -35,9 +35,15 @@ internal class DefaultAccountEditCurrencyUseCase(
             is AccountEditCurrencyUseCase.Action.Request -> {
                 val id = requestIdGenerator()
                 requestId.set(id)
+                val args = buildList {
+                    add(Destinations.Currency.Picker.RequestId.withValue(id))
+                    (action.selectedCurrencyId as? Id.Known)?.let { selectedId ->
+                        add(Destinations.Currency.Picker.SelectedCurrencyId.withValue(selectedId))
+                    }
+                }
                 navigator.navigateTo(
                     destination = Destinations.Currency.Picker,
-                    Destinations.Currency.Picker.RequestId.withValue(id),
+                    *args.toTypedArray(),
                 )
             }
             is AccountEditCurrencyUseCase.Action.Pick -> {
