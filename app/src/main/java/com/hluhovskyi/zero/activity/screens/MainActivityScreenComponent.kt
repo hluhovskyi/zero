@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.activity.screens
 
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
@@ -115,6 +117,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @BindsInstance
         fun bottomSheetNavigator(bottomSheetNavigator: BottomSheetNavigator): Builder
+
+        @BindsInstance
+        @OptIn(ExperimentalMaterialApi::class)
+        fun modalBottomSheetState(modalBottomSheetState: ModalBottomSheetState): Builder
     }
 
     @dagger.Module
@@ -163,9 +169,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @Provides
         @MainActivityScreenScope
+        @OptIn(ExperimentalMaterialApi::class)
         fun viewProvider(
             navHostController: NavHostController,
             bottomSheetNavigator: BottomSheetNavigator,
+            modalBottomSheetState: ModalBottomSheetState,
             navigator: Navigator,
             logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
@@ -180,6 +188,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     .AttachWithView()
             },
             bottomSheetNavigator = bottomSheetNavigator,
+            modalBottomSheetState = modalBottomSheetState,
         )
 
         @Provides

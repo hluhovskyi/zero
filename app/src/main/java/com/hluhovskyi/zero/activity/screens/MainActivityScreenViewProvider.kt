@@ -1,15 +1,24 @@
 package com.hluhovskyi.zero.activity.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.compose.material.navigation.ModalBottomSheetLayout
 import androidx.compose.material.navigation.bottomSheet
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,10 +35,23 @@ internal class MainActivityScreenViewProvider(
     private val navigationEntries: Collection<NavigatorEntry>,
     private val bottomBar: @Composable () -> Unit,
     private val bottomSheetNavigator: BottomSheetNavigator,
+    private val modalBottomSheetState: ModalBottomSheetState,
 ) : ViewProvider {
 
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun View() {
+        val isKeyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        LaunchedEffect(isKeyboardVisible) {
+            if (isKeyboardVisible && modalBottomSheetState.isVisible) {
+                try {
+                    modalBottomSheetState.show()
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
+        }
+
         ModalBottomSheetLayout(
             bottomSheetNavigator = bottomSheetNavigator,
             sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -54,12 +76,18 @@ internal class MainActivityScreenViewProvider(
                                     route = entry.route,
                                     arguments = navArguments,
                                 ) { backStackEntry ->
-                                    entry.view.invoke(
-                                        BundleArguments(
-                                            bundle = backStackEntry.arguments,
-                                            destination = entry.destination,
-                                        ),
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .imePadding(),
+                                    ) {
+                                        entry.view.invoke(
+                                            BundleArguments(
+                                                bundle = backStackEntry.arguments,
+                                                destination = entry.destination,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
                             else -> {
@@ -67,12 +95,18 @@ internal class MainActivityScreenViewProvider(
                                     route = entry.route,
                                     arguments = navArguments,
                                 ) { backStackEntry ->
-                                    entry.view.invoke(
-                                        BundleArguments(
-                                            bundle = backStackEntry.arguments,
-                                            destination = entry.destination,
-                                        ),
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .imePadding(),
+                                    ) {
+                                        entry.view.invoke(
+                                            BundleArguments(
+                                                bundle = backStackEntry.arguments,
+                                                destination = entry.destination,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
                         }
