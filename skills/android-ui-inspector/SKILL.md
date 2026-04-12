@@ -38,4 +38,4 @@ Use this skill **before committing any UI change** — not only when something l
    ```bash
    adb shell input keyevent 111   # KEYCODE_ESCAPE — dismisses keyboard without closing the screen
    ```
-6. **Verify Fixes:** After applying UI or navigation fixes, rebuild the app, navigate back to the screen via ADB, and re-run `./scripts/dump-ui.sh` to conclusively verify your changes worked without relying on guesswork.
+6. **Verify Fixes:** After applying UI or navigation fixes, rebuild the app, navigate back to the screen via ADB, and re-run `./scripts/dump-ui.sh` to conclusively verify your changes worked without relying on guesswork. **Anti-Hallucination Rule:** When verifying a UI state change (like focus, visibility, or bounds), you MUST copy-paste the exact XML node from the `dump-ui.sh` output into your thought process or response before claiming success. Never summarize a verification result without quoting the raw evidence.
