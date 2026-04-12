@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.currencies.picker
 
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,10 +17,11 @@ import java.io.Closeable
 internal class DefaultCurrencyPickerViewModel(
     private val currencyRepository: CurrencyRepository,
     private val onCurrencyPickedHandler: OnCurrencyPickedHandler,
+    private val selectedCurrencyId: Id = Id.Unknown,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : CurrencyPickerViewModel {
 
-    private val mutableState = MutableStateFlow(CurrencyPickerViewModel.State())
+    private val mutableState = MutableStateFlow(CurrencyPickerViewModel.State(selectedCurrencyId = selectedCurrencyId))
     override val state: Flow<CurrencyPickerViewModel.State> = mutableState
 
     override fun perform(action: CurrencyPickerViewModel.Action) {

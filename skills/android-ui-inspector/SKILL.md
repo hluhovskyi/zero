@@ -33,4 +33,9 @@ Use this skill **before committing any UI change** — not only when something l
    adb shell input tap <x> <y>
    ```
    *Note: Pick an (x,y) coordinate safely inside the bounds box.*
+
+   **Dismiss the soft keyboard before screenshotting** if the screen under test contains a text field — the keyboard covers the bottom half of the screen and hides bottom sheets entirely:
+   ```bash
+   adb shell input keyevent 111   # KEYCODE_ESCAPE — dismisses keyboard without closing the screen
+   ```
 6. **Verify Fixes:** After applying UI or navigation fixes, rebuild the app, navigate back to the screen via ADB, and re-run `./scripts/dump-ui.sh` to conclusively verify your changes worked without relying on guesswork.

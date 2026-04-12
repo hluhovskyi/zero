@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.activity.screens
 
-import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.activity.navigation.back
@@ -9,6 +8,7 @@ import com.hluhovskyi.zero.activity.navigation.observeArgumentValue
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
+import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,40 +19,34 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.atomic.AtomicReference
 
-internal class DefaultAccountEditCurrencyUseCase(
+internal class DefaultSettingsCurrencyUseCase(
     private val navigator: Navigator,
     private val requestIdGenerator: IdGenerator,
-) : AccountEditCurrencyUseCase {
+) : SettingsCurrencyUseCase {
 
-    private var requestId = AtomicReference<Id>(Id.Unknown)
-    private val pickAction = MutableSharedFlow<AccountEditCurrencyUseCase.Action.Pick>(
+    private val requestId = AtomicReference<Id>(Id.Unknown)
+    private val pickAction = MutableSharedFlow<SettingsCurrencyUseCase.Action.Pick>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    override fun perform(action: AccountEditCurrencyUseCase.Action) {
+    override fun perform(action: SettingsCurrencyUseCase.Action) {
         when (action) {
-            is AccountEditCurrencyUseCase.Action.Request -> {
+            is SettingsCurrencyUseCase.Action.Request -> {
                 val id = requestIdGenerator()
                 requestId.set(id)
-                val args = buildList {
-                    add(Destinations.Currency.Picker.RequestId.withValue(id))
-                    (action.selectedCurrencyId as? Id.Known)?.let { selectedId ->
-                        add(Destinations.Currency.Picker.SelectedCurrencyId.withValue(selectedId))
-                    }
-                }
                 navigator.navigateTo(
                     destination = Destinations.Currency.Picker,
-                    *args.toTypedArray(),
+                    Destinations.Currency.Picker.RequestId.withValue(id),
                 )
             }
-            is AccountEditCurrencyUseCase.Action.Pick -> {
+            is SettingsCurrencyUseCase.Action.Pick -> {
                 pickAction.tryEmit(action)
             }
         }
     }
 
-    override val state: Flow<AccountEditCurrencyUseCase.State> =
+    override val state: Flow<SettingsCurrencyUseCase.State> =
         navigator.observeArgumentValue(
             destination = Destinations.Currency.Picker,
             argument = Destinations.Currency.Picker.RequestId,
@@ -61,6 +55,6 @@ internal class DefaultAccountEditCurrencyUseCase(
                 pickAction.map { pick -> requestId to pick }
             }
             .filter { (requestId, _) -> requestId.value == this.requestId.get() }
-            .mapNotNull { (_, pick) -> AccountEditCurrencyUseCase.State.Picked(pick.currency) }
+            .mapNotNull { (_, pick) -> SettingsCurrencyUseCase.State.Picked(pick.currency) }
             .onEach { navigator.back() }
 }

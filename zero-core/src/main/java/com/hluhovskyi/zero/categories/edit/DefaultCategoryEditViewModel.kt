@@ -51,7 +51,12 @@ internal class DefaultCategoryEditViewModel(
                     )
                 }
             is CategoryEditViewModel.Action.SelectIcon ->
-                categoryEditIconUseCase.perform(CategoryEditIconUseCase.Action.Request(colorId = mutableState.value.colorId))
+                categoryEditIconUseCase.perform(
+                    CategoryEditIconUseCase.Action.Request(
+                        colorId = mutableState.value.colorId,
+                        iconId = mutableState.value.iconId,
+                    ),
+                )
             is CategoryEditViewModel.Action.SelectColor ->
                 categoryEditColorUseCase.perform(CategoryEditColorUseCase.Action.Request)
             is CategoryEditViewModel.Action.Save -> ioCoroutineScope.launch {

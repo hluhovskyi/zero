@@ -1,15 +1,14 @@
-package com.hluhovskyi.zero.accounts.edit
+package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.common.Currency
-import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-interface AccountEditCurrencyUseCase : ActionStateModel<AccountEditCurrencyUseCase.Action, AccountEditCurrencyUseCase.State> {
+interface SettingsCurrencyUseCase : ActionStateModel<SettingsCurrencyUseCase.Action, SettingsCurrencyUseCase.State> {
 
     sealed interface Action {
-        data class Request(val selectedCurrencyId: Id = Id.Unknown) : Action
+        object Request : Action
         data class Pick(val currency: Currency) : Action
     }
 
@@ -17,7 +16,7 @@ interface AccountEditCurrencyUseCase : ActionStateModel<AccountEditCurrencyUseCa
         data class Picked(val currency: Currency) : State
     }
 
-    object Noop : AccountEditCurrencyUseCase {
+    object Noop : SettingsCurrencyUseCase {
         override val state: Flow<State> = emptyFlow()
         override fun perform(action: Action) = Unit
     }

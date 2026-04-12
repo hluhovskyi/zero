@@ -15,6 +15,7 @@ interface CategoryPickerViewModel : AttachableActionStateModel<CategoryPickerVie
     data class State(
         val categories: List<CategoryPickerItem> = emptyList(),
         val searchQuery: String = "",
+        val selectedCategoryId: Id = Id.Unknown,
     )
 
     data class CategoryPickerItem(

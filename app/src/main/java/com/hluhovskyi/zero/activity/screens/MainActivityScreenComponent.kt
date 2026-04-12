@@ -43,9 +43,11 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
+import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
+import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -248,11 +250,32 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         )
 
         @Provides
+        @MainActivityScreenScope
+        fun transactionEditCurrencyUseCase(
+            navigator: Navigator,
+            idGenerator: IdGenerator,
+        ): TransactionEditCurrencyUseCase = DefaultTransactionEditCurrencyUseCase(
+            navigator = navigator,
+            requestIdGenerator = idGenerator,
+        )
+
+        @Provides
+        @MainActivityScreenScope
+        fun settingsCurrencyUseCase(
+            navigator: Navigator,
+            idGenerator: IdGenerator,
+        ): SettingsCurrencyUseCase = DefaultSettingsCurrencyUseCase(
+            navigator = navigator,
+            requestIdGenerator = idGenerator,
+        )
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
             componentBuilder: TransactionEditComponent.Builder,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -265,6 +288,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
                 .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
+                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
                 .logging(logger)
         }
 
@@ -274,6 +298,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun transactionItemEditNavigationEntry(
             componentBuilder: TransactionEditComponent.Builder,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
@@ -283,6 +308,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
                 .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
+                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
                 .logging(logger)
         }
 
@@ -404,6 +430,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun currencyPickerNavigationEntry(
             componentBuilder: CurrencyPickerComponent.Builder,
             accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
+            settingsCurrencyUseCase: SettingsCurrencyUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -411,9 +439,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
             componentBuilder
+                .selectedCurrencyId(arguments.getValue(Destinations.Currency.Picker.SelectedCurrencyId))
                 .onCurrencyPickedHandler { currency ->
                     accountEditCurrencyUseCase.perform(
                         AccountEditCurrencyUseCase.Action.Pick(currency),
+                    )
+                    settingsCurrencyUseCase.perform(
+                        SettingsCurrencyUseCase.Action.Pick(currency),
+                    )
+                    transactionEditCurrencyUseCase.perform(
+                        TransactionEditCurrencyUseCase.Action.Pick(currency),
                     )
                 }
                 .logging(logger)
@@ -432,6 +467,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
             componentBuilder
+                .selectedCategoryId(arguments.getValue(Destinations.Category.Picker.SelectedCategoryId))
                 .onCategorySelectedHandler { categoryId ->
                     transactionEditCategoryUseCase.perform(
                         TransactionEditCategoryUseCase.Action.Pick(categoryId),
@@ -455,6 +491,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
+                .selectedIconId(arguments.getValue(Destinations.Icon.Picker.SelectedIconId))
                 .onIconSelectedHandler { icon ->
                     accountEditIconUseCase.perform(
                         AccountEditIconUseCase.Action.Pick(
@@ -507,11 +544,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun settingsNavigationEntry(
             componentBuilder: SettingsComponent.Builder,
+            settingsCurrencyUseCase: SettingsCurrencyUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Settings) {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .logging(logger)
         }
 

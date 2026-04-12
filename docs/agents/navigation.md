@@ -33,8 +33,10 @@ Use a scoped use case (`Action.Request` / `Action.Pick` / `State.Picked`) — in
 
 Do not relay results through ViewModel state or shared flows on components.
 
+## Preselecting an Item in a Picker
+
+**To preselect the current item in a picker, pass the selection as an optional `Argument<Id>` on the picker destination and thread it through the stack** — `Action.Request` carries the current selection; the `Default*UseCase` appends it as a nav arg only when `Id.Known`; the `NavigatorEntry` reads it and passes it via `@BindsInstance`; the ViewModel stores it as initial state; the ViewProvider renders the selection ring. See `TransactionEditCategoryUseCase` + `DefaultTransactionEditCategoryUseCase` as the canonical example.
+
 ## Bottom Sheet Destinations
 
 Use `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` for destinations that should appear as a bottom sheet overlay. In `MainActivityScreenViewProvider` these are registered as `dialog {}` destinations (so they overlay the current screen rather than replacing it), wrapped in `BottomSheetNavDestination` which owns the `ModalBottomSheetLayout` show/dismiss logic.
-
-**Known issue**: Sheet renders full-screen instead of as an overlay. Fix pending.

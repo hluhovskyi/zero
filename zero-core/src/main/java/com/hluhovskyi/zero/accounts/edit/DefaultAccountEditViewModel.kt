@@ -63,10 +63,18 @@ internal class DefaultAccountEditViewModel(
                 state.copy(selectedCurrency = action.currency)
             }
             is AccountEditViewModel.Action.OpenCurrencyPicker -> {
-                accountEditCurrencyUseCase.perform(AccountEditCurrencyUseCase.Action.Request)
+                accountEditCurrencyUseCase.perform(
+                    AccountEditCurrencyUseCase.Action.Request(
+                        selectedCurrencyId = mutableState.value.selectedCurrency?.id ?: Id.Unknown,
+                    ),
+                )
             }
             is AccountEditViewModel.Action.SelectIcon -> {
-                accountEditIconUseCase.perform(AccountEditIconUseCase.Action.Request)
+                accountEditIconUseCase.perform(
+                    AccountEditIconUseCase.Action.Request(
+                        iconId = mutableState.value.iconId,
+                    ),
+                )
             }
             is AccountEditViewModel.Action.Save -> coroutineScope.launch {
                 val state = mutableState.value
