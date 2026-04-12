@@ -11,3 +11,7 @@ gemini --yolo -p "You are working on the '<branch>' branch. Execute ALL tasks fr
 ```
 
 After Gemini finishes, Claude reviews the PR and rates Gemini's work.
+
+## Complexity Circuit Breaker
+
+**The "Hacky Code" Circuit Breaker:** If you iterate on a fix more than twice and your solution requires dropping down to low-level framework APIs (e.g., `PointerEventPass.Initial`, Reflection, or Global Registries) for a common UI or logic problem, you must STOP. Revert your changes and present the fundamental constraint to the user before proceeding. Do not brute-force the framework.
