@@ -95,13 +95,9 @@ internal class MainActivityScreenViewProvider(
                                             .fillMaxSize()
                                             .imePadding(),
                                     ) {
-                                        if (dragHandleHeight > 0.dp) {
-                                            DragHandle(
-                                                modifier = Modifier
-                                                    .height(dragHandleHeight)
-                                                    .alpha(dragHandleHeight / 24.dp),
-                                            )
-                                        }
+                                        DragHandle(
+                                            modifier = Modifier.height(dragHandleHeight),
+                                        )
                                         Box(modifier = Modifier.weight(1f)) {
                                             entry.view.invoke(
                                                 BundleArguments(
