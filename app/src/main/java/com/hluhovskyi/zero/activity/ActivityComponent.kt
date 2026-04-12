@@ -181,9 +181,9 @@ abstract class ActivityComponent :
 
         @Provides
         @ActivityScope
-        fun colorPickerComponentBuilder(
+        fun colorPickerComponentFactory(
             component: ActivityComponent,
-        ): ColorPickerComponent.Builder = ColorPickerComponent.builder(component)
+        ): ColorPickerComponent.Factory = ColorPickerComponent.factory(component)
 
         @Provides
         @ActivityScope

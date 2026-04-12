@@ -24,6 +24,12 @@ internal interface NavigatorScope {
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
         view: Context.() -> Buildable<out AttachableViewComponent>,
     ): NavigatorEntry
+
+    fun component(
+        destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        view: Context.() -> AttachableViewComponent,
+    ): NavigatorEntry
 }
 
 internal class DefaultNavigatorScope(
@@ -46,6 +52,17 @@ internal class DefaultNavigatorScope(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
         view: NavigatorScope.Context.() -> Buildable<out AttachableViewComponent>,
+    ): NavigatorEntry = ComposeNavigationEntry(
+        route = navigationRouteResolver.resolveWithPlaceholders(destination),
+        destination = destination,
+        displayOption = displayOption,
+        view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() },
+    )
+
+    override fun component(
+        destination: Destination,
+        displayOption: NavigatorEntry.DisplayOption,
+        view: NavigatorScope.Context.() -> AttachableViewComponent,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
