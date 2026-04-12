@@ -35,6 +35,8 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerSettingsComponent.builder()
             .dependencies(dependencies)
+            .onImportSelectedHandler(OnImportSelectedHandler.Noop)
+            .settingsCurrencyUseCase(SettingsCurrencyUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -44,6 +46,9 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onImportSelectedHandler(handler: OnImportSelectedHandler): Builder
+
+        @BindsInstance
+        fun settingsCurrencyUseCase(useCase: SettingsCurrencyUseCase): Builder
     }
 
     @dagger.Module
@@ -54,9 +59,11 @@ abstract class SettingsComponent : AttachableViewComponent {
         fun viewModel(
             onImportSelected: OnImportSelectedHandler,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            settingsCurrencyUseCase: SettingsCurrencyUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
+            settingsCurrencyUseCase = settingsCurrencyUseCase,
         )
 
         @Provides

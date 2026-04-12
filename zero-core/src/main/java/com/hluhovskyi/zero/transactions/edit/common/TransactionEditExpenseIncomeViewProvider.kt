@@ -59,10 +59,8 @@ private fun TransactionEditExpenseIncomeView(
             onAmountChange = {
                 viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeAmount(it))
             },
-            currencies = state.currencies,
-            currencyLabel = { "${it.currencySymbol} - ${it.name}" },
-            onCurrencySelected = {
-                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectCurrency(it))
+            onCurrencyClick = {
+                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ShowAllCurrencies)
             },
         )
 

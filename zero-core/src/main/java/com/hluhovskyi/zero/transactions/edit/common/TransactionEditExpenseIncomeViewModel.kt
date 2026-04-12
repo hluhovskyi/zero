@@ -17,6 +17,7 @@ interface TransactionEditExpenseIncomeViewModel : ActionStateModel<TransactionEd
         data class ChangeDate(val date: LocalDateTime) : Action
         object EditCategories : Action
         object ShowAllCategories : Action
+        object ShowAllCurrencies : Action
     }
 
     data class State(

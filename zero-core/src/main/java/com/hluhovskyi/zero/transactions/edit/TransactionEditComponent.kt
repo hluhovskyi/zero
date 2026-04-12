@@ -69,6 +69,7 @@ abstract class TransactionEditComponent :
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
             .transactionEditCategoryUseCase(TransactionEditCategoryUseCase.Noop)
+            .transactionEditCurrencyUseCase(TransactionEditCurrencyUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -90,6 +91,9 @@ abstract class TransactionEditComponent :
 
         @BindsInstance
         fun transactionEditCategoryUseCase(useCase: TransactionEditCategoryUseCase): Builder
+
+        @BindsInstance
+        fun transactionEditCurrencyUseCase(useCase: TransactionEditCurrencyUseCase): Builder
     }
 
     @dagger.Module
@@ -109,6 +113,7 @@ abstract class TransactionEditComponent :
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
             incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
             zoneProvider: ZoneProvider,
@@ -125,6 +130,7 @@ abstract class TransactionEditComponent :
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
             transactionEditCategoryUseCase = transactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase = transactionEditCurrencyUseCase,
             incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             zoneProvider = zoneProvider,
