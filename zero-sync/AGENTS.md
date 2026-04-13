@@ -22,6 +22,10 @@ Portable JSON export/import and delta sync engine for all user data.
 - When changing a JSON key (breaking change): increment `version` in `SyncSnapshot`, add a migration path, add new fixture files (`v2-*.json`). **Never modify existing fixture files.**
 - When adding optional fields: no version bump needed; use nullable types with `null` defaults.
 
+## Planned Improvements
+
+- **High-level file I/O on `SyncEngine`.** Currently callers receive/pass `SyncSnapshot` and must handle serialization themselves. The goal is to add `exportTo(userId, uri: Uri.NonEmpty)` and `importFrom(uri: Uri.NonEmpty, userId)` so no caller ever touches JSON. Blocked on: extending `ResourceResolver` (in `zero-api`/`zero-core`) to support write/OutputStream access alongside the existing read path. The read side already works via `UriRequest` — see `ZenMoneyImportSourceUseCase` for the pattern. Avoid `java.io.OutputStream` directly in the interface (JVM-only, breaks KMP); route through `ResourceResolver` instead.
+
 ## Testing
 
 - `zero-sync` unit tests use in-memory fakes for `EntitySyncSource`/`Sink`. No Room.
