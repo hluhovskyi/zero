@@ -12,9 +12,17 @@ interface SyncComponent {
     }
 
     val syncEngine: SyncEngine
+
+    class Factory(private val dependencies: Dependencies) {
+        fun create(): SyncComponent = DefaultSyncComponent(dependencies)
+    }
+
+    companion object {
+        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
+    }
 }
 
-class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : SyncComponent {
+internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : SyncComponent {
 
     override val syncEngine: SyncEngine by lazy {
         DefaultSyncEngine(
