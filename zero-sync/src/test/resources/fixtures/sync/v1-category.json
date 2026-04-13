@@ -1,0 +1,10 @@
+{
+  "id": "cat-aaaa-0001",
+  "name": "Groceries",
+  "iconId": "icon-food",
+  "colorId": "color-green",
+  "parentCategoryId": null,
+  "creationDateTime": "2024-01-01T10:00:00",
+  "updatedDateTime": "2024-03-15T14:30:00",
+  "deletedAt": null
+}

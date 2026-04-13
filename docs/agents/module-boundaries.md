@@ -12,6 +12,14 @@ zero-image-loading  (ImageLoader interface + Coil impl)
 - `:zero-ui` is the host for the **Design System** (Theme, Color, Type, Shape) and dumb reusable Compose components. It has no dependencies on other `zero-*` modules — no domain types, no business logic.
 - No Android framework dependencies in `zero-api`.
 
+## zero-api Co-location Rule
+
+**Any type referenced in a `zero-api` interface signature must itself live in `zero-api`** — placing it in the implementing module creates a circular dependency the moment any other module implements that interface. If you find yourself adding an import from `zero-sync` or `zero-database` inside `zero-api`, the type is in the wrong module.
+
+## New Module Scaffolding
+
+**Every new Gradle module needs a `module/.gitignore` containing `/build`** — without it, Gradle build outputs get staged by `git add` and the pre-commit hook blocks the commit.
+
 ## Mechanical Enforcement
 
 The above rules are enforced by custom Android Lint rules in the `:lint-rules` module.

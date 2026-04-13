@@ -43,6 +43,8 @@ import com.hluhovskyi.zero.imports.ZenMoneyImportComponent
 import com.hluhovskyi.zero.imports.lazy
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.sync.SyncComponent
+import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
@@ -250,6 +252,24 @@ abstract class ApplicationComponent :
             clock = clock,
             zoneProvider = zoneProvider,
         )
+
+        @Provides
+        @ApplicationScope
+        fun syncComponent(
+            databaseComponent: DatabaseComponent,
+        ): SyncComponent = SyncComponent.factory(
+            object : SyncComponent.Dependencies {
+                override val categorySyncSource = databaseComponent.categorySyncSource()
+                override val categorySyncSink = databaseComponent.categorySyncSink()
+                override val accountSyncSource = databaseComponent.accountSyncSource()
+                override val accountSyncSink = databaseComponent.accountSyncSink()
+                override val transactionSyncSource = databaseComponent.transactionSyncSource()
+                override val transactionSyncSink = databaseComponent.transactionSyncSink()
+            },
+        ).create()
+
+        @Provides
+        fun syncEngine(syncComponent: SyncComponent): SyncEngine = syncComponent.syncEngine
 
         @Provides
         @ApplicationScope
