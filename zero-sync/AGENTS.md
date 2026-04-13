@@ -13,7 +13,7 @@ Portable JSON export/import and delta sync engine for all user data.
 
 - **Never modify `updatedDateTime` on write.** Timestamps from the source are preserved exactly. Any code that overwrites timestamps breaks LWW.
 - **Tombstones are entities.** A `deletedAt != null` entity is a valid sync record. Do not skip or filter tombstones during sync.
-- **`ConflictResolver.resolve()` returns `List<T>`; upsert every item in the list that differs from local** — `firstOrNull()` silently discards winners from resolvers that return more than one (e.g. a future "keep-both" resolver). Use `flatMap { resolver.resolve(...) }.filter { it != local[id] }`.
+- **`ConflictResolver.resolve()` returns `List<T>`; upsert every item in the list that differs from local** — `firstOrNull()` silently discards winners from resolvers that return more than one (e.g. a future "keep-both" resolver). Extract `val localEntity = local[entity.id]`, pass it to `resolve()`, and filter against the same reference.
 - **Processing order is mandatory.** Categories → Accounts → Transactions. Changing this order causes dangling references on import.
 - **`lastSyncedAt` advances only on full success.** If any push chunk fails, `lastSyncedAt` must not advance. The next sync retries from the previous high-water mark.
 

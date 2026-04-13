@@ -36,8 +36,9 @@ internal class DefaultSyncEngine(
     ) {
         val local = pipeline.localSource.exportAll(userId).associateBy { it.id }
         val toUpsert = incoming.flatMap { entity ->
-            pipeline.resolver.resolve(local[entity.id], entity)
-                .filter { winner -> winner != local[entity.id] }
+            val localEntity = local[entity.id]
+            pipeline.resolver.resolve(localEntity, entity)
+                .filter { winner -> winner != localEntity }
         }
         if (toUpsert.isNotEmpty()) pipeline.localSink.syncUpsert(toUpsert)
     }
