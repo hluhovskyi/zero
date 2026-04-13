@@ -269,7 +269,20 @@ File export/import continues to work unchanged throughout — V1 behaviour unaff
 
 ---
 
+## Plan B — Own Backend
+
+The sync layer is backend-agnostic by design. Switching from Firestore to a custom backend means replacing `:zero-firebase` implementations with `:zero-backend` implementations. `SyncEngine`, `SyncRegistry`, `Syncer`, and all Room code are untouched.
+
+**Cost inflection point:** Firestore is cheaper than self-hosted until roughly 50k–100k MAU. A VPS + Postgres becomes cheaper at that scale. The interface swap is the only migration work.
+
+**To keep migration cheap, avoid these Firestore-specific patterns:**
+- Do not use Firestore real-time listeners as a core sync mechanism — treat sync as pull-based, listeners as an optional optimization on top of `Syncer.sync()`
+- Do not rely on Firestore's offline cache — all offline state lives in Room; Firestore is a dumb remote store
+- Delta query (`whereGreaterThan("updatedDateTime", since)`) maps directly to `GET /entities?since=...` on any backend — no lock-in
+
+**Auth:** Firebase Auth UIDs must never become the primary user identity in the data model. Store Firebase Auth UID as a lookup field only; use app-internal `Id.Known` as the canonical `userId` everywhere. This decouples auth provider from data identity — switching auth providers becomes a lookup swap, not a data migration.
+
 ## Open Questions
 
-- **Firestore auth**: Firebase Auth UID vs app-internal `Id.Known` — need a mapping layer in `:zero-firebase`.
+- **Firestore auth**: Firebase Auth UID vs app-internal `Id.Known` — mapping layer lives in `:zero-firebase`, never leaks into `zero-sync` or `zero-api`.
 - **Real-time listeners**: Firestore `addSnapshotListener` could trigger `sync()` automatically on remote changes. Out of scope for V2 but compatible with the `Syncer` interface as-is.
