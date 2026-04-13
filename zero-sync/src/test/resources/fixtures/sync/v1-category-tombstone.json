@@ -1,0 +1,10 @@
+{
+  "id": "cat-bbbb-0002",
+  "name": "Old Category",
+  "iconId": null,
+  "colorId": null,
+  "parentCategoryId": null,
+  "creationDateTime": "2023-06-01T08:00:00",
+  "updatedDateTime": "2024-06-01T12:00:00",
+  "deletedAt": "2024-06-01T12:00:00"
+}
