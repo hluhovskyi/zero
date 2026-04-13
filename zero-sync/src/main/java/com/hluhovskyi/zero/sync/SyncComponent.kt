@@ -27,18 +27,18 @@ internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : 
     override val syncEngine: SyncEngine by lazy {
         DefaultSyncEngine(
             categoryPipeline = SyncPipeline(
-                localSource = dependencies.categorySyncSource,
-                localSink = dependencies.categorySyncSink,
+                source = dependencies.categorySyncSource,
+                sink = dependencies.categorySyncSink,
                 resolver = LastWriteWinsResolver(),
             ),
             accountPipeline = SyncPipeline(
-                localSource = dependencies.accountSyncSource,
-                localSink = dependencies.accountSyncSink,
+                source = dependencies.accountSyncSource,
+                sink = dependencies.accountSyncSink,
                 resolver = LastWriteWinsResolver(),
             ),
             transactionPipeline = SyncPipeline(
-                localSource = dependencies.transactionSyncSource,
-                localSink = dependencies.transactionSyncSink,
+                source = dependencies.transactionSyncSource,
+                sink = dependencies.transactionSyncSink,
                 resolver = LastWriteWinsResolver(),
             ),
         )

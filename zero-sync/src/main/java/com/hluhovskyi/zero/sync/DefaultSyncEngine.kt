@@ -17,9 +17,9 @@ internal class DefaultSyncEngine(
         version = SNAPSHOT_VERSION,
         userId = userId,
         exportedAt = Clock.System.now().toLocalDateTime(TimeZone.UTC),
-        categories = categoryPipeline.localSource.exportAll(userId),
-        accounts = accountPipeline.localSource.exportAll(userId),
-        transactions = transactionPipeline.localSource.exportAll(userId),
+        categories = categoryPipeline.source.exportAll(userId),
+        accounts = accountPipeline.source.exportAll(userId),
+        transactions = transactionPipeline.source.exportAll(userId),
     )
 
     override suspend fun import(snapshot: SyncSnapshot, userId: Id.Known) {
@@ -34,12 +34,12 @@ internal class DefaultSyncEngine(
         incoming: List<T>,
         userId: Id.Known,
     ) {
-        val local = pipeline.localSource.exportAll(userId).associateBy { it.id }
+        val stored = pipeline.source.exportAll(userId).associateBy { it.id }
         val toUpsert = incoming.flatMap { entity ->
-            val localEntity = local[entity.id]
-            pipeline.resolver.resolve(localEntity, entity)
-                .filter { winner -> winner != localEntity }
+            val storedEntity = stored[entity.id]
+            pipeline.resolver.resolve(storedEntity, entity)
+                .filter { winner -> winner != storedEntity }
         }
-        if (toUpsert.isNotEmpty()) pipeline.localSink.syncUpsert(toUpsert)
+        if (toUpsert.isNotEmpty()) pipeline.sink.syncUpsert(toUpsert)
     }
 }

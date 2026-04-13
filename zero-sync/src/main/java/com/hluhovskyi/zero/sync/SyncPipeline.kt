@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.sync
 
-data class SyncPipeline<T : SyncEntity>(
-    val localSource: EntitySyncSource<T>,
-    val localSink: EntitySyncSink<T>,
+class SyncPipeline<T : SyncEntity>(
+    val source: EntitySyncSource<T>,
+    val sink: EntitySyncSink<T>,
     val resolver: ConflictResolver<T>,
 )

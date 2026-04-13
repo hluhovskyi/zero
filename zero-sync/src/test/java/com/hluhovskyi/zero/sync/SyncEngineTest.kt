@@ -110,18 +110,18 @@ class SyncEngineTest {
         categorySink: FakeCategorySink = FakeCategorySink(),
     ): SyncEngine = DefaultSyncEngine(
         categoryPipeline = SyncPipeline(
-            localSource = FakeCategorySource(categories),
-            localSink = categorySink,
+            source = FakeCategorySource(categories),
+            sink = categorySink,
             resolver = LastWriteWinsResolver(),
         ),
         accountPipeline = SyncPipeline(
-            localSource = FakeAccountSource(accounts),
-            localSink = FakeAccountSink(),
+            source = FakeAccountSource(accounts),
+            sink = FakeAccountSink(),
             resolver = LastWriteWinsResolver(),
         ),
         transactionPipeline = SyncPipeline(
-            localSource = FakeTransactionSource(transactions),
-            localSink = FakeTransactionSink(),
+            source = FakeTransactionSource(transactions),
+            sink = FakeTransactionSink(),
             resolver = LastWriteWinsResolver(),
         ),
     )
