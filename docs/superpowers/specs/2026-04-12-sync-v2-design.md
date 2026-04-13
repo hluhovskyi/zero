@@ -89,9 +89,10 @@ No `userId` parameter — `Syncer` reads the current user internally via `Curren
 ```kotlin
 // zero-api
 interface SyncEngine {
-    // File backup — unchanged from V1
-    suspend fun export(): SyncSnapshot
-    suspend fun import(snapshot: SyncSnapshot)
+    // File backup — attribution-explicit in V2 since multiple registries exist.
+    // Pass the registry that represents local device state (KnownSyncAttribution.Database).
+    suspend fun export(from: SyncAttribution): SyncSnapshot
+    suspend fun import(snapshot: SyncSnapshot, to: SyncAttribution)
 
     // V2 — creates a configured syncer between two registered attributions
     fun createSyncer(
