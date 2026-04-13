@@ -1,0 +1,15 @@
+{
+  "id": "tx-gggg-0003",
+  "type": "TRANSFER",
+  "accountId": "acc-cccc-0001",
+  "currencyId": "USD",
+  "categoryId": null,
+  "amount": "200.00",
+  "rate": "1.0",
+  "targetAccountId": "acc-dddd-0002",
+  "targetAmount": "185.00",
+  "enteredDateTime": "2024-04-10T11:00:00",
+  "creationDateTime": "2024-04-10T11:00:00",
+  "updatedDateTime": "2024-04-10T11:00:00",
+  "deletedAt": null
+}

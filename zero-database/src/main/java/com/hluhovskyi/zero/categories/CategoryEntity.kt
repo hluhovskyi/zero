@@ -17,4 +17,5 @@ data class CategoryEntity(
     val colorId: String?,
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
+    val deletedAt: LocalDateTime? = null,
 )

@@ -138,6 +138,31 @@ navigatorScope.component(...) {
 
 As each component is migrated, its call site switches from `buildable` to `component`.
 
+## Factory Pattern for New Non-Dagger Components
+
+New modules that never used Dagger (e.g. `zero-sync`, future KMP modules) must still follow the same Factory shape — do not invent a different wiring pattern:
+
+```kotlin
+interface FooComponent {
+    interface Dependencies { ... }
+    val fooEngine: FooEngine
+
+    class Factory(private val dependencies: Dependencies) {
+        fun create(): FooComponent = DefaultFooComponent(dependencies)
+    }
+
+    companion object {
+        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
+    }
+}
+
+internal class DefaultFooComponent(dependencies: FooComponent.Dependencies) : FooComponent {
+    override val fooEngine: FooEngine by lazy { DefaultFooEngine(...) }
+}
+```
+
+**`DefaultFooComponent` must be `internal`** — callers only see the interface and `Factory`. See `SyncComponent` and `ColorPickerComponent` for live examples.
+
 ## Migration Checklist (per component)
 
 1. Convert `abstract class FooComponent` to `class FooComponent private constructor(...)`

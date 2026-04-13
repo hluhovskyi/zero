@@ -1,0 +1,12 @@
+{
+  "id": "acc-dddd-0002",
+  "currencyId": "EUR",
+  "name": "Closed Account",
+  "iconId": "icon-bank",
+  "initialBalance": "100.00",
+  "category": "OTHER",
+  "details": "Closed in 2024",
+  "creationDateTime": "2022-01-01T00:00:00",
+  "updatedDateTime": "2024-08-15T16:00:00",
+  "deletedAt": "2024-08-15T16:00:00"
+}

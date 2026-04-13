@@ -33,9 +33,10 @@ zero-api             → Domain interfaces and types (pure Kotlin)
 zero-database        → Room DAOs, Entities, Repository implementations
 zero-image-loading   → ImageLoader interface + Coil impl
 zero-zenmoney        → ZenMoney CSV import
+zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 ```
 
-**Dependency flow:** `app → zero-core → zero-api`, `app → zero-database → zero-api`, `zero-core → zero-ui` (dumb views, no domain types), `zero-core → zero-image-loading`.
+**Dependency flow:** `app → zero-core → zero-api`, `app → zero-database → zero-api`, `app → zero-sync → zero-api`, `zero-core → zero-ui` (dumb views, no domain types), `zero-core → zero-image-loading`.
 
 Each module has its own `AGENTS.md` with module-specific rules.
 

@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
+import kotlinx.datetime.LocalDateTime
 
 @Entity(
     indices = [Index("userId")],
@@ -19,4 +20,7 @@ internal data class AccountEntity(
     @Embedded val initialBalance: AmountEntity,
     val category: String = "OTHER",
     val details: String? = null,
+    val creationDateTime: LocalDateTime,
+    val updatedDateTime: LocalDateTime,
+    val deletedAt: LocalDateTime? = null,
 )

@@ -26,6 +26,7 @@ internal data class TransactionEntity(
     val enteredDateTime: LocalDateTime,
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
+    val deletedAt: LocalDateTime? = null,
 ) {
     enum class Type {
         EXPENSE,

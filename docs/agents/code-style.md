@@ -2,6 +2,10 @@
 
 Conventions to keep code consistent across the codebase.
 
+## Naming Conventions
+
+**Name concrete implementations `Default*`, never `*Impl`** — `DefaultFooViewModel`, not `FooViewModelImpl`. A lint rule (`DefaultImplMustBeInternal`) enforces that `Default*` classes are `internal`; violating the naming convention silently bypasses that guard.
+
 ## Imports vs Fully Qualified Class Names
 Always use specific imports. NEVER use fully qualified class names in code bodies. NEVER use wildcard imports (`import com.package.*`).
 

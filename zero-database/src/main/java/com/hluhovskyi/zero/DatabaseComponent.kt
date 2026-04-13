@@ -5,8 +5,12 @@ import androidx.room.Room
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.MIGRATION_1_2
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
+import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
+import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.RoomCategoryRepository
+import com.hluhovskyi.zero.categories.RoomCategorySyncSink
+import com.hluhovskyi.zero.categories.RoomCategorySyncSource
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -17,7 +21,14 @@ import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.RoomConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.InUseCurrencyRepository
+import com.hluhovskyi.zero.sync.EntitySyncSink
+import com.hluhovskyi.zero.sync.EntitySyncSource
+import com.hluhovskyi.zero.sync.SyncAccount
+import com.hluhovskyi.zero.sync.SyncCategory
+import com.hluhovskyi.zero.sync.SyncTransaction
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
+import com.hluhovskyi.zero.transactions.RoomTransactionSyncSink
+import com.hluhovskyi.zero.transactions.RoomTransactionSyncSource
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.RoomCurrentUserRepository
@@ -53,6 +64,14 @@ interface DatabaseComponent {
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
 
     fun transform(repository: CurrencyRepository): CurrencyRepository = currencyRepositoryTransformer.transform(repository)
+
+    // Sync sources/sinks — interface types only, no Room* type names in signatures
+    fun categorySyncSource(): EntitySyncSource<SyncCategory>
+    fun categorySyncSink(): EntitySyncSink<SyncCategory>
+    fun accountSyncSource(): EntitySyncSource<SyncAccount>
+    fun accountSyncSink(): EntitySyncSink<SyncAccount>
+    fun transactionSyncSource(): EntitySyncSource<SyncTransaction>
+    fun transactionSyncSink(): EntitySyncSink<SyncTransaction>
 
     interface Dependencies {
 
@@ -103,7 +122,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
         @Provides
@@ -197,5 +216,59 @@ interface DatabaseComponent {
                 zoneProvider = zoneProvider,
             )
         }
+
+        @Provides
+        @DatabaseScope
+        internal fun categorySyncSource(
+            database: Provider<MainDatabase>,
+        ): EntitySyncSource<SyncCategory> = RoomCategorySyncSource(
+            dao = { database.get().categorySync() },
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun categorySyncSink(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+        ): EntitySyncSink<SyncCategory> = RoomCategorySyncSink(
+            dao = { database.get().categorySync() },
+            currentUserId = currentUserId,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun accountSyncSource(
+            database: Provider<MainDatabase>,
+        ): EntitySyncSource<SyncAccount> = RoomAccountSyncSource(
+            dao = { database.get().accountSync() },
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun accountSyncSink(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+        ): EntitySyncSink<SyncAccount> = RoomAccountSyncSink(
+            dao = { database.get().accountSync() },
+            currentUserId = currentUserId,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun transactionSyncSource(
+            database: Provider<MainDatabase>,
+        ): EntitySyncSource<SyncTransaction> = RoomTransactionSyncSource(
+            dao = { database.get().transactionSync() },
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun transactionSyncSink(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+        ): EntitySyncSink<SyncTransaction> = RoomTransactionSyncSink(
+            dao = { database.get().transactionSync() },
+            currentUserId = currentUserId,
+        )
     }
 }
