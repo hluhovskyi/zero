@@ -61,7 +61,7 @@ class SyncRegistry(
 
 ### ResolveStrategy
 
-Public API concept — callers configure strategy by name, engine maps to internal `ConflictResolver` implementation. Callers never instantiate resolvers directly.
+Public API concept — callers configure strategy by name, engine maps to internal `ConflictResolver` implementation. Callers never instantiate resolvers directly. One strategy applies to the whole syncer — if different entity types need different strategies, use separate syncers.
 
 ```kotlin
 // zero-sync
@@ -69,14 +69,6 @@ sealed class ResolveStrategy {
     object LastWriteWins : ResolveStrategy()
     // KeepBoth — future, only valid for leaf entities (transactions)
 }
-```
-
-```kotlin
-class SyncStrategies(
-    val category: ResolveStrategy = ResolveStrategy.LastWriteWins,
-    val account: ResolveStrategy = ResolveStrategy.LastWriteWins,
-    val transaction: ResolveStrategy = ResolveStrategy.LastWriteWins,
-)
 ```
 
 ### Syncer
@@ -105,7 +97,7 @@ interface SyncEngine {
     fun createSyncer(
         from: SyncAttribution,
         to: SyncAttribution,
-        strategies: SyncStrategies = SyncStrategies(),
+        strategy: ResolveStrategy = ResolveStrategy.LastWriteWins,
     ): Syncer
 }
 ```
