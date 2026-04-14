@@ -281,21 +281,7 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun exportWriter(context: Context): ExportWriter = ExportWriter { fileName, content ->
-            val contentValues = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, fileName)
-                put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/json")
-                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
-            }
-            val insertUri = context.contentResolver.insert(
-                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                contentValues,
-            ) ?: error("Could not create file in Downloads")
-            context.contentResolver.openOutputStream(insertUri)?.use { output ->
-                output.write(content.toByteArray())
-            }
-            contentValues.clear()
-            contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
-            context.contentResolver.update(insertUri, contentValues, null, null)
+            MediaStoreHelper.saveToDownloads(context, fileName, content)
         }
 
         @Provides
