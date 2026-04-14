@@ -21,7 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.imports.KnownSource
 import com.hluhovskyi.zero.imports.Source
+import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 
 internal class SourceSelectionViewProvider(
     private val viewModel: SourceSelectionViewModel,
@@ -39,17 +42,19 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         IconButton(onClick = { viewModel.perform(SourceSelectionViewModel.Action.Close) }) {
-            Icon(imageVector = Icons.Filled.Close, contentDescription = "Close")
+            Icon(imageVector = Icons.Filled.Close, contentDescription = "Close", tint = OnSurface)
         }
         Text(
             text = "Import Data",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
+            color = OnSurface,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         )
         Text(
             text = "Choose how you'd like to import your financial data.",
             fontSize = 14.sp,
+            color = OnSurfaceVariant,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
         )
         LazyColumn(
@@ -68,6 +73,12 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
 
 @Composable
 private fun SourceRow(source: Source, onClick: () -> Unit) {
+    val (label, description) = when (source.key) {
+        KnownSource.ZeroBackup.key -> "Zero Backup" to "Restore from a Zero backup file"
+        KnownSource.ZenMoney.key -> "ZenMoney" to "Import from a ZenMoney CSV export"
+        else -> source.key to ""
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,7 +86,18 @@ private fun SourceRow(source: Source, onClick: () -> Unit) {
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(text = source.label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        Text(text = source.description, fontSize = 13.sp)
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = OnSurface,
+        )
+        if (description.isNotEmpty()) {
+            Text(
+                text = description,
+                fontSize = 13.sp,
+                color = OnSurfaceVariant,
+            )
+        }
     }
 }
