@@ -44,6 +44,7 @@ import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.settings.DefaultExportWriter
 import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
@@ -283,9 +284,7 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun exportWriter(context: Context): ExportWriter = ExportWriter { fileName, content ->
-            MediaStoreHelper.saveToDownloads(context, fileName, content)
-        }
+        fun exportWriter(context: Context): ExportWriter = DefaultExportWriter(context)
 
         @Provides
         @ApplicationScope
