@@ -18,7 +18,7 @@ import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 
 internal class ImportViewProvider(
-    private val useCase: ImportUseCase,
+    private val viewModel: ImportViewModel,
     private val sourceSelection: Buildable<out AttachableViewComponent>,
     private val categoriesReview: Buildable<out AttachableViewComponent>,
     private val accountsReview: Buildable<out AttachableViewComponent>,
@@ -28,7 +28,7 @@ internal class ImportViewProvider(
     @Composable
     override fun View() {
         ImportView(
-            useCase = useCase,
+            viewModel = viewModel,
             sourceSelection = sourceSelection,
             categoriesReview = categoriesReview,
             accountsReview = accountsReview,
@@ -39,14 +39,14 @@ internal class ImportViewProvider(
 
 @Composable
 private fun ImportView(
-    useCase: ImportUseCase,
+    viewModel: ImportViewModel,
     sourceSelection: Buildable<out AttachableViewComponent>,
     categoriesReview: Buildable<out AttachableViewComponent>,
     accountsReview: Buildable<out AttachableViewComponent>,
     transactionsPreview: Buildable<out AttachableViewComponent>,
 ) {
-    val state by useCase.state.collectAsState(
-        initial = ImportUseCase.State.SourceSelection(emptyList()),
+    val state by viewModel.state.collectAsState(
+        initial = ImportViewModel.State.SourceSelection,
     )
 
     val fileLauncher = rememberLauncherForActivityResult(
@@ -55,27 +55,27 @@ private fun ImportView(
         if (androidUri != null) {
             val uri = Uri(androidUri.toString())
             if (uri is Uri.NonEmpty) {
-                useCase.perform(ImportUseCase.Action.SelectFile(uri))
+                viewModel.perform(ImportViewModel.Action.SelectFile(uri))
             }
         } else {
-            useCase.perform(ImportUseCase.Action.Back)
+            viewModel.perform(ImportViewModel.Action.Back)
         }
     }
 
     when (state) {
-        is ImportUseCase.State.SourceSelection -> sourceSelection.AttachWithView()
-        is ImportUseCase.State.FilePicker -> {
+        ImportViewModel.State.SourceSelection -> sourceSelection.AttachWithView()
+        ImportViewModel.State.FilePicker -> {
             LaunchedEffect(state) {
                 fileLauncher.launch(arrayOf("*/*"))
             }
         }
-        is ImportUseCase.State.Loading -> {
+        ImportViewModel.State.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-        is ImportUseCase.State.CategoriesReview -> categoriesReview.AttachWithView()
-        is ImportUseCase.State.AccountsReview -> accountsReview.AttachWithView()
-        is ImportUseCase.State.TransactionsPreview -> transactionsPreview.AttachWithView()
+        ImportViewModel.State.CategoriesReview -> categoriesReview.AttachWithView()
+        ImportViewModel.State.AccountsReview -> accountsReview.AttachWithView()
+        ImportViewModel.State.TransactionsPreview -> transactionsPreview.AttachWithView()
     }
 }

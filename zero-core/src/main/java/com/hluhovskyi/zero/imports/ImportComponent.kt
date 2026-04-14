@@ -87,6 +87,10 @@ abstract class ImportComponent :
 
         @Provides
         @ImportScope
+        fun viewModel(useCase: ImportUseCase): ImportViewModel = DefaultImportViewModel(useCase)
+
+        @Provides
+        @ImportScope
         internal fun sourceSelectionComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
@@ -122,13 +126,13 @@ abstract class ImportComponent :
         @Provides
         @ImportScope
         internal fun viewProvider(
-            importUseCase: ImportUseCase,
+            viewModel: ImportViewModel,
             sourceSelectionBuilder: SourceSelectionComponent.Builder,
             categoriesReviewBuilder: CategoriesReviewComponent.Builder,
             accountsReviewBuilder: AccountsReviewComponent.Builder,
             transactionsPreviewBuilder: TransactionsPreviewComponent.Builder,
         ): ViewProvider = ImportViewProvider(
-            useCase = importUseCase,
+            viewModel = viewModel,
             sourceSelection = sourceSelectionBuilder,
             categoriesReview = categoriesReviewBuilder,
             accountsReview = accountsReviewBuilder,
