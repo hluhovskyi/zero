@@ -45,6 +45,7 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.settings.ExportWriter
+import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
@@ -69,15 +70,17 @@ private annotation class ApplicationScope
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     DatabaseComponent.Dependencies,
-    ResourceResolverComponent.Dependencies {
+    ResourceResolverComponent.Dependencies,
+    SettingsComponent.Dependencies,
+    ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract override val zoneProvider: ZoneProvider
     abstract val logger: Logger
     abstract override val serializer: SyncSerializer
     abstract override val exportWriter: ExportWriter
-    abstract override val resourceResolver: ResourceResolver
     abstract override val importComponentBuilder: ImportComponent.Builder
+    abstract override val settingsComponentBuilder: SettingsComponent.Builder
 
     interface Dependencies {
         val context: Context
@@ -292,6 +295,7 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun importComponentBuilder(
+            component: ApplicationComponent,
             syncEngine: SyncEngine,
             clock: Clock,
             idGenerator: IdGenerator,
@@ -308,7 +312,14 @@ abstract class ApplicationComponent :
                 ),
             )
             return ImportComponent.builder(parsers)
+                .dependencies(component)
         }
+
+        @Provides
+        @ApplicationScope
+        fun settingsComponentBuilder(
+            component: ApplicationComponent,
+        ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
         @ApplicationScope

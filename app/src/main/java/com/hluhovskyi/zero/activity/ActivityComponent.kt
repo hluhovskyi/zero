@@ -34,15 +34,11 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
-import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.settings.SettingsComponent
-import com.hluhovskyi.zero.sync.SyncEngine
-import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
-import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -73,9 +69,7 @@ abstract class ActivityComponent :
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
-    ColorPickerComponent.Dependencies,
-    SettingsComponent.Dependencies,
-    ImportComponent.Dependencies {
+    ColorPickerComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -103,11 +97,8 @@ abstract class ActivityComponent :
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
 
-        val syncEngine: SyncEngine
-        val currentUserRepository: CurrentUserRepository
-        val serializer: SyncSerializer
-        val exportWriter: ExportWriter
         val importComponentBuilder: ImportComponent.Builder
+        val settingsComponentBuilder: SettingsComponent.Builder
     }
 
     companion object {
@@ -194,12 +185,6 @@ abstract class ActivityComponent :
         fun colorPickerComponentFactory(
             component: ActivityComponent,
         ): ColorPickerComponent.Factory = ColorPickerComponent.factory(component)
-
-        @Provides
-        @ActivityScope
-        fun settingsComponentBuilder(
-            component: ActivityComponent,
-        ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
         @ActivityScope
