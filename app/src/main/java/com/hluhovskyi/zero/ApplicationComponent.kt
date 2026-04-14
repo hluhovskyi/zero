@@ -38,9 +38,6 @@ import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
-import com.hluhovskyi.zero.imports.ImportSourceUseCase
-import com.hluhovskyi.zero.imports.ZenMoneyImportComponent
-import com.hluhovskyi.zero.imports.lazy
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.sync.SyncComponent
@@ -66,11 +63,11 @@ private annotation class ApplicationScope
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     DatabaseComponent.Dependencies,
-    ResourceResolverComponent.Dependencies,
-    ZenMoneyImportComponent.Dependencies {
+    ResourceResolverComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract override val zoneProvider: ZoneProvider
+    abstract val logger: Logger
 
     interface Dependencies {
         val context: Context
@@ -91,7 +88,6 @@ abstract class ApplicationComponent :
     @dagger.Module(
         includes = [
             DatabaseModule::class,
-            ImportModule::class,
         ],
     )
     object Module {
@@ -334,18 +330,4 @@ internal object DatabaseModule {
     fun configurationRepository(
         databaseComponent: DatabaseComponent,
     ): ConfigurationRepository = databaseComponent.configurationRepository
-}
-
-@dagger.Module
-internal object ImportModule {
-
-    @Provides
-    @ApplicationScope
-    fun zenMoneyImportComponent(
-        component: ApplicationComponent,
-    ): ImportSourceUseCase = {
-        ZenMoneyImportComponent.builder(component)
-            .build()
-            .importSourceUseCase
-    }.lazy()
 }

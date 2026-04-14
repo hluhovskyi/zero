@@ -32,8 +32,6 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
-import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.imports.ImportSourceUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -70,8 +68,7 @@ abstract class ActivityComponent :
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
-    SettingsComponent.Dependencies,
-    ImportComponent.Dependencies {
+    SettingsComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -88,7 +85,6 @@ abstract class ActivityComponent :
         val incorrectStateDetector: IncorrectStateDetector
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
-        val importSourceUseCase: ImportSourceUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
 
@@ -190,14 +186,6 @@ abstract class ActivityComponent :
         fun settingsComponentBuilder(
             component: ActivityComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
-
-        @Provides
-        @ActivityScope
-        fun importComponentBuilder(
-            component: ActivityComponent,
-            importSourceUseCase: ImportSourceUseCase,
-        ): ImportComponent.Builder = ImportComponent.builder(component)
-            .importSourceUseCase(importSourceUseCase)
 
         @Provides
         @ActivityScope
