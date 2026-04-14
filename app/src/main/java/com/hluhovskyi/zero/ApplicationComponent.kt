@@ -75,15 +75,7 @@ abstract class ApplicationComponent :
     ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
-    abstract override val zoneProvider: ZoneProvider
     abstract val logger: Logger
-    abstract override val serializer: SyncSerializer
-    abstract override val exportWriter: ExportWriter
-    abstract override val syncEngine: SyncEngine
-    abstract override val currentUserRepository: CurrentUserRepository
-    abstract override val amountFormatter: AmountFormatter
-    abstract override val dateFormatter: DateFormatter
-    abstract override val currencyPrimaryUseCase: CurrencyPrimaryUseCase
 
     interface Dependencies {
         val context: Context
