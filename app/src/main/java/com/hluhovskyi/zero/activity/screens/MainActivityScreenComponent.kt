@@ -41,7 +41,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
-// import com.hluhovskyi.zero.imports.ImportComponent // TODO: re-wire import
+import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.TransactionComponent
@@ -98,7 +98,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val colorPickerComponentFactory: ColorPickerComponent.Factory
 
         val settingsComponentBuilder: SettingsComponent.Builder
-        // val importComponentBuilder: ImportComponent.Builder // TODO: re-wire import
+        val importComponentBuilder: ImportComponent.Builder
     }
 
     companion object {
@@ -554,19 +554,18 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .logging(logger)
         }
 
-        // TODO: re-wire import
-        // @Provides
-        // @IntoSet
-        // @MainActivityScreenScope
-        // fun importNavigationEntry(
-        //     componentBuilder: ImportComponent.Builder,
-        //     navigatorScope: NavigatorScope,
-        //     logger: Logger,
-        // ): NavigatorEntry = navigatorScope.buildable(Destinations.Import) {
-        //     componentBuilder
-        //         .onImportFinishedHandler { navigator.back() }
-        //         .logging(logger)
-        // }
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun importNavigationEntry(
+            componentBuilder: ImportComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Import) {
+            componentBuilder
+                .onImportFinishedHandler { navigator.back() }
+                .logging(logger)
+        }
 
         @Provides
         @IntoSet

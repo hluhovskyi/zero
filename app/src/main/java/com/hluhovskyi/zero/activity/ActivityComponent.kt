@@ -32,11 +32,20 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.imports.SnapshotParser
+import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
+import com.hluhovskyi.zero.imports.ZeroBackupParser
+import com.hluhovskyi.zero.resource.ResourceResolver
+import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.settings.SettingsComponent
+import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -68,7 +77,8 @@ abstract class ActivityComponent :
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
-    SettingsComponent.Dependencies {
+    SettingsComponent.Dependencies,
+    ImportComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -83,6 +93,7 @@ abstract class ActivityComponent :
         val dateFormatter: DateFormatter
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector
+        val resourceResolver: ResourceResolver
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
@@ -94,6 +105,11 @@ abstract class ActivityComponent :
         val transactionRepository: TransactionRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+
+        val syncEngine: SyncEngine
+        val currentUserRepository: CurrentUserRepository
+        val serializer: SyncSerializer
+        val exportWriter: ExportWriter
     }
 
     companion object {
@@ -186,6 +202,28 @@ abstract class ActivityComponent :
         fun settingsComponentBuilder(
             component: ActivityComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun importComponentBuilder(
+            component: ActivityComponent,
+            syncEngine: SyncEngine,
+            clock: Clock,
+            idGenerator: IdGenerator,
+            logger: Logger,
+            resourceResolver: ResourceResolver,
+        ): ImportComponent.Builder {
+            val parsers: List<@JvmSuppressWildcards SnapshotParser> = listOf(
+                ZeroBackupParser(syncEngine = syncEngine),
+                ZenMoneySnapshotParser(
+                    resourceResolver = resourceResolver,
+                    idGenerator = idGenerator,
+                    clock = clock,
+                    logger = logger,
+                ),
+            )
+            return ImportComponent.builder(component).parsers(parsers)
+        }
 
         @Provides
         @ActivityScope

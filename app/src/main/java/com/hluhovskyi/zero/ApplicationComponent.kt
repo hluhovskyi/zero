@@ -40,8 +40,10 @@ import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
@@ -68,6 +70,9 @@ abstract class ApplicationComponent :
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract override val zoneProvider: ZoneProvider
     abstract val logger: Logger
+    abstract override val serializer: SyncSerializer
+    abstract override val exportWriter: ExportWriter
+    abstract override val resourceResolver: ResourceResolver
 
     interface Dependencies {
         val context: Context
@@ -268,6 +273,30 @@ abstract class ApplicationComponent :
 
         @Provides
         fun syncEngine(syncComponent: SyncComponent): SyncEngine = syncComponent.syncEngine
+
+        @Provides
+        @ApplicationScope
+        fun syncSerializer(syncComponent: SyncComponent): SyncSerializer = syncComponent.serializer
+
+        @Provides
+        @ApplicationScope
+        fun exportWriter(context: Context): ExportWriter = ExportWriter { fileName, content ->
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/json")
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val insertUri = context.contentResolver.insert(
+                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                contentValues,
+            ) ?: error("Could not create file in Downloads")
+            context.contentResolver.openOutputStream(insertUri)?.use { output ->
+                output.write(content.toByteArray())
+            }
+            contentValues.clear()
+            contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+            context.contentResolver.update(insertUri, contentValues, null, null)
+        }
 
         @Provides
         @ApplicationScope
