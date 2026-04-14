@@ -79,8 +79,6 @@ abstract class ApplicationComponent :
     abstract val logger: Logger
     abstract override val serializer: SyncSerializer
     abstract override val exportWriter: ExportWriter
-    abstract override val importComponentBuilder: ImportComponent.Builder
-    abstract override val settingsComponentBuilder: SettingsComponent.Builder
 
     interface Dependencies {
         val context: Context
