@@ -4,6 +4,9 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
+import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSerializer
+import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -29,10 +32,13 @@ abstract class SettingsComponent : AttachableViewComponent {
 
     interface Dependencies {
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
+        val syncEngine: SyncEngine
+        val currentUserRepository: CurrentUserRepository
+        val serializer: SyncSerializer
+        val exportWriter: ExportWriter
     }
 
     companion object {
-
         fun builder(dependencies: Dependencies): Builder = DaggerSettingsComponent.builder()
             .dependencies(dependencies)
             .onImportSelectedHandler(OnImportSelectedHandler.Noop)
@@ -41,7 +47,6 @@ abstract class SettingsComponent : AttachableViewComponent {
 
     @dagger.Component.Builder
     interface Builder : Buildable<SettingsComponent> {
-
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
@@ -60,18 +65,22 @@ abstract class SettingsComponent : AttachableViewComponent {
             onImportSelected: OnImportSelectedHandler,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
+            syncEngine: SyncEngine,
+            currentUserRepository: CurrentUserRepository,
+            serializer: SyncSerializer,
+            exportWriter: ExportWriter,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,
+            syncEngine = syncEngine,
+            currentUserRepository = currentUserRepository,
+            serializer = serializer,
+            exportWriter = exportWriter,
         )
 
         @Provides
         @SettingsScope
-        fun viewProvider(
-            viewModel: SettingsViewModel,
-        ): ViewProvider = SettingsViewProvider(
-            viewModel = viewModel,
-        )
+        fun viewProvider(viewModel: SettingsViewModel): ViewProvider = SettingsViewProvider(viewModel = viewModel)
     }
 }

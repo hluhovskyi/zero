@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -23,8 +26,10 @@ import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.MoveToInbox
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,56 +56,63 @@ internal class SettingsViewProvider(
 @Composable
 private fun MoreView(viewModel: SettingsViewModel) {
     val state by viewModel.state.collectAsState(initial = SettingsViewModel.State())
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        item {
-            MoreHeader()
+    LaunchedEffect(state.exportFeedback) {
+        when (val feedback = state.exportFeedback) {
+            SettingsViewModel.ExportFeedback.Success ->
+                snackbarHostState.showSnackbar("Backup saved to Downloads")
+            is SettingsViewModel.ExportFeedback.Error ->
+                snackbarHostState.showSnackbar("Export failed: ${feedback.message}")
+            null -> Unit
         }
+    }
 
-        item {
-            MoreSection(title = "PREFERENCES") {
-                MoreRow(
-                    icon = Icons.Outlined.Payments,
-                    primaryText = "Primary Currency",
-                    secondaryText = state.selectedCurrencyName.ifEmpty { "Loading…" },
-                    onClick = { viewModel.perform(SettingsViewModel.Action.OpenCurrencyPicker) },
-                )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+        ) {
+            item { MoreHeader() }
+            item {
+                MoreSection(title = "PREFERENCES") {
+                    MoreRow(
+                        icon = Icons.Outlined.Payments,
+                        primaryText = "Primary Currency",
+                        secondaryText = state.selectedCurrencyName.ifEmpty { "Loading…" },
+                        onClick = { viewModel.perform(SettingsViewModel.Action.OpenCurrencyPicker) },
+                    )
+                }
             }
-        }
-
-        item {
-            MoreSection(title = "DATA") {
-                MoreRow(
-                    icon = Icons.Outlined.MoveToInbox,
-                    primaryText = "Import Data",
-                    secondaryText = "Migrate history from other apps",
-                    onClick = { viewModel.perform(SettingsViewModel.Action.Import) },
-                )
-                MoreRow(
-                    icon = Icons.Outlined.Download,
-                    primaryText = "Export Data",
-                    secondaryText = "Export your transactions as CSV",
-                    onClick = { /* placeholder */ },
-                )
+            item {
+                MoreSection(title = "DATA") {
+                    MoreRow(
+                        icon = Icons.Outlined.MoveToInbox,
+                        primaryText = "Import Data",
+                        secondaryText = "Migrate history from other apps",
+                        onClick = { viewModel.perform(SettingsViewModel.Action.Import) },
+                    )
+                    MoreRow(
+                        icon = Icons.Outlined.Download,
+                        primaryText = "Export Data",
+                        secondaryText = "Save a backup of your data",
+                        onClick = { viewModel.perform(SettingsViewModel.Action.Export) },
+                    )
+                }
             }
-        }
-
-        item {
-            MoreSection(title = "SECURITY") {
-                MoreRow(
-                    icon = Icons.Outlined.Fingerprint,
-                    primaryText = "Biometric Lock",
-                    secondaryText = "Face ID or Fingerprint required on open",
-                    onClick = { /* placeholder */ },
-                    showChevron = false,
-                )
+            item {
+                MoreSection(title = "SECURITY") {
+                    MoreRow(
+                        icon = Icons.Outlined.Fingerprint,
+                        primaryText = "Biometric Lock",
+                        secondaryText = "Face ID or Fingerprint required on open",
+                        onClick = { /* placeholder */ },
+                        showChevron = false,
+                    )
+                }
             }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
