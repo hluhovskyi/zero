@@ -38,7 +38,6 @@ import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
-import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -83,6 +82,8 @@ abstract class ActivityComponent :
         val dateFormatter: DateFormatter
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector
+        val logger: Logger
+        val idGenerator: IdGenerator
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
@@ -103,20 +104,12 @@ abstract class ActivityComponent :
 
         fun builder(dependencies: Dependencies): Builder = DaggerActivityComponent.builder()
             .dependencies(dependencies)
-            .logger(Logger.Noop)
-            .idGenerator(IdGenerator.UUID)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<ActivityComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun logger(logger: Logger): Builder
-
-        @BindsInstance
-        fun idGenerator(idGenerator: IdGenerator): Builder
     }
 
     @dagger.Module(

@@ -76,7 +76,6 @@ abstract class ApplicationComponent :
     ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
-    abstract val logger: Logger
 
     interface Dependencies {
         val context: Context
@@ -319,11 +318,7 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
-            logger: Logger,
-            idGenerator: IdGenerator,
         ): ActivityComponent.Builder = ActivityComponent.builder(component)
-            .logger(logger)
-            .idGenerator(idGenerator)
     }
 }
 
