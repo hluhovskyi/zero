@@ -38,6 +38,10 @@ import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
+import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.imports.SnapshotParser
+import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
+import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.settings.ExportWriter
@@ -73,6 +77,7 @@ abstract class ApplicationComponent :
     abstract override val serializer: SyncSerializer
     abstract override val exportWriter: ExportWriter
     abstract override val resourceResolver: ResourceResolver
+    abstract override val importComponentBuilder: ImportComponent.Builder
 
     interface Dependencies {
         val context: Context
@@ -282,6 +287,27 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun exportWriter(context: Context): ExportWriter = ExportWriter { fileName, content ->
             MediaStoreHelper.saveToDownloads(context, fileName, content)
+        }
+
+        @Provides
+        @ApplicationScope
+        fun importComponentBuilder(
+            syncEngine: SyncEngine,
+            clock: Clock,
+            idGenerator: IdGenerator,
+            logger: Logger,
+            resourceResolver: ResourceResolver,
+        ): ImportComponent.Builder {
+            val parsers: List<@JvmSuppressWildcards SnapshotParser> = listOf(
+                ZeroBackupParser(syncEngine = syncEngine),
+                ZenMoneySnapshotParser(
+                    resourceResolver = resourceResolver,
+                    idGenerator = idGenerator,
+                    clock = clock,
+                    logger = logger,
+                ),
+            )
+            return ImportComponent.builder(parsers)
         }
 
         @Provides

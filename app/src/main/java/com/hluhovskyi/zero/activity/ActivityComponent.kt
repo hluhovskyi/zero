@@ -33,9 +33,6 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.imports.SnapshotParser
-import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
-import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -110,6 +107,7 @@ abstract class ActivityComponent :
         val currentUserRepository: CurrentUserRepository
         val serializer: SyncSerializer
         val exportWriter: ExportWriter
+        val importComponentBuilder: ImportComponent.Builder
     }
 
     companion object {
@@ -202,28 +200,6 @@ abstract class ActivityComponent :
         fun settingsComponentBuilder(
             component: ActivityComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
-
-        @Provides
-        @ActivityScope
-        fun importComponentBuilder(
-            component: ActivityComponent,
-            syncEngine: SyncEngine,
-            clock: Clock,
-            idGenerator: IdGenerator,
-            logger: Logger,
-            resourceResolver: ResourceResolver,
-        ): ImportComponent.Builder {
-            val parsers: List<@JvmSuppressWildcards SnapshotParser> = listOf(
-                ZeroBackupParser(syncEngine = syncEngine),
-                ZenMoneySnapshotParser(
-                    resourceResolver = resourceResolver,
-                    idGenerator = idGenerator,
-                    clock = clock,
-                    logger = logger,
-                ),
-            )
-            return ImportComponent.builder(component).parsers(parsers)
-        }
 
         @Provides
         @ActivityScope
