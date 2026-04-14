@@ -253,6 +253,7 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun syncComponent(
             databaseComponent: DatabaseComponent,
+            resourceResolver: ResourceResolver,
         ): SyncComponent = SyncComponent.factory(
             object : SyncComponent.Dependencies {
                 override val categorySyncSource = databaseComponent.categorySyncSource()
@@ -261,6 +262,7 @@ abstract class ApplicationComponent :
                 override val accountSyncSink = databaseComponent.accountSyncSink()
                 override val transactionSyncSource = databaseComponent.transactionSyncSource()
                 override val transactionSyncSink = databaseComponent.transactionSyncSink()
+                override val resourceResolver = resourceResolver
             },
         ).create()
 
