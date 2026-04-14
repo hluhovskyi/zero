@@ -5,6 +5,9 @@ import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceStatus
 import com.hluhovskyi.zero.resource.UriRequest
+import com.hluhovskyi.zero.resource.UriResult
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -29,15 +32,12 @@ internal class DefaultSyncEngine(
     )
 
     override suspend fun loadSnapshot(uri: Uri.NonEmpty): SyncSnapshot {
-        var uriResult: com.hluhovskyi.zero.resource.UriResult? = null
-        resourceResolver.resolve(UriRequest(uri)).collect { status ->
-            if (status is ResourceStatus.Result<*>) {
-                @Suppress("UNCHECKED_CAST")
-                uriResult = (status as ResourceStatus.Result<com.hluhovskyi.zero.resource.UriResult>).result
-            }
-        }
-        val json = uriResult?.inputStream?.bufferedReader()?.use { it.readText() }
-            ?: error("Could not read file: $uri")
+        val uriResult = resourceResolver.resolve(UriRequest(uri))
+            .filterIsInstance<ResourceStatus.Result<UriResult>>()
+            .first()
+            .result
+
+        val json = uriResult.inputStream.bufferedReader().use { it.readText() }
         return serializer.deserialize(json)
     }
 
