@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/accountsreview/AccountsReviewViewProvider.kt
 package com.hluhovskyi.zero.imports.accountsreview
 
 import androidx.compose.foundation.layout.Arrangement

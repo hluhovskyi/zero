@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/ImportComponent.kt
 package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.common.AmountFormatter

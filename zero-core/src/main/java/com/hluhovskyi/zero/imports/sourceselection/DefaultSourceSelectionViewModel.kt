@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/sourceselection/DefaultSourceSelectionViewModel.kt
 package com.hluhovskyi.zero.imports.sourceselection
 
 import com.hluhovskyi.zero.imports.ImportUseCase

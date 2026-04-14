@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/ImportViewProvider.kt
 package com.hluhovskyi.zero.imports
 
 import androidx.activity.compose.rememberLauncherForActivityResult

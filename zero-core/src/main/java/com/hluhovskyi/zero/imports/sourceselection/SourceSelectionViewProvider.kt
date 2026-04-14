@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/sourceselection/SourceSelectionViewProvider.kt
 package com.hluhovskyi.zero.imports.sourceselection
 
 import androidx.compose.foundation.clickable

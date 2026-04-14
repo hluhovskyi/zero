@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/transactionspreview/DefaultTransactionsPreviewViewModel.kt
 package com.hluhovskyi.zero.imports.transactionspreview
 
 import com.hluhovskyi.zero.common.AmountFormatter

@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/sourceselection/SourceSelectionViewModel.kt
 package com.hluhovskyi.zero.imports.sourceselection
 
 import com.hluhovskyi.zero.common.ActionStateModel

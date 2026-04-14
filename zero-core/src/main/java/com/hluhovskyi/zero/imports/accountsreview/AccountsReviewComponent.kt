@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/accountsreview/AccountsReviewComponent.kt
 package com.hluhovskyi.zero.imports.accountsreview
 
 import com.hluhovskyi.zero.common.AttachableViewComponent

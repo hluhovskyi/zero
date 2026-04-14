@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/transactionspreview/TransactionsPreviewViewProvider.kt
 package com.hluhovskyi.zero.imports.transactionspreview
 
 import androidx.compose.foundation.layout.Column

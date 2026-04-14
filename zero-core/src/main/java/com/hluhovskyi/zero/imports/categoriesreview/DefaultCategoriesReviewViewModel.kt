@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/categoriesreview/DefaultCategoriesReviewViewModel.kt
 package com.hluhovskyi.zero.imports.categoriesreview
 
 import com.hluhovskyi.zero.imports.ImportUseCase

@@ -1,4 +1,3 @@
-// zero-core/src/main/java/com/hluhovskyi/zero/imports/categoriesreview/CategoriesReviewViewProvider.kt
 package com.hluhovskyi.zero.imports.categoriesreview
 
 import androidx.compose.foundation.layout.Column
