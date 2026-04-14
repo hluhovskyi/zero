@@ -306,8 +306,8 @@ abstract class ApplicationComponent :
                     logger = logger,
                 ),
             )
-            return ImportComponent.builder(parsers)
-                .dependencies(component)
+            return ImportComponent.builder(component)
+                .parsers(parsers)
         }
 
         @Provides

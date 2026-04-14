@@ -51,10 +51,6 @@ abstract class ImportComponent :
             .dependencies(dependencies)
             .parsers(emptyList())
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
-
-        fun builder(parsers: List<SnapshotParser>): Builder = DaggerImportComponent.builder()
-            .parsers(parsers)
-            .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
 
     @dagger.Component.Builder
