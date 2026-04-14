@@ -36,6 +36,8 @@ import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
 import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
+import com.hluhovskyi.zero.export.DefaultExportWriter
+import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -44,8 +46,6 @@ import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
-import com.hluhovskyi.zero.settings.DefaultExportWriter
-import com.hluhovskyi.zero.settings.ExportWriter
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
