@@ -52,7 +52,7 @@ abstract class ImportComponent :
             .parsers(emptyList())
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
 
-        fun builder(parsers: List<@JvmSuppressWildcards SnapshotParser>): Builder = DaggerImportComponent.builder()
+        fun builder(parsers: List<SnapshotParser>): Builder = DaggerImportComponent.builder()
             .parsers(parsers)
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
@@ -62,7 +62,7 @@ abstract class ImportComponent :
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun parsers(parsers: List<@JvmSuppressWildcards SnapshotParser>): Builder
+        fun parsers(parsers: List<SnapshotParser>): Builder
 
         @BindsInstance
         fun onImportFinishedHandler(handler: OnImportFinishedHandler): Builder
@@ -74,7 +74,7 @@ abstract class ImportComponent :
         @Provides
         @ImportScope
         fun useCase(
-            parsers: List<@JvmSuppressWildcards SnapshotParser>,
+            parsers: List<SnapshotParser>,
             syncEngine: SyncEngine,
             currentUserRepository: CurrentUserRepository,
             onImportFinishedHandler: OnImportFinishedHandler,

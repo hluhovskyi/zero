@@ -296,7 +296,7 @@ abstract class ApplicationComponent :
             logger: Logger,
             resourceResolver: ResourceResolver,
         ): ImportComponent.Builder {
-            val parsers: List<@JvmSuppressWildcards SnapshotParser> = listOf(
+            val parsers: List<SnapshotParser> = listOf(
                 ZeroBackupParser(syncEngine = syncEngine),
                 ZenMoneySnapshotParser(
                     resourceResolver = resourceResolver,
