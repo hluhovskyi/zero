@@ -33,7 +33,6 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -84,7 +83,6 @@ abstract class ActivityComponent :
         val dateFormatter: DateFormatter
         val androidUriResourceFactory: AndroidUriResourceFactory
         val incorrectStateDetector: IncorrectStateDetector
-        val resourceResolver: ResourceResolver
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
