@@ -14,6 +14,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
 3. **Strict Development Lifecycle**:
     - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
+    - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
     - **Implicit Denial**: Technical feedback is NOT approval. Re-propose and wait for a fresh handshake after any plan update.
     - **Minimalism**: Change ONLY what is in the approved plan. No unrelated refactors, visibility changes, or "cleanup".
     - **Zero Deviation**: Approved plans are binding. Stop and re-propose if implementation requires any architectural or logic change.

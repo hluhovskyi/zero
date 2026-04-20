@@ -1,161 +1,185 @@
 package com.hluhovskyi.zero.imports
 
-import com.hluhovskyi.zero.accounts.AccountRepository
-import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Rate
-import com.hluhovskyi.zero.common.Uri
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
-import com.hluhovskyi.zero.icons.IconRepository
-import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSnapshot
+import com.hluhovskyi.zero.sync.SyncTransaction
+import com.hluhovskyi.zero.users.CurrentUserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultImportUseCase(
-    private val importSourceUseCase: ImportSourceUseCase,
-    private val accountRepository: AccountRepository,
-    private val categoryRepository: CategoryRepository,
-    private val transactionRepository: TransactionRepository,
+    private val parsers: List<SnapshotParser>,
+    private val syncEngine: SyncEngine,
+    private val currentUserRepository: CurrentUserRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : ImportUseCase {
 
-    private val mutableState = MutableStateFlow(CompositeState())
+    private data class InternalState(
+        val selectedSource: Source? = null,
+        val storedDelta: SyncSnapshot? = null,
+        val screen: ImportUseCase.State,
+    )
+
+    private val mutableState = MutableStateFlow(
+        InternalState(screen = ImportUseCase.State.SourceSelection(parsers.map { it.source })),
+    )
+    override val state: Flow<ImportUseCase.State> = mutableState.map { it.screen }
+
     override fun perform(action: ImportUseCase.Action) {
         when (action) {
-            is ImportUseCase.Action.SelectFile -> {
-                mutableState.update { state ->
-                    state.copy(fileToImport = action.uri)
+            is ImportUseCase.Action.SelectSource -> mutableState.update { current ->
+                current.copy(
+                    selectedSource = action.source,
+                    screen = ImportUseCase.State.FilePicker,
+                )
+            }
+            is ImportUseCase.Action.SelectFile -> coroutineScope.launch {
+                mutableState.update { it.copy(screen = ImportUseCase.State.Loading) }
+                val source = mutableState.value.selectedSource ?: return@launch
+                val parser = parsers.first { it.source.key == source.key }
+                val userId = currentUserRepository.query().first().id
+                val snapshot = parser.parse(action.uri)
+                val delta = syncEngine.delta(snapshot, userId)
+                mutableState.update { current ->
+                    current.copy(
+                        storedDelta = delta,
+                        screen = ImportUseCase.State.CategoriesReview(
+                            categories = delta.categories.map { syncCategory ->
+                                ImportCategory(
+                                    id = syncCategory.id,
+                                    name = syncCategory.name,
+                                    iconId = syncCategory.iconId?.let { Id.Known(it) },
+                                    colorId = syncCategory.colorId?.let { Id.Known(it) },
+                                )
+                            },
+                        ),
+                    )
                 }
-                // TODO: Handle disposal
-                coroutineScope.launch {
-                    val result = importSourceUseCase.load(ImportSourceUseCase.Request.FromFile(action.uri))
-                    mutableState.update { state ->
-                        state.copy(
-                            accounts = result.accounts,
-                            categories = result.categories,
-                            transactions = result.transactions,
+            }
+            is ImportUseCase.Action.ConfirmCategories -> mutableState.update { current ->
+                val delta = current.storedDelta ?: return@update current
+                val txByAccountId = delta.transactions.groupBy { it.accountId }
+                current.copy(
+                    screen = ImportUseCase.State.AccountsReview(
+                        accounts = delta.accounts.map { syncAccount ->
+                            ImportAccount(
+                                id = syncAccount.id,
+                                name = syncAccount.name,
+                                currencyId = syncAccount.currencyId,
+                                transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
+                            )
+                        },
+                    ),
+                )
+            }
+            is ImportUseCase.Action.ConfirmAccounts -> mutableState.update { current ->
+                val delta = current.storedDelta ?: return@update current
+                val categoryById = delta.categories.associateBy { it.id }
+                val transactions = delta.transactions.map { syncTx ->
+                    val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
+                    when (syncTx.type) {
+                        SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
+                            id = syncTx.id,
+                            accountId = syncTx.accountId,
+                            currencyId = syncTx.currencyId,
+                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                            dateTime = syncTx.enteredDateTime,
+                            categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                            categoryName = categoryName,
+                        )
+                        SyncTransaction.Type.INCOME -> ImportTransaction.Income(
+                            id = syncTx.id,
+                            accountId = syncTx.accountId,
+                            currencyId = syncTx.currencyId,
+                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                            dateTime = syncTx.enteredDateTime,
+                            categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                            categoryName = categoryName,
+                        )
+                        SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(
+                            id = syncTx.id,
+                            accountId = syncTx.accountId,
+                            currencyId = syncTx.currencyId,
+                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                            dateTime = syncTx.enteredDateTime,
+                            targetAccountId = Id.Known(syncTx.targetAccountId ?: syncTx.accountId.value),
+                            targetAmount = Amount(syncTx.targetAmount?.toBigDecimalOrNull()),
+                            targetCurrencyId = syncTx.currencyId,
                         )
                     }
                 }
+                current.copy(
+                    screen = ImportUseCase.State.TransactionsPreview(
+                        transactions = transactions,
+                        totalCount = transactions.size,
+                    ),
+                )
             }
-            is ImportUseCase.Action.SelectAccounts -> mutableState.update { state ->
-                state.copy(selectedAccountIds = action.accountIds)
-            }
-            is ImportUseCase.Action.SelectCategories -> mutableState.update { state ->
-                state.copy(selectedCategoryIds = action.categoryIds)
-            }
-            is ImportUseCase.Action.SubmitTransactions -> {
-                // TODO: Filter by selection
+            is ImportUseCase.Action.Confirm -> {
+                val delta = mutableState.value.storedDelta ?: return
                 coroutineScope.launch {
-                    val state = mutableState.value
-                    launch {
-                        val accounts = state.accounts.map { account ->
-                            AccountRepository.AccountInsert(
-                                id = account.id,
-                                name = account.name,
-                                currencyId = account.currencyId,
-                                iconId = IconRepository.defaultAccountIconId(),
-                                initialBalance = Amount.zero(),
-                            )
-                        }
-                        accountRepository.insert(accounts)
+                    val userId = currentUserRepository.query().first().id
+                    syncEngine.import(delta, userId)
+                    coroutineScope.launch(Dispatchers.Main) {
+                        onImportFinishedHandler.onFinished()
                     }
-                    launch {
-                        val categories = state.categories.map { category ->
-                            CategoryRepository.CategoryInsert(
-                                id = category.id,
-                                name = category.name,
-                                parentCategoryId = Id.Unknown,
-                                iconId = Id.Unknown,
-                                colorId = Id.Unknown,
-                            )
-                        }
-                        categoryRepository.insert(categories)
+                }
+            }
+            is ImportUseCase.Action.Back -> mutableState.update { current ->
+                when (current.screen) {
+                    is ImportUseCase.State.FilePicker,
+                    is ImportUseCase.State.SourceSelection,
+                    is ImportUseCase.State.Loading,
+                    is ImportUseCase.State.CategoriesReview,
+                    -> InternalState(
+                        screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }),
+                    )
+                    is ImportUseCase.State.AccountsReview -> {
+                        val delta = current.storedDelta ?: return@update current
+                        current.copy(
+                            screen = ImportUseCase.State.CategoriesReview(
+                                categories = delta.categories.map { syncCategory ->
+                                    ImportCategory(
+                                        id = syncCategory.id,
+                                        name = syncCategory.name,
+                                        iconId = syncCategory.iconId?.let { Id.Known(it) },
+                                        colorId = syncCategory.colorId?.let { Id.Known(it) },
+                                    )
+                                },
+                            ),
+                        )
                     }
-                    launch {
-                        val transactions = state.transactions.map { transaction ->
-                            when (transaction) {
-                                is ImportTransaction.Expense -> TransactionRepository.Transaction.Expense(
-                                    id = transaction.id,
-                                    amount = transaction.amount,
-                                    accountId = transaction.accountId,
-                                    currencyId = transaction.currencyId,
-                                    categoryId = transaction.categoryId,
-                                    dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                                    // TODO: Handle rate
-                                    rate = Rate.Same,
-                                )
-                                is ImportTransaction.Income -> TransactionRepository.Transaction.Income(
-                                    id = transaction.id,
-                                    amount = transaction.amount,
-                                    accountId = transaction.accountId,
-                                    currencyId = transaction.currencyId,
-                                    categoryId = transaction.categoryId,
-                                    dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                                    // TODO: Handle rate
-                                    rate = Rate.Same,
-                                )
-                                is ImportTransaction.Transfer -> TransactionRepository.Transaction.Transfer(
-                                    id = transaction.id,
-                                    amount = transaction.amount,
-                                    currencyId = transaction.currencyId,
-                                    accountId = transaction.accountId,
-                                    dateTime = transaction.dateTime,
-                                    updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                                    targetAmount = transaction.targetAmount,
-                                    targetAccount = transaction.targetAccount,
-                                )
-                            }
-                        }
-                        transactionRepository.insert(transactions)
-                    }
-                }.invokeOnCompletion { throwable ->
-                    if (throwable != null) {
-                        // TODO: Actually, doesn't work
-                        coroutineScope.launch(context = Dispatchers.Main) {
-                            onImportFinishedHandler.onFinished()
-                        }
-                    } else {
-                        // TODO: Handle error
+                    is ImportUseCase.State.TransactionsPreview -> {
+                        val delta = current.storedDelta ?: return@update current
+                        val txByAccountId = delta.transactions.groupBy { it.accountId }
+                        current.copy(
+                            screen = ImportUseCase.State.AccountsReview(
+                                accounts = delta.accounts.map { syncAccount ->
+                                    ImportAccount(
+                                        id = syncAccount.id,
+                                        name = syncAccount.name,
+                                        currencyId = syncAccount.currencyId,
+                                        transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
+                                    )
+                                },
+                            ),
+                        )
                     }
                 }
             }
         }
     }
 
-    override val state: Flow<ImportUseCase.State> = mutableState
-        .mapNotNull { state ->
-            when {
-                state.selectedCategoryIds.isNotEmpty() -> ImportUseCase.State.TransactionsPreview(state.transactions)
-                state.selectedAccountIds.isNotEmpty() -> ImportUseCase.State.CategoriesPicker(state.categories)
-                state.fileToImport is Uri.NonEmpty -> ImportUseCase.State.AccountsPicker(state.accounts)
-                else -> ImportUseCase.State.FilePicker
-            }
-        }
-
     override fun attach(): Closeable = Closeables.empty()
-
-    private data class CompositeState(
-        val fileToImport: Uri = Uri.Empty,
-        val accounts: List<ImportAccount> = emptyList(),
-        val selectedAccountIds: List<Id.Known> = emptyList(),
-        val categories: List<ImportCategory> = emptyList(),
-        val selectedCategoryIds: List<Id.Known> = emptyList(),
-        val transactions: List<ImportTransaction> = emptyList(),
-    )
 }

@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.sync
 
+import com.hluhovskyi.zero.resource.ResourceResolver
+
 interface SyncComponent {
 
     interface Dependencies {
@@ -9,9 +11,11 @@ interface SyncComponent {
         val accountSyncSink: EntitySyncSink<SyncAccount>
         val transactionSyncSource: EntitySyncSource<SyncTransaction>
         val transactionSyncSink: EntitySyncSink<SyncTransaction>
+        val resourceResolver: ResourceResolver
     }
 
     val syncEngine: SyncEngine
+    val serializer: SyncSerializer
 
     class Factory(private val dependencies: Dependencies) {
         fun create(): SyncComponent = DefaultSyncComponent(dependencies)
@@ -23,6 +27,8 @@ interface SyncComponent {
 }
 
 internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : SyncComponent {
+
+    override val serializer: SyncSerializer = SyncSerializer()
 
     override val syncEngine: SyncEngine by lazy {
         DefaultSyncEngine(
@@ -41,6 +47,8 @@ internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : 
                 sink = dependencies.transactionSyncSink,
                 resolver = LastWriteWinsResolver(),
             ),
+            resourceResolver = dependencies.resourceResolver,
+            serializer = serializer,
         )
     }
 }

@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.sync
 
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.resource.ResourceResolver
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
@@ -101,6 +102,80 @@ class SyncEngineTest {
         assertTrue("Local newer: sink should not be written", sink.upserted.isEmpty())
     }
 
+    // --- Delta ---
+
+    @Test
+    fun `delta returns empty snapshot when nothing is new`() = runTest {
+        val cat = syncCategory("cat-1", "2024-01-02T00:00:00")
+        val snapshot = SyncSnapshot(
+            version = 1,
+            userId = Id.Known("user-1"),
+            exportedAt = LocalDateTime.parse("2026-04-12T10:00:00"),
+            categories = listOf(cat),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        val engine = engineWith(categories = listOf(cat))
+        val delta = engine.delta(snapshot, userId = Id.Known("user-1"))
+
+        assertTrue("No new categories expected", delta.categories.isEmpty())
+    }
+
+    @Test
+    fun `delta returns only entities newer than stored`() = runTest {
+        val localCat = syncCategory("cat-1", "2024-01-03T00:00:00")
+        val incomingCat = syncCategory("cat-1", "2024-01-01T00:00:00")
+        val newCat = syncCategory("cat-2", "2024-01-01T00:00:00")
+        val snapshot = SyncSnapshot(
+            version = 1,
+            userId = Id.Known("user-1"),
+            exportedAt = LocalDateTime.parse("2026-04-12T10:00:00"),
+            categories = listOf(incomingCat, newCat),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        val engine = engineWith(categories = listOf(localCat))
+        val delta = engine.delta(snapshot, userId = Id.Known("user-1"))
+
+        assertEquals(listOf(newCat), delta.categories)
+    }
+
+    @Test
+    fun `delta returns incoming when it wins LWW`() = runTest {
+        val localCat = syncCategory("cat-1", "2024-01-01T00:00:00")
+        val incomingCat = syncCategory("cat-1", "2024-01-05T00:00:00")
+        val snapshot = SyncSnapshot(
+            version = 1,
+            userId = Id.Known("user-1"),
+            exportedAt = LocalDateTime.parse("2026-04-12T10:00:00"),
+            categories = listOf(incomingCat),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        val engine = engineWith(categories = listOf(localCat))
+        val delta = engine.delta(snapshot, userId = Id.Known("user-1"))
+
+        assertEquals(listOf(incomingCat), delta.categories)
+    }
+
+    @Test
+    fun `delta preserves snapshot metadata`() = runTest {
+        val snapshot = SyncSnapshot(
+            version = 1,
+            userId = Id.Known("original-user"),
+            exportedAt = LocalDateTime.parse("2026-04-12T10:00:00"),
+            categories = emptyList(),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        val engine = engineWith()
+        val delta = engine.delta(snapshot, userId = Id.Known("current-user"))
+
+        assertEquals(snapshot.version, delta.version)
+        assertEquals(snapshot.userId, delta.userId)
+        assertEquals(snapshot.exportedAt, delta.exportedAt)
+    }
+
     // --- Helpers ---
 
     private fun engineWith(
@@ -124,6 +199,8 @@ class SyncEngineTest {
             sink = FakeTransactionSink(),
             resolver = LastWriteWinsResolver(),
         ),
+        resourceResolver = ResourceResolver.Noop,
+        serializer = SyncSerializer(),
     )
 
     private fun syncCategory(id: String, updatedAt: String, deletedAt: LocalDateTime? = null) = SyncCategory(

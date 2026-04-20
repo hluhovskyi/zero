@@ -63,7 +63,6 @@ dependencies {
     implementation(project(":zero-sync"))
     implementation(project(":zero-core"))
     implementation(project(":zero-image-loading"))
-    implementation(project(":zero-zenmoney"))
 
     implementation deps.kotlin.serialization
 
