@@ -12,6 +12,19 @@ gemini --yolo -p "You are working on the '<branch>' branch. Execute ALL tasks fr
 
 After Gemini finishes, Claude reviews the PR and rates Gemini's work.
 
+## UI Verification — Mandatory Loop
+
+**After every UI change, verify before claiming it works.** No exceptions.
+
+```bash
+./gradlew installDebug                          # build + install
+adb shell input keyevent 111                    # dismiss keyboard if open
+./scripts/dump-ui.sh                            # XML hierarchy — check bounds
+adb exec-out screencap -p > /tmp/screen.png    # visual snapshot
+```
+
+Read `/tmp/screen.png` with the image tool. If the expected composable is missing or has zero-width/height bounds, the fix did not work — do not report success.
+
 ## Complexity Circuit Breaker
 
 **The "Hacky Code" Circuit Breaker:** If you iterate on a fix more than twice and your solution requires dropping down to low-level framework APIs (e.g., `PointerEventPass.Initial`, Reflection, or Global Registries) for a common UI or logic problem, you must STOP. Revert your changes and present the fundamental constraint to the user before proceeding. Do not brute-force the framework.
