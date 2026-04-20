@@ -1,17 +1,16 @@
 package com.hluhovskyi.zero.imports
 
-import com.hluhovskyi.zero.accounts.AccountRepository
-import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.imports.accounts.ImportAccountPickerComponent
-import com.hluhovskyi.zero.imports.categories.ImportCategoriesPickerComponent
-import com.hluhovskyi.zero.imports.filepicker.ImportFilePickerComponent
-import com.hluhovskyi.zero.imports.transactions.ImportTransactionPreviewComponent
-import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.imports.accountsreview.AccountsReviewComponent
+import com.hluhovskyi.zero.imports.categoriesreview.CategoriesReviewComponent
+import com.hluhovskyi.zero.imports.sourceselection.SourceSelectionComponent
+import com.hluhovskyi.zero.imports.transactionspreview.TransactionsPreviewComponent
+import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -30,10 +29,10 @@ private const val TAG = "ImportComponent"
 )
 abstract class ImportComponent :
     AttachableViewComponent,
-    ImportFilePickerComponent.Dependencies,
-    ImportCategoriesPickerComponent.Dependencies,
-    ImportAccountPickerComponent.Dependencies,
-    ImportTransactionPreviewComponent.Dependencies {
+    SourceSelectionComponent.Dependencies,
+    CategoriesReviewComponent.Dependencies,
+    AccountsReviewComponent.Dependencies,
+    TransactionsPreviewComponent.Dependencies {
 
     override val tag: String = TAG
 
@@ -41,28 +40,25 @@ abstract class ImportComponent :
     override fun attach(): Closeable = useCase.attach()
 
     interface Dependencies {
-        val accountRepository: AccountRepository
-        val categoryRepository: CategoryRepository
-        val transactionRepository: TransactionRepository
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val syncEngine: SyncEngine
+        val currentUserRepository: CurrentUserRepository
+        val amountFormatter: AmountFormatter
+        val dateFormatter: DateFormatter
     }
 
     companion object {
-
         fun builder(dependencies: Dependencies): Builder = DaggerImportComponent.builder()
             .dependencies(dependencies)
-            .importSourceUseCase(ImportSourceUseCase.Noop)
+            .parsers(emptyList())
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<ImportComponent> {
-
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun importSourceUseCase(importSourceUseCase: ImportSourceUseCase): Builder
+        fun parsers(parsers: List<SnapshotParser>): Builder
 
         @BindsInstance
         fun onImportFinishedHandler(handler: OnImportFinishedHandler): Builder
@@ -74,53 +70,45 @@ abstract class ImportComponent :
         @Provides
         @ImportScope
         fun useCase(
-            importSourceUseCase: ImportSourceUseCase,
-            accountRepository: AccountRepository,
-            categoryRepository: CategoryRepository,
-            transactionRepository: TransactionRepository,
+            parsers: List<SnapshotParser>,
+            syncEngine: SyncEngine,
+            currentUserRepository: CurrentUserRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
         ): ImportUseCase = DefaultImportUseCase(
-            importSourceUseCase = importSourceUseCase,
-            accountRepository = accountRepository,
-            categoryRepository = categoryRepository,
-            transactionRepository = transactionRepository,
+            parsers = parsers,
+            syncEngine = syncEngine,
+            currentUserRepository = currentUserRepository,
             onImportFinishedHandler = onImportFinishedHandler,
-            clock = clock,
-            zoneProvider = zoneProvider,
         )
 
         @Provides
         @ImportScope
-        fun viewModel(
-            importUseCase: ImportUseCase,
-        ): ImportViewModel = DefaultImportViewModel(
-            importUseCase = importUseCase,
-        )
+        fun viewModel(useCase: ImportUseCase): ImportViewModel = DefaultImportViewModel(useCase)
 
         @Provides
         @ImportScope
-        internal fun filePickerComponentBuilder(
+        internal fun sourceSelectionComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
-        ): ImportFilePickerComponent.Builder = ImportFilePickerComponent.builder(component)
+            onImportFinishedHandler: OnImportFinishedHandler,
+        ): SourceSelectionComponent.Builder = SourceSelectionComponent.builder(component)
+            .importUseCase(importUseCase)
+            .onImportFinishedHandler(onImportFinishedHandler)
+
+        @Provides
+        @ImportScope
+        internal fun categoriesReviewComponentBuilder(
+            component: ImportComponent,
+            importUseCase: ImportUseCase,
+        ): CategoriesReviewComponent.Builder = CategoriesReviewComponent.builder(component)
             .importUseCase(importUseCase)
 
         @Provides
         @ImportScope
-        internal fun accountPickerComponentBuilder(
+        internal fun accountsReviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
-        ): ImportAccountPickerComponent.Builder = ImportAccountPickerComponent.builder(component)
-            .importUseCase(importUseCase)
-
-        @Provides
-        @ImportScope
-        internal fun categoryPickerComponentBuilder(
-            component: ImportComponent,
-            importUseCase: ImportUseCase,
-        ): ImportCategoriesPickerComponent.Builder = ImportCategoriesPickerComponent.builder(component)
+        ): AccountsReviewComponent.Builder = AccountsReviewComponent.builder(component)
             .importUseCase(importUseCase)
 
         @Provides
@@ -128,23 +116,23 @@ abstract class ImportComponent :
         internal fun transactionsPreviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
-        ): ImportTransactionPreviewComponent.Builder = ImportTransactionPreviewComponent.builder(component)
+        ): TransactionsPreviewComponent.Builder = TransactionsPreviewComponent.builder(component)
             .importUseCase(importUseCase)
 
         @Provides
         @ImportScope
         internal fun viewProvider(
             viewModel: ImportViewModel,
-            filePickerComponentBuilder: ImportFilePickerComponent.Builder,
-            accountPickerComponentBuilder: ImportAccountPickerComponent.Builder,
-            categoriesPickerComponentBuilder: ImportCategoriesPickerComponent.Builder,
-            transactionsPreviewComponentBuilder: ImportTransactionPreviewComponent.Builder,
+            sourceSelectionBuilder: SourceSelectionComponent.Builder,
+            categoriesReviewBuilder: CategoriesReviewComponent.Builder,
+            accountsReviewBuilder: AccountsReviewComponent.Builder,
+            transactionsPreviewBuilder: TransactionsPreviewComponent.Builder,
         ): ViewProvider = ImportViewProvider(
             viewModel = viewModel,
-            filePicker = filePickerComponentBuilder,
-            accountPicker = accountPickerComponentBuilder,
-            categoriesPicker = categoriesPickerComponentBuilder,
-            transactionsPreview = transactionsPreviewComponentBuilder,
+            sourceSelection = sourceSelectionBuilder,
+            categoriesReview = categoriesReviewBuilder,
+            accountsReview = accountsReviewBuilder,
+            transactionsPreview = transactionsPreviewBuilder,
         )
     }
 }

@@ -43,6 +43,7 @@ dependencies {
     coreLibraryDesugaring deps.android.tools.desugar
     lintChecks project(":lint-rules")
     implementation project(':zero-api')
+    implementation project(':zero-sync')
 
     implementation(project(":zero-ui"))
     implementation(project(":zero-image-loading"))
@@ -55,6 +56,7 @@ dependencies {
     implementation deps.android.compose.material
     implementation deps.android.compose.materialIconsExtended
     implementation deps.android.compose.viewModel
+    implementation deps.android.compose.activity
 
     implementation deps.android.core.ktx
     implementation deps.android.core.appcompat

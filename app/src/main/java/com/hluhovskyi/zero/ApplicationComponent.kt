@@ -36,15 +36,20 @@ import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
 import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
+import com.hluhovskyi.zero.export.DefaultExportWriter
+import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
-import com.hluhovskyi.zero.imports.ImportSourceUseCase
-import com.hluhovskyi.zero.imports.ZenMoneyImportComponent
-import com.hluhovskyi.zero.imports.lazy
+import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.imports.SnapshotParser
+import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
+import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
@@ -67,12 +72,14 @@ abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     DatabaseComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
-    ZenMoneyImportComponent.Dependencies {
+    SettingsComponent.Dependencies,
+    ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
-    abstract override val zoneProvider: ZoneProvider
+    abstract val logger: Logger
 
     interface Dependencies {
+
         val context: Context
     }
 
@@ -91,7 +98,6 @@ abstract class ApplicationComponent :
     @dagger.Module(
         includes = [
             DatabaseModule::class,
-            ImportModule::class,
         ],
     )
     object Module {
@@ -257,6 +263,7 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun syncComponent(
             databaseComponent: DatabaseComponent,
+            resourceResolver: ResourceResolver,
         ): SyncComponent = SyncComponent.factory(
             object : SyncComponent.Dependencies {
                 override val categorySyncSource = databaseComponent.categorySyncSource()
@@ -265,11 +272,49 @@ abstract class ApplicationComponent :
                 override val accountSyncSink = databaseComponent.accountSyncSink()
                 override val transactionSyncSource = databaseComponent.transactionSyncSource()
                 override val transactionSyncSink = databaseComponent.transactionSyncSink()
+                override val resourceResolver = resourceResolver
             },
         ).create()
 
         @Provides
         fun syncEngine(syncComponent: SyncComponent): SyncEngine = syncComponent.syncEngine
+
+        @Provides
+        @ApplicationScope
+        fun syncSerializer(syncComponent: SyncComponent): SyncSerializer = syncComponent.serializer
+
+        @Provides
+        @ApplicationScope
+        fun exportWriter(context: Context): ExportWriter = DefaultExportWriter(context)
+
+        @Provides
+        @ApplicationScope
+        fun importComponentBuilder(
+            component: ApplicationComponent,
+            syncEngine: SyncEngine,
+            clock: Clock,
+            idGenerator: IdGenerator,
+            logger: Logger,
+            resourceResolver: ResourceResolver,
+        ): ImportComponent.Builder {
+            val parsers: List<SnapshotParser> = listOf(
+                ZeroBackupParser(syncEngine = syncEngine),
+                ZenMoneySnapshotParser(
+                    resourceResolver = resourceResolver,
+                    idGenerator = idGenerator,
+                    clock = clock,
+                    logger = logger,
+                ),
+            )
+            return ImportComponent.builder(component)
+                .parsers(parsers)
+        }
+
+        @Provides
+        @ApplicationScope
+        fun settingsComponentBuilder(
+            component: ApplicationComponent,
+        ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
         @ApplicationScope
@@ -334,18 +379,4 @@ internal object DatabaseModule {
     fun configurationRepository(
         databaseComponent: DatabaseComponent,
     ): ConfigurationRepository = databaseComponent.configurationRepository
-}
-
-@dagger.Module
-internal object ImportModule {
-
-    @Provides
-    @ApplicationScope
-    fun zenMoneyImportComponent(
-        component: ApplicationComponent,
-    ): ImportSourceUseCase = {
-        ZenMoneyImportComponent.builder(component)
-            .build()
-            .importSourceUseCase
-    }.lazy()
 }

@@ -33,7 +33,6 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.imports.ImportSourceUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -69,9 +68,7 @@ abstract class ActivityComponent :
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
-    ColorPickerComponent.Dependencies,
-    SettingsComponent.Dependencies,
-    ImportComponent.Dependencies {
+    ColorPickerComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -88,7 +85,6 @@ abstract class ActivityComponent :
         val incorrectStateDetector: IncorrectStateDetector
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
-        val importSourceUseCase: ImportSourceUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
 
@@ -98,6 +94,9 @@ abstract class ActivityComponent :
         val transactionRepository: TransactionRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+
+        val importComponentBuilder: ImportComponent.Builder
+        val settingsComponentBuilder: SettingsComponent.Builder
     }
 
     companion object {
@@ -184,20 +183,6 @@ abstract class ActivityComponent :
         fun colorPickerComponentFactory(
             component: ActivityComponent,
         ): ColorPickerComponent.Factory = ColorPickerComponent.factory(component)
-
-        @Provides
-        @ActivityScope
-        fun settingsComponentBuilder(
-            component: ActivityComponent,
-        ): SettingsComponent.Builder = SettingsComponent.builder(component)
-
-        @Provides
-        @ActivityScope
-        fun importComponentBuilder(
-            component: ActivityComponent,
-            importSourceUseCase: ImportSourceUseCase,
-        ): ImportComponent.Builder = ImportComponent.builder(component)
-            .importSourceUseCase(importSourceUseCase)
 
         @Provides
         @ActivityScope

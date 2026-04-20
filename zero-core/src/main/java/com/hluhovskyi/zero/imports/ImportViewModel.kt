@@ -1,17 +1,21 @@
 package com.hluhovskyi.zero.imports
 
-import com.hluhovskyi.zero.common.StateModel
+import com.hluhovskyi.zero.common.ActionStateModel
+import com.hluhovskyi.zero.common.Uri
 
-interface ImportViewModel : StateModel<ImportViewModel.State> {
+interface ImportViewModel : ActionStateModel<ImportViewModel.Action, ImportViewModel.State> {
 
-    data class State(
-        val step: Step = Step.FilePicker,
-    )
+    sealed interface Action {
+        data class SelectFile(val uri: Uri.NonEmpty) : Action
+        object Back : Action
+    }
 
-    enum class Step {
-        FilePicker,
-        AccountsPicker,
-        CategoriesPicker,
-        TransactionsPreview,
+    sealed interface State {
+        object SourceSelection : State
+        object FilePicker : State
+        object Loading : State
+        object CategoriesReview : State
+        object AccountsReview : State
+        object TransactionsPreview : State
     }
 }
