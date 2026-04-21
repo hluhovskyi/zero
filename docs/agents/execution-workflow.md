@@ -12,6 +12,18 @@ gemini --yolo -p "You are working on the '<branch>' branch. Execute ALL tasks fr
 
 After Gemini finishes, Claude reviews the PR and rates Gemini's work.
 
+## UI Verification — Mandatory Loop
+
+**After every UI change, verify before claiming it works.** No exceptions.
+
+```bash
+./gradlew installDebug && ./scripts/open-screen.sh <screen>
+```
+
+`open-screen.sh` launches the app, navigates to the target screen, prints a readable hierarchy summary, and saves `/tmp/screen.png`. Read the screenshot with your image tool. If the expected composable is missing or has zero-size bounds, the fix did not work — do not report success.
+
+Pass `--raw` to `dump-ui.sh` when you need full XML attribute detail.
+
 ## Complexity Circuit Breaker
 
 **The "Hacky Code" Circuit Breaker:** If you iterate on a fix more than twice and your solution requires dropping down to low-level framework APIs (e.g., `PointerEventPass.Initial`, Reflection, or Global Registries) for a common UI or logic problem, you must STOP. Revert your changes and present the fundamental constraint to the user before proceeding. Do not brute-force the framework.
