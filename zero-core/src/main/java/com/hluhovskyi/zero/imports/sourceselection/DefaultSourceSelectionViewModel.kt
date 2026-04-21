@@ -13,7 +13,7 @@ internal class DefaultSourceSelectionViewModel(
 
     override val state: Flow<SourceSelectionViewModel.State> = importUseCase.state
         .filterIsInstance<ImportUseCase.State.SourceSelection>()
-        .map { SourceSelectionViewModel.State(sources = it.sources) }
+        .map { SourceSelectionViewModel.State(sources = it.sources, error = it.error) }
 
     override fun perform(action: SourceSelectionViewModel.Action) {
         when (action) {
@@ -21,6 +21,10 @@ internal class DefaultSourceSelectionViewModel(
                 importUseCase.perform(ImportUseCase.Action.SelectSource(action.source))
             is SourceSelectionViewModel.Action.Close ->
                 onImportFinishedHandler.onFinished()
+            is SourceSelectionViewModel.Action.DismissError ->
+                importUseCase.perform(ImportUseCase.Action.DismissError)
+            is SourceSelectionViewModel.Action.Retry ->
+                importUseCase.perform(ImportUseCase.Action.Retry)
         }
     }
 }
