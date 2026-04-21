@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -12,7 +13,7 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
     sealed interface Action {
         data class SelectSource(val source: Source) : Action
         data class SelectFile(val uri: Uri.NonEmpty) : Action
-        object ConfirmCategories : Action
+        data class ConfirmCategories(val excludedIds: Set<Id.Known> = emptySet()) : Action
         object ConfirmAccounts : Action
         object Confirm : Action
         object Back : Action

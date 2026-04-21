@@ -1,10 +1,13 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.accountsreview.AccountsReviewComponent
 import com.hluhovskyi.zero.imports.categoriesreview.CategoriesReviewComponent
 import com.hluhovskyi.zero.imports.sourceselection.SourceSelectionComponent
@@ -42,6 +45,9 @@ abstract class ImportComponent :
     interface Dependencies {
         val syncEngine: SyncEngine
         val currentUserRepository: CurrentUserRepository
+        val iconRepository: IconRepository
+        val colorRepository: ColorRepository
+        val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
     }
@@ -73,11 +79,15 @@ abstract class ImportComponent :
             parsers: List<SnapshotParser>,
             syncEngine: SyncEngine,
             currentUserRepository: CurrentUserRepository,
+            iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
         ): ImportUseCase = DefaultImportUseCase(
             parsers = parsers,
             syncEngine = syncEngine,
             currentUserRepository = currentUserRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
             onImportFinishedHandler = onImportFinishedHandler,
         )
 
@@ -100,8 +110,10 @@ abstract class ImportComponent :
         internal fun categoriesReviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
+            imageLoader: ImageLoader,
         ): CategoriesReviewComponent.Builder = CategoriesReviewComponent.builder(component)
             .importUseCase(importUseCase)
+            .imageLoader(imageLoader)
 
         @Provides
         @ImportScope

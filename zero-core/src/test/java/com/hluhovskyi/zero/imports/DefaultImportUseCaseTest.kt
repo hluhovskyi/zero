@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
@@ -30,6 +32,10 @@ class DefaultImportUseCaseTest {
 
     @Mock private lateinit var currentUserRepository: CurrentUserRepository
 
+    @Mock private lateinit var iconRepository: IconRepository
+
+    @Mock private lateinit var colorRepository: ColorRepository
+
     private val source = KnownSource.ZeroBackup
     private val userId = Id.Known("user-1")
     private val testUri = Uri("file://test.zero") as Uri.NonEmpty
@@ -44,6 +50,8 @@ class DefaultImportUseCaseTest {
         parsers = listOf(parser),
         syncEngine = syncEngine,
         currentUserRepository = currentUserRepository,
+        iconRepository = iconRepository,
+        colorRepository = colorRepository,
         onImportFinishedHandler = OnImportFinishedHandler.Noop,
         coroutineScope = scope,
     )
