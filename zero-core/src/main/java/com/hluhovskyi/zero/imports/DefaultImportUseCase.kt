@@ -49,22 +49,34 @@ internal class DefaultImportUseCase(
                 val source = mutableState.value.selectedSource ?: return@launch
                 val parser = parsers.first { it.source.key == source.key }
                 val userId = currentUserRepository.query().first().id
-                val snapshot = parser.parse(action.uri)
-                val delta = syncEngine.delta(snapshot, userId)
-                mutableState.update { current ->
-                    current.copy(
-                        storedDelta = delta,
-                        screen = ImportUseCase.State.CategoriesReview(
-                            categories = delta.categories.map { syncCategory ->
-                                ImportCategory(
-                                    id = syncCategory.id,
-                                    name = syncCategory.name,
-                                    iconId = syncCategory.iconId?.let { Id.Known(it) },
-                                    colorId = syncCategory.colorId?.let { Id.Known(it) },
-                                )
-                            },
-                        ),
-                    )
+                try {
+                    val snapshot = parser.parse(action.uri)
+                    val delta = syncEngine.delta(snapshot, userId)
+                    mutableState.update { current ->
+                        current.copy(
+                            storedDelta = delta,
+                            screen = ImportUseCase.State.CategoriesReview(
+                                categories = delta.categories.map { syncCategory ->
+                                    ImportCategory(
+                                        id = syncCategory.id,
+                                        name = syncCategory.name,
+                                        iconId = syncCategory.iconId?.let { Id.Known(it) },
+                                        colorId = syncCategory.colorId?.let { Id.Known(it) },
+                                    )
+                                },
+                            ),
+                        )
+                    }
+                } catch (e: Exception) {
+                    mutableState.update { current ->
+                        InternalState(
+                            selectedSource = current.selectedSource,
+                            screen = ImportUseCase.State.SourceSelection(
+                                sources = parsers.map { it.source },
+                                error = "Couldn't read file. Check the format and try again.",
+                            ),
+                        )
+                    }
                 }
             }
             is ImportUseCase.Action.ConfirmCategories -> mutableState.update { current ->
@@ -136,6 +148,12 @@ internal class DefaultImportUseCase(
                     }
                 }
             }
+            is ImportUseCase.Action.DismissError -> mutableState.update {
+                InternalState(screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }))
+            }
+            is ImportUseCase.Action.Retry -> mutableState.update { current ->
+                current.copy(screen = ImportUseCase.State.FilePicker)
+            }
             is ImportUseCase.Action.Back -> mutableState.update { current ->
                 when (current.screen) {
                     is ImportUseCase.State.FilePicker,
@@ -177,9 +195,6 @@ internal class DefaultImportUseCase(
                         )
                     }
                 }
-            }
-            is ImportUseCase.Action.DismissError, is ImportUseCase.Action.Retry -> {
-                // TODO: Implement in later task
             }
         }
     }
