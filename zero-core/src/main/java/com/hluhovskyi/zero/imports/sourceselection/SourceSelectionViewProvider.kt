@@ -26,6 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -138,8 +139,9 @@ private fun SourceCard(source: Source, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLowest, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceContainerLowest)
+            .clickable(onClick = onClick, onClickLabel = config.title)
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
