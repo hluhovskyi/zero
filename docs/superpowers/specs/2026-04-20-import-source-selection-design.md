@@ -68,7 +68,20 @@ Icon container: 52×52dp, `RoundedCornerShape(14.dp)`, icon size 28dp.
 
 ## Error banner
 
+Extracted as a generic `ImportErrorBanner` composable in `zero-ui` so future import steps can reuse it.
+
 Shown above the subtitle when `state.error` is non-null. Matches design exactly.
+
+**Signature:**
+```kotlin
+@Composable
+fun ImportErrorBanner(
+    message: String,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+)
+```
 
 **Visual:**
 - Background: `ErrorContainer` (`#FFDAD6`), `RoundedCornerShape(12.dp)`, padding 14dp/16dp
@@ -132,6 +145,7 @@ try {
 
 | File | Change |
 |---|---|
+| `zero-ui/.../ui/ImportErrorBanner.kt` | New generic reusable error banner composable |
 | `zero-core/.../imports/ImportUseCase.kt` | `SourceSelection` state + `DismissError` / `Retry` actions |
 | `zero-core/.../imports/DefaultImportUseCase.kt` | try/catch in `SelectFile`; handle `DismissError` and `Retry` |
 | `zero-core/.../imports/ImportViewModel.kt` | Mirror new state field and actions |
