@@ -3,10 +3,10 @@ package com.hluhovskyi.zero.imports.categoriesreview
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,13 +65,13 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         )
         LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
+            columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.categories, key = { it.id.value }) { category ->
-                CategoryGridItem(
+                CategoryCard(
                     category = category,
                     isSelected = category.id !in state.excludedIds,
                     imageLoader = imageLoader,
@@ -90,22 +89,24 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
 }
 
 @Composable
-private fun CategoryGridItem(
+private fun CategoryCard(
     category: ImportCategory,
     isSelected: Boolean,
     imageLoader: ImageLoader,
     onClick: () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier
-            .width(72.dp)
+            .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CategoryIconView(
             colorScheme = category.colorScheme.toUi(),
+            size = 40.dp,
+            contentPadding = 8.dp,
             isSelected = isSelected,
         ) { iconTint ->
             imageLoader.View(
@@ -114,19 +115,19 @@ private fun CategoryGridItem(
                 tint = if (iconTint == Color.Unspecified) null else iconTint,
             )
         }
-        Text(
-            text = category.name,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = "${category.transactionCount}",
-            fontSize = 10.sp,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = category.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${category.transactionCount} transactions",
+                fontSize = 12.sp,
+                color = Color.Gray,
+            )
+        }
     }
 }
