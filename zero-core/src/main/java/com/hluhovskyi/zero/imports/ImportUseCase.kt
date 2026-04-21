@@ -16,10 +16,15 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         object ConfirmAccounts : Action
         object Confirm : Action
         object Back : Action
+        object DismissError : Action
+        object Retry : Action
     }
 
     sealed interface State {
-        data class SourceSelection(val sources: List<Source>) : State
+        data class SourceSelection(
+            val sources: List<Source>,
+            val error: String? = null,
+        ) : State
         object FilePicker : State
         object Loading : State
         data class CategoriesReview(val categories: List<ImportCategory>) : State

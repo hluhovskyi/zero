@@ -178,6 +178,9 @@ internal class DefaultImportUseCase(
                     }
                 }
             }
+            is ImportUseCase.Action.DismissError, is ImportUseCase.Action.Retry -> {
+                // TODO: Implement in later task
+            }
         }
     }
 
