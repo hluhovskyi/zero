@@ -15,10 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,10 +34,10 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.ImportCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.ImportStepHeader
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Secondary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
@@ -65,56 +63,12 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
     val selectedCount = categoryCount - state.excludedIds.size
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // ── Header ──────────────────────────────────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = { viewModel.perform(CategoriesReviewViewModel.Action.Back) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = PrimaryContainer,
-                )
-            }
-            Text(
-                text = "Review Categories",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
-                modifier = Modifier.weight(1f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            Text(
-                text = "${CURRENT_STEP + 1}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
-                modifier = Modifier.padding(end = 12.dp),
-            )
-        }
-
-        // ── Step progress bar ────────────────────────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 0.dp)
-                .padding(bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            repeat(TOTAL_STEPS - 1) { i ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(if (i < CURRENT_STEP) PrimaryContainer else OutlineVariant),
-                )
-            }
-        }
+        ImportStepHeader(
+            title = "Review Categories",
+            step = CURRENT_STEP,
+            totalSteps = TOTAL_STEPS,
+            onBack = { viewModel.perform(CategoriesReviewViewModel.Action.Back) },
+        )
 
         // ── List ─────────────────────────────────────────────────────────────────
         LazyColumn(
@@ -196,15 +150,21 @@ private fun CategoryRow(
                 tint = if (iconTint == Color.Unspecified) null else iconTint,
             )
         }
-        Text(
-            text = category.name,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = category.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = OnSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${category.transactionCount} transactions",
+                fontSize = 12.sp,
+                color = OnSurfaceVariant,
+            )
+        }
         if (isSelected) {
             Icon(
                 imageVector = Icons.Filled.Check,
