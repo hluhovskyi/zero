@@ -60,8 +60,8 @@ private fun TransactionsPreviewView(viewModel: TransactionsPreviewViewModel) {
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp, start = 4.dp),
                 )
             }
-            items(state.transactions, key = { it.primaryText + it.date + it.amount }) { tx ->
-                TransactionRow(transaction = tx)
+            items(state.transactions, key = { it.primaryText + it.date + it.amount }) { transaction ->
+                TransactionRow(transaction = transaction)
             }
             item { Box(modifier = Modifier.padding(bottom = 8.dp)) }
         }
