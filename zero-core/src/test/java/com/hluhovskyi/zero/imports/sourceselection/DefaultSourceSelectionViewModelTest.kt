@@ -60,17 +60,13 @@ class DefaultSourceSelectionViewModelTest {
     fun `DismissError action forwards to ImportUseCase`() = runTest {
         viewModel.perform(SourceSelectionViewModel.Action.DismissError)
 
-        assert(capturedActions.contains(ImportUseCase.Action.DismissError)) {
-            "Expected DismissError in captured actions: $capturedActions"
-        }
+        assertEquals(listOf(ImportUseCase.Action.DismissError), capturedActions)
     }
 
     @Test
     fun `Retry action forwards to ImportUseCase`() = runTest {
         viewModel.perform(SourceSelectionViewModel.Action.Retry)
 
-        assert(capturedActions.contains(ImportUseCase.Action.Retry)) {
-            "Expected Retry in captured actions: $capturedActions"
-        }
+        assertEquals(listOf(ImportUseCase.Action.Retry), capturedActions)
     }
 }
