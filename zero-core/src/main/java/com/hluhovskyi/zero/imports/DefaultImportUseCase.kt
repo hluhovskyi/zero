@@ -34,6 +34,7 @@ internal class DefaultImportUseCase(
         val selectedSource: Source? = null,
         val storedDelta: SyncSnapshot? = null,
         val storedCategories: List<ImportCategory>? = null,
+        val excludedCategoryIds: Set<Id.Known> = emptySet(),
         val screen: ImportUseCase.State,
     )
 
@@ -63,6 +64,7 @@ internal class DefaultImportUseCase(
                         current.copy(
                             storedDelta = delta,
                             storedCategories = categories,
+                            excludedCategoryIds = emptySet(),
                             screen = ImportUseCase.State.CategoriesReview(categories = categories),
                         )
                     }
@@ -78,16 +80,33 @@ internal class DefaultImportUseCase(
                     }
                 }
             }
+            is ImportUseCase.Action.ToggleCategory -> mutableState.update { current ->
+                val id = action.id
+                val newExcluded = if (id in current.excludedCategoryIds) {
+                    current.excludedCategoryIds - id
+                } else {
+                    current.excludedCategoryIds + id
+                }
+                val categories = current.storedCategories ?: return@update current
+                current.copy(
+                    excludedCategoryIds = newExcluded,
+                    screen = ImportUseCase.State.CategoriesReview(
+                        categories = categories,
+                        excludedIds = newExcluded,
+                    ),
+                )
+            }
             is ImportUseCase.Action.ConfirmCategories -> mutableState.update { current ->
                 val delta = current.storedDelta ?: return@update current
-                val filteredDelta = if (action.excludedIds.isEmpty()) {
+                val excluded = current.excludedCategoryIds
+                val filteredDelta = if (excluded.isEmpty()) {
                     delta
                 } else {
                     delta.copy(
-                        categories = delta.categories.filter { it.id !in action.excludedIds },
+                        categories = delta.categories.filter { it.id !in excluded },
                         transactions = delta.transactions.filter { tx ->
                             val catId = tx.categoryId
-                            catId == null || Id.Known(catId) !in action.excludedIds
+                            catId == null || Id.Known(catId) !in excluded
                         },
                     )
                 }
@@ -177,7 +196,10 @@ internal class DefaultImportUseCase(
                     is ImportUseCase.State.AccountsReview -> {
                         val categories = current.storedCategories ?: return@update current
                         current.copy(
-                            screen = ImportUseCase.State.CategoriesReview(categories = categories),
+                            screen = ImportUseCase.State.CategoriesReview(
+                                categories = categories,
+                                excludedIds = current.excludedCategoryIds,
+                            ),
                         )
                     }
                     is ImportUseCase.State.TransactionsPreview -> {
