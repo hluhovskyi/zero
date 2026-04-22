@@ -1,12 +1,13 @@
 package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
+import com.hluhovskyi.zero.common.Uri
 
 interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Action, SettingsViewModel.State> {
 
     sealed interface Action {
         object Import : Action
-        object Export : Action
+        data class Export(val uri: Uri.NonEmpty) : Action
         object OpenCurrencyPicker : Action
     }
 
