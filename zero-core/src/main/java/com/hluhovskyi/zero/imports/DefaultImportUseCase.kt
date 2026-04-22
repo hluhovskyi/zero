@@ -160,10 +160,21 @@ internal class DefaultImportUseCase(
                         )
                     }
                 }
+                val txByAccountId = transactions.groupBy { it.accountId }
+                val accounts = delta.accounts.map { syncAccount ->
+                    ImportAccount(
+                        id = syncAccount.id,
+                        name = syncAccount.name,
+                        currencyId = syncAccount.currencyId,
+                        transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
+                    )
+                }
                 current.copy(
                     screen = ImportUseCase.State.TransactionsPreview(
                         transactions = transactions,
                         totalCount = transactions.size,
+                        accounts = accounts,
+                        categories = current.storedCategories ?: emptyList(),
                     ),
                 )
             }

@@ -37,6 +37,8 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         data class TransactionsPreview(
             val transactions: List<ImportTransaction>,
             val totalCount: Int,
+            val accounts: List<ImportAccount>,
+            val categories: List<ImportCategory>,
         ) : State
     }
 
