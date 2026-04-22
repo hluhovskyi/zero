@@ -15,11 +15,16 @@ zero-core/src/main/java/com/hluhovskyi/zero/export/ExportUseCase.kt
 zero-core/src/main/java/com/hluhovskyi/zero/export/DefaultExportUseCase.kt
 ```
 
-`ExportUseCase` is a `fun interface` with a single method:
+`ExportUseCase` is an interface with a single method that returns a custom sealed `Result`:
 
 ```kotlin
-fun interface ExportUseCase {
-    suspend fun export(uri: Uri.NonEmpty)
+interface ExportUseCase {
+    suspend fun export(uri: Uri.NonEmpty): Result
+
+    sealed interface Result {
+        object Success : Result
+        data class Failure(val message: String) : Result
+    }
 }
 ```
 
@@ -59,11 +64,11 @@ Drops `SyncEngine`, `CurrentUserRepository`, `SyncSerializer`, and `ExportWriter
 
 ```kotlin
 is SettingsViewModel.Action.Export -> coroutineScope.launch {
-    try {
-        exportUseCase.export(action.uri)
-        mutableState.update { it.copy(exportFeedback = ExportFeedback.Success) }
-    } catch (e: Exception) {
-        mutableState.update { it.copy(exportFeedback = ExportFeedback.Error(e.message ?: "Unknown error")) }
+    when (val result = exportUseCase.export(action.uri)) {
+        ExportUseCase.Result.Success ->
+            mutableState.update { it.copy(exportFeedback = ExportFeedback.Success) }
+        is ExportUseCase.Result.Failure ->
+            mutableState.update { it.copy(exportFeedback = ExportFeedback.Error(result.message)) }
     }
 }
 ```
@@ -87,17 +92,15 @@ Button click
   → User picks location
   → URI returned to ViewProvider
   → viewModel.perform(Action.Export(uri))
-  → exportUseCase.export(uri)
-      → get userId
-      → syncEngine.export(userId) → snapshot
-      → serializer.serialize(snapshot) → json
-      → exportWriter.write(uri, json)
-  → ExportFeedback.Success → snackbar "Backup saved"
+  → exportUseCase.export(uri) → ExportUseCase.Result
+      (internally: get userId → export snapshot → serialize → write)
+  → Result.Success → ExportFeedback.Success → snackbar "Backup saved"
+  → Result.Failure(msg) → ExportFeedback.Error(msg) → snackbar "Export failed: …"
 ```
 
 ## Error Handling
 
-Exceptions from the `export()` call bubble up to the ViewModel's try/catch and surface as `ExportFeedback.Error` in the snackbar. No changes to error UX.
+`ExportUseCase.export()` returns `ExportUseCase.Result` — no exceptions escape the use case. `DefaultExportUseCase` wraps its pipeline in a try/catch and returns `Result.Failure(message)` on error. The ViewModel `when`-matches the result and maps it to `ExportFeedback`. Failures surface as `ExportFeedback.Error` in the snackbar.
 
 If the user cancels the file picker (returns null URI), the launcher callback does nothing — no ViewModel action is dispatched, no state changes.
 
