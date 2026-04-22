@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.imports.transactionspreview
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -37,6 +38,7 @@ internal abstract class TransactionsPreviewComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionsPreviewComponent.builder()
             .dependencies(dependencies)
             .importUseCase(ImportUseCase.Noop)
+            .imageLoader(ImageLoader.empty())
     }
 
     @dagger.Component.Builder
@@ -45,6 +47,9 @@ internal abstract class TransactionsPreviewComponent : AttachableViewComponent {
 
         @BindsInstance
         fun importUseCase(useCase: ImportUseCase): Builder
+
+        @BindsInstance
+        fun imageLoader(imageLoader: ImageLoader): Builder
     }
 
     @dagger.Module
@@ -64,6 +69,12 @@ internal abstract class TransactionsPreviewComponent : AttachableViewComponent {
 
         @Provides
         @TransactionsPreviewScope
-        fun viewProvider(viewModel: TransactionsPreviewViewModel): ViewProvider = TransactionsPreviewViewProvider(viewModel = viewModel)
+        fun viewProvider(
+            viewModel: TransactionsPreviewViewModel,
+            imageLoader: ImageLoader,
+        ): ViewProvider = TransactionsPreviewViewProvider(
+            viewModel = viewModel,
+            imageLoader = imageLoader,
+        )
     }
 }

@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +33,8 @@ import com.hluhovskyi.zero.ui.ImportStepHeader
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
 internal class AccountsReviewViewProvider(
@@ -45,6 +51,7 @@ internal class AccountsReviewViewProvider(
 private fun AccountsReviewView(viewModel: AccountsReviewViewModel) {
     val state by viewModel.state.collectAsState(initial = AccountsReviewViewModel.State())
 
+    val totalTransactions = state.accounts.sumOf { it.transactionCount }
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
             title = "Review Accounts",
@@ -57,10 +64,11 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel) {
         ) {
             item {
                 Text(
-                    text = "${state.accounts.size} ACCOUNTS",
+                    text = "${state.accounts.size} ACCOUNTS · $totalTransactions TRANSACTIONS",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceVariant,
+                    letterSpacing = 0.08.sp,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp, start = 4.dp),
                 )
             }
@@ -95,8 +103,21 @@ private fun AccountRow(account: ImportAccount) {
             .background(SurfaceContainerLowest)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AccountBalance,
+                contentDescription = null,
+                tint = OnSurfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = account.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
             Text(text = account.currencyId.value, fontSize = 12.sp, color = OnSurfaceVariant)
@@ -104,11 +125,11 @@ private fun AccountRow(account: ImportAccount) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFFF5F3F7))
+                .background(SurfaceContainerLow)
                 .padding(horizontal = 10.dp, vertical = 4.dp),
         ) {
             Text(
-                text = "${account.transactionCount} transactions",
+                text = "${account.transactionCount} tx",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OnSurfaceVariant,
