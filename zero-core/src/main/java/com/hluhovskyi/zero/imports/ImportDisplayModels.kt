@@ -1,14 +1,17 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
 import kotlinx.datetime.LocalDateTime
 
 data class ImportCategory(
     val id: Id.Known,
     val name: String,
-    val iconId: Id?,
-    val colorId: Id?,
+    val colorScheme: ColorScheme,
+    val icon: Image,
+    val transactionCount: Int,
 )
 
 data class ImportAccount(

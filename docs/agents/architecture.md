@@ -11,6 +11,10 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 - **Handler callbacks, not shared state** — screens communicate through `fun interface OnXxxHandler` passed via `@BindsInstance`. Handlers that trigger navigation must dispatch on `Dispatchers.Main`.
 - **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types).
 
+## UseCase State Ownership
+
+**When a UseCase exists, it owns all state — ViewModels are thin projections.** A ViewModel backed by a UseCase should only `filterIsInstance` and `.map` the relevant slice; it must not introduce its own `MutableStateFlow`. State that lives in the ViewModel instead of `UseCase.InternalState` won't survive back-navigation and won't be visible to other steps in the same flow.
+
 ## Flow Composition
 
 ViewModels `combine()` multiple repository flows into a single `Flow<State>`. Key extensions:

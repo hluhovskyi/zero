@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -12,6 +13,7 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
     sealed interface Action {
         data class SelectSource(val source: Source) : Action
         data class SelectFile(val uri: Uri.NonEmpty) : Action
+        data class ToggleCategory(val id: Id.Known) : Action
         object ConfirmCategories : Action
         object ConfirmAccounts : Action
         object Confirm : Action
@@ -27,7 +29,10 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         ) : State
         object FilePicker : State
         object Loading : State
-        data class CategoriesReview(val categories: List<ImportCategory>) : State
+        data class CategoriesReview(
+            val categories: List<ImportCategory>,
+            val excludedIds: Set<Id.Known> = emptySet(),
+        ) : State
         data class AccountsReview(val accounts: List<ImportAccount>) : State
         data class TransactionsPreview(
             val transactions: List<ImportTransaction>,

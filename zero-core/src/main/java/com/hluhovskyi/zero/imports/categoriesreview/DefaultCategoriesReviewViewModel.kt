@@ -11,7 +11,7 @@ internal class DefaultCategoriesReviewViewModel(
 
     override val state: Flow<CategoriesReviewViewModel.State> = importUseCase.state
         .filterIsInstance<ImportUseCase.State.CategoriesReview>()
-        .map { CategoriesReviewViewModel.State(categories = it.categories) }
+        .map { CategoriesReviewViewModel.State(categories = it.categories, excludedIds = it.excludedIds) }
 
     override fun perform(action: CategoriesReviewViewModel.Action) {
         when (action) {
@@ -19,6 +19,8 @@ internal class DefaultCategoriesReviewViewModel(
                 importUseCase.perform(ImportUseCase.Action.ConfirmCategories)
             is CategoriesReviewViewModel.Action.Back ->
                 importUseCase.perform(ImportUseCase.Action.Back)
+            is CategoriesReviewViewModel.Action.ToggleCategory ->
+                importUseCase.perform(ImportUseCase.Action.ToggleCategory(action.id))
         }
     }
 }

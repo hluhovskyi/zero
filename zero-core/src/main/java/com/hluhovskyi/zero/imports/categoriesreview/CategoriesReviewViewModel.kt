@@ -1,14 +1,19 @@
 package com.hluhovskyi.zero.imports.categoriesreview
 
 import com.hluhovskyi.zero.common.ActionStateModel
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.imports.ImportCategory
 
 interface CategoriesReviewViewModel : ActionStateModel<CategoriesReviewViewModel.Action, CategoriesReviewViewModel.State> {
 
-    data class State(val categories: List<ImportCategory> = emptyList())
+    data class State(
+        val categories: List<ImportCategory> = emptyList(),
+        val excludedIds: Set<Id.Known> = emptySet(),
+    )
 
     sealed interface Action {
         object Next : Action
         object Back : Action
+        data class ToggleCategory(val id: Id.Known) : Action
     }
 }

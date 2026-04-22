@@ -28,6 +28,8 @@ Always inject `Clock` from `com.hluhovskyi.zero.common.time.Clock` instead of ca
 ## Use `Id.Unknown` Instead of `null`
 For missing or unset identifiers, use `Id.Unknown` — never `null`.
 
+**`Id(nullableString)` handles the null case via companion operator** — produces `Id.Known` or `Id.Unknown`; no null guard before `Id.Known(it)` is needed. Because `Id.Unknown` can never appear in a `Set<Id.Known>`, set-membership checks work naturally: `Id(transaction.categoryId) !in excluded` replaces `categoryId == null || Id.Known(categoryId) !in excluded`.
+
 ## Extract Complex Logic into Named Private Functions
 When a block exceeds ~5-10 lines — a `when` branch, a `launch` body, a nested lambda — extract it into a named private function. The calling site should read like a table of contents (e.g., `is Action.Save -> save()`), not contain inline logic. Same applies when a condition-check-then-action pattern repeats across methods — extract a helper (e.g., `fetchRateIfTransfer()`).
 
