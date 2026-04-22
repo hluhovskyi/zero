@@ -1,6 +1,8 @@
 package com.hluhovskyi.zero.imports
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -47,6 +49,8 @@ abstract class ImportComponent :
         val currentUserRepository: CurrentUserRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+        val categoryRepository: CategoryRepository
+        val accountRepository: AccountRepository
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
@@ -81,6 +85,8 @@ abstract class ImportComponent :
             currentUserRepository: CurrentUserRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
+            categoryRepository: CategoryRepository,
+            accountRepository: AccountRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
         ): ImportUseCase = DefaultImportUseCase(
             parsers = parsers,
@@ -88,6 +94,8 @@ abstract class ImportComponent :
             currentUserRepository = currentUserRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
+            categoryRepository = categoryRepository,
+            accountRepository = accountRepository,
             onImportFinishedHandler = onImportFinishedHandler,
         )
 
@@ -120,8 +128,10 @@ abstract class ImportComponent :
         internal fun accountsReviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
+            imageLoader: ImageLoader,
         ): AccountsReviewComponent.Builder = AccountsReviewComponent.builder(component)
             .importUseCase(importUseCase)
+            .imageLoader(imageLoader)
 
         @Provides
         @ImportScope

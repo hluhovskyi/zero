@@ -1,11 +1,14 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.sync.SyncAccount
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
 import com.hluhovskyi.zero.sync.SyncTransaction
@@ -26,6 +29,8 @@ internal class DefaultImportUseCase(
     private val currentUserRepository: CurrentUserRepository,
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
+    private val categoryRepository: CategoryRepository,
+    private val accountRepository: AccountRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : ImportUseCase {
@@ -34,7 +39,11 @@ internal class DefaultImportUseCase(
         val selectedSource: Source? = null,
         val storedDelta: SyncSnapshot? = null,
         val storedCategories: List<ImportCategory>? = null,
+        val storedAccounts: List<ImportAccount>? = null,
         val excludedCategoryIds: Set<Id.Known> = emptySet(),
+        val existingCategoryByName: Map<String, CategoryRepository.Category> = emptyMap(),
+        val existingAccountByName: Map<String, AccountRepository.Account> = emptyMap(),
+        val allIconsById: Map<Id.Known, Icon> = emptyMap(),
         val screen: ImportUseCase.State,
     )
 
@@ -59,12 +68,25 @@ internal class DefaultImportUseCase(
                 try {
                     val snapshot = parser.parse(action.uri)
                     val delta = syncEngine.delta(snapshot, userId)
-                    val categories = buildCategories(delta)
+
+                    val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
+                    val allIconsById = allIcons.associateBy { it.id }
+
+                    val existingCategories = categoryRepository.query(CategoryRepository.Criteria.All()).first()
+                    val existingCategoryByName = existingCategories.associateBy { it.name.lowercase() }
+
+                    val existingAccounts = accountRepository.query(AccountRepository.Criteria.All()).first()
+                    val existingAccountByName = existingAccounts.associateBy { it.name.lowercase() }
+
+                    val categories = buildCategories(delta, existingCategoryByName, allIconsById)
                     mutableState.update { current ->
                         current.copy(
                             storedDelta = delta,
                             storedCategories = categories,
                             excludedCategoryIds = emptySet(),
+                            existingCategoryByName = existingCategoryByName,
+                            existingAccountByName = existingAccountByName,
+                            allIconsById = allIconsById,
                             screen = ImportUseCase.State.CategoriesReview(categories = categories),
                         )
                     }
@@ -96,8 +118,9 @@ internal class DefaultImportUseCase(
                     ),
                 )
             }
-            is ImportUseCase.Action.ConfirmCategories -> mutableState.update { current ->
-                val delta = current.storedDelta ?: return@update current
+            is ImportUseCase.Action.ConfirmCategories -> coroutineScope.launch {
+                val current = mutableState.value
+                val delta = current.storedDelta ?: return@launch
                 val excluded = current.excludedCategoryIds
                 val filteredDelta = if (excluded.isEmpty()) {
                     delta
@@ -109,23 +132,23 @@ internal class DefaultImportUseCase(
                         },
                     )
                 }
-                val txByAccountId = filteredDelta.transactions.groupBy { it.accountId }
-                current.copy(
-                    storedDelta = filteredDelta,
-                    screen = ImportUseCase.State.AccountsReview(
-                        accounts = filteredDelta.accounts.map { syncAccount ->
-                            ImportAccount(
-                                id = syncAccount.id,
-                                name = syncAccount.name,
-                                currencyId = syncAccount.currencyId,
-                                transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
-                            )
-                        },
-                    ),
+                val accounts = buildAccounts(
+                    syncAccounts = filteredDelta.accounts,
+                    transactions = filteredDelta.transactions,
+                    existingAccountByName = current.existingAccountByName,
+                    allIconsById = current.allIconsById,
                 )
+                mutableState.update { cur ->
+                    cur.copy(
+                        storedDelta = filteredDelta,
+                        storedAccounts = accounts,
+                        screen = ImportUseCase.State.AccountsReview(accounts = accounts),
+                    )
+                }
             }
             is ImportUseCase.Action.ConfirmAccounts -> mutableState.update { current ->
                 val delta = current.storedDelta ?: return@update current
+                val accounts = current.storedAccounts ?: return@update current
                 val categoryById = delta.categories.associateBy { it.id }
                 val transactions = delta.transactions.map { syncTx ->
                     val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
@@ -159,15 +182,6 @@ internal class DefaultImportUseCase(
                             targetCurrencyId = syncTx.currencyId,
                         )
                     }
-                }
-                val txByAccountId = transactions.groupBy { it.accountId }
-                val accounts = delta.accounts.map { syncAccount ->
-                    ImportAccount(
-                        id = syncAccount.id,
-                        name = syncAccount.name,
-                        currencyId = syncAccount.currencyId,
-                        transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
-                    )
                 }
                 current.copy(
                     screen = ImportUseCase.State.TransactionsPreview(
@@ -213,19 +227,9 @@ internal class DefaultImportUseCase(
                         )
                     }
                     is ImportUseCase.State.TransactionsPreview -> {
-                        val delta = current.storedDelta ?: return@update current
-                        val txByAccountId = delta.transactions.groupBy { it.accountId }
+                        val accounts = current.storedAccounts ?: return@update current
                         current.copy(
-                            screen = ImportUseCase.State.AccountsReview(
-                                accounts = delta.accounts.map { syncAccount ->
-                                    ImportAccount(
-                                        id = syncAccount.id,
-                                        name = syncAccount.name,
-                                        currencyId = syncAccount.currencyId,
-                                        transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
-                                    )
-                                },
-                            ),
+                            screen = ImportUseCase.State.AccountsReview(accounts = accounts),
                         )
                     }
                 }
@@ -235,25 +239,50 @@ internal class DefaultImportUseCase(
 
     override fun attach(): Closeable = Closeables.empty()
 
-    private suspend fun buildCategories(delta: SyncSnapshot): List<ImportCategory> {
-        val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
-        val iconById = allIcons.associateBy { it.id }
+    private fun buildCategories(
+        delta: SyncSnapshot,
+        existingCategoryByName: Map<String, CategoryRepository.Category>,
+        allIconsById: Map<Id.Known, Icon>,
+    ): List<ImportCategory> {
         val txCountByCategoryId = delta.transactions
             .mapNotNull { transaction -> transaction.categoryId?.let { Id.Known(it) } }
             .groupBy { it }
             .mapValues { it.value.size }
         return delta.categories.map { syncCategory ->
-            val colorId = syncCategory.colorId?.let { Id.Known(it) }
+            val existingMatch = existingCategoryByName[syncCategory.name.lowercase()]
+            val colorId = (existingMatch?.colorId as? Id.Known)
+                ?: syncCategory.colorId?.let { Id.Known(it) }
                 ?: ColorRepository.unknownCategoryColorId()
-            val iconId = syncCategory.iconId?.let { Id.Known(it) }
+            val iconId = (existingMatch?.iconId as? Id.Known)
+                ?: syncCategory.iconId?.let { Id.Known(it) }
                 ?: IconRepository.unknownCategoryIconId()
-            val icon = iconById[iconId] ?: Icon.empty()
+            val icon = allIconsById[iconId] ?: Icon.empty()
             ImportCategory(
                 id = syncCategory.id,
                 name = syncCategory.name,
                 colorScheme = colorRepository.schemeFor(colorId),
                 icon = icon.image,
                 transactionCount = txCountByCategoryId[syncCategory.id] ?: 0,
+            )
+        }
+    }
+
+    private fun buildAccounts(
+        syncAccounts: List<SyncAccount>,
+        transactions: List<SyncTransaction>,
+        existingAccountByName: Map<String, AccountRepository.Account>,
+        allIconsById: Map<Id.Known, Icon>,
+    ): List<ImportAccount> {
+        val txByAccountId = transactions.groupBy { it.accountId }
+        return syncAccounts.map { syncAccount ->
+            val existingMatch = existingAccountByName[syncAccount.name.lowercase()]
+            val icon = existingMatch?.iconId?.let { allIconsById[it]?.image }
+            ImportAccount(
+                id = syncAccount.id,
+                name = syncAccount.name,
+                currencyId = syncAccount.currencyId,
+                transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
+                icon = icon,
             )
         }
     }

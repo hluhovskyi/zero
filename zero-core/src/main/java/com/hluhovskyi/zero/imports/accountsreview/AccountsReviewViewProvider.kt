@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.ImportAccount
 import com.hluhovskyi.zero.ui.ImportStepHeader
@@ -39,16 +41,17 @@ import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
 internal class AccountsReviewViewProvider(
     private val viewModel: AccountsReviewViewModel,
+    private val imageLoader: ImageLoader,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        AccountsReviewView(viewModel = viewModel)
+        AccountsReviewView(viewModel = viewModel, imageLoader = imageLoader)
     }
 }
 
 @Composable
-private fun AccountsReviewView(viewModel: AccountsReviewViewModel) {
+private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: ImageLoader) {
     val state by viewModel.state.collectAsState(initial = AccountsReviewViewModel.State())
 
     val totalTransactions = state.accounts.sumOf { it.transactionCount }
@@ -73,7 +76,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel) {
                 )
             }
             items(state.accounts, key = { it.id.value }) { account ->
-                AccountRow(account = account)
+                AccountRow(account = account, imageLoader = imageLoader)
             }
             item { Box(modifier = Modifier.padding(bottom = 8.dp)) }
         }
@@ -94,7 +97,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel) {
 }
 
 @Composable
-private fun AccountRow(account: ImportAccount) {
+private fun AccountRow(account: ImportAccount, imageLoader: ImageLoader) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,12 +114,21 @@ private fun AccountRow(account: ImportAccount) {
                 .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = Icons.Filled.AccountBalance,
-                contentDescription = null,
-                tint = OnSurfaceVariant,
-                modifier = Modifier.size(24.dp),
-            )
+            val icon = account.icon
+            if (icon != null) {
+                imageLoader.View(
+                    image = icon,
+                    modifier = Modifier.size(24.dp),
+                    tint = OnSurfaceVariant,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.AccountBalance,
+                    contentDescription = null,
+                    tint = OnSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = account.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
