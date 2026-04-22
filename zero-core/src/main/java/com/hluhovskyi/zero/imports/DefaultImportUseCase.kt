@@ -104,9 +104,8 @@ internal class DefaultImportUseCase(
                 } else {
                     delta.copy(
                         categories = delta.categories.filter { it.id !in excluded },
-                        transactions = delta.transactions.filter { tx ->
-                            val catId = tx.categoryId
-                            catId == null || Id.Known(catId) !in excluded
+                        transactions = delta.transactions.filter { transaction ->
+                            Id(transaction.categoryId) !in excluded
                         },
                     )
                 }
@@ -229,7 +228,7 @@ internal class DefaultImportUseCase(
         val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
         val iconById = allIcons.associateBy { it.id }
         val txCountByCategoryId = delta.transactions
-            .mapNotNull { tx -> tx.categoryId?.let { Id.Known(it) } }
+            .mapNotNull { transaction -> transaction.categoryId?.let { Id.Known(it) } }
             .groupBy { it }
             .mapValues { it.value.size }
         return delta.categories.map { syncCategory ->

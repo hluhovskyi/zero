@@ -108,7 +108,7 @@ private fun AccountRow(account: ImportAccount) {
                 .padding(horizontal = 10.dp, vertical = 4.dp),
         ) {
             Text(
-                text = "${account.transactionCount} tx",
+                text = "${account.transactionCount} transactions",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OnSurfaceVariant,
