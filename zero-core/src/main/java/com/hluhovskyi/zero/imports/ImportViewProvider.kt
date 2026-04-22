@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.imports
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -48,6 +49,13 @@ private fun ImportView(
     val state by viewModel.state.collectAsState(
         initial = ImportViewModel.State.SourceSelection,
     )
+
+    BackHandler(
+        enabled = state !is ImportViewModel.State.SourceSelection &&
+            state !is ImportViewModel.State.FilePicker,
+    ) {
+        viewModel.perform(ImportViewModel.Action.Back)
+    }
 
     val fileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
