@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,11 +39,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 internal class SettingsViewProvider(
     private val viewModel: SettingsViewModel,
@@ -58,10 +64,21 @@ private fun MoreView(viewModel: SettingsViewModel) {
     val state by viewModel.state.collectAsState(initial = SettingsViewModel.State())
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { androidUri ->
+        if (androidUri != null) {
+            val uri = Uri(androidUri.toString())
+            if (uri is Uri.NonEmpty) {
+                viewModel.perform(SettingsViewModel.Action.Export(uri))
+            }
+        }
+    }
+
     LaunchedEffect(state.exportFeedback) {
         when (val feedback = state.exportFeedback) {
             SettingsViewModel.ExportFeedback.Success ->
-                snackbarHostState.showSnackbar("Backup saved to Downloads")
+                snackbarHostState.showSnackbar("Backup saved")
             is SettingsViewModel.ExportFeedback.Error ->
                 snackbarHostState.showSnackbar("Export failed: ${feedback.message}")
             null -> Unit
@@ -97,7 +114,10 @@ private fun MoreView(viewModel: SettingsViewModel) {
                         icon = Icons.Outlined.Download,
                         primaryText = "Export Data",
                         secondaryText = "Save a backup of your data",
-                        onClick = { viewModel.perform(SettingsViewModel.Action.Export) },
+                        onClick = {
+                            val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                            exportLauncher.launch("zero-backup-$date.json")
+                        },
                     )
                 }
             }
