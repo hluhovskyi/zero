@@ -12,6 +12,10 @@ gemini --yolo -p "You are working on the '<branch>' branch. Execute ALL tasks fr
 
 After Gemini finishes, Claude reviews the PR and rates Gemini's work.
 
+## Design-First for Screen Layout
+
+**Fetch and read the design file before writing any layout code.** Text descriptions are ambiguous — "grid", "cards", "list" mean different things in different contexts. If a design URL or file is not provided, ask for it before starting implementation. Never infer column count, spacing, or component structure from prose alone.
+
 ## UI Verification — Mandatory Loop
 
 **After every UI change, verify before claiming it works.** No exceptions.
