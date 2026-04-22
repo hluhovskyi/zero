@@ -1,8 +1,11 @@
 package com.hluhovskyi.zero.imports
 
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.icons.Icon
+import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
 import com.hluhovskyi.zero.sync.SyncTransaction
@@ -21,6 +24,8 @@ internal class DefaultImportUseCase(
     private val parsers: List<SnapshotParser>,
     private val syncEngine: SyncEngine,
     private val currentUserRepository: CurrentUserRepository,
+    private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : ImportUseCase {
@@ -28,6 +33,8 @@ internal class DefaultImportUseCase(
     private data class InternalState(
         val selectedSource: Source? = null,
         val storedDelta: SyncSnapshot? = null,
+        val storedCategories: List<ImportCategory>? = null,
+        val excludedCategoryIds: Set<Id.Known> = emptySet(),
         val screen: ImportUseCase.State,
     )
 
@@ -52,19 +59,13 @@ internal class DefaultImportUseCase(
                 try {
                     val snapshot = parser.parse(action.uri)
                     val delta = syncEngine.delta(snapshot, userId)
+                    val categories = buildCategories(delta)
                     mutableState.update { current ->
                         current.copy(
                             storedDelta = delta,
-                            screen = ImportUseCase.State.CategoriesReview(
-                                categories = delta.categories.map { syncCategory ->
-                                    ImportCategory(
-                                        id = syncCategory.id,
-                                        name = syncCategory.name,
-                                        iconId = syncCategory.iconId?.let { Id.Known(it) },
-                                        colorId = syncCategory.colorId?.let { Id.Known(it) },
-                                    )
-                                },
-                            ),
+                            storedCategories = categories,
+                            excludedCategoryIds = emptySet(),
+                            screen = ImportUseCase.State.CategoriesReview(categories = categories),
                         )
                     }
                 } catch (e: Exception) {
@@ -79,12 +80,41 @@ internal class DefaultImportUseCase(
                     }
                 }
             }
+            is ImportUseCase.Action.ToggleCategory -> mutableState.update { current ->
+                val id = action.id
+                val newExcluded = if (id in current.excludedCategoryIds) {
+                    current.excludedCategoryIds - id
+                } else {
+                    current.excludedCategoryIds + id
+                }
+                val categories = current.storedCategories ?: return@update current
+                current.copy(
+                    excludedCategoryIds = newExcluded,
+                    screen = ImportUseCase.State.CategoriesReview(
+                        categories = categories,
+                        excludedIds = newExcluded,
+                    ),
+                )
+            }
             is ImportUseCase.Action.ConfirmCategories -> mutableState.update { current ->
                 val delta = current.storedDelta ?: return@update current
-                val txByAccountId = delta.transactions.groupBy { it.accountId }
+                val excluded = current.excludedCategoryIds
+                val filteredDelta = if (excluded.isEmpty()) {
+                    delta
+                } else {
+                    delta.copy(
+                        categories = delta.categories.filter { it.id !in excluded },
+                        transactions = delta.transactions.filter { tx ->
+                            val catId = tx.categoryId
+                            catId == null || Id.Known(catId) !in excluded
+                        },
+                    )
+                }
+                val txByAccountId = filteredDelta.transactions.groupBy { it.accountId }
                 current.copy(
+                    storedDelta = filteredDelta,
                     screen = ImportUseCase.State.AccountsReview(
-                        accounts = delta.accounts.map { syncAccount ->
+                        accounts = filteredDelta.accounts.map { syncAccount ->
                             ImportAccount(
                                 id = syncAccount.id,
                                 name = syncAccount.name,
@@ -164,17 +194,11 @@ internal class DefaultImportUseCase(
                         screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }),
                     )
                     is ImportUseCase.State.AccountsReview -> {
-                        val delta = current.storedDelta ?: return@update current
+                        val categories = current.storedCategories ?: return@update current
                         current.copy(
                             screen = ImportUseCase.State.CategoriesReview(
-                                categories = delta.categories.map { syncCategory ->
-                                    ImportCategory(
-                                        id = syncCategory.id,
-                                        name = syncCategory.name,
-                                        iconId = syncCategory.iconId?.let { Id.Known(it) },
-                                        colorId = syncCategory.colorId?.let { Id.Known(it) },
-                                    )
-                                },
+                                categories = categories,
+                                excludedIds = current.excludedCategoryIds,
                             ),
                         )
                     }
@@ -200,4 +224,27 @@ internal class DefaultImportUseCase(
     }
 
     override fun attach(): Closeable = Closeables.empty()
+
+    private suspend fun buildCategories(delta: SyncSnapshot): List<ImportCategory> {
+        val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
+        val iconById = allIcons.associateBy { it.id }
+        val txCountByCategoryId = delta.transactions
+            .mapNotNull { tx -> tx.categoryId?.let { Id.Known(it) } }
+            .groupBy { it }
+            .mapValues { it.value.size }
+        return delta.categories.map { syncCategory ->
+            val colorId = syncCategory.colorId?.let { Id.Known(it) }
+                ?: ColorRepository.unknownCategoryColorId()
+            val iconId = syncCategory.iconId?.let { Id.Known(it) }
+                ?: IconRepository.unknownCategoryIconId()
+            val icon = iconById[iconId] ?: Icon.empty()
+            ImportCategory(
+                id = syncCategory.id,
+                name = syncCategory.name,
+                colorScheme = colorRepository.schemeFor(colorId),
+                icon = icon.image,
+                transactionCount = txCountByCategoryId[syncCategory.id] ?: 0,
+            )
+        }
+    }
 }

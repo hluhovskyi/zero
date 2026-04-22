@@ -18,7 +18,7 @@ internal class DefaultTransactionsPreviewViewModel(
         .filterIsInstance<ImportUseCase.State.TransactionsPreview>()
         .map { previewState ->
             TransactionsPreviewViewModel.State(
-                transactions = previewState.transactions.map { tx -> tx.toDisplay() },
+                transactions = previewState.transactions.map { transaction -> transaction.toDisplay() },
                 totalCount = previewState.totalCount,
             )
         }

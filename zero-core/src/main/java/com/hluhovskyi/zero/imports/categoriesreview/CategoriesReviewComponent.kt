@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.imports.categoriesreview
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
@@ -32,6 +33,7 @@ internal abstract class CategoriesReviewComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoriesReviewComponent.builder()
             .dependencies(dependencies)
             .importUseCase(ImportUseCase.Noop)
+            .imageLoader(ImageLoader.empty())
     }
 
     @dagger.Component.Builder
@@ -40,6 +42,9 @@ internal abstract class CategoriesReviewComponent : AttachableViewComponent {
 
         @BindsInstance
         fun importUseCase(useCase: ImportUseCase): Builder
+
+        @BindsInstance
+        fun imageLoader(imageLoader: ImageLoader): Builder
     }
 
     @dagger.Module
@@ -51,6 +56,6 @@ internal abstract class CategoriesReviewComponent : AttachableViewComponent {
 
         @Provides
         @CategoriesReviewScope
-        fun viewProvider(viewModel: CategoriesReviewViewModel): ViewProvider = CategoriesReviewViewProvider(viewModel = viewModel)
+        fun viewProvider(viewModel: CategoriesReviewViewModel, imageLoader: ImageLoader): ViewProvider = CategoriesReviewViewProvider(viewModel = viewModel, imageLoader = imageLoader)
     }
 }
