@@ -128,8 +128,10 @@ abstract class ImportComponent :
         internal fun transactionsPreviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
+            imageLoader: ImageLoader,
         ): TransactionsPreviewComponent.Builder = TransactionsPreviewComponent.builder(component)
             .importUseCase(importUseCase)
+            .imageLoader(imageLoader)
 
         @Provides
         @ImportScope

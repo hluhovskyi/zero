@@ -1,7 +1,11 @@
 package com.hluhovskyi.zero.imports.transactionspreview
 
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
+import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.imports.ImportAccount
+import com.hluhovskyi.zero.imports.ImportCategory
 import com.hluhovskyi.zero.imports.ImportTransaction
 import com.hluhovskyi.zero.imports.ImportUseCase
 import kotlinx.coroutines.flow.Flow
@@ -17,49 +21,72 @@ internal class DefaultTransactionsPreviewViewModel(
     override val state: Flow<TransactionsPreviewViewModel.State> = importUseCase.state
         .filterIsInstance<ImportUseCase.State.TransactionsPreview>()
         .map { previewState ->
+            val accountById = previewState.accounts.associateBy { it.id }
+            val categoryById = previewState.categories.associateBy { it.id }
+
+            val groups = LinkedHashMap<String, MutableList<TransactionsPreviewViewModel.DisplayTransaction>>()
+            for (transaction in previewState.transactions) {
+                val display = transaction.toDisplay(accountById, categoryById)
+                groups.getOrPut(display.date) { mutableListOf() }.add(display)
+            }
+
             TransactionsPreviewViewModel.State(
-                transactions = previewState.transactions.map { transaction -> transaction.toDisplay() },
+                groups = groups.map { (date, txList) ->
+                    TransactionsPreviewViewModel.DateGroup(dateLabel = date, transactions = txList)
+                },
                 totalCount = previewState.totalCount,
             )
         }
 
-    private fun ImportTransaction.toDisplay(): TransactionsPreviewViewModel.DisplayTransaction = when (this) {
-        is ImportTransaction.Expense -> TransactionsPreviewViewModel.DisplayTransaction(
-            primaryText = categoryName ?: "Expense",
-            amount = amountFormatter.format(amount, currencyId.value),
-            accountName = accountId.value,
-            date = dateFormatter.format(
-                date = dateTime.date,
-                dayConfig = DateFormatter.DayConfig.WithoutZero,
-                monthConfig = DateFormatter.MonthConfig.Readable,
-                yearConfig = DateFormatter.YearConfig.SkipCurrent,
-            ),
-            type = TransactionsPreviewViewModel.DisplayTransaction.Type.EXPENSE,
+    private fun ImportTransaction.toDisplay(
+        accountById: Map<Id.Known, ImportAccount>,
+        categoryById: Map<Id.Known, ImportCategory>,
+    ): TransactionsPreviewViewModel.DisplayTransaction {
+        val accountName = accountById[accountId]?.name ?: accountId.value
+        val date = dateFormatter.format(
+            date = dateTime.date,
+            dayConfig = DateFormatter.DayConfig.WithoutZero,
+            monthConfig = DateFormatter.MonthConfig.Readable,
+            yearConfig = DateFormatter.YearConfig.SkipCurrent,
         )
-        is ImportTransaction.Income -> TransactionsPreviewViewModel.DisplayTransaction(
-            primaryText = categoryName ?: "Income",
-            amount = amountFormatter.format(amount, currencyId.value),
-            accountName = accountId.value,
-            date = dateFormatter.format(
-                date = dateTime.date,
-                dayConfig = DateFormatter.DayConfig.WithoutZero,
-                monthConfig = DateFormatter.MonthConfig.Readable,
-                yearConfig = DateFormatter.YearConfig.SkipCurrent,
-            ),
-            type = TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME,
-        )
-        is ImportTransaction.Transfer -> TransactionsPreviewViewModel.DisplayTransaction(
-            primaryText = targetAccountId.value,
-            amount = amountFormatter.format(amount, currencyId.value),
-            accountName = accountId.value,
-            date = dateFormatter.format(
-                date = dateTime.date,
-                dayConfig = DateFormatter.DayConfig.WithoutZero,
-                monthConfig = DateFormatter.MonthConfig.Readable,
-                yearConfig = DateFormatter.YearConfig.SkipCurrent,
-            ),
-            type = TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER,
-        )
+        return when (this) {
+            is ImportTransaction.Expense -> {
+                val category = categoryId?.let { categoryById[it] }
+                TransactionsPreviewViewModel.DisplayTransaction(
+                    id = id.value,
+                    primaryText = categoryName ?: "Expense",
+                    amount = "-${amountFormatter.format(Amount(amount.value.abs()), currencyId.value)}",
+                    accountName = accountName,
+                    date = date,
+                    colorScheme = category?.colorScheme,
+                    icon = category?.icon,
+                    type = TransactionsPreviewViewModel.DisplayTransaction.Type.EXPENSE,
+                )
+            }
+            is ImportTransaction.Income -> {
+                val category = categoryId?.let { categoryById[it] }
+                TransactionsPreviewViewModel.DisplayTransaction(
+                    id = id.value,
+                    primaryText = categoryName ?: "Income",
+                    amount = "+${amountFormatter.format(Amount(amount.value.abs()), currencyId.value)}",
+                    accountName = accountName,
+                    date = date,
+                    colorScheme = category?.colorScheme,
+                    icon = category?.icon,
+                    type = TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME,
+                )
+            }
+            is ImportTransaction.Transfer -> TransactionsPreviewViewModel.DisplayTransaction(
+                id = id.value,
+                primaryText = "Transfer",
+                amount = amountFormatter.format(Amount(amount.value.abs()), currencyId.value),
+                accountName = accountName,
+                date = date,
+                colorScheme = null,
+                icon = null,
+                type = TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER,
+            )
+        }
     }
 
     override fun perform(action: TransactionsPreviewViewModel.Action) {
