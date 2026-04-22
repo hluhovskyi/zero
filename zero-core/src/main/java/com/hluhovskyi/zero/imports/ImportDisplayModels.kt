@@ -19,6 +19,7 @@ data class ImportAccount(
     val name: String,
     val currencyId: Id.Known,
     val transactionCount: Int,
+    val icon: Image? = null,
 )
 
 sealed interface ImportTransaction {
