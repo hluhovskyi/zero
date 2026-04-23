@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -82,7 +83,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `LoadMore action emits to the trigger passed to Criteria_All query`() = runTest {
-        val viewModel = createViewModel(this)
+        val viewModel = createViewModel(backgroundScope)
         viewModel.attach()
         runCurrent()
 
@@ -110,7 +111,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `attach queries Criteria_After with a recent timestamp`() = runTest {
-        val viewModel = createViewModel(this)
+        val viewModel = createViewModel(backgroundScope)
         viewModel.attach()
         runCurrent()
 
@@ -162,7 +163,7 @@ class DefaultTransactionViewModelTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
         whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
 
-        val viewModel = createViewModel(this)
+        val viewModel = createViewModel(backgroundScope)
         viewModel.attach()
         runCurrent()
 
@@ -177,6 +178,76 @@ class DefaultTransactionViewModelTest {
         assertEquals(currency1.symbol, transfer.currencySymbol)
         assertEquals(currency2.symbol, transfer.targetCurrencySymbol)
         assertEquals(ColorScheme.Grey, transfer.transferColorScheme)
+    }
+
+    @Test
+    fun `UpdateSearchQuery updates searchQuery in state immediately`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery("Coffee"))
+        runCurrent()
+
+        assertEquals("Coffee", viewModel.state.first().searchQuery)
+    }
+
+    @Test
+    fun `UpdateSearchQuery triggers Criteria_Search query after debounce`() = runTest {
+        val searchFlow = MutableSharedFlow<List<TransactionRepository.Transaction>>(replay = 1)
+        whenever(transactionRepository.query(any<TransactionRepository.Criteria.Search>(), any()))
+            .thenReturn(searchFlow)
+
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery("Coffee"))
+        advanceTimeBy(299L)
+        runCurrent()
+
+        // Before debounce fires — Search should NOT have been called yet
+        val criteriaBeforeDebounce = argumentCaptor<TransactionRepository.Criteria<*>>().also {
+            verify(transactionRepository, atLeastOnce()).query(it.capture(), any())
+        }.allValues.filterIsInstance<TransactionRepository.Criteria.Search>()
+        assertEquals(0, criteriaBeforeDebounce.size)
+
+        advanceTimeBy(1L) // debounce fires at 300ms total
+        runCurrent()
+
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+        val searchCriteria = criteriaCaptor.allValues
+            .filterIsInstance<TransactionRepository.Criteria.Search>()
+        assertEquals(1, searchCriteria.size)
+        assertEquals("Coffee", searchCriteria.first().query)
+    }
+
+    @Test
+    fun `LoadMore is no-op when search is active`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        // Capture the trigger flow before activating search
+        val triggerCaptor = argumentCaptor<kotlinx.coroutines.flow.Flow<*>>()
+        verify(transactionRepository, atLeastOnce()).query(
+            org.mockito.kotlin.isA<TransactionRepository.Criteria.All>(),
+            triggerCaptor.capture(),
+        )
+        val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
+        val emissions = mutableListOf<Unit>()
+        val collectJob = launch { trigger.collect { emissions.add(it) } }
+
+        // Activate search, then try LoadMore
+        viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery("Food"))
+        advanceTimeBy(300L)
+        runCurrent()
+        viewModel.perform(TransactionViewModel.Action.LoadMore)
+        advanceUntilIdle()
+
+        assertEquals(0, emissions.size)
+        collectJob.cancel()
     }
 
     private fun createViewModel(coroutineScope: CoroutineScope) = DefaultTransactionViewModel(

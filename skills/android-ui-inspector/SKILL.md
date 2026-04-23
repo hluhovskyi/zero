@@ -28,6 +28,7 @@ Use this skill **before committing any UI change** — not only when something l
    - No node is clipped by a parent with smaller bounds
    - Expected nodes are present (missing node = component not rendered at all)
    - Bottom sheets: bounds should be a partial overlay, not `[0,0][1080,2040]` (full screen = not a sheet)
+   - **Focus state: `focused="true/false"`** — a screenshot cannot capture a blinking cursor reliably (single frame). For any fix involving text field focus or cursor visibility, you MUST grep the dump: `grep 'focused="true"' /tmp/ui.xml`. A screenshot that looks clean is not proof focus was cleared.
 5. **Interact via ADB (If needed):** If you need to navigate to another screen to test something, use the bounds from step 4 to send tap events via your shell/bash tool:
    ```bash
    adb shell input tap <x> <y>

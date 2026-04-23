@@ -17,6 +17,7 @@ interface TransactionRepository {
         data class ById(val id: Id.Known) : Criteria<Transaction>
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
+        data class Search(val query: String) : Criteria<List<Transaction>>
     }
 
     sealed interface Trigger {

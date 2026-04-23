@@ -133,4 +133,28 @@ class RoomTransactionRepositoryPaginationTest {
 
         job.cancel()
     }
+
+    // --- Criteria.Search ---
+
+    @Test
+    fun `Criteria_Search delegates to search DAO with percent-wrapped query`() = runTest {
+        val searchFlow = MutableSharedFlow<List<TransactionEntity>>(replay = 1)
+        whenever(transactionRoom.search("user1", "%food%")).thenReturn(searchFlow)
+
+        val results = mutableListOf<List<TransactionRepository.Transaction>>()
+        val job = launch {
+            repo.query(TransactionRepository.Criteria.Search("food")).collect { results.add(it) }
+        }
+
+        searchFlow.emit(listOf(expenseEntity("t1", jan15h10)))
+        advanceUntilIdle()
+        assertEquals(listOf("t1"), results.last().map { it.id.value })
+
+        // Simulates Room re-emitting on new matching insert
+        searchFlow.emit(listOf(expenseEntity("t2", jan15h10), expenseEntity("t1", jan15h10)))
+        advanceUntilIdle()
+        assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
+
+        job.cancel()
+    }
 }

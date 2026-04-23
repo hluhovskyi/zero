@@ -98,6 +98,20 @@ internal interface TransactionRoom {
     )
     fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
 
+    // Reactive — Room re-emits when any matching row changes.
+    // query must already include SQL wildcards, e.g. "%food%". Special chars (%, _) must be pre-escaped.
+    @Query(
+        """
+        SELECT t.* FROM TransactionEntity t
+        LEFT JOIN AccountEntity a ON t.accountId = a.id AND a.userId = t.userId
+        LEFT JOIN CategoryEntity c ON t.categoryId = c.id AND c.userId = t.userId
+        WHERE t.userId = :userId
+          AND (a.name LIKE :query ESCAPE '\' OR c.name LIKE :query ESCAPE '\')
+        ORDER BY datetime(t.enteredDateTime) DESC
+    """,
+    )
+    fun search(userId: String, query: String): Flow<List<TransactionEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 
