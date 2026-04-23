@@ -59,9 +59,15 @@ internal class RoomTransactionRepository(
                         }
                     }
 
-                is TransactionRepository.Criteria.Search -> transactionRoom()
-                    .search(userId.value, "%${criteria.query}%")
-                    .map { entities -> entities.mapNotNull { it.toRepository() } }
+                is TransactionRepository.Criteria.Search -> {
+                    val escaped = criteria.query
+                        .replace("\\", "\\\\")
+                        .replace("%", "\\%")
+                        .replace("_", "\\_")
+                    transactionRoom()
+                        .search(userId.value, "%$escaped%")
+                        .map { entities -> entities.mapNotNull { it.toRepository() } }
+                }
             }
         }
         .uncheckedCast()
