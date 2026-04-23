@@ -98,6 +98,18 @@ internal interface TransactionRoom {
     )
     fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
 
+    @Query(
+        """
+        SELECT t.* FROM TransactionEntity t
+        LEFT JOIN AccountEntity a ON t.accountId = a.id AND a.userId = t.userId
+        LEFT JOIN CategoryEntity c ON t.categoryId = c.id AND c.userId = t.userId
+        WHERE t.userId = :userId
+          AND (a.name LIKE :query OR c.name LIKE :query)
+        ORDER BY datetime(t.enteredDateTime) DESC
+    """,
+    )
+    fun search(userId: String, query: String): Flow<List<TransactionEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 
