@@ -175,4 +175,50 @@ class DefaultImportUseCaseTest {
             "Expected matched icon image from existing category but got ${categories[0].icon}"
         }
     }
+
+    @Test
+    fun `SelectFile transitions to UpToDate when delta is completely empty`() = runTest {
+        val emptySnapshot = com.hluhovskyi.zero.sync.SyncSnapshot(
+            version = 1,
+            userId = userId,
+            exportedAt = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            categories = emptyList(),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        whenever(parser.parse(testUri)).thenReturn(emptySnapshot)
+        whenever(syncEngine.delta(emptySnapshot, userId)).thenReturn(emptySnapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.UpToDate) { "Expected UpToDate but got $state" }
+    }
+
+    @Test
+    fun `Back from UpToDate returns to SourceSelection`() = runTest {
+        val emptySnapshot = com.hluhovskyi.zero.sync.SyncSnapshot(
+            version = 1,
+            userId = userId,
+            exportedAt = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            categories = emptyList(),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        whenever(parser.parse(testUri)).thenReturn(emptySnapshot)
+        whenever(syncEngine.delta(emptySnapshot, userId)).thenReturn(emptySnapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        useCase.perform(ImportUseCase.Action.Back)
+
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.SourceSelection) { "Expected SourceSelection but got $state" }
+    }
 }

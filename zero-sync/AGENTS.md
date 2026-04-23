@@ -15,6 +15,7 @@ Portable JSON export/import and delta sync engine for all user data.
 - **Tombstones are entities.** A `deletedAt != null` entity is a valid sync record. Do not skip or filter tombstones during sync.
 - **Processing order is mandatory.** Categories → Accounts → Transactions. Changing this order causes dangling references on import.
 - **`lastSyncedAt` advances only on full success.** If any push chunk fails, `lastSyncedAt` must not advance. The next sync retries from the previous high-water mark.
+- **Same-device export → import always produces an empty delta.** Equal `updatedDateTime` → LWW keeps local → `computeDelta`'s filter removes it → all three lists are empty. This is correct behavior, not a bug. Callers must handle the empty-delta case explicitly (e.g., navigate to an "up to date" state) rather than passing it to review screens where the user sees "0 items".
 
 ## Backward Compatibility Rules
 
