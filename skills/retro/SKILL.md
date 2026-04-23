@@ -58,6 +58,8 @@ Perform a root-cause analysis on the session friction. You MUST answer "Why?" fi
 
 Present findings concisely. A retrospective is ONLY complete if it results in an actionable documentation update or a programmatic safeguard (e.g., a lint rule) that makes the error impossible to repeat.
 
+**Before listing any item, apply this filter:** "Would I actually read this file, at the moment I need it, in a future session?" If not, cut it. One sharp item beats three diluted ones. Zero items is a valid outcome if nothing passes the filter.
+
 ```
 ## Final Achieved Architecture
 - [one-sentence summary of the final solution]
@@ -70,7 +72,7 @@ Present findings concisely. A retrospective is ONLY complete if it results in an
 - [safeguard] → suggest: implement linter/static check for [rule]
 ```
 
-Keep it short. No padding. Then ask: **"Which of these would you like me to write?"** — let the user pick a subset rather than forcing all-or-nothing.
+Keep it short. No padding. Then ask: **"Which of these would you like me to write?"** — one item is fine; the user picks, not you.
 
 ## Step 5 — Write (if confirmed)
 

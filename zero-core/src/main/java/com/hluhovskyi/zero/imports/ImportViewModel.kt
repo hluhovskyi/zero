@@ -17,5 +17,6 @@ interface ImportViewModel : ActionStateModel<ImportViewModel.Action, ImportViewM
         object CategoriesReview : State
         object AccountsReview : State
         object TransactionsPreview : State
+        object UpToDate : State
     }
 }
