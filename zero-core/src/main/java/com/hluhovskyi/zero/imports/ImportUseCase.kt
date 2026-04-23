@@ -40,6 +40,8 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
             val accounts: List<ImportAccount>,
             val categories: List<ImportCategory>,
         ) : State
+
+        object UpToDate : State
     }
 
     object Noop : ImportUseCase {

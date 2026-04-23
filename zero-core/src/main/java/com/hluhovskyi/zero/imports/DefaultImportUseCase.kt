@@ -79,6 +79,12 @@ internal class DefaultImportUseCase(
                     val existingAccountByName = existingAccounts.associateBy { it.name.lowercase() }
 
                     val categories = buildCategories(delta, existingCategoryByName, allIconsById)
+                    if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
+                        mutableState.update { current ->
+                            current.copy(screen = ImportUseCase.State.UpToDate)
+                        }
+                        return@launch
+                    }
                     mutableState.update { current ->
                         current.copy(
                             storedDelta = delta,
@@ -214,6 +220,7 @@ internal class DefaultImportUseCase(
                     is ImportUseCase.State.SourceSelection,
                     is ImportUseCase.State.Loading,
                     is ImportUseCase.State.CategoriesReview,
+                    is ImportUseCase.State.UpToDate,
                     -> InternalState(
                         screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }),
                     )
