@@ -4,6 +4,8 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
+import com.hluhovskyi.zero.export.DefaultExportUseCase
+import com.hluhovskyi.zero.export.ExportUseCase
 import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
@@ -62,22 +64,30 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @Provides
         @SettingsScope
+        fun exportUseCase(
+            currentUserRepository: CurrentUserRepository,
+            syncEngine: SyncEngine,
+            serializer: SyncSerializer,
+            exportWriter: ExportWriter,
+        ): ExportUseCase = DefaultExportUseCase(
+            currentUserRepository = currentUserRepository,
+            syncEngine = syncEngine,
+            serializer = serializer,
+            exportWriter = exportWriter,
+        )
+
+        @Provides
+        @SettingsScope
         fun viewModel(
             onImportSelected: OnImportSelectedHandler,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
-            syncEngine: SyncEngine,
-            currentUserRepository: CurrentUserRepository,
-            serializer: SyncSerializer,
-            exportWriter: ExportWriter,
+            exportUseCase: ExportUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,
-            syncEngine = syncEngine,
-            currentUserRepository = currentUserRepository,
-            serializer = serializer,
-            exportWriter = exportWriter,
+            exportUseCase = exportUseCase,
         )
 
         @Provides
