@@ -13,10 +13,12 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
     sealed interface Action {
         data class SelectTransaction(val item: Item.Transaction) : Action
         data object LoadMore : Action
+        data class UpdateSearchQuery(val query: String) : Action
     }
 
     data class State(
         val transactions: List<Item> = emptyList(),
+        val searchQuery: String = "",
     )
 
     sealed interface Item {
