@@ -29,6 +29,8 @@ interface TransactionRepository {
 
     suspend fun insert(transactions: List<Transaction>)
 
+    suspend fun delete(id: Id.Known)
+
     data class CategoryUsageStatistic(
         val categoryId: Id.Known,
         val transactionCount: Int,
@@ -43,6 +45,7 @@ interface TransactionRepository {
         val accountId: Id.Known
         val dateTime: LocalDateTime
         val updatedDateTime: LocalDateTime
+        val deletedAt: LocalDateTime?
 
         data class Expense(
             override val id: Id.Known,
@@ -51,6 +54,7 @@ interface TransactionRepository {
             override val currencyId: Id.Known,
             override val dateTime: LocalDateTime,
             override val updatedDateTime: LocalDateTime,
+            override val deletedAt: LocalDateTime? = null,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -62,6 +66,7 @@ interface TransactionRepository {
             override val currencyId: Id.Known,
             override val dateTime: LocalDateTime,
             override val updatedDateTime: LocalDateTime,
+            override val deletedAt: LocalDateTime? = null,
             val categoryId: Id.Known,
             val rate: Rate,
         ) : Transaction
@@ -73,6 +78,7 @@ interface TransactionRepository {
             override val accountId: Id.Known,
             override val dateTime: LocalDateTime,
             override val updatedDateTime: LocalDateTime,
+            override val deletedAt: LocalDateTime? = null,
             val targetAccount: Id.Known,
             val targetAmount: Amount,
         ) : Transaction
@@ -82,5 +88,6 @@ interface TransactionRepository {
         override fun <T> query(criteria: Criteria<T>, trigger: Flow<*>): Flow<T> = emptyFlow()
         override suspend fun insert(transaction: Transaction) = Unit
         override suspend fun insert(transactions: List<Transaction>) = Unit
+        override suspend fun delete(id: Id.Known) = Unit
     }
 }

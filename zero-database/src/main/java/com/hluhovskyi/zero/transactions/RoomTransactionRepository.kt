@@ -116,6 +116,18 @@ internal class RoomTransactionRepository(
         }
     }
 
+    override suspend fun delete(id: Id.Known) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            val now = clock.localDateTime(zoneProvider.timeZone()).toString()
+            transactionRoom().softDelete(
+                id = id.value,
+                userId = userId.value,
+                deletedAt = now,
+                updatedDateTime = now,
+            )
+        }
+    }
+
     private fun TransactionEntity.toRepository(): TransactionRepository.Transaction? {
         return when (type) {
             TransactionEntity.Type.EXPENSE -> {
@@ -128,6 +140,7 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
+                    deletedAt = deletedAt,
                     categoryId = categoryId,
                     rate = rate.convert(),
                 )
@@ -143,6 +156,7 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
+                    deletedAt = deletedAt,
                     categoryId = categoryId,
                     rate = rate.convert(),
                 )
@@ -157,6 +171,7 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
+                    deletedAt = deletedAt,
                     targetAccount = Id.Known(targetAccount),
                     targetAmount = targetAmount.convert(),
                 )

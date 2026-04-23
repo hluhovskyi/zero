@@ -32,6 +32,7 @@ internal interface TransactionRoom {
         """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
+          AND deletedAt IS NULL
         ORDER BY datetime(enteredDateTime) DESC
         LIMIT :limit
     """,
@@ -44,6 +45,7 @@ internal interface TransactionRoom {
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND date(enteredDateTime) < date(:cursorDate)
+          AND deletedAt IS NULL
         ORDER BY datetime(enteredDateTime) DESC
         LIMIT :limit
     """,
@@ -58,6 +60,7 @@ internal interface TransactionRoom {
         WHERE userId = :userId
           AND date(enteredDateTime) = date(:day)
           AND datetime(enteredDateTime) < datetime(:beforeDateTime)
+          AND deletedAt IS NULL
         ORDER BY datetime(enteredDateTime) DESC
     """,
     )
@@ -106,6 +109,7 @@ internal interface TransactionRoom {
         LEFT JOIN AccountEntity a ON t.accountId = a.id AND a.userId = t.userId
         LEFT JOIN CategoryEntity c ON t.categoryId = c.id AND c.userId = t.userId
         WHERE t.userId = :userId
+          AND t.deletedAt IS NULL
           AND (a.name LIKE :query ESCAPE '\' OR c.name LIKE :query ESCAPE '\')
         ORDER BY datetime(t.enteredDateTime) DESC
     """,
@@ -119,4 +123,13 @@ internal interface TransactionRoom {
     suspend fun insert(entities: List<TransactionEntity>) {
         entities.forEach { insert(it) }
     }
+
+    @Query(
+        """
+        UPDATE TransactionEntity
+        SET deletedAt = :deletedAt, updatedDateTime = :updatedDateTime
+        WHERE id = :id AND userId = :userId
+    """,
+    )
+    suspend fun softDelete(id: String, userId: String, deletedAt: String, updatedDateTime: String)
 }
