@@ -106,7 +106,7 @@ internal interface TransactionRoom {
         LEFT JOIN AccountEntity a ON t.accountId = a.id AND a.userId = t.userId
         LEFT JOIN CategoryEntity c ON t.categoryId = c.id AND c.userId = t.userId
         WHERE t.userId = :userId
-          AND (a.name LIKE :query ESCAPE '\\' OR c.name LIKE :query ESCAPE '\\')
+          AND (a.name LIKE :query ESCAPE '\' OR c.name LIKE :query ESCAPE '\')
         ORDER BY datetime(t.enteredDateTime) DESC
     """,
     )

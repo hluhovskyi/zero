@@ -18,15 +18,19 @@ import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +73,14 @@ private fun TransactionView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
     val lazyListState = rememberLazyListState()
+    val focusManager = LocalFocusManager.current
+    var clearFocusOnStart by remember { mutableStateOf(true) }
+    SideEffect {
+        if (clearFocusOnStart) {
+            clearFocusOnStart = false
+            focusManager.clearFocus(force = true)
+        }
+    }
 
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -111,15 +123,21 @@ private fun TransactionView(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = lazyListState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
             ) {
                 items(state.transactions) { transaction ->
                     when (transaction) {
                         is TransactionViewModel.Item.Summary -> {
+                            val isFirst = state.transactions.first() == transaction
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp),
+                                    .padding(
+                                        top = if (isFirst) 8.dp else 20.dp,
+                                        bottom = 8.dp,
+                                        start = 4.dp,
+                                        end = 4.dp,
+                                    ),
                             ) {
                                 Text(
                                     modifier = Modifier.weight(1f),
