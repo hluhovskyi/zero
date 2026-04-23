@@ -10,6 +10,20 @@ Interface default methods with `@Composable` and default parameters: Kotlin's `D
 
 To convert a `ColorValue` to Compose `Color`: `ComposeColor(colorValue.hex.toInt())`. This passes the ARGB int, not the raw ULong.
 
+## BasicTextField Auto-Focus on Screen Entry
+
+**`FocusManager.clearFocus()` does not stop `BasicTextField` from auto-focusing** — `BasicTextField` focuses a native `EditText` independently of Compose's focus system. `clearFocus()` (including `force = true`, in `SideEffect`, in `LaunchedEffect`) only reaches the Compose layer and leaves the native `EditText` focused.
+
+To prevent auto-focus on screen entry, place `Modifier.focusTarget()` on the parent container *before* the text field so Android's initial focus traversal lands on the non-text node instead:
+
+```kotlin
+Column(modifier = Modifier.fillMaxSize().focusTarget()) {
+    SearchBar(...)  // no longer receives initial focus
+}
+```
+
+Verify with the view dump, not a screenshot: `grep 'focused="true"' /tmp/ui.xml`.
+
 ## Compose Event Traps
 
 **Do not use global touch interceptors for focus management.** `LazyColumn` and scrollable areas consume touch events, breaking root-level `clickable` modifiers. Instead of raw `pointerInput` hacks, apply `clearFocus()` explicitly on the interactive elements (buttons, selectors) or use a custom `Modifier` specifically on the items that should trigger dismissal.

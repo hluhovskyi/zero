@@ -22,11 +22,18 @@ import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -60,41 +67,73 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.LoadMore -> {
-                coroutineScope.launch {
-                    loadMoreTrigger.emit(Unit)
+                if (mutableState.value.searchQuery.isBlank()) {
+                    coroutineScope.launch {
+                        loadMoreTrigger.emit(Unit)
+                    }
                 }
+            }
+
+            is TransactionViewModel.Action.UpdateSearchQuery -> {
+                mutableState.update { it.copy(searchQuery = action.query) }
             }
         }
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
-            combine(
-                combine(
-                    transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
-                        .onStartWithEmptyList()
-                        .onEmptyReturnEmptyList(),
-                    transactionRepository.query(
-                        TransactionRepository.Criteria.All(),
-                        trigger = loadMoreTrigger,
-                    )
-                        .onStartWithEmptyList()
-                        .onEmptyReturnEmptyList(),
-                ) { new, paged ->
-                    val freshById = new.associateBy { it.id }
-                    val merged = paged.map { transaction ->
-                        val fresh = freshById[transaction.id]
-                        if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
-                            fresh
-                        } else {
-                            transaction
+
+            // Always subscribed — cursor/pages survive search round-trips
+            val pagedTransactions = combine(
+                transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
+                    .onStartWithEmptyList()
+                    .onEmptyReturnEmptyList(),
+                transactionRepository.query(
+                    TransactionRepository.Criteria.All(),
+                    trigger = loadMoreTrigger,
+                )
+                    .onStartWithEmptyList()
+                    .onEmptyReturnEmptyList(),
+            ) { new, paged ->
+                val freshById = new.associateBy { it.id }
+                val merged = paged.map { transaction ->
+                    val fresh = freshById[transaction.id]
+                    if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
+                        fresh
+                    } else {
+                        transaction
+                    }
+                }
+                val existingIds = paged.map { it.id }.toSet()
+                val added = new.filter { it.id !in existingIds }
+                (added + merged).sortedByDescending { it.dateTime }
+            }
+
+            // null = "no search active, use paged"; non-null = search results
+            // Blank query emits null immediately (no debounce) so the combine doesn't stall.
+            // Non-blank queries are debounced 300ms before hitting the DB.
+            val searchTransactions = mutableState
+                .map { it.searchQuery }
+                .distinctUntilChanged()
+                .flatMapLatest { query ->
+                    if (query.isBlank()) {
+                        flowOf(null)
+                    } else {
+                        flow<List<TransactionRepository.Transaction>?> {
+                            delay(300L)
+                            emitAll(transactionRepository.query(TransactionRepository.Criteria.Search(query)))
                         }
                     }
-                    val existingIds = paged.map { it.id }.toSet()
-                    val added = new.filter { it.id !in existingIds }
-                    (added + merged).sortedByDescending { it.dateTime }
-                },
+                }
+
+            val activeTransactions = combine(pagedTransactions, searchTransactions) { paged, searchResult ->
+                searchResult ?: paged
+            }
+
+            combine(
+                activeTransactions,
                 categoriesQueryUseCase.queryAll()
                     .onStartWithEmptyList()
                     .onEmptyReturnEmptyList()
@@ -168,9 +207,7 @@ internal class DefaultTransactionViewModel(
                     }
             }.collectLatest { items ->
                 mutableState.update { state ->
-                    state.copy(
-                        transactions = items,
-                    )
+                    state.copy(transactions = items)
                 }
             }
         }

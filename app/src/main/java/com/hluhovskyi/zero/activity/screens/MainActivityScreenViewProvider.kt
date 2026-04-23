@@ -65,7 +65,7 @@ internal class MainActivityScreenViewProvider(
             sheetBackgroundColor = MaterialTheme.colors.background,
             scrimColor = Color.Black.copy(alpha = 0.32f),
         ) {
-            Scaffold(bottomBar = bottomBar) { innerPadding ->
+            Scaffold(bottomBar = { if (!isKeyboardVisible) bottomBar() }) { innerPadding ->
                 NavHost(
                     modifier = Modifier.padding(innerPadding),
                     navController = navController,
