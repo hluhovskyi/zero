@@ -30,8 +30,6 @@ class RoomTransactionRepositoryPaginationTest {
 
     @Mock private lateinit var transactionRoom: TransactionRoom
 
-    @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
-
     @Mock private lateinit var clock: Clock
 
     @Mock private lateinit var zoneProvider: ZoneProvider

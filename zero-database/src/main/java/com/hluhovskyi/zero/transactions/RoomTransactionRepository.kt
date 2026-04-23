@@ -194,6 +194,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = deletedAt,
         )
 
         is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -210,6 +211,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = deletedAt,
         )
 
         is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -226,6 +228,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = deletedAt,
         )
     }
 
