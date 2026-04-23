@@ -3,8 +3,10 @@ package com.hluhovskyi.zero.transactions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
+import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.common.toUi
 
 internal class TransactionViewProvider(
@@ -83,112 +87,136 @@ private fun TransactionView(
         }
     }
 
-    LazyColumn(
-        state = lazyListState,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        items(state.transactions) { transaction ->
-            when (transaction) {
-                is TransactionViewModel.Item.Summary -> {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp),
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = dateFormatter.format(transaction).uppercase(),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF44464F),
-                            letterSpacing = 0.8.sp,
-                        )
-                        Text(
-                            text = amountFormatter.format(
-                                amount = transaction.total,
-                                currencySymbol = transaction.currencySymbol,
-                            ),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF44464F),
-                            letterSpacing = 0.8.sp,
-                        )
-                    }
-                }
-                is TransactionViewModel.Item.Transaction -> {
-                    val cardShape = RoundedCornerShape(12.dp)
-                    val contentModifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
-                        .padding(horizontal = 16.dp, vertical = 14.dp)
+    Column(modifier = Modifier.fillMaxSize()) {
+        SearchBar(
+            query = state.searchQuery,
+            onQueryChange = { viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery(it)) },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 12.dp)
-                            .clip(cardShape)
-                            .background(Color(0xFFFFFFFF)),
-                    ) {
-                        when (transaction) {
-                            is TransactionViewModel.Item.Transaction.Expense ->
-                                TransactionExpenseView(
-                                    modifier = contentModifier,
-                                    categoryName = transaction.categoryName,
-                                    amount = amountFormatter.format(
-                                        amount = transaction.amount,
-                                        currencySymbol = transaction.currencySymbol,
-                                    ),
-                                    accountName = transaction.accountName,
-                                    iconColorScheme = transaction.categoryColorScheme.toUi(),
-                                    accountIcon = transaction.accountIcon.toComposable(
-                                        imageLoader = imageLoader,
-                                        modifier = Modifier
-                                            .alpha(ContentAlpha.medium)
-                                            .padding(end = 6.dp)
-                                            .size(20.dp),
-                                    ),
-                                    convertedAmount = transaction.conversion.format(amountFormatter),
-                                    icon = transaction.categoryIcon.toTintedComposable(
-                                        imageLoader = imageLoader,
-                                        modifier = Modifier.size(24.dp),
-                                    ),
+        if (state.searchQuery.isNotBlank() && state.transactions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "No transactions found",
+                    fontSize = 15.sp,
+                    color = Color(0xFF44464F),
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = lazyListState,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                items(state.transactions) { transaction ->
+                    when (transaction) {
+                        is TransactionViewModel.Item.Summary -> {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp, bottom = 8.dp, start = 4.dp, end = 4.dp),
+                            ) {
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = dateFormatter.format(transaction).uppercase(),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF44464F),
+                                    letterSpacing = 0.8.sp,
                                 )
-                            is TransactionViewModel.Item.Transaction.Income -> {
-                                TransactionIncomeView(
-                                    modifier = contentModifier,
-                                    categoryName = transaction.categoryName,
-                                    amount = amountFormatter.format(
-                                        amount = transaction.amount,
+                                Text(
+                                    text = amountFormatter.format(
+                                        amount = transaction.total,
                                         currencySymbol = transaction.currencySymbol,
                                     ),
-                                    accountName = transaction.accountName,
-                                    iconColorScheme = transaction.categoryColorScheme.toUi(),
-                                    convertedAmount = transaction.conversion.format(amountFormatter),
-                                    icon = transaction.categoryIcon.toTintedComposable(
-                                        imageLoader = imageLoader,
-                                        modifier = Modifier.size(24.dp),
-                                    ),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF44464F),
+                                    letterSpacing = 0.8.sp,
                                 )
                             }
-                            is TransactionViewModel.Item.Transaction.Transfer -> {
-                                TransactionTransferView(
-                                    modifier = contentModifier,
-                                    sourceAccountName = transaction.accountName,
-                                    targetAccountName = transaction.targetAccountName,
-                                    sourceAmount = amountFormatter.format(
-                                        amount = transaction.amount,
-                                        currencySymbol = transaction.currencySymbol,
-                                    ),
-                                    targetAmount = amountFormatter.format(
-                                        amount = transaction.targetAmount,
-                                        currencySymbol = transaction.targetCurrencySymbol,
-                                    ),
-                                    transferIconColorScheme = transaction.transferColorScheme.toUi(),
-                                    transferIcon = transaction.transferIcon.toTintedComposable(
-                                        imageLoader = imageLoader,
-                                        modifier = Modifier.size(24.dp),
-                                    ),
-                                )
+                        }
+                        is TransactionViewModel.Item.Transaction -> {
+                            val cardShape = RoundedCornerShape(12.dp)
+                            val contentModifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 12.dp)
+                                    .clip(cardShape)
+                                    .background(Color(0xFFFFFFFF)),
+                            ) {
+                                when (transaction) {
+                                    is TransactionViewModel.Item.Transaction.Expense ->
+                                        TransactionExpenseView(
+                                            modifier = contentModifier,
+                                            categoryName = transaction.categoryName,
+                                            amount = amountFormatter.format(
+                                                amount = transaction.amount,
+                                                currencySymbol = transaction.currencySymbol,
+                                            ),
+                                            accountName = transaction.accountName,
+                                            iconColorScheme = transaction.categoryColorScheme.toUi(),
+                                            accountIcon = transaction.accountIcon.toComposable(
+                                                imageLoader = imageLoader,
+                                                modifier = Modifier
+                                                    .alpha(ContentAlpha.medium)
+                                                    .padding(end = 6.dp)
+                                                    .size(20.dp),
+                                            ),
+                                            convertedAmount = transaction.conversion.format(amountFormatter),
+                                            icon = transaction.categoryIcon.toTintedComposable(
+                                                imageLoader = imageLoader,
+                                                modifier = Modifier.size(24.dp),
+                                            ),
+                                        )
+                                    is TransactionViewModel.Item.Transaction.Income -> {
+                                        TransactionIncomeView(
+                                            modifier = contentModifier,
+                                            categoryName = transaction.categoryName,
+                                            amount = amountFormatter.format(
+                                                amount = transaction.amount,
+                                                currencySymbol = transaction.currencySymbol,
+                                            ),
+                                            accountName = transaction.accountName,
+                                            iconColorScheme = transaction.categoryColorScheme.toUi(),
+                                            convertedAmount = transaction.conversion.format(amountFormatter),
+                                            icon = transaction.categoryIcon.toTintedComposable(
+                                                imageLoader = imageLoader,
+                                                modifier = Modifier.size(24.dp),
+                                            ),
+                                        )
+                                    }
+                                    is TransactionViewModel.Item.Transaction.Transfer -> {
+                                        TransactionTransferView(
+                                            modifier = contentModifier,
+                                            sourceAccountName = transaction.accountName,
+                                            targetAccountName = transaction.targetAccountName,
+                                            sourceAmount = amountFormatter.format(
+                                                amount = transaction.amount,
+                                                currencySymbol = transaction.currencySymbol,
+                                            ),
+                                            targetAmount = amountFormatter.format(
+                                                amount = transaction.targetAmount,
+                                                currencySymbol = transaction.targetCurrencySymbol,
+                                            ),
+                                            transferIconColorScheme = transaction.transferColorScheme.toUi(),
+                                            transferIcon = transaction.transferIcon.toTintedComposable(
+                                                imageLoader = imageLoader,
+                                                modifier = Modifier.size(24.dp),
+                                            ),
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
