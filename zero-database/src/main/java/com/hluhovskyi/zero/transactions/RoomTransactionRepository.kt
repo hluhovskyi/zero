@@ -58,6 +58,10 @@ internal class RoomTransactionRepository(
                             )
                         }
                     }
+
+                is TransactionRepository.Criteria.Search -> transactionRoom()
+                    .search(userId.value, "%${criteria.query}%")
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
             }
         }
         .uncheckedCast()
