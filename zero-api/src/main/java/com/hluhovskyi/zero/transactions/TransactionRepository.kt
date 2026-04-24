@@ -29,6 +29,8 @@ interface TransactionRepository {
 
     suspend fun insert(transactions: List<Transaction>)
 
+    suspend fun delete(id: Id.Known)
+
     data class CategoryUsageStatistic(
         val categoryId: Id.Known,
         val transactionCount: Int,
@@ -82,5 +84,6 @@ interface TransactionRepository {
         override fun <T> query(criteria: Criteria<T>, trigger: Flow<*>): Flow<T> = emptyFlow()
         override suspend fun insert(transaction: Transaction) = Unit
         override suspend fun insert(transactions: List<Transaction>) = Unit
+        override suspend fun delete(id: Id.Known) = Unit
     }
 }

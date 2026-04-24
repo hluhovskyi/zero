@@ -14,6 +14,7 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data class SelectTransaction(val item: Item.Transaction) : Action
         data object LoadMore : Action
         data class UpdateSearchQuery(val query: String) : Action
+        data class DeleteTransaction(val id: Id.Known) : Action
     }
 
     data class State(
