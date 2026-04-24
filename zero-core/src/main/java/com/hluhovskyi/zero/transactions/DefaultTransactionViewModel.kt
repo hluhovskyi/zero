@@ -55,8 +55,6 @@ internal class DefaultTransactionViewModel(
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
     override val state: Flow<TransactionViewModel.State> = mutableState
 
-    private val deletedIds = MutableStateFlow<Set<Id.Known>>(emptySet())
-
     private val loadMoreTrigger = MutableSharedFlow<Unit>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -81,7 +79,6 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.DeleteTransaction -> {
-                deletedIds.update { it + action.id }
                 coroutineScope.launch {
                     transactionRepository.delete(action.id)
                 }
@@ -137,8 +134,8 @@ internal class DefaultTransactionViewModel(
                     }
                 }
 
-            val activeTransactions = combine(pagedTransactions, searchTransactions, deletedIds) { paged, searchResult, deleted ->
-                (searchResult ?: paged).filter { it.id !in deleted }
+            val activeTransactions = combine(pagedTransactions, searchTransactions) { paged, searchResult ->
+                searchResult ?: paged
             }
 
             combine(
