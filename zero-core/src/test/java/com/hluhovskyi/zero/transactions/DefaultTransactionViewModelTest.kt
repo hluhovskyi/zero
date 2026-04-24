@@ -250,6 +250,18 @@ class DefaultTransactionViewModelTest {
         collectJob.cancel()
     }
 
+    @Test
+    fun `DeleteTransaction action calls transactionRepository delete`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.DeleteTransaction(Id.Known("t1")))
+        runCurrent()
+
+        org.mockito.kotlin.verify(transactionRepository).delete(Id.Known("t1"))
+    }
+
     private fun createViewModel(coroutineScope: CoroutineScope) = DefaultTransactionViewModel(
         transactionRepository = transactionRepository,
         accountRepository = accountRepository,
