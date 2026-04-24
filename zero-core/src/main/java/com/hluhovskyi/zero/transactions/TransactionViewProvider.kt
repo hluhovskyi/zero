@@ -1,11 +1,13 @@
 package com.hluhovskyi.zero.transactions
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,13 +17,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,6 +44,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
@@ -61,6 +71,7 @@ internal class TransactionViewProvider(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TransactionView(
     viewModel: TransactionViewModel,
@@ -69,6 +80,7 @@ private fun TransactionView(
     dateFormatter: DateFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
+    var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     val lazyListState = rememberLazyListState()
 
     val shouldLoadMore by remember {
@@ -152,7 +164,10 @@ private fun TransactionView(
                             val cardShape = RoundedCornerShape(12.dp)
                             val contentModifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) }
+                                .combinedClickable(
+                                    onClick = { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) },
+                                    onLongClick = { expandedItemId = transaction.id },
+                                )
                                 .padding(horizontal = 16.dp, vertical = 14.dp)
 
                             Box(
@@ -222,6 +237,32 @@ private fun TransactionView(
                                                 modifier = Modifier.size(24.dp),
                                             ),
                                         )
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = expandedItemId == transaction.id,
+                                    onDismissRequest = { expandedItemId = null },
+                                ) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            viewModel.perform(TransactionViewModel.Action.DeleteTransaction(transaction.id))
+                                            expandedItemId = null
+                                        },
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = null,
+                                                tint = Color(0xFFBA1A1A),
+                                                modifier = Modifier.size(20.dp),
+                                            )
+                                            Spacer(modifier = Modifier.size(8.dp))
+                                            Text(
+                                                text = "Delete",
+                                                color = Color(0xFFBA1A1A),
+                                            )
+                                        }
                                     }
                                 }
                             }

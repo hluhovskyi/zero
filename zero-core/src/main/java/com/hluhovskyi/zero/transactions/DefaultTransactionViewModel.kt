@@ -77,6 +77,12 @@ internal class DefaultTransactionViewModel(
             is TransactionViewModel.Action.UpdateSearchQuery -> {
                 mutableState.update { it.copy(searchQuery = action.query) }
             }
+
+            is TransactionViewModel.Action.DeleteTransaction -> {
+                coroutineScope.launch {
+                    transactionRepository.delete(action.id)
+                }
+            }
         }
     }
 

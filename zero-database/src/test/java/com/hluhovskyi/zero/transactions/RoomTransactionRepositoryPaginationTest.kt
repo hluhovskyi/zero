@@ -30,8 +30,6 @@ class RoomTransactionRepositoryPaginationTest {
 
     @Mock private lateinit var transactionRoom: TransactionRoom
 
-    @Mock private lateinit var incorrectStateDetector: IncorrectStateDetector
-
     @Mock private lateinit var clock: Clock
 
     @Mock private lateinit var zoneProvider: ZoneProvider
@@ -48,7 +46,7 @@ class RoomTransactionRepositoryPaginationTest {
         repo = RoomTransactionRepository(
             transactionRoom = { transactionRoom },
             currentUserId = flowOf(userId),
-            incorrectStateDetector = incorrectStateDetector,
+            incorrectStateDetector = IncorrectStateDetector.ignoreIncorrect(),
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -156,5 +154,22 @@ class RoomTransactionRepositoryPaginationTest {
         assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
 
         job.cancel()
+    }
+
+    @Test
+    fun `delete soft-deletes the transaction`() = runTest {
+        val now = LocalDateTime(2024, 1, 16, 9, 0)
+        whenever(clock.now()).thenReturn(kotlinx.datetime.Instant.parse("2024-01-16T09:00:00Z"))
+        whenever(zoneProvider.timeZone()).thenReturn(kotlinx.datetime.TimeZone.UTC)
+
+        repo.delete(Id.Known("t1"))
+        advanceUntilIdle()
+
+        org.mockito.kotlin.verify(transactionRoom).softDelete(
+            id = "t1",
+            userId = "user1",
+            deletedAt = now.toString(),
+            updatedDateTime = now.toString(),
+        )
     }
 }

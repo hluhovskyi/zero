@@ -12,10 +12,13 @@ import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.localDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.take
 
 internal class RoomTransactionRepository(
@@ -25,6 +28,11 @@ internal class RoomTransactionRepository(
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
 ) : TransactionRepository {
+
+    private val deletionEvents = MutableSharedFlow<Id.Known>(
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun <T> query(
@@ -72,6 +80,11 @@ internal class RoomTransactionRepository(
         }
         .uncheckedCast()
 
+    private sealed interface PageEvent {
+        data object LoadMore : PageEvent
+        data class Delete(val id: Id.Known) : PageEvent
+    }
+
     private fun paginatedFlow(
         userId: Id.Known,
         trigger: Flow<*>,
@@ -82,13 +95,24 @@ internal class RoomTransactionRepository(
         accumulated.addAll(firstPage + loadDayPadding(userId, firstPage))
         emit(accumulated.mapNotNull { it.toRepository() })
 
-        trigger.collect {
-            val oldest = accumulated.lastOrNull() ?: return@collect
-            val cursorDate = oldest.enteredDateTime.date.toString()
-            val nextPage = transactionRoom().selectNextPage(userId.value, cursorDate, PAGE_SIZE)
-            if (nextPage.isEmpty()) return@collect
-            accumulated.addAll(nextPage + loadDayPadding(userId, nextPage))
-            emit(accumulated.mapNotNull { it.toRepository() })
+        merge(
+            trigger.map { PageEvent.LoadMore as PageEvent },
+            deletionEvents.map { PageEvent.Delete(it) },
+        ).collect { event ->
+            when (event) {
+                PageEvent.LoadMore -> {
+                    val oldest = accumulated.lastOrNull() ?: return@collect
+                    val cursorDate = oldest.enteredDateTime.date.toString()
+                    val nextPage = transactionRoom().selectNextPage(userId.value, cursorDate, PAGE_SIZE)
+                    if (nextPage.isEmpty()) return@collect
+                    accumulated.addAll(nextPage + loadDayPadding(userId, nextPage))
+                    emit(accumulated.mapNotNull { it.toRepository() })
+                }
+                is PageEvent.Delete -> {
+                    accumulated.removeAll { it.id == event.id }
+                    emit(accumulated.mapNotNull { it.toRepository() })
+                }
+            }
         }
     }
 
@@ -114,6 +138,19 @@ internal class RoomTransactionRepository(
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
             transactionRoom().insert(transactions.map { it.toEntity(userId) })
         }
+    }
+
+    override suspend fun delete(id: Id.Known) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            val now = clock.localDateTime(zoneProvider.timeZone()).toString()
+            transactionRoom().softDelete(
+                id = id.value,
+                userId = userId.value,
+                deletedAt = now,
+                updatedDateTime = now,
+            )
+        }
+        deletionEvents.emit(id)
     }
 
     private fun TransactionEntity.toRepository(): TransactionRepository.Transaction? {
@@ -179,6 +216,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = null,
         )
 
         is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -195,6 +233,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = null,
         )
 
         is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -211,6 +250,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
+            deletedAt = null,
         )
     }
 
