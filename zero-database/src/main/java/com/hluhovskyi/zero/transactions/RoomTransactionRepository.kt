@@ -140,7 +140,6 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
-                    deletedAt = deletedAt,
                     categoryId = categoryId,
                     rate = rate.convert(),
                 )
@@ -156,7 +155,6 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
-                    deletedAt = deletedAt,
                     categoryId = categoryId,
                     rate = rate.convert(),
                 )
@@ -171,7 +169,6 @@ internal class RoomTransactionRepository(
                     currencyId = currencyId,
                     dateTime = enteredDateTime,
                     updatedDateTime = updatedDateTime,
-                    deletedAt = deletedAt,
                     targetAccount = Id.Known(targetAccount),
                     targetAmount = targetAmount.convert(),
                 )
@@ -194,7 +191,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
-            deletedAt = deletedAt,
+            deletedAt = null,
         )
 
         is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -211,7 +208,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
-            deletedAt = deletedAt,
+            deletedAt = null,
         )
 
         is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -228,7 +225,7 @@ internal class RoomTransactionRepository(
             enteredDateTime = dateTime,
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
-            deletedAt = deletedAt,
+            deletedAt = null,
         )
     }
 

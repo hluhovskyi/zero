@@ -22,6 +22,7 @@ internal interface TransactionRoom {
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND datetime(updatedDateTime) > datetime(:after)
+          AND deletedAt IS NULL
         ORDER BY datetime(enteredDateTime) DESC
     """,
     )
