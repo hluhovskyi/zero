@@ -19,7 +19,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -70,12 +69,6 @@ private fun TransactionEditTransferView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditTransferViewModel.State())
     val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) {
-        if (shouldFocus) {
-            focusRequester.requestFocus()
-        }
-    }
 
     Column(
         modifier = Modifier
