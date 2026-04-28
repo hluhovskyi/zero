@@ -163,15 +163,19 @@ abstract class TransactionEditComponent :
         fun transactionEditExpenseIncomeComponentBuilder(
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
+            transactionId: Id,
         ): TransactionEditExpenseIncomeComponent.Builder = TransactionEditExpenseIncomeComponent.builder(component)
             .transactionEditUseCase(useCase)
+            .isNewTransaction(transactionId is Id.Unknown)
 
         @Provides
         @TransactionEditScope
         fun transactionEditTransferComponentBuilder(
             component: TransactionEditComponent,
             useCase: TransactionEditUseCase,
+            transactionId: Id,
         ): TransactionEditTransferComponent.Builder = TransactionEditTransferComponent.builder(component)
             .transactionEditUseCase(useCase)
+            .isNewTransaction(transactionId is Id.Unknown)
     }
 }

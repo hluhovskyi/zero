@@ -19,7 +19,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,27 +50,30 @@ import java.text.DecimalFormat
 
 internal class TransactionEditTransferViewProvider(
     private val viewModel: TransactionEditTransferViewModel,
+    private val isNewTransaction: Boolean,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditTransferView(viewModel = viewModel)
+        TransactionEditTransferView(
+            viewModel = viewModel,
+            shouldFocus = isNewTransaction,
+        )
     }
 }
 
 @Composable
 private fun TransactionEditTransferView(
     viewModel: TransactionEditTransferViewModel,
+    shouldFocus: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditTransferViewModel.State())
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp),
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
         // Amount display
         AmountDisplay(

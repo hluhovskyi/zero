@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
@@ -23,6 +23,7 @@ import com.hluhovskyi.zero.ui.SelectorCard
 internal class TransactionEditExpenseIncomeViewProvider(
     private val viewModel: TransactionEditExpenseIncomeViewModel,
     private val imageLoader: ImageLoader,
+    private val isNewTransaction: Boolean,
 ) : ViewProvider {
 
     @Composable
@@ -30,6 +31,7 @@ internal class TransactionEditExpenseIncomeViewProvider(
         TransactionEditExpenseIncomeView(
             viewModel = viewModel,
             imageLoader = imageLoader,
+            shouldFocus = isNewTransaction,
         )
     }
 }
@@ -38,16 +40,15 @@ internal class TransactionEditExpenseIncomeViewProvider(
 private fun TransactionEditExpenseIncomeView(
     viewModel: TransactionEditExpenseIncomeViewModel,
     imageLoader: ImageLoader,
+    shouldFocus: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp),
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
         AmountDisplay(
             modifier = Modifier
