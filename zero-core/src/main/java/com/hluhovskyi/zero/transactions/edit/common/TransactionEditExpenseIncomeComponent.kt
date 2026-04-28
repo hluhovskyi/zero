@@ -44,6 +44,9 @@ abstract class TransactionEditExpenseIncomeComponent : AttachableViewComponent {
 
         @BindsInstance
         fun transactionEditUseCase(useCase: TransactionEditUseCase): Builder
+
+        @BindsInstance
+        fun isNewTransaction(value: Boolean): Builder
     }
 
     @dagger.Module
@@ -62,9 +65,11 @@ abstract class TransactionEditExpenseIncomeComponent : AttachableViewComponent {
         fun viewProvider(
             viewModel: TransactionEditExpenseIncomeViewModel,
             imageLoader: ImageLoader,
+            isNewTransaction: Boolean,
         ): ViewProvider = TransactionEditExpenseIncomeViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
+            isNewTransaction = isNewTransaction,
         )
     }
 }

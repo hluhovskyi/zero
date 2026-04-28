@@ -41,6 +41,9 @@ abstract class TransactionEditTransferComponent : AttachableViewComponent {
 
         @BindsInstance
         fun transactionEditUseCase(useCase: TransactionEditUseCase): Builder
+
+        @BindsInstance
+        fun isNewTransaction(value: Boolean): Builder
     }
 
     @dagger.Module
@@ -58,8 +61,10 @@ abstract class TransactionEditTransferComponent : AttachableViewComponent {
         @TransactionEditTransferScope
         fun viewProvider(
             viewModel: TransactionEditTransferViewModel,
+            isNewTransaction: Boolean,
         ): ViewProvider = TransactionEditTransferViewProvider(
             viewModel = viewModel,
+            isNewTransaction = isNewTransaction,
         )
     }
 }
