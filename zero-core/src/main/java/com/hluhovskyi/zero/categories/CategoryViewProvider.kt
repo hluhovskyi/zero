@@ -197,7 +197,7 @@ private fun ActiveCategoryCard(
             )
         }
         Row(
-            modifier = Modifier.padding(start = 54.dp, top = 2.dp),
+            modifier = Modifier.padding(start = 62.dp, top = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
