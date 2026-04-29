@@ -175,44 +175,46 @@ private fun ActiveCategoryCard(
                     tint = tint,
                 )
             }
-            Text(
-                text = category.name,
-                modifier = Modifier
-                    .padding(start = 14.dp)
-                    .weight(1f),
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurface,
-                ),
-            )
-            Text(
-                text = formattedTotal,
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Primary,
-                    letterSpacing = (-0.1).sp,
-                ),
-            )
-        }
-        Row(
-            modifier = Modifier.padding(start = 62.dp, top = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "${spending.transactionCount} transaction${if (spending.transactionCount != 1) "s" else ""}",
-                modifier = Modifier.weight(1f),
-                style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
-            )
-            Text(
-                text = "$percentOfTotal% of total",
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = OnSurfaceVariant,
-                ),
-            )
+            Column(modifier = Modifier.padding(start = 14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = category.name,
+                        modifier = Modifier.weight(1f),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurface,
+                        ),
+                    )
+                    Text(
+                        text = formattedTotal,
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Primary,
+                            letterSpacing = (-0.1).sp,
+                        ),
+                    )
+                }
+                Row(
+                    modifier = Modifier.padding(top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "${spending.transactionCount} transaction${if (spending.transactionCount != 1) "s" else ""}",
+                        modifier = Modifier.weight(1f),
+                        style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
+                    )
+                    Text(
+                        text = "$percentOfTotal% of total",
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OnSurfaceVariant,
+                        ),
+                    )
+                }
+            }
         }
         SpendingBar(
             fraction = barFraction,
