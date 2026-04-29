@@ -87,14 +87,13 @@ private fun CategoryView(
 
         items(active, key = { it.id.value }) { category ->
             val spending = category.spending as CategoryViewModel.Spending.Active
-            val barFraction = if (grandTotal.signum() > 0) {
-                (spending.totalAmount.value.toDouble() / grandTotal.toDouble())
-                    .toFloat().coerceIn(0f, 1f)
+            val barFraction = if (grandTotal > 0L) {
+                (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
             } else {
                 0f
             }
-            val percentOfTotal = if (grandTotal.signum() > 0) {
-                (spending.totalAmount.value.toDouble() / grandTotal.toDouble() * 100).toInt()
+            val percentOfTotal = if (grandTotal > 0L) {
+                (spending.totalAmount / grandTotal * 100).toInt()
             } else {
                 0
             }

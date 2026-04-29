@@ -5,7 +5,6 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
-import java.math.BigDecimal
 
 interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
 
@@ -15,7 +14,7 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
 
     data class State(
         val categories: List<CategoryItem> = emptyList(),
-        val grandTotal: BigDecimal = BigDecimal.ZERO,
+        val grandTotal: Amount = Amount.zero(),
         val currencySymbol: String = "",
     )
 

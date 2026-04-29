@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
-import java.math.BigDecimal
 
 internal class DefaultCategoryViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
@@ -62,8 +62,8 @@ internal class DefaultCategoryViewModel(
                 }
 
                 val (active, inactive) = items.partition { it.spending is CategoryViewModel.Spending.Active }
-                val grandTotal = active.fold(BigDecimal.ZERO) { acc, item ->
-                    acc + (item.spending as CategoryViewModel.Spending.Active).totalAmount.value
+                val grandTotal = active.fold(Amount.zero()) { acc, item ->
+                    acc + (item.spending as CategoryViewModel.Spending.Active).totalAmount
                 }
                 val sorted = active.sortedByDescending {
                     (it.spending as CategoryViewModel.Spending.Active).totalAmount.value
