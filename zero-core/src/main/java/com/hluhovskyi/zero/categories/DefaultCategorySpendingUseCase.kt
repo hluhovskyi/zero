@@ -34,8 +34,8 @@ internal class DefaultCategorySpendingUseCase(
         val totals = mutableMapOf<Id.Known, Pair<Amount, Int>>()
         for (row in rows) {
             val converted = currencyConvertUseCase.convertToPrimary(row.totalAmount, row.currencyId)
-            val (prev, prevCount) = totals[row.categoryId] ?: Pair(Amount.zero(), 0)
-            totals[row.categoryId] = Pair(prev + converted, prevCount + row.transactionCount)
+            val (prev, prevCount) = totals[row.categoryId] ?: (Amount.zero() to 0)
+            totals[row.categoryId] = (prev + converted) to (prevCount + row.transactionCount)
         }
         return totals.map { (categoryId, pair) ->
             CategorySpendingUseCase.CategorySpending(
