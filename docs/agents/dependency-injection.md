@@ -18,6 +18,10 @@
 
 Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
 
+## Use Case Scope
+
+**Scope a use case to the smallest component that needs it** — create it in `FeatureComponent.Module` via `@Provides`. Only add it to `Dependencies` and promote to `ActivityComponent` if two or more feature components need it.
+
 ## Lifecycle Timing
 
 Resolve dependencies that require runtime state (e.g. looking up a scheme by ID) in `attach()`, not in the constructor or `@Provides` methods. This ensures the component is fully wired before resolution occurs.

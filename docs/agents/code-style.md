@@ -51,5 +51,9 @@ Add a blank line between `when` branches, especially when branches have multi-li
 ## Line Wrapping
 Break long expressions before `?:` and `?.let` operators. Indent continuation on the next line.
 
+## Kotlin Idioms Over Verbose Alternatives
+
+**Use Kotlin idioms: `to` over `Pair(a, b)`, destructuring with meaningful names over `.first`/`.second`, operators on domain types over unwrapping `.value` at the call site** — if a domain type is missing an operator, add it to the interface rather than working around it inline.
+
 ## Trailing Commas
 Use trailing commas on the last parameter in multi-line function declarations and calls.

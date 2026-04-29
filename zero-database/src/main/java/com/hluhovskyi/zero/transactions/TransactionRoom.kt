@@ -102,6 +102,28 @@ internal interface TransactionRoom {
     )
     fun selectCategoryUsageStatistic(userId: String): Flow<List<CategoryUsageStatistic>>
 
+    @Query(
+        """
+        SELECT categoryId,
+               currencyId,
+               SUM(amount_value) AS totalAmount,
+               COUNT(*) AS transactionCount
+        FROM TransactionEntity
+        WHERE userId = :userId
+          AND categoryId IS NOT NULL
+          AND type IN ('EXPENSE', 'INCOME')
+          AND deletedAt IS NULL
+          AND date(enteredDateTime) >= date(:from)
+          AND date(enteredDateTime) <= date(:to)
+        GROUP BY categoryId, currencyId
+    """,
+    )
+    fun selectCategorySpendingBetween(
+        userId: String,
+        from: String,
+        to: String,
+    ): Flow<List<CategorySpendingRow>>
+
     // Reactive — Room re-emits when any matching row changes.
     // query must already include SQL wildcards, e.g. "%food%". Special chars (%, _) must be pre-escaped.
     @Query(

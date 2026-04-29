@@ -76,6 +76,23 @@ internal class RoomTransactionRepository(
                         .search(userId.value, "%$escaped%")
                         .map { entities -> entities.mapNotNull { it.toRepository() } }
                 }
+
+                is TransactionRepository.Criteria.CategorySpendingBetween -> transactionRoom()
+                    .selectCategorySpendingBetween(
+                        userId = userId.value,
+                        from = criteria.from.toString(),
+                        to = criteria.to.toString(),
+                    )
+                    .map { rows ->
+                        rows.map { row ->
+                            TransactionRepository.CategorySpendingStatistic(
+                                categoryId = Id.Known(row.categoryId),
+                                currencyId = Id.Known(row.currencyId),
+                                totalAmount = Amount(row.totalAmount),
+                                transactionCount = row.transactionCount,
+                            )
+                        }
+                    }
             }
         }
         .uncheckedCast()
