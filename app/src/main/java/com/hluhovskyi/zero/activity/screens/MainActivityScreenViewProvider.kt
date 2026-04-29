@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.activity.screens
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -70,6 +72,10 @@ internal class MainActivityScreenViewProvider(
                     modifier = Modifier.padding(innerPadding),
                     navController = navController,
                     startDestination = startDestination.route,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                    popEnterTransition = { EnterTransition.None },
+                    popExitTransition = { ExitTransition.None },
                 ) {
                     navigationEntries.forEach { entry ->
                         val navArguments = entry.destination.arguments.map { argument ->
