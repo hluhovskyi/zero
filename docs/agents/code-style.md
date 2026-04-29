@@ -51,5 +51,14 @@ Add a blank line between `when` branches, especially when branches have multi-li
 ## Line Wrapping
 Break long expressions before `?:` and `?.let` operators. Indent continuation on the next line.
 
+## Kotlin Idioms Over Verbose Alternatives
+
+**Prefer Kotlin idioms; never reach for Java-style verbosity when a Kotlin equivalent exists:**
+- Use infix `to` instead of `Pair(a, b)`
+- Destructure pairs with meaningful names (`val (totalAmount, transactionCount) = …`), never access `.first`/`.second` directly
+- Add operators to domain types (`Amount.div`, `Amount.plus`) rather than unwrapping `.value` at the call site
+
+When a domain type is missing an operator you need, add it to the interface — don't work around it inline.
+
 ## Trailing Commas
 Use trailing commas on the last parameter in multi-line function declarations and calls.

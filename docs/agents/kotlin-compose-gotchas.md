@@ -24,6 +24,12 @@ Column(modifier = Modifier.fillMaxSize().focusTarget()) {
 
 Verify with the view dump, not a screenshot: `grep 'focused="true"' /tmp/ui.xml`.
 
+## Layout Verification
+
+**Verify layout with a UI dump + screenshot, not by reasoning about dp values** — visual gaps, clipping, and alignment errors are invisible in code. After any layout change, run `./scripts/dump-ui.sh` and check element bounds. For alignment fixes specifically, check *both* the x-position *and* the vertical gap between related elements; passing one check while ignoring the other is a common source of "still broken" follow-ups.
+
+**Do not assume a component's layout size from its parameter name** — read the implementation. Example: `CategoryIconView(size = 40.dp)` actually occupies `size + 8.dp = 48.dp` in the layout because it reserves space for the selection border ring. When computing sibling offsets, run the dump first and measure from actual bounds.
+
 ## Compose Event Traps
 
 **Do not use global touch interceptors for focus management.** `LazyColumn` and scrollable areas consume touch events, breaking root-level `clickable` modifiers. Instead of raw `pointerInput` hacks, apply `clearFocus()` explicitly on the interactive elements (buttons, selectors) or use a custom `Modifier` specifically on the items that should trigger dismissal.
