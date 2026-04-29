@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 interface TransactionRepository {
@@ -18,6 +19,10 @@ interface TransactionRepository {
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
         data class Search(val query: String) : Criteria<List<Transaction>>
+        data class CategorySpendingBetween(
+            val from: LocalDate,
+            val to: LocalDate,
+        ) : Criteria<List<CategorySpendingStatistic>>
     }
 
     sealed interface Trigger {
@@ -35,6 +40,13 @@ interface TransactionRepository {
         val categoryId: Id.Known,
         val transactionCount: Int,
         val lastUsedDateTime: LocalDateTime,
+    )
+
+    data class CategorySpendingStatistic(
+        val categoryId: Id.Known,
+        val currencyId: Id.Known,
+        val totalAmount: Amount,
+        val transactionCount: Int,
     )
 
     sealed interface Transaction {

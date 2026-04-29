@@ -58,7 +58,11 @@ Perform a root-cause analysis on the session friction. You MUST answer "Why?" fi
 
 Present findings concisely. A retrospective is ONLY complete if it results in an actionable documentation update or a programmatic safeguard (e.g., a lint rule) that makes the error impossible to repeat.
 
-**Before listing any item, apply this filter:** "Would I actually read this file, at the moment I need it, in a future session?" If not, cut it. One sharp item beats three diluted ones. Zero items is a valid outcome if nothing passes the filter.
+**Before listing any item, run both filters. Cut anything that fails either one.**
+
+**Filter 1 — Root cause test:** Does this rule address the underlying failure mode, or does it patch one specific instance of it? A rule that says "component X has dimension Y" patches a symptom — the wrong value was used. The root cause is the process failure that allowed the wrong value to go undetected (e.g., not running a visual verification). Document the process failure, not the specific wrong value. Ask: "If this exact component were refactored tomorrow, would the rule still prevent the same class of mistake?"
+
+**Filter 2 — Reach test:** "Would I actually read this file, at the moment I need it, in a future session?" If not, cut it. One sharp item beats three diluted ones. Zero items is a valid outcome if nothing passes the filter.
 
 ```
 ## Final Achieved Architecture

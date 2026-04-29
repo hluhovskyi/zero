@@ -24,6 +24,10 @@ Column(modifier = Modifier.fillMaxSize().focusTarget()) {
 
 Verify with the view dump, not a screenshot: `grep 'focused="true"' /tmp/ui.xml`.
 
+## Layout Verification
+
+**Verify layout with a UI dump + screenshot after every layout change** — visual gaps, clipping, and alignment errors are invisible in code. Run `./scripts/dump-ui.sh` and check element bounds. For alignment fixes, verify both x-position *and* vertical gap between related elements — passing one check while ignoring the other is the most common source of "still broken" follow-ups.
+
 ## Compose Event Traps
 
 **Do not use global touch interceptors for focus management.** `LazyColumn` and scrollable areas consume touch events, breaking root-level `clickable` modifiers. Instead of raw `pointerInput` hacks, apply `clearFocus()` explicitly on the interactive elements (buttons, selectors) or use a custom `Modifier` specifically on the items that should trigger dismissal.

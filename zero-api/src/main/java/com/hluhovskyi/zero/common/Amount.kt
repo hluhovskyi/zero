@@ -18,6 +18,8 @@ interface Amount {
 
     operator fun minus(amount: Amount): Amount
 
+    operator fun div(amount: Amount): Double
+
     operator fun compareTo(value: Amount): Int
 
     operator fun compareTo(value: Long): Int
@@ -43,6 +45,8 @@ private class ValueAmount(override val value: BigDecimal) : Amount {
     override fun plus(amount: Amount): Amount = ValueAmount(value + amount.value)
 
     override fun minus(amount: Amount): Amount = ValueAmount(value - amount.value)
+
+    override fun div(amount: Amount): Double = value.toDouble() / amount.value.toDouble()
 
     override fun compareTo(value: Amount): Int = this.value.compareTo(value.value)
 
