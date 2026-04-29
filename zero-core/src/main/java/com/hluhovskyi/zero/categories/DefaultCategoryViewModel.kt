@@ -68,7 +68,7 @@ internal class DefaultCategoryViewModel(
                 val sorted = active.sortedByDescending {
                     (it.spending as CategoryViewModel.Spending.Active).totalAmount.value
                 } + inactive.sortedBy { it.name }
-                Pair(sorted, grandTotal)
+                sorted to grandTotal
             }
                 .collectLatest { (items, grandTotal) ->
                     mutableState.update { it.copy(categories = items, grandTotal = grandTotal) }
