@@ -1,10 +1,5 @@
 package com.hluhovskyi.zero.activity.screens.bottombar
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
@@ -46,15 +41,7 @@ internal fun BottomBarView(
     imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = BottomBarViewModel.State())
-    AnimatedVisibility(
-        enter = fadeIn() + slideInVertically(
-            initialOffsetY = { it },
-        ),
-        exit = fadeOut() + slideOutVertically(
-            targetOffsetY = { it },
-        ),
-        visible = state.items.isNotEmpty(),
-    ) {
+    if (state.items.isNotEmpty()) {
         BottomNavigation(
             modifier = Modifier.height(72.dp),
             backgroundColor = Color(0xFFFFFFFF),
