@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
+import java.math.BigDecimal
 
 internal class DefaultCategoryViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
@@ -61,12 +62,16 @@ internal class DefaultCategoryViewModel(
                 }
 
                 val (active, inactive) = items.partition { it.spending is CategoryViewModel.Spending.Active }
-                active.sortedByDescending {
+                val grandTotal = active.fold(BigDecimal.ZERO) { acc, item ->
+                    acc + (item.spending as CategoryViewModel.Spending.Active).totalAmount.value
+                }
+                val sorted = active.sortedByDescending {
                     (it.spending as CategoryViewModel.Spending.Active).totalAmount.value
                 } + inactive.sortedBy { it.name }
+                Pair(sorted, grandTotal)
             }
-                .collectLatest { items ->
-                    mutableState.update { it.copy(categories = items) }
+                .collectLatest { (items, grandTotal) ->
+                    mutableState.update { it.copy(categories = items, grandTotal = grandTotal) }
                 }
         }
     }

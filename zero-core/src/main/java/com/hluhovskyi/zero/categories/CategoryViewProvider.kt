@@ -38,7 +38,6 @@ import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
-import java.math.BigDecimal
 
 internal class CategoryViewProvider(
     private val viewModel: CategoryViewModel,
@@ -65,16 +64,12 @@ private fun CategoryView(
     val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
 
     val currencySymbol = state.currencySymbol
+    val grandTotal = state.grandTotal
     val active = remember(state.categories) {
         state.categories.filter { it.spending is CategoryViewModel.Spending.Active }
     }
     val inactive = remember(state.categories) {
         state.categories.filter { it.spending is CategoryViewModel.Spending.None }
-    }
-    val grandTotal = remember(active) {
-        active.fold(BigDecimal.ZERO) { acc, item ->
-            acc + (item.spending as CategoryViewModel.Spending.Active).totalAmount.value
-        }
     }
 
     LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)) {
@@ -92,13 +87,13 @@ private fun CategoryView(
 
         items(active, key = { it.id.value }) { category ->
             val spending = category.spending as CategoryViewModel.Spending.Active
-            val barFraction = if (grandTotal > BigDecimal.ZERO) {
+            val barFraction = if (grandTotal.signum() > 0) {
                 (spending.totalAmount.value.toDouble() / grandTotal.toDouble())
                     .toFloat().coerceIn(0f, 1f)
             } else {
                 0f
             }
-            val percentOfTotal = if (grandTotal > BigDecimal.ZERO) {
+            val percentOfTotal = if (grandTotal.signum() > 0) {
                 (spending.totalAmount.value.toDouble() / grandTotal.toDouble() * 100).toInt()
             } else {
                 0
