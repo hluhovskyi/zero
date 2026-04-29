@@ -1,18 +1,21 @@
 package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultCategoryViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
+    private val categorySpendingUseCase: CategorySpendingUseCase,
+    private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onCategorySelectedHandler: OnCategorySelectedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : CategoryViewModel {
@@ -22,7 +25,7 @@ internal class DefaultCategoryViewModel(
 
     override fun perform(action: CategoryViewModel.Action) {
         when (action) {
-            is CategoryViewModel.Action.SelectCategory -> coroutineScope.launch(context = Dispatchers.Main) {
+            is CategoryViewModel.Action.SelectCategory -> coroutineScope.launch(Dispatchers.Main) {
                 onCategorySelectedHandler.onSelected(action.category.id)
             }
         }
@@ -30,21 +33,40 @@ internal class DefaultCategoryViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            categoriesQueryUseCase.queryAll()
-                .map { categories ->
-                    categories.map { category ->
-                        CategoryViewModel.CategoryItem(
-                            id = category.id,
-                            name = category.name,
-                            icon = category.icon,
-                            colorScheme = category.colorScheme,
-                        )
-                    }
+            val currencySymbol = currencyPrimaryUseCase.getPrimaryCurrency().symbol
+            mutableState.update { it.copy(currencySymbol = currencySymbol) }
+
+            combine(
+                categoriesQueryUseCase.queryAll(),
+                categorySpendingUseCase.query(CategorySpendingUseCase.Period.CurrentMonth),
+            ) { categories, spendingList ->
+                val spendingById = spendingList.associateBy { it.categoryId }
+
+                val items = categories.map { category ->
+                    val spending = spendingById[category.id]
+                    CategoryViewModel.CategoryItem(
+                        id = category.id,
+                        name = category.name,
+                        icon = category.icon,
+                        colorScheme = category.colorScheme,
+                        spending = if (spending != null && spending.totalAmount > 0L) {
+                            CategoryViewModel.Spending.Active(
+                                totalAmount = spending.totalAmount,
+                                transactionCount = spending.transactionCount,
+                            )
+                        } else {
+                            CategoryViewModel.Spending.None
+                        },
+                    )
                 }
-                .collectLatest { categories ->
-                    mutableState.update { state ->
-                        state.copy(categories = categories)
-                    }
+
+                val (active, inactive) = items.partition { it.spending is CategoryViewModel.Spending.Active }
+                active.sortedByDescending {
+                    (it.spending as CategoryViewModel.Spending.Active).totalAmount.value
+                } + inactive.sortedBy { it.name }
+            }
+                .collectLatest { items ->
+                    mutableState.update { it.copy(categories = items) }
                 }
         }
     }

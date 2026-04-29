@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.colors.ColorScheme
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -13,6 +14,7 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
 
     data class State(
         val categories: List<CategoryItem> = emptyList(),
+        val currencySymbol: String = "",
     )
 
     data class CategoryItem(
@@ -20,5 +22,15 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
         val name: String,
         val icon: Image,
         val colorScheme: ColorScheme,
+        val spending: Spending = Spending.None,
     )
+
+    sealed class Spending {
+        data class Active(
+            val totalAmount: Amount,
+            val transactionCount: Int,
+        ) : Spending()
+
+        object None : Spending()
+    }
 }
