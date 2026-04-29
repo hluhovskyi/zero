@@ -53,12 +53,7 @@ Break long expressions before `?:` and `?.let` operators. Indent continuation on
 
 ## Kotlin Idioms Over Verbose Alternatives
 
-**Prefer Kotlin idioms; never reach for Java-style verbosity when a Kotlin equivalent exists:**
-- Use infix `to` instead of `Pair(a, b)`
-- Destructure pairs with meaningful names (`val (totalAmount, transactionCount) = …`), never access `.first`/`.second` directly
-- Add operators to domain types (`Amount.div`, `Amount.plus`) rather than unwrapping `.value` at the call site
-
-When a domain type is missing an operator you need, add it to the interface — don't work around it inline.
+**Use Kotlin idioms: `to` over `Pair(a, b)`, destructuring with meaningful names over `.first`/`.second`, operators on domain types over unwrapping `.value` at the call site** — if a domain type is missing an operator, add it to the interface rather than working around it inline.
 
 ## Trailing Commas
 Use trailing commas on the last parameter in multi-line function declarations and calls.

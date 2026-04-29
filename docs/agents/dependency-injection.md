@@ -20,7 +20,7 @@ Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
 
 ## Use Case Scope
 
-**Scope a use case to the smallest component that needs it** — if a `DefaultXxxUseCase` is `internal` to `zero-core` and consumed by exactly one feature component, create it in that `FeatureComponent.Module` via a `@Provides` method. Only promote it to `ActivityComponent` (and add it to the feature's `Dependencies` interface) if two or more feature components need it. Promoting a use case that is only used in one place adds an unnecessary abstraction boundary and leaks an internal implementation detail to the app module.
+**Scope a use case to the smallest component that needs it** — create it in `FeatureComponent.Module` via `@Provides`. Only add it to `Dependencies` and promote to `ActivityComponent` if two or more feature components need it.
 
 ## Lifecycle Timing
 
