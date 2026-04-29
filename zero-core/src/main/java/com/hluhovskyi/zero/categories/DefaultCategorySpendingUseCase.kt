@@ -37,11 +37,12 @@ internal class DefaultCategorySpendingUseCase(
             val (prev, prevCount) = totals[row.categoryId] ?: (Amount.zero() to 0)
             totals[row.categoryId] = (prev + converted) to (prevCount + row.transactionCount)
         }
-        return totals.map { (categoryId, pair) ->
+        return totals.map { (categoryId, amountAndCount) ->
+            val (totalAmount, transactionCount) = amountAndCount
             CategorySpendingUseCase.CategorySpending(
                 categoryId = categoryId,
-                totalAmount = pair.first,
-                transactionCount = pair.second,
+                totalAmount = totalAmount,
+                transactionCount = transactionCount,
             )
         }
     }
