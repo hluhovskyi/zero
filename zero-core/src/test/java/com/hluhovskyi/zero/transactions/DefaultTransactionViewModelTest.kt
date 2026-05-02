@@ -262,7 +262,45 @@ class DefaultTransactionViewModelTest {
         org.mockito.kotlin.verify(transactionRepository).delete(Id.Known("t1"))
     }
 
-    private fun createViewModel(coroutineScope: CoroutineScope) = DefaultTransactionViewModel(
+    @Test
+    fun `ForCategory filter queries ForCategory criterion instead of All`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+
+        val forCat = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.ForCategory>()
+        assertEquals(1, forCat.size)
+        assertEquals(categoryId, forCat.first().categoryId)
+
+        val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
+        assertEquals(0, allCriteria.size)
+    }
+
+    @Test
+    fun `ForCategory filter makes LoadMore a no-op`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.LoadMore)
+        advanceUntilIdle()
+
+        // No Criteria.All should have been queried at any point
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+        val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
+        assertEquals(0, allCriteria.size)
+    }
+
+    private fun createViewModel(
+        coroutineScope: CoroutineScope,
+        filter: TransactionFilter = TransactionFilter.All,
+    ) = DefaultTransactionViewModel(
         transactionRepository = transactionRepository,
         accountRepository = accountRepository,
         currencyRepository = currencyRepository,
@@ -271,6 +309,7 @@ class DefaultTransactionViewModelTest {
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
+        filter = filter,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope,

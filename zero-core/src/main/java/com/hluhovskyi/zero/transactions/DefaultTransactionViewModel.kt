@@ -47,6 +47,7 @@ internal class DefaultTransactionViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
+    private val filter: TransactionFilter = TransactionFilter.All,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -67,7 +68,7 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.LoadMore -> {
-                if (mutableState.value.searchQuery.isBlank()) {
+                if (filter is TransactionFilter.All && mutableState.value.searchQuery.isBlank()) {
                     coroutineScope.launch {
                         loadMoreTrigger.emit(Unit)
                     }
@@ -91,30 +92,38 @@ internal class DefaultTransactionViewModel(
         coroutineScope.launch {
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
 
-            // Always subscribed — cursor/pages survive search round-trips
-            val pagedTransactions = combine(
-                transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
-                    .onStartWithEmptyList()
-                    .onEmptyReturnEmptyList(),
-                transactionRepository.query(
-                    TransactionRepository.Criteria.All(),
-                    trigger = loadMoreTrigger,
-                )
-                    .onStartWithEmptyList()
-                    .onEmptyReturnEmptyList(),
-            ) { new, paged ->
-                val freshById = new.associateBy { it.id }
-                val merged = paged.map { transaction ->
-                    val fresh = freshById[transaction.id]
-                    if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
-                        fresh
-                    } else {
-                        transaction
+            val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when (filter) {
+                TransactionFilter.All -> {
+                    combine(
+                        transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
+                            .onStartWithEmptyList()
+                            .onEmptyReturnEmptyList(),
+                        transactionRepository.query(
+                            TransactionRepository.Criteria.All(),
+                            trigger = loadMoreTrigger,
+                        )
+                            .onStartWithEmptyList()
+                            .onEmptyReturnEmptyList(),
+                    ) { new, paged ->
+                        val freshById = new.associateBy { it.id }
+                        val merged = paged.map { transaction ->
+                            val fresh = freshById[transaction.id]
+                            if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
+                                fresh
+                            } else {
+                                transaction
+                            }
+                        }
+                        val existingIds = paged.map { it.id }.toSet()
+                        val added = new.filter { it.id !in existingIds }
+                        (added + merged).sortedByDescending { it.dateTime }
                     }
                 }
-                val existingIds = paged.map { it.id }.toSet()
-                val added = new.filter { it.id !in existingIds }
-                (added + merged).sortedByDescending { it.dateTime }
+                is TransactionFilter.ForCategory -> {
+                    transactionRepository.query(TransactionRepository.Criteria.ForCategory(filter.categoryId))
+                        .onStartWithEmptyList()
+                        .onEmptyReturnEmptyList()
+                }
             }
 
             // null = "no search active, use paged"; non-null = search results
