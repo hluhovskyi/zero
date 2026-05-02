@@ -1537,7 +1537,6 @@ Create `zero-core/src/main/java/com/hluhovskyi/zero/categories/detail/CategoryDe
 package com.hluhovskyi.zero.categories.detail
 
 import com.hluhovskyi.zero.ImageLoader
-import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategorySpendingUseCase
 import com.hluhovskyi.zero.categories.DefaultCategorySpendingUseCase
@@ -1545,15 +1544,12 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import com.hluhovskyi.zero.currencies.CurrencyRepository
-import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.OnTransactionSelectedHandler
 import com.hluhovskyi.zero.transactions.TransactionComponent
@@ -1593,7 +1589,17 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
     // Exposed so attach() can reach the TransactionComponent lifecycle
     internal abstract val viewProvider: CategoryDetailViewProvider
 
-    interface Dependencies : TransactionComponent.Dependencies
+    interface Dependencies {
+        val transactionComponentBuilder: TransactionComponent.Builder
+        val imageLoader: ImageLoader
+        val amountFormatter: AmountFormatter
+        val categoriesQueryUseCase: CategoriesQueryUseCase
+        val currencyConvertUseCase: CurrencyConvertUseCase
+        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
+        val transactionRepository: TransactionRepository
+        val clock: Clock
+        val zoneProvider: ZoneProvider
+    }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryDetailComponent.builder()
@@ -1662,40 +1668,13 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         @Provides
         @CategoryDetailScope
         fun transactionComponent(
+            builder: TransactionComponent.Builder,
             categoryId: Id.Known,
-            imageLoader: ImageLoader,
-            amountFormatter: AmountFormatter,
-            dateFormatter: DateFormatter,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
-            transactionRepository: TransactionRepository,
-            accountRepository: AccountRepository,
-            currencyRepository: CurrencyRepository,
-            iconRepository: IconRepository,
-            categoriesQueryUseCase: CategoriesQueryUseCase,
-            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-            currencyConvertUseCase: CurrencyConvertUseCase,
-        ): TransactionComponent {
-            val deps = object : TransactionComponent.Dependencies {
-                override val imageLoader = imageLoader
-                override val amountFormatter = amountFormatter
-                override val dateFormatter = dateFormatter
-                override val clock = clock
-                override val zoneProvider = zoneProvider
-                override val transactionRepository = transactionRepository
-                override val accountRepository = accountRepository
-                override val currencyRepository = currencyRepository
-                override val iconRepository = iconRepository
-                override val categoriesQueryUseCase = categoriesQueryUseCase
-                override val currencyPrimaryUseCase = currencyPrimaryUseCase
-                override val currencyConvertUseCase = currencyConvertUseCase
-            }
-            return TransactionComponent.builder(deps)
-                .transactionFilter(TransactionFilter.ForCategory(categoryId))
-                .displayConfig(DisplayConfig(showSearchBar = false))
-                .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
-                .build()
-        }
+        ): TransactionComponent = builder
+            .transactionFilter(TransactionFilter.ForCategory(categoryId))
+            .displayConfig(DisplayConfig(showSearchBar = false))
+            .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
+            .build()
 
         @Provides
         @CategoryDetailScope
@@ -1997,6 +1976,10 @@ abstract class ActivityComponent :
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies {
 ```
+
+`ActivityComponent` already satisfies every field in `CategoryDetailComponent.Dependencies`:
+- `transactionComponentBuilder` — already provided by `ActivityComponent.Module.transactionComponentBuilder()` (no new provider needed)
+- All other fields (`imageLoader`, `amountFormatter`, `categoriesQueryUseCase`, etc.) — already present via `ActivityComponent.Dependencies`
 
 3. Add the builder provider in `ActivityComponent.Module`:
 ```kotlin
