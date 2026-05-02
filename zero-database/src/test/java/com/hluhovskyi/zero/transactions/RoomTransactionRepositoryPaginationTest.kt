@@ -172,4 +172,46 @@ class RoomTransactionRepositoryPaginationTest {
             updatedDateTime = now.toString(),
         )
     }
+
+    // --- Criteria.ForCategory ---
+
+    @Test
+    fun `ForCategory criterion calls selectByCategory with the right userId and categoryId`() = runTest {
+        val categoryId = Id.Known("cat1")
+        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+            .thenReturn(flowOf(emptyList()))
+
+        repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+
+        org.mockito.kotlin.verify(transactionRoom).selectByCategory(userId.value, categoryId.value)
+    }
+
+    @Test
+    fun `ForCategory criterion maps expense entity to Expense transaction`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val entity = TransactionEntity(
+            id = Id.Known("t1"),
+            userId = userId,
+            type = TransactionEntity.Type.EXPENSE,
+            currencyId = Id.Known("usd"),
+            accountId = Id.Known("acc"),
+            categoryId = categoryId.value,
+            amount = AmountEntity(java.math.BigDecimal("42.00")),
+            rate = RateEntity(java.math.BigDecimal.ONE),
+            targetAccount = null,
+            targetAmount = AmountEntity(java.math.BigDecimal.ZERO),
+            enteredDateTime = jan15h10,
+            creationDateTime = jan15h10,
+            updatedDateTime = jan15h10,
+        )
+        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+            .thenReturn(flowOf(listOf(entity)))
+
+        val result = repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+
+        assertEquals(1, result.size)
+        val tx = result.first()
+        org.junit.Assert.assertTrue(tx is TransactionRepository.Transaction.Expense)
+        assertEquals(Id.Known("t1"), tx.id)
+    }
 }

@@ -139,6 +139,17 @@ internal interface TransactionRoom {
     )
     fun search(userId: String, query: String): Flow<List<TransactionEntity>>
 
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND categoryId = :categoryId
+          AND deletedAt  IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByCategory(userId: String, categoryId: String): Flow<List<TransactionEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 
