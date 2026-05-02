@@ -2,7 +2,12 @@
 
 Personal finance Android app (Kotlin, Jetpack Compose) for tracking expenses, income, and transfers across accounts with multi-currency support. Built as a hands-on experiment in agentic development with Claude Code.
 
-<img src="docs/screenshots/transactions.png" width="280"> <img src="docs/screenshots/accounts.png" width="280">
+<table>
+  <tr>
+    <td><img src="docs/screenshots/transactions.png" height="500"></td>
+    <td><img src="docs/screenshots/accounts.png" height="500"></td>
+  </tr>
+</table>
 
 ## Features
 
