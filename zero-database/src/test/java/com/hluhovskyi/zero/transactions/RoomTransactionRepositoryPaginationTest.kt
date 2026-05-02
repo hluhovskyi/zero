@@ -15,12 +15,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
@@ -165,7 +167,7 @@ class RoomTransactionRepositoryPaginationTest {
         repo.delete(Id.Known("t1"))
         advanceUntilIdle()
 
-        org.mockito.kotlin.verify(transactionRoom).softDelete(
+        verify(transactionRoom).softDelete(
             id = "t1",
             userId = "user1",
             deletedAt = now.toString(),
@@ -183,7 +185,7 @@ class RoomTransactionRepositoryPaginationTest {
 
         repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
 
-        org.mockito.kotlin.verify(transactionRoom).selectByCategory(userId.value, categoryId.value)
+        verify(transactionRoom).selectByCategory(userId.value, categoryId.value)
     }
 
     @Test
@@ -211,7 +213,8 @@ class RoomTransactionRepositoryPaginationTest {
 
         assertEquals(1, result.size)
         val tx = result.first()
-        org.junit.Assert.assertTrue(tx is TransactionRepository.Transaction.Expense)
+        assertTrue(tx is TransactionRepository.Transaction.Expense)
         assertEquals(Id.Known("t1"), tx.id)
+        assertEquals(categoryId, (tx as TransactionRepository.Transaction.Expense).categoryId)
     }
 }
