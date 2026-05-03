@@ -30,9 +30,10 @@ internal object Destinations {
         }
 
         sealed interface Item : Category {
-            object Edit : Item, Destination by destinationOf("categories/{categoryId}/edit", CategoryId) {
-                object CategoryId : Argument<Id> by idValueOf("categoryId")
-            }
+            object CategoryId : Argument<Id> by idValueOf("categoryId")
+
+            object Detail : Item, Destination by destinationOf("categories/{categoryId}", CategoryId)
+            object Edit : Item, Destination by destinationOf("categories/{categoryId}/edit", CategoryId)
         }
     }
 
