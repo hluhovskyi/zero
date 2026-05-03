@@ -2,8 +2,10 @@
 name: scaffold-feature
 description: >
   Scaffold a new zero-core feature (Component + ViewModel + ViewProvider + Handlers).
-  Use this whenever a plan adds a new screen or feature to zero-core. Generates compilable
-  stubs so plans describe only business logic — not structural boilerplate.
+  Use this whenever a plan adds a new screen or feature to zero-core, or whenever the user says
+  "add a new screen", "create a new feature", "scaffold X", or starts implementing anything that
+  follows the Component/ViewModel/ViewProvider pattern. Generates compilable stubs so plans
+  describe only business logic — not structural boilerplate.
 ---
 
 # Scaffold Feature
@@ -15,7 +17,7 @@ Generate the structural stub for a new zero-core feature.
 Clarify before generating (infer from context if obvious):
 
 - **`name`** — PascalCase, e.g. `AccountSummary`
-- **`package`** — subpath under `com.hluhovskyi.zero`, e.g. `accounts/summary`
+- **`package`** — slash-separated subpath under `com/hluhovskyi/zero/`, e.g. `accounts/summary`
 - **`handlers`** — which to generate: `back`, `edit`, `saved` (default: `back` only)
 
 If any input is ambiguous, ask — do not guess.
@@ -23,6 +25,10 @@ If any input is ambiguous, ask — do not guess.
 ## Output files
 
 All files go under `zero-core/src/main/java/com/hluhovskyi/zero/<package>/`.
+
+The package name in the Kotlin files uses dots: `com.hluhovskyi.zero.<package_with_dots>`.
+
+---
 
 ### `<Name>ViewModel.kt`
 
@@ -51,38 +57,44 @@ interface <Name>ViewModel : AttachableActionStateModel<<Name>ViewModel.Action, <
 }
 ```
 
+---
+
 ### `Default<Name>ViewModel.kt`
+
+The scope uses a **defaulted constructor parameter** — this lets tests inject a `TestScope` without changing the production path.
 
 ```kotlin
 package com.hluhovskyi.zero.<package_dotted>
 
-import com.hluhovskyi.zero.common.AttachableActionStateModel
+import com.hluhovskyi.zero.common.Closeables
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class Default<Name>ViewModel(
-    // TODO: add dependencies
-    private val coroutineScope: CoroutineScope,
+    // TODO: add dependencies (repositories, use cases, handlers)
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : <Name>ViewModel {
 
-    private val _state = MutableStateFlow(<Name>ViewModel.State())
-    override val state = _state.asStateFlow()
+    private val mutableState = MutableStateFlow(<Name>ViewModel.State())
+    override val state: Flow<<Name>ViewModel.State> = mutableState
 
     override fun perform(action: <Name>ViewModel.Action) {
-        // TODO: handle actions
+        // TODO: handle actions — dispatch handlers on Dispatchers.Main
     }
 
-    override fun attach(): Closeable {
-        val job = coroutineScope.launch {
-            // TODO: launch data collection
+    override fun attach(): Closeable = Closeables.of {
+        coroutineScope.launch {
+            // TODO: launch data collection (combine flows, update mutableState)
         }
-        return Closeable { job.cancel() }
     }
 }
 ```
+
+---
 
 ### `<Name>ViewProvider.kt`
 
@@ -106,6 +118,8 @@ internal class <Name>ViewProvider(
 }
 ```
 
+---
+
 ### `<Name>Component.kt`
 
 ```kotlin
@@ -114,7 +128,6 @@ package com.hluhovskyi.zero.<package_dotted>
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -139,20 +152,20 @@ abstract class <Name>Component : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
-        val dispatcherProvider: DispatcherProvider
-        // TODO: add repository/use-case dependencies
+        // TODO: add repository/use-case dependencies needed by the ViewModel
+        // Note: do NOT add DispatcherProvider — ViewModels manage their own CoroutineScope
     }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = Dagger<Name>Component.builder()
             .dependencies(dependencies)
-            // TODO: set default handler noops
+            // TODO: wire default handler Noops for each @BindsInstance handler
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<<Name>Component> {
         fun dependencies(dependencies: Dependencies): Builder
-        // TODO: add @BindsInstance methods for Id and handlers
+        // TODO: add @BindsInstance methods — use Id (not Id.Known) for ID parameters
     }
 
     @dagger.Module
@@ -161,10 +174,9 @@ abstract class <Name>Component : AttachableViewComponent {
         @Provides
         @<Name>Scope
         fun viewModel(
-            dispatcherProvider: DispatcherProvider,
-            // TODO: add other dependencies
+            // TODO: inject dependencies from Dependencies interface
         ): <Name>ViewModel = Default<Name>ViewModel(
-            coroutineScope = TODO("provide scope from dispatcherProvider"),
+            // TODO: pass dependencies; coroutineScope uses default, do not pass it
         )
 
         @Provides
@@ -175,7 +187,11 @@ abstract class <Name>Component : AttachableViewComponent {
 }
 ```
 
-### Handler files (one per requested handler)
+---
+
+### Handler files
+
+Generate one file per requested handler. Example for `back`:
 
 ```kotlin
 // On<Name>BackHandler.kt
@@ -189,20 +205,27 @@ fun interface On<Name>BackHandler {
 }
 ```
 
-## Invariants to enforce in generated code
+For `edit`: method name `onEdit()`. For `saved`: method name `onSaved()`.
 
-- `Default<Name>ViewModel` launches in `coroutineScope` (from `DispatcherProvider`) inside `attach()`, not in a constructor-level `init {}` block
-- `Component.attach()` only attaches the ViewModel. If the ViewProvider later embeds another `AttachableViewComponent`, use `subComponent.AttachWithView()` in the composable — do NOT attach it in `Component.attach()`
-- All `Default*` and `*ViewProvider` classes are `internal`
-- `@BindsInstance` for IDs uses `Id`, not `Id.Known`
-- Scope annotation is `private` in the component file
+---
+
+## Key invariants
+
+- **`CoroutineScope` uses default** — `= CoroutineScope(Dispatchers.IO)` in the constructor. Don't inject it via Dagger; the default lets tests substitute a `TestScope`.
+- **`attach()` pattern** — always `Closeables.of { coroutineScope.launch { ... } }`. Not `Closeable { job.cancel() }`.
+- **Handler dispatch** — actions that trigger navigation call `coroutineScope.launch(Dispatchers.Main) { handler.onXxx() }`.
+- **No `DispatcherProvider` in Dependencies** — ViewModels are self-contained with their own scope.
+- **`internal` on implementations** — `Default<Name>ViewModel` and `<Name>ViewProvider` are both `internal`.
+- **Embedded sub-components** — if the ViewProvider needs to render another `AttachableViewComponent`, call `subComponent.AttachWithView()` in the composable. Do NOT attach it in `Component.attach()`.
+
+---
 
 ## After generating
 
-1. Run `./gradlew :zero-core:compileDebugKotlin` — fix any compilation errors before proceeding
+1. Run `./gradlew :zero-core:compileDebugKotlin` — fix any errors before proceeding
 2. Report the exact file paths created
 3. The implementation plan now only needs to specify:
-   - ViewModel state fields and their data sources (which repository/use-case feeds each field)
+   - ViewModel state fields and their data sources
    - Action → handler mapping
    - ViewProvider layout (Compose structure)
    - Any use cases to extract
