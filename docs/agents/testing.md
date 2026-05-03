@@ -50,5 +50,5 @@ class MyViewModelTest {
 ## Coroutines Testing
 
 *   **`runTest`:** Always use `runTest` for testing suspending functions or `Flow` collections.
-*   **runCurrent()**: Use to trigger any pending tasks in the current dispatcher (useful after `attach()` or `perform()`).
-*   **advanceUntilIdle()**: Use when you need to wait for all asynchronous launches to complete.
+*   **`runCurrent()` after `attach()`** — `attach()` launches work on `backgroundScope`, which uses `StandardTestDispatcher`. Use `runCurrent()` to drain it. `advanceUntilIdle()` does **not** drain `backgroundScope` from the outer test scope and will leave state at its initial defaults — a silent failure.
+*   **`advanceUntilIdle()`**: Use only for coroutines launched on the test's own scope (not `backgroundScope`).
