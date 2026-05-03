@@ -7,7 +7,6 @@ import com.hluhovskyi.zero.categories.DefaultCategorySpendingUseCase
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
@@ -38,18 +37,10 @@ private const val TAG = "CategoryDetailComponent"
 abstract class CategoryDetailComponent : AttachableViewComponent {
 
     internal abstract val viewModel: CategoryDetailViewModel
-    internal abstract val transactionComponent: TransactionComponent
 
     override val tag: String = TAG
 
-    override fun attach(): Closeable {
-        val vmCloseable = viewModel.attach()
-        val txCloseable = transactionComponent.attach()
-        return Closeables.from {
-            vmCloseable.close()
-            txCloseable.close()
-        }
-    }
+    override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
         val transactionComponentBuilder: TransactionComponent.Builder
@@ -147,7 +138,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             amountFormatter: AmountFormatter,
         ): ViewProvider = CategoryDetailViewProvider(
             viewModel = viewModel,
-            transactionViewProvider = transactionComponent.viewProvider,
+            transactionComponent = transactionComponent,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
         )

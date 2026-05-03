@@ -32,14 +32,16 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 
 internal class CategoryDetailViewProvider(
     private val viewModel: CategoryDetailViewModel,
-    private val transactionViewProvider: ViewProvider,
+    private val transactionComponent: TransactionComponent,
     private val imageLoader: ImageLoader,
     private val amountFormatter: AmountFormatter,
 ) : ViewProvider {
@@ -53,7 +55,7 @@ internal class CategoryDetailViewProvider(
             TopBar(state.categoryName, viewModel)
             HeroCard(state, colorScheme, imageLoader, amountFormatter)
             Box(Modifier.weight(1f)) {
-                transactionViewProvider.View()
+                transactionComponent.AttachWithView()
             }
         }
     }
