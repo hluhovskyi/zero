@@ -7,6 +7,8 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
@@ -295,6 +297,62 @@ class DefaultTransactionViewModelTest {
         verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
         val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
         assertEquals(0, allCriteria.size)
+    }
+
+    @Test
+    fun `ForCategory filter flows transactions into state`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val oneExpenseTransaction = TransactionRepository.Transaction.Expense(
+            id = Id.Known("t1"),
+            dateTime = now,
+            updatedDateTime = now,
+            amount = Amount(BigDecimal.TEN),
+            currencyId = Id.Known("c1"),
+            accountId = Id.Known("a1"),
+            categoryId = categoryId,
+            rate = Rate.Same,
+        )
+        val account = AccountRepository.Account(
+            id = Id.Known("a1"),
+            name = "Checking",
+            currencyId = Id.Known("c1"),
+            iconId = Id.Known("i1"),
+            initialBalance = Amount.zero(),
+            category = AccountCategory.OTHER,
+            details = null,
+        )
+        val currency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
+        val icon = Icon(id = Id.Known("i1"), image = Image.empty())
+        val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty())
+
+        // Override the setUp() stub for ForCategory queries
+        val forCategoryCriteria = org.mockito.kotlin.argThat<TransactionRepository.Criteria<*>> {
+            this is TransactionRepository.Criteria.ForCategory && this.categoryId == categoryId
+        }
+        whenever(transactionRepository.query(forCategoryCriteria, any())).thenReturn(flowOf(listOf(oneExpenseTransaction)))
+        whenever(accountRepository.query(org.mockito.kotlin.isA<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(account)))
+        whenever(currencyRepository.query(org.mockito.kotlin.isA<CurrencyRepository.Criteria.All>())).thenReturn(flowOf(listOf(currency)))
+        whenever(iconRepository.query(org.mockito.kotlin.isA<IconRepository.Criteria.All>())).thenReturn(flowOf(listOf(icon)))
+        whenever(categoriesQueryUseCase.queryAll()).thenReturn(
+            flowOf(
+                listOf(
+                    CategoriesQueryUseCase.Category(categoryId, "Food", categoryIcon.image, ColorScheme.Grey),
+                ),
+            ),
+        )
+        whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(currency)
+        whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
+
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+        advanceUntilIdle()
+
+        val state = viewModel.state.first()
+        val transactionItems = state.transactions.filterIsInstance<TransactionViewModel.Item.Transaction>()
+
+        assertEquals("Expected 1 transaction but got ${transactionItems.size}", 1, transactionItems.size)
+        assertEquals("Transaction ID mismatch", oneExpenseTransaction.id, transactionItems.first().id)
     }
 
     private fun createViewModel(
