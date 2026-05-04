@@ -7,6 +7,7 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 ### Why it works this way
 
 - **Component owns lifecycle** — `attach()` delegates to ViewModel, returns `Closeable` that cancels coroutines. `AttachWithView()` in Compose ties this to `DisposableEffect`.
+- **Embedding a sub-component** — if a ViewProvider needs to render another `AttachableViewComponent` (e.g. a `TransactionComponent` inside a detail screen), call `subComponent.AttachWithView()` directly in the composable. Do **not** call `subComponent.attach()` manually from the parent's `attach()` — Compose manages the sub-component's lifecycle via `DisposableEffect`.
 - **`Buildable<T>` on Builder** — `NavigatorScope.buildable()` rebuilds the component on every navigation, so each screen visit gets fresh state.
 - **Handler callbacks, not shared state** — screens communicate through `fun interface OnXxxHandler` passed via `@BindsInstance`. Handlers that trigger navigation must dispatch on `Dispatchers.Main`.
 - **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types).

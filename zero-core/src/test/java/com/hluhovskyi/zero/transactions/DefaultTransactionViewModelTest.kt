@@ -7,6 +7,8 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
@@ -36,8 +38,10 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.isA
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
@@ -89,7 +93,7 @@ class DefaultTransactionViewModelTest {
 
         val triggerCaptor = argumentCaptor<kotlinx.coroutines.flow.Flow<*>>()
         verify(transactionRepository, atLeastOnce()).query(
-            org.mockito.kotlin.isA<TransactionRepository.Criteria.All>(),
+            isA<TransactionRepository.Criteria.All>(),
             triggerCaptor.capture(),
         )
         val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
@@ -232,7 +236,7 @@ class DefaultTransactionViewModelTest {
         // Capture the trigger flow before activating search
         val triggerCaptor = argumentCaptor<kotlinx.coroutines.flow.Flow<*>>()
         verify(transactionRepository, atLeastOnce()).query(
-            org.mockito.kotlin.isA<TransactionRepository.Criteria.All>(),
+            isA<TransactionRepository.Criteria.All>(),
             triggerCaptor.capture(),
         )
         val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
@@ -259,10 +263,104 @@ class DefaultTransactionViewModelTest {
         viewModel.perform(TransactionViewModel.Action.DeleteTransaction(Id.Known("t1")))
         runCurrent()
 
-        org.mockito.kotlin.verify(transactionRepository).delete(Id.Known("t1"))
+        verify(transactionRepository).delete(Id.Known("t1"))
     }
 
-    private fun createViewModel(coroutineScope: CoroutineScope) = DefaultTransactionViewModel(
+    @Test
+    fun `ForCategory filter queries ForCategory criterion instead of All`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+
+        val forCat = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.ForCategory>()
+        assertEquals(1, forCat.size)
+        assertEquals(categoryId, forCat.first().categoryId)
+
+        val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
+        assertEquals(0, allCriteria.size)
+    }
+
+    @Test
+    fun `ForCategory filter makes LoadMore a no-op`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.LoadMore)
+        advanceUntilIdle()
+
+        // No Criteria.All should have been queried at any point
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+        val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
+        assertEquals(0, allCriteria.size)
+    }
+
+    @Test
+    fun `ForCategory filter flows transactions into state`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val oneExpenseTransaction = TransactionRepository.Transaction.Expense(
+            id = Id.Known("t1"),
+            dateTime = now,
+            updatedDateTime = now,
+            amount = Amount(BigDecimal.TEN),
+            currencyId = Id.Known("c1"),
+            accountId = Id.Known("a1"),
+            categoryId = categoryId,
+            rate = Rate.Same,
+        )
+        val account = AccountRepository.Account(
+            id = Id.Known("a1"),
+            name = "Checking",
+            currencyId = Id.Known("c1"),
+            iconId = Id.Known("i1"),
+            initialBalance = Amount.zero(),
+            category = AccountCategory.OTHER,
+            details = null,
+        )
+        val currency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
+        val icon = Icon(id = Id.Known("i1"), image = Image.empty())
+        val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty())
+
+        // Override the setUp() stub for ForCategory queries
+        val forCategoryCriteria = argThat<TransactionRepository.Criteria<*>> {
+            this is TransactionRepository.Criteria.ForCategory && this.categoryId == categoryId
+        }
+        whenever(transactionRepository.query(forCategoryCriteria, any())).thenReturn(flowOf(listOf(oneExpenseTransaction)))
+        whenever(accountRepository.query(isA<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(account)))
+        whenever(currencyRepository.query(isA<CurrencyRepository.Criteria.All>())).thenReturn(flowOf(listOf(currency)))
+        whenever(iconRepository.query(isA<IconRepository.Criteria.All>())).thenReturn(flowOf(listOf(icon)))
+        whenever(categoriesQueryUseCase.queryAll()).thenReturn(
+            flowOf(
+                listOf(
+                    CategoriesQueryUseCase.Category(categoryId, "Food", categoryIcon.image, ColorScheme.Grey),
+                ),
+            ),
+        )
+        whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(currency)
+        whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
+
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        viewModel.attach()
+        runCurrent()
+        advanceUntilIdle()
+
+        val state = viewModel.state.first()
+        val transactionItems = state.transactions.filterIsInstance<TransactionViewModel.Item.Transaction>()
+
+        assertEquals("Expected 1 transaction but got ${transactionItems.size}", 1, transactionItems.size)
+        assertEquals("Transaction ID mismatch", oneExpenseTransaction.id, transactionItems.first().id)
+    }
+
+    private fun createViewModel(
+        coroutineScope: CoroutineScope,
+        filter: TransactionFilter = TransactionFilter.All,
+    ) = DefaultTransactionViewModel(
         transactionRepository = transactionRepository,
         accountRepository = accountRepository,
         currencyRepository = currencyRepository,
@@ -271,6 +369,7 @@ class DefaultTransactionViewModelTest {
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
+        filter = filter,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope,

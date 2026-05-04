@@ -139,6 +139,35 @@ internal interface TransactionRoom {
     )
     fun search(userId: String, query: String): Flow<List<TransactionEntity>>
 
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND categoryId = :categoryId
+          AND deletedAt  IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByCategory(userId: String, categoryId: String): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND categoryId = :categoryId
+          AND deletedAt  IS NULL
+          AND date(enteredDateTime) >= date(:from)
+          AND date(enteredDateTime) <= date(:to)
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByCategoryBetween(
+        userId: String,
+        categoryId: String,
+        from: String,
+        to: String,
+    ): Flow<List<TransactionEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 

@@ -1,0 +1,61 @@
+{
+  "skill_name": "scaffold-feature",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "scaffold a BudgetOverview feature — package is budget/overview, needs back and edit handlers",
+      "expected_output": "BudgetOverviewComponent.kt, BudgetOverviewViewModel.kt, DefaultBudgetOverviewViewModel.kt, BudgetOverviewViewProvider.kt, OnBudgetOverviewBackHandler.kt, OnBudgetOverviewEditHandler.kt all created under zero-core/src/main/java/com/hluhovskyi/zero/budget/overview/. Build passes.",
+      "assertions": [
+        {
+          "name": "correct-scope-default",
+          "description": "DefaultBudgetOverviewViewModel has 'coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)'"
+        },
+        {
+          "name": "closeables-of-pattern",
+          "description": "attach() uses Closeables.of { coroutineScope.launch { } } — not Closeable { job.cancel() }"
+        },
+        {
+          "name": "no-dispatcher-provider-in-dependencies",
+          "description": "Dependencies interface does NOT contain DispatcherProvider"
+        },
+        {
+          "name": "both-handlers-generated",
+          "description": "OnBudgetOverviewBackHandler.kt and OnBudgetOverviewEditHandler.kt both exist with Noop companion"
+        },
+        {
+          "name": "internal-implementations",
+          "description": "DefaultBudgetOverviewViewModel and BudgetOverviewViewProvider are marked internal"
+        },
+        {
+          "name": "build-passes",
+          "description": "./gradlew :zero-core:compileDebugKotlin succeeds after generation"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "I need to add a new screen for showing import history. scaffold ImportHistory feature, package imports/history, just needs a back handler",
+      "expected_output": "ImportHistoryComponent.kt, ImportHistoryViewModel.kt, DefaultImportHistoryViewModel.kt, ImportHistoryViewProvider.kt, OnImportHistoryBackHandler.kt created under zero-core/src/main/java/com/hluhovskyi/zero/imports/history/. Build passes.",
+      "assertions": [
+        {
+          "name": "correct-scope-default",
+          "description": "DefaultImportHistoryViewModel has 'coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)'"
+        },
+        {
+          "name": "closeables-of-pattern",
+          "description": "attach() uses Closeables.of { coroutineScope.launch { } }"
+        },
+        {
+          "name": "only-back-handler",
+          "description": "OnImportHistoryBackHandler.kt exists but no edit/saved handler file"
+        },
+        {
+          "name": "build-passes",
+          "description": "./gradlew :zero-core:compileDebugKotlin succeeds after generation"
+        }
+      ],
+      "files": []
+    }
+  ]
+}

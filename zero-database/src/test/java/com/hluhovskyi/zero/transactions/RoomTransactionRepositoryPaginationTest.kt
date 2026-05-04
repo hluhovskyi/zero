@@ -15,12 +15,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
@@ -165,11 +167,54 @@ class RoomTransactionRepositoryPaginationTest {
         repo.delete(Id.Known("t1"))
         advanceUntilIdle()
 
-        org.mockito.kotlin.verify(transactionRoom).softDelete(
+        verify(transactionRoom).softDelete(
             id = "t1",
             userId = "user1",
             deletedAt = now.toString(),
             updatedDateTime = now.toString(),
         )
+    }
+
+    // --- Criteria.ForCategory ---
+
+    @Test
+    fun `ForCategory criterion calls selectByCategory with the right userId and categoryId`() = runTest {
+        val categoryId = Id.Known("cat1")
+        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+            .thenReturn(flowOf(emptyList()))
+
+        repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+
+        verify(transactionRoom).selectByCategory(userId.value, categoryId.value)
+    }
+
+    @Test
+    fun `ForCategory criterion maps expense entity to Expense transaction`() = runTest {
+        val categoryId = Id.Known("cat1")
+        val entity = TransactionEntity(
+            id = Id.Known("t1"),
+            userId = userId,
+            type = TransactionEntity.Type.EXPENSE,
+            currencyId = Id.Known("usd"),
+            accountId = Id.Known("acc"),
+            categoryId = categoryId.value,
+            amount = AmountEntity(java.math.BigDecimal("42.00")),
+            rate = RateEntity(java.math.BigDecimal.ONE),
+            targetAccount = null,
+            targetAmount = AmountEntity(java.math.BigDecimal.ZERO),
+            enteredDateTime = jan15h10,
+            creationDateTime = jan15h10,
+            updatedDateTime = jan15h10,
+        )
+        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+            .thenReturn(flowOf(listOf(entity)))
+
+        val result = repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+
+        assertEquals(1, result.size)
+        val tx = result.first()
+        assertTrue(tx is TransactionRepository.Transaction.Expense)
+        assertEquals(Id.Known("t1"), tx.id)
+        assertEquals(categoryId, (tx as TransactionRepository.Transaction.Expense).categoryId)
     }
 }

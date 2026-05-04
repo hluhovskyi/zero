@@ -7,6 +7,7 @@ internal class CompositeNavigationArgumentSerializer(
     serializers: Set<TypedNavigationArgumentSerializer<*>> = setOf(
         StringNavigationArgumentSerializer,
         IdNavigationArgumentSerializer,
+        IdKnownNavigationArgumentSerializer,
     ),
 ) : NavigationArgumentSerializer {
 
