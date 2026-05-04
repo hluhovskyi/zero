@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.datetime.LocalDate
 
 interface CategoryDetailViewModel : AttachableActionStateModel<CategoryDetailViewModel.Action, CategoryDetailViewModel.State> {
 
@@ -18,7 +19,7 @@ interface CategoryDetailViewModel : AttachableActionStateModel<CategoryDetailVie
         val categoryName: String = "",
         val categoryIcon: Image = Image.empty(),
         val categoryColorScheme: ColorScheme = ColorScheme.Grey,
-        val periodLabel: String = "",
+        val periodDate: LocalDate? = null,
         val totalAmount: Amount = Amount.zero(),
         val currencySymbol: String = "",
         val transactionCount: Int = 0,

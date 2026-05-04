@@ -19,6 +19,7 @@ Clarify before generating (infer from context if obvious):
 - **`name`** — PascalCase, e.g. `AccountSummary`
 - **`package`** — slash-separated subpath under `com/hluhovskyi/zero/`, e.g. `accounts/summary`
 - **`handlers`** — which to generate: `back`, `edit`, `saved` (default: `back` only)
+- **`useCase`** — whether to generate a use case stub (optional, default: skip)
 
 If any input is ambiguous, ask — do not guess.
 
@@ -209,6 +210,55 @@ For `edit`: method name `onEdit()`. For `saved`: method name `onSaved()`.
 
 ---
 
+### Use case file (optional)
+
+Generate only when the user asks for a use case stub. Place it in `zero-api` if it defines a public contract, or in `zero-core` if it's implementation-only.
+
+Public contract in `zero-api/src/main/java/com/hluhovskyi/zero/<package>/`:
+
+```kotlin
+// <Name>UseCase.kt
+package com.hluhovskyi.zero.<package_dotted>
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+
+interface <Name>UseCase {
+
+    fun query(): Flow<<Name>UseCase.Result>
+
+    data class Result(
+        // TODO: define result fields
+    )
+
+    object Noop : <Name>UseCase {
+        override fun query(): Flow<Result> = emptyFlow()
+    }
+}
+```
+
+Implementation in `zero-core/src/main/java/com/hluhovskyi/zero/<package>/`:
+
+```kotlin
+// Default<Name>UseCase.kt
+package com.hluhovskyi.zero.<package_dotted>
+
+import kotlinx.coroutines.flow.Flow
+
+internal class Default<Name>UseCase(
+    // TODO: add repository dependencies
+) : <Name>UseCase {
+
+    override fun query(): Flow<<Name>UseCase.Result> {
+        // TODO: implement
+    }
+}
+```
+
+Provide it through the Component's `Dependencies` interface and wire it in the `Module`.
+
+---
+
 ## Key invariants
 
 - **`CoroutineScope` uses default** — `= CoroutineScope(Dispatchers.IO)` in the constructor. Don't inject it via Dagger; the default lets tests substitute a `TestScope`.
@@ -216,6 +266,7 @@ For `edit`: method name `onEdit()`. For `saved`: method name `onSaved()`.
 - **Handler dispatch** — actions that trigger navigation call `coroutineScope.launch(Dispatchers.Main) { handler.onXxx() }`.
 - **No `DispatcherProvider` in Dependencies** — ViewModels are self-contained with their own scope.
 - **`internal` on implementations** — `Default<Name>ViewModel` and `<Name>ViewProvider` are both `internal`.
+- **Back handler** — use `com.hluhovskyi.zero.common.OnBackHandler` (generic, in zero-api) for the back action. Only create a feature-specific `On<Name>BackHandler` if it carries additional parameters.
 - **Embedded sub-components** — if the ViewProvider needs to render another `AttachableViewComponent`, call `subComponent.AttachWithView()` in the composable. Do NOT attach it in `Component.attach()`.
 
 ---

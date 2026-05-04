@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.common
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Money value wrapping [BigDecimal]. Supports arithmetic and currency conversion via [withRate].
@@ -19,6 +20,8 @@ interface Amount {
     operator fun minus(amount: Amount): Amount
 
     operator fun div(amount: Amount): Double
+
+    operator fun div(count: Int): Amount
 
     operator fun compareTo(value: Amount): Int
 
@@ -47,6 +50,8 @@ private class ValueAmount(override val value: BigDecimal) : Amount {
     override fun minus(amount: Amount): Amount = ValueAmount(value - amount.value)
 
     override fun div(amount: Amount): Double = value.toDouble() / amount.value.toDouble()
+
+    override fun div(count: Int): Amount = ValueAmount(value.divide(BigDecimal(count), 2, RoundingMode.HALF_UP))
 
     override fun compareTo(value: Amount): Int = this.value.compareTo(value.value)
 

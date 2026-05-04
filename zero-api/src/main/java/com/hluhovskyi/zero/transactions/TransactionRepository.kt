@@ -24,6 +24,11 @@ interface TransactionRepository {
             val to: LocalDate,
         ) : Criteria<List<CategorySpendingStatistic>>
         data class ForCategory(val categoryId: Id.Known) : Criteria<List<Transaction>>
+        data class ForCategoryBetween(
+            val categoryId: Id.Known,
+            val from: LocalDate,
+            val to: LocalDate,
+        ) : Criteria<List<Transaction>>
     }
 
     sealed interface Trigger {

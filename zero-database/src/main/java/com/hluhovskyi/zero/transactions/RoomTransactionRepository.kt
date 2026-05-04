@@ -97,6 +97,15 @@ internal class RoomTransactionRepository(
                 is TransactionRepository.Criteria.ForCategory -> transactionRoom()
                     .selectByCategory(userId.value, criteria.categoryId.value)
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
+
+                is TransactionRepository.Criteria.ForCategoryBetween -> transactionRoom()
+                    .selectByCategoryBetween(
+                        userId = userId.value,
+                        categoryId = criteria.categoryId.value,
+                        from = criteria.from.toString(),
+                        to = criteria.to.toString(),
+                    )
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
             }
         }
         .uncheckedCast()

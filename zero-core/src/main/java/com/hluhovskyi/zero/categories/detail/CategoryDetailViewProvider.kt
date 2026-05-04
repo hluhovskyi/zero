@@ -38,6 +38,9 @@ import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import kotlinx.datetime.toJavaLocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 internal class CategoryDetailViewProvider(
     private val viewModel: CategoryDetailViewModel,
@@ -126,7 +129,11 @@ private fun HeroCard(
 
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = state.periodLabel.uppercase(),
+                text = state.periodDate
+                    ?.toJavaLocalDate()
+                    ?.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+                    ?.uppercase()
+                    .orEmpty(),
                 style = TextStyle(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,

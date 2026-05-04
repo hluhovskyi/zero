@@ -47,3 +47,12 @@ private data class IdArgument(
     override val fallback: Id = Id.Unknown,
     override val argumentClass: KClass<Id> = Id::class,
 ) : Argument<Id>
+
+internal fun idKnownValueOf(key: String): Argument<Id.Known> = IdKnownArgument(key)
+
+private data class IdKnownArgument(
+    override val key: String,
+    override val optional: Boolean = false,
+    override val fallback: Id.Known? = null,
+    override val argumentClass: KClass<Id.Known> = Id.Known::class,
+) : Argument<Id.Known>

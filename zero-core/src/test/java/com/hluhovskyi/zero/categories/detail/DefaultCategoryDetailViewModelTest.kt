@@ -9,11 +9,10 @@ import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -41,15 +41,9 @@ class DefaultCategoryDetailViewModelTest {
 
     @Mock private lateinit var categorySpendingUseCase: CategorySpendingUseCase
 
-    @Mock private lateinit var transactionRepository: TransactionRepository
-
-    @Mock private lateinit var currencyConvertUseCase: CurrencyConvertUseCase
-
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
 
     @Mock private lateinit var onEditHandler: OnCategoryDetailEditHandler
-
-    @Mock private lateinit var onBackHandler: OnCategoryDetailBackHandler
 
     private val categoryId = Id.Known("cat1")
     private val primaryCurrency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
@@ -65,9 +59,7 @@ class DefaultCategoryDetailViewModelTest {
     @Before
     fun setUp() {
         whenever(categoriesQueryUseCase.queryById(categoryId)).thenReturn(emptyFlow())
-        whenever(categorySpendingUseCase.query(any())).thenReturn(flowOf(emptyList()))
-        whenever(transactionRepository.query(any<TransactionRepository.Criteria.ForCategory>(), any()))
-            .thenReturn(flowOf(emptyList()))
+        whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(null))
     }
 
     @Test
@@ -95,13 +87,13 @@ class DefaultCategoryDetailViewModelTest {
     }
 
     @Test
-    fun `state total and transactionCount come from CategorySpendingUseCase for this category`() = runTest {
+    fun `state total and transactionCount come from queryForCategory`() = runTest {
         val spending = CategorySpendingUseCase.CategorySpending(
             categoryId = categoryId,
             totalAmount = Amount(BigDecimal("150.00")),
             transactionCount = 5,
         )
-        whenever(categorySpendingUseCase.query(any())).thenReturn(flowOf(listOf(spending)))
+        whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(spending))
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
 
         val vm = createViewModel(backgroundScope)
@@ -120,21 +112,20 @@ class DefaultCategoryDetailViewModelTest {
             totalAmount = Amount(BigDecimal("100.00")),
             transactionCount = 4,
         )
-        whenever(categorySpendingUseCase.query(any())).thenReturn(flowOf(listOf(spending)))
+        whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(spending))
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
 
         val vm = createViewModel(backgroundScope)
         vm.attach()
         runCurrent()
 
-        val state = vm.state.first()
         // 100 / 4 = 25.00
-        assertEquals(0, BigDecimal("25.00").compareTo(state.averageAmount.value))
+        assertEquals(0, BigDecimal("25.00").compareTo(vm.state.first().averageAmount.value))
     }
 
     @Test
     fun `state averageAmount is zero when transactionCount is zero`() = runTest {
-        whenever(categorySpendingUseCase.query(any())).thenReturn(flowOf(emptyList()))
+        whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(null))
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
 
         val vm = createViewModel(backgroundScope)
@@ -156,26 +147,24 @@ class DefaultCategoryDetailViewModelTest {
     }
 
     @Test
-    fun `periodLabel is formatted as month name and year`() = runTest {
+    fun `periodDate is the first day of the current month`() = runTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
 
         val vm = createViewModel(backgroundScope)
         vm.attach()
         runCurrent()
 
-        // fixedInstant = 2026-05-02 → "May 2026"
-        assertEquals("May 2026", vm.state.first().periodLabel)
+        // fixedInstant = 2026-05-02 → periodDate should be 2026-05-01
+        assertEquals(LocalDate(2026, 5, 1), vm.state.first().periodDate)
     }
 
     private fun createViewModel(coroutineScope: CoroutineScope) = DefaultCategoryDetailViewModel(
         categoryId = categoryId,
         categoriesQueryUseCase = categoriesQueryUseCase,
         categorySpendingUseCase = categorySpendingUseCase,
-        transactionRepository = transactionRepository,
-        currencyConvertUseCase = currencyConvertUseCase,
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         onEditHandler = onEditHandler,
-        onBackHandler = onBackHandler,
+        onBackHandler = OnBackHandler.Noop,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope,

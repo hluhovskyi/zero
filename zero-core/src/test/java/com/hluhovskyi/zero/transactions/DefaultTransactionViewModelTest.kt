@@ -38,8 +38,10 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.isA
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
@@ -91,7 +93,7 @@ class DefaultTransactionViewModelTest {
 
         val triggerCaptor = argumentCaptor<kotlinx.coroutines.flow.Flow<*>>()
         verify(transactionRepository, atLeastOnce()).query(
-            org.mockito.kotlin.isA<TransactionRepository.Criteria.All>(),
+            isA<TransactionRepository.Criteria.All>(),
             triggerCaptor.capture(),
         )
         val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
@@ -234,7 +236,7 @@ class DefaultTransactionViewModelTest {
         // Capture the trigger flow before activating search
         val triggerCaptor = argumentCaptor<kotlinx.coroutines.flow.Flow<*>>()
         verify(transactionRepository, atLeastOnce()).query(
-            org.mockito.kotlin.isA<TransactionRepository.Criteria.All>(),
+            isA<TransactionRepository.Criteria.All>(),
             triggerCaptor.capture(),
         )
         val trigger = triggerCaptor.allValues.last() as MutableSharedFlow<Unit>
@@ -261,7 +263,7 @@ class DefaultTransactionViewModelTest {
         viewModel.perform(TransactionViewModel.Action.DeleteTransaction(Id.Known("t1")))
         runCurrent()
 
-        org.mockito.kotlin.verify(transactionRepository).delete(Id.Known("t1"))
+        verify(transactionRepository).delete(Id.Known("t1"))
     }
 
     @Test
@@ -326,13 +328,13 @@ class DefaultTransactionViewModelTest {
         val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty())
 
         // Override the setUp() stub for ForCategory queries
-        val forCategoryCriteria = org.mockito.kotlin.argThat<TransactionRepository.Criteria<*>> {
+        val forCategoryCriteria = argThat<TransactionRepository.Criteria<*>> {
             this is TransactionRepository.Criteria.ForCategory && this.categoryId == categoryId
         }
         whenever(transactionRepository.query(forCategoryCriteria, any())).thenReturn(flowOf(listOf(oneExpenseTransaction)))
-        whenever(accountRepository.query(org.mockito.kotlin.isA<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(account)))
-        whenever(currencyRepository.query(org.mockito.kotlin.isA<CurrencyRepository.Criteria.All>())).thenReturn(flowOf(listOf(currency)))
-        whenever(iconRepository.query(org.mockito.kotlin.isA<IconRepository.Criteria.All>())).thenReturn(flowOf(listOf(icon)))
+        whenever(accountRepository.query(isA<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(account)))
+        whenever(currencyRepository.query(isA<CurrencyRepository.Criteria.All>())).thenReturn(flowOf(listOf(currency)))
+        whenever(iconRepository.query(isA<IconRepository.Criteria.All>())).thenReturn(flowOf(listOf(icon)))
         whenever(categoriesQueryUseCase.queryAll()).thenReturn(
             flowOf(
                 listOf(

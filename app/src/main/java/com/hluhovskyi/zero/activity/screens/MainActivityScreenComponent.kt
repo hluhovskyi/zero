@@ -379,7 +379,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
-            val categoryId = arguments.getValue(Destinations.Category.Item.CategoryId) as Id.Known
+            val categoryId = arguments.getValue(Destinations.Category.Item.CategoryId)
             componentBuilder
                 .categoryId(categoryId)
                 .onBackHandler { navigator.back() }

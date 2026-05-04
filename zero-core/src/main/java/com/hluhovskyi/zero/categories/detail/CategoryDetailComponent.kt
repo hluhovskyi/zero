@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
@@ -58,7 +59,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryDetailComponent.builder()
             .dependencies(dependencies)
             .onEditHandler(OnCategoryDetailEditHandler.Noop)
-            .onBackHandler(OnCategoryDetailBackHandler.Noop)
+            .onBackHandler(OnBackHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -72,7 +73,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         fun onEditHandler(handler: OnCategoryDetailEditHandler): Builder
 
         @BindsInstance
-        fun onBackHandler(handler: OnCategoryDetailBackHandler): Builder
+        fun onBackHandler(handler: OnBackHandler): Builder
     }
 
     @dagger.Module
@@ -98,19 +99,15 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             categoryId: Id.Known,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             categorySpendingUseCase: CategorySpendingUseCase,
-            transactionRepository: TransactionRepository,
-            currencyConvertUseCase: CurrencyConvertUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onEditHandler: OnCategoryDetailEditHandler,
-            onBackHandler: OnCategoryDetailBackHandler,
+            onBackHandler: OnBackHandler,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoryDetailViewModel = DefaultCategoryDetailViewModel(
             categoryId = categoryId,
             categoriesQueryUseCase = categoriesQueryUseCase,
             categorySpendingUseCase = categorySpendingUseCase,
-            transactionRepository = transactionRepository,
-            currencyConvertUseCase = currencyConvertUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onEditHandler = onEditHandler,
             onBackHandler = onBackHandler,

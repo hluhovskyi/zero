@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import java.io.Closeable
 
 internal class DefaultTransactionViewModel(
@@ -68,7 +69,7 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.LoadMore -> {
-                if (filter is TransactionFilter.All && mutableState.value.searchQuery.isBlank()) {
+                if (mutableState.value.searchQuery.isBlank()) {
                     coroutineScope.launch {
                         loadMoreTrigger.emit(Unit)
                     }
@@ -93,37 +94,8 @@ internal class DefaultTransactionViewModel(
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
 
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when (filter) {
-                TransactionFilter.All -> {
-                    combine(
-                        transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
-                            .onStartWithEmptyList()
-                            .onEmptyReturnEmptyList(),
-                        transactionRepository.query(
-                            TransactionRepository.Criteria.All(),
-                            trigger = loadMoreTrigger,
-                        )
-                            .onStartWithEmptyList()
-                            .onEmptyReturnEmptyList(),
-                    ) { new, paged ->
-                        val freshById = new.associateBy { it.id }
-                        val merged = paged.map { transaction ->
-                            val fresh = freshById[transaction.id]
-                            if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) {
-                                fresh
-                            } else {
-                                transaction
-                            }
-                        }
-                        val existingIds = paged.map { it.id }.toSet()
-                        val added = new.filter { it.id !in existingIds }
-                        (added + merged).sortedByDescending { it.dateTime }
-                    }
-                }
-                is TransactionFilter.ForCategory -> {
-                    transactionRepository.query(TransactionRepository.Criteria.ForCategory(filter.categoryId))
-                        .onStartWithEmptyList()
-                        .onEmptyReturnEmptyList()
-                }
+                TransactionFilter.All -> allTransactionsFlow(initialTimestamp)
+                is TransactionFilter.ForCategory -> forCategoryTransactionsFlow(filter)
             }
 
             // null = "no search active, use paged"; non-null = search results
@@ -227,6 +199,35 @@ internal class DefaultTransactionViewModel(
             }
         }
     }
+
+    private fun allTransactionsFlow(
+        initialTimestamp: LocalDateTime,
+    ): Flow<List<TransactionRepository.Transaction>> = combine(
+        transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList(),
+        transactionRepository.query(
+            TransactionRepository.Criteria.All(),
+            trigger = loadMoreTrigger,
+        )
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList(),
+    ) { new, paged ->
+        val freshById = new.associateBy { it.id }
+        val merged = paged.map { transaction ->
+            val fresh = freshById[transaction.id]
+            if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) fresh else transaction
+        }
+        val existingIds = paged.map { it.id }.toSet()
+        val added = new.filter { it.id !in existingIds }
+        (added + merged).sortedByDescending { it.dateTime }
+    }
+
+    private fun forCategoryTransactionsFlow(
+        filter: TransactionFilter.ForCategory,
+    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForCategory(filter.categoryId))
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,
