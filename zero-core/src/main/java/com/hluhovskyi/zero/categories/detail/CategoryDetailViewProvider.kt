@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
@@ -54,12 +57,23 @@ internal class CategoryDetailViewProvider(
         val state by viewModel.state.collectAsState(initial = CategoryDetailViewModel.State())
         val colorScheme = state.categoryColorScheme.toUi()
 
-        Column(Modifier.fillMaxSize()) {
-            TopBar(state.categoryName, viewModel)
-            HeroCard(state, colorScheme, imageLoader, amountFormatter)
-            Box(Modifier.weight(1f)) {
-                transactionComponent.AttachWithView()
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize()) {
+                TopBar(state.categoryName, viewModel)
+                HeroCard(state, colorScheme, imageLoader, amountFormatter)
+                Box(Modifier.weight(1f)) {
+                    transactionComponent.AttachWithView()
+                }
             }
+            ExtendedFloatingActionButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 32.dp),
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                text = { Text("Add transaction") },
+                onClick = { viewModel.perform(CategoryDetailViewModel.Action.CreateTransaction) },
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+            )
         }
     }
 }
