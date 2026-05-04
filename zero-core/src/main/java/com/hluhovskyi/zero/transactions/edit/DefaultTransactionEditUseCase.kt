@@ -350,22 +350,25 @@ internal class DefaultTransactionEditUseCase(
                     .collectLatest { categories ->
                         logger.d("attach, categories=${categories.joinIdsToString()}")
                         mutableState.update { state ->
-                            state.copy(
-                                categories = categories,
-                                selectedCategory = if (state.selectedCategory != null) {
-                                    val updated =
-                                        categories.find { it.id == state.selectedCategory.id }
-                                    if (updated != state.selectedCategory) {
-                                        updated
-                                    } else {
-                                        state.selectedCategory
-                                    }
+                            if (state.selectedCategory != null) {
+                                val updated = categories.find { it.id == state.selectedCategory.id }
+                                state.copy(
+                                    categories = categories,
+                                    selectedCategory = if (updated != state.selectedCategory) updated else state.selectedCategory,
+                                )
+                            } else {
+                                val preSelected = (preSelectedCategoryId as? Id.Known)
+                                    ?.let { id -> categories.find { it.id == id } }
+                                val reordered = if (preSelected != null) {
+                                    listOf(preSelected) + categories.filter { it.id != preSelected.id }
                                 } else {
-                                    (preSelectedCategoryId as? Id.Known)
-                                        ?.let { id -> categories.find { it.id == id } }
-                                        ?: categories.firstOrNull()
-                                },
-                            )
+                                    categories
+                                }
+                                state.copy(
+                                    categories = reordered,
+                                    selectedCategory = preSelected ?: categories.firstOrNull(),
+                                )
+                            }
                         }
                     }
             }
