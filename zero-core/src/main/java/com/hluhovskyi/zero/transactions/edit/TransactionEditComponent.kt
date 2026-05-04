@@ -21,7 +21,6 @@ import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferCom
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
-import javax.inject.Named
 import javax.inject.Scope
 
 @Scope
@@ -83,8 +82,7 @@ abstract class TransactionEditComponent :
         fun transactionId(transactionId: Id): Builder
 
         @BindsInstance
-        @Named("preSelectedCategoryId")
-        fun preSelectedCategoryId(id: Id): Builder
+        fun preSelectedCategoryId(@PreSelectedCategoryId id: Id): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -109,7 +107,7 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun useCase(
             transactionId: Id,
-            @Named("preSelectedCategoryId") preSelectedCategoryId: Id,
+            @PreSelectedCategoryId preSelectedCategoryId: Id,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
