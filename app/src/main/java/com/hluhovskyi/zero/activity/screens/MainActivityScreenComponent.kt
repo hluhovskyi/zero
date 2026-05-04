@@ -286,6 +286,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .transactionId(Id.Unknown)
+                .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
