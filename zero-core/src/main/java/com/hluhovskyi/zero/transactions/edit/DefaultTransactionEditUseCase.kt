@@ -41,6 +41,7 @@ private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
     private val transactionId: Id,
+    private val preSelectedCategoryId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
@@ -360,7 +361,9 @@ internal class DefaultTransactionEditUseCase(
                                         state.selectedCategory
                                     }
                                 } else {
-                                    state.selectedCategory ?: categories.firstOrNull()
+                                    (preSelectedCategoryId as? Id.Known)
+                                        ?.let { id -> categories.find { it.id == id } }
+                                        ?: categories.firstOrNull()
                                 },
                             )
                         }

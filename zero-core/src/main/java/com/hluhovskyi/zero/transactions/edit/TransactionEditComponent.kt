@@ -21,6 +21,7 @@ import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferCom
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
+import javax.inject.Named
 import javax.inject.Scope
 
 @Scope
@@ -65,6 +66,7 @@ abstract class TransactionEditComponent :
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditComponent.builder()
             .dependencies(dependencies)
             .transactionId(Id.Unknown)
+            .preSelectedCategoryId(Id.Unknown)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
@@ -79,6 +81,10 @@ abstract class TransactionEditComponent :
 
         @BindsInstance
         fun transactionId(transactionId: Id): Builder
+
+        @BindsInstance
+        @Named("preSelectedCategoryId")
+        fun preSelectedCategoryId(id: Id): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -103,6 +109,7 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun useCase(
             transactionId: Id,
+            @Named("preSelectedCategoryId") preSelectedCategoryId: Id,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
@@ -120,6 +127,7 @@ abstract class TransactionEditComponent :
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             transactionId = transactionId,
+            preSelectedCategoryId = preSelectedCategoryId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             currencyConvertUseCase = currencyConvertUseCase,
