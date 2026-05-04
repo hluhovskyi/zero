@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
@@ -19,10 +21,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -80,6 +85,7 @@ internal class CategoryDetailViewProvider(
 
 @Composable
 private fun TopBar(categoryName: String, viewModel: CategoryDetailViewModel) {
+    var menuExpanded by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -103,12 +109,27 @@ private fun TopBar(categoryName: String, viewModel: CategoryDetailViewModel) {
                 color = PrimaryContainer,
             ),
         )
-        IconButton(onClick = { viewModel.perform(CategoryDetailViewModel.Action.Edit) }) {
-            Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = "Edit",
-                tint = PrimaryContainer,
-            )
+        Box {
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "More options",
+                    tint = PrimaryContainer,
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        menuExpanded = false
+                        viewModel.perform(CategoryDetailViewModel.Action.Edit)
+                    },
+                ) {
+                    Text("Edit category")
+                }
+            }
         }
     }
 }
