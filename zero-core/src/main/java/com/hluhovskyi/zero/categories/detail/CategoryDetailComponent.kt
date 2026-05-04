@@ -61,6 +61,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             .onEditHandler(OnCategoryDetailEditHandler.Noop)
             .onBackHandler(OnBackHandler.Noop)
             .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
+            .onCreateTransactionHandler(OnCategoryDetailCreateTransactionHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -78,6 +79,9 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
+
+        @BindsInstance
+        fun onCreateTransactionHandler(handler: OnCategoryDetailCreateTransactionHandler): Builder
     }
 
     @dagger.Module
@@ -106,6 +110,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onEditHandler: OnCategoryDetailEditHandler,
             onBackHandler: OnBackHandler,
+            onCreateTransactionHandler: OnCategoryDetailCreateTransactionHandler,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoryDetailViewModel = DefaultCategoryDetailViewModel(
@@ -115,6 +120,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onEditHandler = onEditHandler,
             onBackHandler = onBackHandler,
+            onCreateTransactionHandler = onCreateTransactionHandler,
             clock = clock,
             zoneProvider = zoneProvider,
         )
