@@ -60,6 +60,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onEditHandler(OnCategoryDetailEditHandler.Noop)
             .onBackHandler(OnBackHandler.Noop)
+            .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -74,6 +75,9 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onBackHandler(handler: OnBackHandler): Builder
+
+        @BindsInstance
+        fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
     }
 
     @dagger.Module
@@ -120,10 +124,11 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         fun transactionComponent(
             builder: TransactionComponent.Builder,
             categoryId: Id.Known,
+            onTransactionSelectedHandler: OnTransactionSelectedHandler,
         ): TransactionComponent = builder
             .transactionFilter(TransactionFilter.ForCategory(categoryId))
             .displayConfig(DisplayConfig(showSearchBar = false))
-            .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
+            .onTransactionSelectHandler(onTransactionSelectedHandler)
             .build()
 
         @Provides

@@ -389,6 +389,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                         Destinations.Category.Item.CategoryId.withValue(categoryId),
                     )
                 }
+                .onTransactionSelectedHandler { transactionId ->
+                    navigator.navigateTo(
+                        Destinations.Transaction.Item.Edit,
+                        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
                 .logging(logger)
         }
 
