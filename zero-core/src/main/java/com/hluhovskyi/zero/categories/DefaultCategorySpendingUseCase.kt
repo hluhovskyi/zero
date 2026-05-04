@@ -21,11 +21,20 @@ internal class DefaultCategorySpendingUseCase(
     private val zoneProvider: ZoneProvider,
 ) : CategorySpendingUseCase {
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
         val (from, to) = period.resolve()
         return transactionRepository
             .query(TransactionRepository.Criteria.CategorySpendingBetween(from = from, to = to))
             .flatMapLatest { rows -> flow { emit(aggregate(rows)) } }
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun queryForCategory(id: Id.Known, period: CategorySpendingUseCase.Period): Flow<CategorySpendingUseCase.CategorySpending?> {
+        val (from, to) = period.resolve()
+        return transactionRepository
+            .query(TransactionRepository.Criteria.ForCategoryBetween(id, from, to))
+            .flatMapLatest { transactions -> flow { emit(aggregateForCategory(id, transactions)) } }
     }
 
     private suspend fun aggregate(
@@ -45,6 +54,27 @@ internal class DefaultCategorySpendingUseCase(
                 transactionCount = transactionCount,
             )
         }
+    }
+
+    private suspend fun aggregateForCategory(
+        id: Id.Known,
+        transactions: List<TransactionRepository.Transaction>,
+    ): CategorySpendingUseCase.CategorySpending? {
+        val income = transactions.filterNot { it is TransactionRepository.Transaction.Transfer }
+        if (income.isEmpty()) return null
+        var total = Amount.zero()
+        var largest = Amount.zero()
+        for (tx in income) {
+            val converted = currencyConvertUseCase.convertToPrimary(tx.amount, tx.currencyId)
+            total += converted
+            if (converted > largest) largest = converted
+        }
+        return CategorySpendingUseCase.CategorySpending(
+            categoryId = id,
+            totalAmount = total,
+            transactionCount = income.size,
+            largestTransactionAmount = largest,
+        )
     }
 
     private fun CategorySpendingUseCase.Period.resolve(): Pair<LocalDate, LocalDate> {

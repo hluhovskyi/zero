@@ -10,10 +10,13 @@ interface CategorySpendingUseCase {
 
     fun query(period: Period): Flow<List<CategorySpending>>
 
+    fun queryForCategory(id: Id.Known, period: Period): Flow<CategorySpending?>
+
     data class CategorySpending(
         val categoryId: Id.Known,
         val totalAmount: Amount,
         val transactionCount: Int,
+        val largestTransactionAmount: Amount = Amount.zero(),
     )
 
     sealed class Period {
@@ -25,5 +28,6 @@ interface CategorySpendingUseCase {
 
     object Noop : CategorySpendingUseCase {
         override fun query(period: Period): Flow<List<CategorySpending>> = emptyFlow()
+        override fun queryForCategory(id: Id.Known, period: Period): Flow<CategorySpending?> = emptyFlow()
     }
 }

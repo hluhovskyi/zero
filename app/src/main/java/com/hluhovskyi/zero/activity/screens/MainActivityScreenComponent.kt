@@ -24,6 +24,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
+import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
@@ -87,6 +88,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
         val categoryComponentBuilder: CategoryComponent.Builder
+        val categoryDetailComponentBuilder: CategoryDetailComponent.Builder
         val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
 
@@ -324,8 +326,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 component = componentBuilder
                     .onCategorySelectedHandler { categoryId ->
                         navigator.navigateTo(
-                            Destinations.Category.Item.Edit,
-                            Destinations.Category.Item.Edit.CategoryId.withValue(categoryId),
+                            Destinations.Category.Item.Detail,
+                            Destinations.Category.Item.CategoryId.withValue(categoryId),
                         )
                     }
                     .logging(logger),
@@ -362,10 +364,31 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Edit) {
             componentBuilder
-                .categoryId(arguments.getValue(Destinations.Category.Item.Edit.CategoryId))
+                .categoryId(arguments.getValue(Destinations.Category.Item.CategoryId))
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun categoryDetailNavigationEntry(
+            componentBuilder: CategoryDetailComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
+            val categoryId = arguments.getValue(Destinations.Category.Item.CategoryId)
+            componentBuilder
+                .categoryId(categoryId)
+                .onBackHandler { navigator.back() }
+                .onEditHandler {
+                    navigator.navigateTo(
+                        Destinations.Category.Item.Edit,
+                        Destinations.Category.Item.CategoryId.withValue(categoryId),
+                    )
+                }
                 .logging(logger)
         }
 

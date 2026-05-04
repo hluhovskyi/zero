@@ -32,9 +32,10 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 
 ## Adding a New Feature
 
-1. Create package under `com/hluhovskyi/zero/featurename/`
-2. Define `FeatureViewModel` interface extending `AttachableActionStateModel<Action, State>`
-3. Implement `DefaultFeatureViewModel` (internal)
-4. Create `FeatureViewProvider` (internal)
-5. Create `FeatureComponent` with `Dependencies`, `Builder`, and `Module`
-6. Wire in `app` module's `MainActivityScreenComponent` for navigation
+**Run `/zero-project:scaffold-feature` first** — it generates the Component/ViewModel/ViewProvider/Handler stubs so the plan only needs to specify business logic (state fields, data sources, layout). Do not inline this boilerplate in the plan; reference existing components (e.g. "follow `CategoryEditComponent`") for any pattern not covered by the scaffold.
+
+1. Run `/zero-project:scaffold-feature` with `name`, `package`, and `handlers`
+2. Verify `./gradlew :zero-core:compileDebugKotlin` passes on the stubs
+3. Fill in ViewModel state fields and Flow sources
+4. Implement ViewProvider layout
+5. Wire in `app` module's `MainActivityScreenComponent` for navigation (see [Navigation](../docs/agents/navigation.md))

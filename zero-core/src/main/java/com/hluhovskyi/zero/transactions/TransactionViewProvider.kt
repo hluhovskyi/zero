@@ -58,6 +58,7 @@ internal class TransactionViewProvider(
     private val imageLoader: ImageLoader,
     private val amountFormatter: AmountFormatter,
     private val dateFormatter: DateFormatter,
+    private val displayConfig: DisplayConfig = DisplayConfig(),
 ) : ViewProvider {
 
     @Composable
@@ -67,6 +68,7 @@ internal class TransactionViewProvider(
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
+            displayConfig = displayConfig,
         )
     }
 }
@@ -78,6 +80,7 @@ private fun TransactionView(
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     dateFormatter: DateFormatter,
+    displayConfig: DisplayConfig = DisplayConfig(),
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
@@ -101,11 +104,13 @@ private fun TransactionView(
     }
 
     Column(modifier = Modifier.fillMaxSize().focusTarget()) {
-        SearchBar(
-            query = state.searchQuery,
-            onQueryChange = { viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery(it)) },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
+        if (displayConfig.showSearchBar) {
+            SearchBar(
+                query = state.searchQuery,
+                onQueryChange = { viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery(it)) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
 
         if (state.searchQuery.isNotBlank() && state.transactions.isEmpty()) {
             Box(

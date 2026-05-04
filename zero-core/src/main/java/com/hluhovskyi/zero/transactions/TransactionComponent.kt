@@ -36,6 +36,7 @@ abstract class TransactionComponent : AttachableViewComponent {
 
     override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
+
     interface Dependencies {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
@@ -57,6 +58,8 @@ abstract class TransactionComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionComponent.builder()
             .dependencies(dependencies)
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
+            .transactionFilter(TransactionFilter.All)
+            .displayConfig(DisplayConfig())
     }
 
     @dagger.Component.Builder
@@ -66,6 +69,12 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onTransactionSelectHandler(handler: OnTransactionSelectedHandler): Builder
+
+        @BindsInstance
+        fun transactionFilter(filter: TransactionFilter): Builder
+
+        @BindsInstance
+        fun displayConfig(config: DisplayConfig): Builder
     }
 
     @dagger.Module
@@ -82,6 +91,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
+            filter: TransactionFilter,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
@@ -93,6 +103,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
             onTransactionSelectedHandler = onTransactionSelectedHandler,
+            filter = filter,
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -104,11 +115,13 @@ abstract class TransactionComponent : AttachableViewComponent {
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
             dateFormatter: DateFormatter,
+            displayConfig: DisplayConfig,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
+            displayConfig = displayConfig,
         )
     }
 }
