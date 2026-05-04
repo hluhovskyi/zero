@@ -27,7 +27,7 @@ internal class BundleArguments(
                     value = value.orEmpty() as T,
                 )
             }
-            Id::class -> {
+            Id::class, Id.Known::class -> {
                 val value = bundle.getString(key.key)
                 if (!key.optional && value == null) {
                     assertMissingArguments(key)
