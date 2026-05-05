@@ -267,7 +267,6 @@ Provide it through the Component's `Dependencies` interface and wire it in the `
 - **No `DispatcherProvider` in Dependencies** — ViewModels are self-contained with their own scope.
 - **`internal` on implementations** — `Default<Name>ViewModel` and `<Name>ViewProvider` are both `internal`.
 - **Back handler** — use `com.hluhovskyi.zero.common.OnBackHandler` (generic, in zero-api) for the back action. Only create a feature-specific `On<Name>BackHandler` if it carries additional parameters.
-- **Embedded sub-components** — if the ViewProvider needs to render another `AttachableViewComponent`, call `subComponent.AttachWithView()` in the composable. Do NOT attach it in `Component.attach()`.
 
 ---
 
