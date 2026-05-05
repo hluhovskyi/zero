@@ -59,6 +59,7 @@ internal class TransactionViewProvider(
     private val amountFormatter: AmountFormatter,
     private val dateFormatter: DateFormatter,
     private val displayConfig: DisplayConfig = DisplayConfig(),
+    private val header: TransactionHeader = TransactionHeader.None,
 ) : ViewProvider {
 
     @Composable
@@ -69,6 +70,7 @@ internal class TransactionViewProvider(
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
+            header = header,
         )
     }
 }
@@ -81,6 +83,7 @@ private fun TransactionView(
     amountFormatter: AmountFormatter,
     dateFormatter: DateFormatter,
     displayConfig: DisplayConfig = DisplayConfig(),
+    header: TransactionHeader = TransactionHeader.None,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
@@ -131,6 +134,7 @@ private fun TransactionView(
                 state = lazyListState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
             ) {
+                item { header.Content() }
                 items(state.transactions) { transaction ->
                     when (transaction) {
                         is TransactionViewModel.Item.Summary -> {

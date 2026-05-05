@@ -45,7 +45,6 @@ import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.ui.UiColorScheme
-import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
@@ -61,12 +60,10 @@ internal class CategoryDetailViewProvider(
     @Composable
     override fun View() {
         val state by viewModel.state.collectAsState(initial = CategoryDetailViewModel.State())
-        val colorScheme = state.categoryColorScheme.toUi()
 
         Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 TopBar(state.categoryName, viewModel)
-                HeroCard(state, colorScheme, imageLoader, amountFormatter)
                 Box(Modifier.weight(1f)) {
                     transactionComponent.AttachWithView()
                 }
@@ -142,7 +139,7 @@ private fun TopBar(categoryName: String, viewModel: CategoryDetailViewModel) {
 }
 
 @Composable
-private fun HeroCard(
+internal fun HeroCard(
     state: CategoryDetailViewModel.State,
     colorScheme: UiColorScheme,
     imageLoader: ImageLoader,
@@ -218,7 +215,7 @@ private fun HeroCard(
 }
 
 @Composable
-private fun StatColumn(label: String, value: String, colorScheme: UiColorScheme) {
+internal fun StatColumn(label: String, value: String, colorScheme: UiColorScheme) {
     Column {
         Text(
             text = label,

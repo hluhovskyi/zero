@@ -60,6 +60,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
             .transactionFilter(TransactionFilter.All)
             .displayConfig(DisplayConfig())
+            .header(TransactionHeader.None)
     }
 
     @dagger.Component.Builder
@@ -75,6 +76,9 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun displayConfig(config: DisplayConfig): Builder
+
+        @BindsInstance
+        fun header(header: TransactionHeader): Builder
     }
 
     @dagger.Module
@@ -116,12 +120,14 @@ abstract class TransactionComponent : AttachableViewComponent {
             amountFormatter: AmountFormatter,
             dateFormatter: DateFormatter,
             displayConfig: DisplayConfig,
+            header: TransactionHeader,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
+            header = header,
         )
     }
 }
