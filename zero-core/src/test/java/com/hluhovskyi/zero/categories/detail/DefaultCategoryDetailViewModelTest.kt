@@ -165,6 +165,7 @@ class DefaultCategoryDetailViewModelTest {
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         onEditHandler = onEditHandler,
         onBackHandler = OnBackHandler.Noop,
+        onCreateTransactionHandler = OnCategoryDetailCreateTransactionHandler.Noop,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope,

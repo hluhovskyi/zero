@@ -41,6 +41,7 @@ private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
     private val transactionId: Id,
+    private val preSelectedCategoryId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
@@ -349,20 +350,25 @@ internal class DefaultTransactionEditUseCase(
                     .collectLatest { categories ->
                         logger.d("attach, categories=${categories.joinIdsToString()}")
                         mutableState.update { state ->
-                            state.copy(
-                                categories = categories,
-                                selectedCategory = if (state.selectedCategory != null) {
-                                    val updated =
-                                        categories.find { it.id == state.selectedCategory.id }
-                                    if (updated != state.selectedCategory) {
-                                        updated
-                                    } else {
-                                        state.selectedCategory
-                                    }
+                            if (state.selectedCategory != null) {
+                                val updated = categories.find { it.id == state.selectedCategory.id }
+                                state.copy(
+                                    categories = categories,
+                                    selectedCategory = if (updated != state.selectedCategory) updated else state.selectedCategory,
+                                )
+                            } else {
+                                val preSelected = (preSelectedCategoryId as? Id.Known)
+                                    ?.let { id -> categories.find { it.id == id } }
+                                val reordered = if (preSelected != null) {
+                                    listOf(preSelected) + categories.filter { it.id != preSelected.id }
                                 } else {
-                                    state.selectedCategory ?: categories.firstOrNull()
-                                },
-                            )
+                                    categories
+                                }
+                                state.copy(
+                                    categories = reordered,
+                                    selectedCategory = preSelected ?: categories.firstOrNull(),
+                                )
+                            }
                         }
                     }
             }
