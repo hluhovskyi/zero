@@ -14,6 +14,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         HandlerFunInterfaceDetector.ISSUE,
         DatabaseComponentEncapsulationDetector.ISSUE,
         SyncEntitySerialNameDetector.ISSUE,
+        NoNamedAnnotationDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
