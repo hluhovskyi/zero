@@ -65,6 +65,7 @@ abstract class TransactionEditComponent :
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditComponent.builder()
             .dependencies(dependencies)
             .transactionId(Id.Unknown)
+            .preSelectedCategoryId(Id.Unknown)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
@@ -79,6 +80,9 @@ abstract class TransactionEditComponent :
 
         @BindsInstance
         fun transactionId(transactionId: Id): Builder
+
+        @BindsInstance
+        fun preSelectedCategoryId(@PreSelectedCategoryId id: Id): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -103,6 +107,7 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun useCase(
             transactionId: Id,
+            @PreSelectedCategoryId preSelectedCategoryId: Id,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
@@ -120,6 +125,7 @@ abstract class TransactionEditComponent :
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             transactionId = transactionId,
+            preSelectedCategoryId = preSelectedCategoryId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             currencyConvertUseCase = currencyConvertUseCase,

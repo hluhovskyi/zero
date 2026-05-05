@@ -13,6 +13,7 @@ interface CategoryDetailViewModel : AttachableActionStateModel<CategoryDetailVie
     sealed interface Action {
         object Edit : Action
         object Back : Action
+        object CreateTransaction : Action
     }
 
     data class State(

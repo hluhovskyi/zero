@@ -27,6 +27,7 @@ internal class DefaultCategoryDetailViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onEditHandler: OnCategoryDetailEditHandler,
     private val onBackHandler: OnBackHandler,
+    private val onCreateTransactionHandler: OnCategoryDetailCreateTransactionHandler,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
@@ -42,6 +43,9 @@ internal class DefaultCategoryDetailViewModel(
             }
             CategoryDetailViewModel.Action.Back -> coroutineScope.launch(Dispatchers.Main) {
                 onBackHandler.onBack()
+            }
+            CategoryDetailViewModel.Action.CreateTransaction -> coroutineScope.launch(Dispatchers.Main) {
+                onCreateTransactionHandler.onCreate()
             }
         }
     }

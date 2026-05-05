@@ -20,20 +20,28 @@ Use this skill **before committing any UI change** — not only when something l
    ```
 3. **Take a Screenshot:** Capture a visual snapshot alongside the XML — bounds tell you structure, the screenshot catches rendering artifacts (color, overflow, clipping):
    ```bash
-   adb exec-out screencap -p > /tmp/screen.png
+   adb shell screencap -p /sdcard/screen.png
+   adb pull /sdcard/screen.png /tmp/screen.png
    ```
    Then read `/tmp/screen.png` with your image tool to visually inspect the result.
+
+   > **Do not use `adb exec-out screencap -p > /tmp/screen.png`** — it triggers permission prompts on this device.
+
 4. **Analyze the Layout:** Parse the XML output to find the nodes you care about. Check:
    - `bounds="[x1,y1][x2,y2]"` — verify expected size and position; a zero-width/height bound means the view is invisible
    - No node is clipped by a parent with smaller bounds
    - Expected nodes are present (missing node = component not rendered at all)
    - Bottom sheets: bounds should be a partial overlay, not `[0,0][1080,2040]` (full screen = not a sheet)
    - **Focus state: `focused="true/false"`** — a screenshot cannot capture a blinking cursor reliably (single frame). For any fix involving text field focus or cursor visibility, you MUST grep the dump: `grep 'focused="true"' /tmp/ui.xml`. A screenshot that looks clean is not proof focus was cleared.
-5. **Interact via ADB (If needed):** If you need to navigate to another screen to test something, use the bounds from step 4 to send tap events via your shell/bash tool:
+5. **Interact via ADB (If needed):** To tap a UI element by its visible label or content-desc, use `tap-label.sh` — it dumps the hierarchy, finds the node, and taps the center in one call:
    ```bash
-   adb shell input tap <x> <y>
+   ./scripts/tap-label.sh "Food"                    # tap and continue
+   ./scripts/tap-label.sh "Add transaction" --screenshot   # tap then capture /tmp/screen.png
    ```
-   *Note: Pick an (x,y) coordinate safely inside the bounds box.*
+   For elements with no text/content-desc, fall back to manual coordinates from the dump:
+   ```bash
+   adb shell input tap <x> <y>   # (x,y) must be safely inside the bounds box
+   ```
 
    **Dismiss the soft keyboard before screenshotting** if the screen under test contains a text field — the keyboard covers the bottom half of the screen and hides bottom sheets entirely:
    ```bash

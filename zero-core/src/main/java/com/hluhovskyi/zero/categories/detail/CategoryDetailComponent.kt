@@ -60,6 +60,8 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onEditHandler(OnCategoryDetailEditHandler.Noop)
             .onBackHandler(OnBackHandler.Noop)
+            .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
+            .onCreateTransactionHandler(OnCategoryDetailCreateTransactionHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -74,6 +76,12 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onBackHandler(handler: OnBackHandler): Builder
+
+        @BindsInstance
+        fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
+
+        @BindsInstance
+        fun onCreateTransactionHandler(handler: OnCategoryDetailCreateTransactionHandler): Builder
     }
 
     @dagger.Module
@@ -102,6 +110,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onEditHandler: OnCategoryDetailEditHandler,
             onBackHandler: OnBackHandler,
+            onCreateTransactionHandler: OnCategoryDetailCreateTransactionHandler,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoryDetailViewModel = DefaultCategoryDetailViewModel(
@@ -111,6 +120,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onEditHandler = onEditHandler,
             onBackHandler = onBackHandler,
+            onCreateTransactionHandler = onCreateTransactionHandler,
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -120,10 +130,11 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         fun transactionComponent(
             builder: TransactionComponent.Builder,
             categoryId: Id.Known,
+            onTransactionSelectedHandler: OnTransactionSelectedHandler,
         ): TransactionComponent = builder
             .transactionFilter(TransactionFilter.ForCategory(categoryId))
             .displayConfig(DisplayConfig(showSearchBar = false))
-            .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
+            .onTransactionSelectHandler(onTransactionSelectedHandler)
             .build()
 
         @Provides
