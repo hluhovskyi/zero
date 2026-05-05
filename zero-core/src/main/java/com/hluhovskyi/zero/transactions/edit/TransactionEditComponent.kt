@@ -147,8 +147,10 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun viewModel(
             useCase: TransactionEditUseCase,
+            transactionId: Id,
         ): TransactionEditViewModel = DefaultTransactionEditViewModel(
             useCase = useCase,
+            isEditMode = transactionId is Id.Known,
         )
 
         @Provides

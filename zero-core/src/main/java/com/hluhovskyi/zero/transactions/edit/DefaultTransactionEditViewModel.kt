@@ -7,6 +7,7 @@ private const val TAG = "DefaultTransactionEditViewModel"
 
 internal class DefaultTransactionEditViewModel(
     private val useCase: TransactionEditUseCase,
+    private val isEditMode: Boolean,
 ) : TransactionEditViewModel {
 
     override val state: Flow<TransactionEditViewModel.State> = useCase.state
@@ -25,6 +26,7 @@ internal class DefaultTransactionEditViewModel(
                 },
                 date = state.date,
                 selectedCategory = selectedCategory,
+                isEditMode = isEditMode,
             )
         }
 
@@ -41,6 +43,9 @@ internal class DefaultTransactionEditViewModel(
 
             is TransactionEditViewModel.Action.Discard ->
                 TransactionEditUseCase.Action.Discard
+
+            is TransactionEditViewModel.Action.Delete ->
+                TransactionEditUseCase.Action.Delete
         }
         useCase.perform(useCaseAction)
     }

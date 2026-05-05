@@ -106,6 +106,12 @@ internal class RoomTransactionRepository(
                         to = criteria.to.toString(),
                     )
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
+
+                is TransactionRepository.Criteria.AccountBalanceDeltas -> transactionRoom()
+                    .selectAccountBalanceDeltas(userId.value)
+                    .map { rows ->
+                        rows.associate { Id.Known(it.accountId) to Amount(it.value) }
+                    }
             }
         }
         .uncheckedCast()

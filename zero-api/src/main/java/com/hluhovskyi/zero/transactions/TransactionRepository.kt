@@ -29,6 +29,8 @@ interface TransactionRepository {
             val from: LocalDate,
             val to: LocalDate,
         ) : Criteria<List<Transaction>>
+
+        class AccountBalanceDeltas : Criteria<Map<Id.Known, Amount>>
     }
 
     sealed interface Trigger {
