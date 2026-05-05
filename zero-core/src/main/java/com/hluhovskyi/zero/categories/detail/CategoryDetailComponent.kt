@@ -1,7 +1,5 @@
 package com.hluhovskyi.zero.categories.detail
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategorySpendingUseCase
@@ -20,9 +18,7 @@ import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.OnTransactionSelectedHandler
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionFilter
-import com.hluhovskyi.zero.transactions.TransactionHeader
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.ui.common.toUi
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -135,20 +131,10 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             builder: TransactionComponent.Builder,
             categoryId: Id.Known,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
-            viewModel: CategoryDetailViewModel,
-            imageLoader: ImageLoader,
-            amountFormatter: AmountFormatter,
         ): TransactionComponent = builder
             .transactionFilter(TransactionFilter.ForCategory(categoryId))
             .displayConfig(DisplayConfig(showSearchBar = false))
             .onTransactionSelectHandler(onTransactionSelectedHandler)
-            .header(
-                TransactionHeader {
-                    val state by viewModel.state.collectAsState(initial = CategoryDetailViewModel.State())
-                    val colorScheme = state.categoryColorScheme.toUi()
-                    HeroCard(state, colorScheme, imageLoader, amountFormatter)
-                },
-            )
             .build()
 
         @Provides
