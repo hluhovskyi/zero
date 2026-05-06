@@ -53,6 +53,7 @@ abstract class AccountComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerAccountComponent.builder()
             .dependencies(dependencies)
             .onAddAccountHandler(OnAddAccountHandler.Noop)
+            .onAccountSelectedHandler(OnAccountSelectedHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -62,6 +63,9 @@ abstract class AccountComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAddAccountHandler(handler: OnAddAccountHandler): Builder
+
+        @BindsInstance
+        fun onAccountSelectedHandler(handler: OnAccountSelectedHandler): Builder
     }
 
     @dagger.Module
@@ -90,9 +94,11 @@ abstract class AccountComponent : AttachableViewComponent {
         fun viewModel(
             useCase: AccountUseCase,
             dispatcherProvider: DispatcherProvider,
+            onAccountSelectedHandler: OnAccountSelectedHandler,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
             dispatchers = dispatcherProvider,
+            onAccountSelectedHandler = onAccountSelectedHandler,
         )
 
         @Provides
