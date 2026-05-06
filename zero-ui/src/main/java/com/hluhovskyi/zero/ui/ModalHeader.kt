@@ -25,6 +25,7 @@ fun ModalHeader(
     modifier: Modifier = Modifier,
     title: String,
     onClose: () -> Unit,
+    trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -48,7 +49,8 @@ fun ModalHeader(
             color = PrimaryContainer,
             textAlign = TextAlign.Center,
         )
-        // Spacer to balance the close button width
-        Box(modifier = Modifier.widthIn(min = 48.dp))
+        Box(modifier = Modifier.widthIn(min = 48.dp)) {
+            trailingContent?.invoke()
+        }
     }
 }
