@@ -199,6 +199,17 @@ internal class DefaultTransactionEditUseCase(
                 }
             }
 
+            is TransactionEditUseCase.Action.Delete -> {
+                coroutineScope.launch {
+                    (transactionId as? Id.Known)?.let { id ->
+                        transactionRepository.delete(id)
+                    }
+                    launch(context = Dispatchers.Main) {
+                        onDiscardHandler.onDiscard()
+                    }
+                }
+            }
+
             is TransactionEditUseCase.Action.ChangeTargetAmount -> {
                 mutableState.update { state ->
                     state.copy(targetAmount = action.amount)

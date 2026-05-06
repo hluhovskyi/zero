@@ -5,7 +5,6 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,11 +26,12 @@ internal class DefaultAccountViewModel(
     override fun attachOnMain() {
         scope.launch {
             useCase.state
-                .map { it.accounts }
-                .collectLatest { accounts ->
+                .collectLatest { useCaseState ->
                     mutableState.update { state ->
                         state.copy(
-                            accounts = accounts,
+                            balance = useCaseState.balance,
+                            currency = useCaseState.currency,
+                            accounts = useCaseState.accounts,
                         )
                     }
                 }

@@ -4,22 +4,35 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -27,6 +40,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -52,6 +66,7 @@ private fun TransactionEditView(
     transferComponent: Buildable<out AttachableViewComponent>,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -64,8 +79,48 @@ private fun TransactionEditView(
         ) {
             item {
                 ModalHeader(
-                    title = "New Transaction",
+                    title = if (state.isEditMode) "Edit Transaction" else "New Transaction",
                     onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
+                    trailingContent = if (state.isEditMode) {
+                        {
+                            Box {
+                                IconButton(onClick = { menuExpanded = true }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.MoreVert,
+                                        contentDescription = "More options",
+                                        tint = PrimaryContainer,
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = menuExpanded,
+                                    onDismissRequest = { menuExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            menuExpanded = false
+                                            viewModel.perform(TransactionEditViewModel.Action.Delete)
+                                        },
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = null,
+                                                tint = Color(0xFFBA1A1A),
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(
+                                                text = "Delete",
+                                                color = Color(0xFFBA1A1A),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             item {

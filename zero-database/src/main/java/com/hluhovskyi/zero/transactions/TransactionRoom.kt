@@ -168,6 +168,25 @@ internal interface TransactionRoom {
         to: String,
     ): Flow<List<TransactionEntity>>
 
+    @Query(
+        """
+        SELECT accountId, SUM(delta) AS value FROM (
+            SELECT accountId,
+                CASE WHEN type='INCOME'   THEN  amount_value
+                     WHEN type='EXPENSE'  THEN -amount_value
+                     WHEN type='TRANSFER' THEN -amount_value
+                     ELSE 0 END AS delta
+            FROM TransactionEntity
+            WHERE userId = :userId AND deletedAt IS NULL
+            UNION ALL
+            SELECT targetAccount AS accountId, target_amount_value AS delta
+            FROM TransactionEntity
+            WHERE userId = :userId AND type = 'TRANSFER' AND deletedAt IS NULL AND targetAccount IS NOT NULL
+        ) GROUP BY accountId
+    """,
+    )
+    fun selectAccountBalanceDeltas(userId: String): Flow<List<AccountBalanceDeltaRow>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: TransactionEntity)
 
