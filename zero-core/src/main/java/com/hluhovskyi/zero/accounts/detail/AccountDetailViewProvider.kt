@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,21 +15,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
@@ -39,6 +29,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.TransactionComponent
+import com.hluhovskyi.zero.ui.CollapsibleHeroLayout
 import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.theme.Error
@@ -50,7 +41,6 @@ import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
 internal class AccountDetailViewProvider(
     private val viewModel: AccountDetailViewModel,
@@ -63,58 +53,16 @@ internal class AccountDetailViewProvider(
     override fun View() {
         val state by viewModel.state.collectAsState(initial = AccountDetailViewModel.State())
 
-        val heroHeightPx = remember { mutableStateOf(0) }
-        val heroOffsetPx = remember { mutableStateOf(0f) }
-
-        val connection = remember {
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    if (available.y >= 0f) return Offset.Zero
-                    val newOffset = (heroOffsetPx.value + available.y)
-                        .coerceIn(-heroHeightPx.value.toFloat(), 0f)
-                    val consumed = newOffset - heroOffsetPx.value
-                    heroOffsetPx.value = newOffset
-                    return Offset(0f, consumed)
-                }
-
-                override fun onPostScroll(
-                    consumed: Offset,
-                    available: Offset,
-                    source: NestedScrollSource,
-                ): Offset {
-                    if (available.y <= 0f) return Offset.Zero
-                    val newOffset = (heroOffsetPx.value + available.y).coerceAtMost(0f)
-                    val delta = newOffset - heroOffsetPx.value
-                    heroOffsetPx.value = newOffset
-                    return Offset(0f, delta)
-                }
-            }
-        }
-
-        Box(Modifier.fillMaxSize().nestedScroll(connection)) {
-            Column(Modifier.fillMaxSize()) {
+        CollapsibleHeroLayout(
+            topBar = {
                 DetailTopBar(
                     title = state.accountName,
                     onBack = { viewModel.perform(AccountDetailViewModel.Action.Back) },
                 )
-                Box(Modifier.weight(1f)) {
-                    val topPaddingDp = with(LocalDensity.current) {
-                        (heroHeightPx.value + heroOffsetPx.value).coerceAtLeast(0f).toDp()
-                    }
-                    Box(Modifier.fillMaxSize().padding(top = topPaddingDp)) {
-                        transactionComponent.AttachWithView()
-                    }
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .onSizeChanged { heroHeightPx.value = it.height }
-                            .offset { IntOffset(0, heroOffsetPx.value.roundToInt()) },
-                    ) {
-                        HeroCard(state, amountFormatter, imageLoader)
-                    }
-                }
-            }
-        }
+            },
+            hero = { HeroCard(state, amountFormatter, imageLoader) },
+            content = { transactionComponent.AttachWithView() },
+        )
     }
 }
 

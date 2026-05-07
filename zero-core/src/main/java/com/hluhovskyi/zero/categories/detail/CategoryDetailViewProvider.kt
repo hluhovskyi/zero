@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,15 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
@@ -50,6 +42,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.TransactionComponent
+import com.hluhovskyi.zero.ui.CollapsibleHeroLayout
 import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.UiColorScheme
@@ -58,7 +51,6 @@ import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
 internal class CategoryDetailViewProvider(
     private val viewModel: CategoryDetailViewModel,
@@ -72,86 +64,46 @@ internal class CategoryDetailViewProvider(
         val state by viewModel.state.collectAsState(initial = CategoryDetailViewModel.State())
         val colorScheme = state.categoryColorScheme.toUi()
 
-        val heroHeightPx = remember { mutableStateOf(0) }
-        val heroOffsetPx = remember { mutableStateOf(0f) }
-
-        val connection = remember {
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    if (available.y >= 0f) return Offset.Zero
-                    val newOffset = (heroOffsetPx.value + available.y)
-                        .coerceIn(-heroHeightPx.value.toFloat(), 0f)
-                    val consumed = newOffset - heroOffsetPx.value
-                    heroOffsetPx.value = newOffset
-                    return Offset(0f, consumed)
-                }
-
-                override fun onPostScroll(
-                    consumed: Offset,
-                    available: Offset,
-                    source: NestedScrollSource,
-                ): Offset {
-                    if (available.y <= 0f) return Offset.Zero
-                    val newOffset = (heroOffsetPx.value + available.y).coerceAtMost(0f)
-                    val delta = newOffset - heroOffsetPx.value
-                    heroOffsetPx.value = newOffset
-                    return Offset(0f, delta)
-                }
-            }
-        }
-
-        Box(Modifier.fillMaxSize().nestedScroll(connection)) {
-            Column(Modifier.fillMaxSize()) {
-                DetailTopBar(
-                    title = state.categoryName,
-                    onBack = { viewModel.perform(CategoryDetailViewModel.Action.Back) },
-                    trailing = {
-                        var menuExpanded by remember { mutableStateOf(false) }
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "More options",
-                                tint = PrimaryContainer,
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    menuExpanded = false
-                                    viewModel.perform(CategoryDetailViewModel.Action.Edit)
-                                },
-                            ) {
+        Box(Modifier.fillMaxSize()) {
+            CollapsibleHeroLayout(
+                topBar = {
+                    DetailTopBar(
+                        title = state.categoryName,
+                        onBack = { viewModel.perform(CategoryDetailViewModel.Action.Back) },
+                        trailing = {
+                            var menuExpanded by remember { mutableStateOf(false) }
+                            IconButton(onClick = { menuExpanded = true }) {
                                 Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "More options",
+                                    tint = PrimaryContainer,
                                 )
-                                Spacer(Modifier.width(8.dp))
-                                Text("Edit category")
                             }
-                        }
-                    },
-                )
-                Box(Modifier.weight(1f)) {
-                    val topPaddingDp = with(LocalDensity.current) {
-                        (heroHeightPx.value + heroOffsetPx.value).coerceAtLeast(0f).toDp()
-                    }
-                    Box(Modifier.fillMaxSize().padding(top = topPaddingDp)) {
-                        transactionComponent.AttachWithView()
-                    }
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .onSizeChanged { heroHeightPx.value = it.height }
-                            .offset { IntOffset(0, heroOffsetPx.value.roundToInt()) },
-                    ) {
-                        HeroCard(state, colorScheme, imageLoader, amountFormatter)
-                    }
-                }
-            }
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        menuExpanded = false
+                                        viewModel.perform(CategoryDetailViewModel.Action.Edit)
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Edit category")
+                                }
+                            }
+                        },
+                    )
+                },
+                hero = { HeroCard(state, colorScheme, imageLoader, amountFormatter) },
+                content = { transactionComponent.AttachWithView() },
+            )
             ExtendedFloatingActionButton(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
