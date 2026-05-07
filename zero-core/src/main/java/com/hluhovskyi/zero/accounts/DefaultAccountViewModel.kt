@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 internal class DefaultAccountViewModel(
     private val useCase: AccountUseCase,
     private val dispatchers: DispatcherProvider,
+    private val onAccountSelectedHandler: OnAccountSelectedHandler = OnAccountSelectedHandler.Noop,
 ) : BaseViewModel(dispatchers),
     AccountViewModel {
 
@@ -19,7 +20,9 @@ internal class DefaultAccountViewModel(
 
     override fun perform(action: AccountViewModel.Action) {
         when (action) {
-            else -> {}
+            is AccountViewModel.Action.Select -> scope.launch(dispatchers.main()) {
+                onAccountSelectedHandler.onSelected(action.accountId)
+            }
         }
     }
 

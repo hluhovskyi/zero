@@ -170,6 +170,35 @@ internal interface TransactionRoom {
 
     @Query(
         """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND accountId  = :accountId
+          AND deletedAt  IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByAccount(userId: String, accountId: String): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND accountId  = :accountId
+          AND deletedAt  IS NULL
+          AND date(enteredDateTime) >= date(:from)
+          AND date(enteredDateTime) <= date(:to)
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByAccountBetween(
+        userId: String,
+        accountId: String,
+        from: String,
+        to: String,
+    ): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
         SELECT accountId, SUM(delta) AS value FROM (
             SELECT accountId,
                 CASE WHEN type='INCOME'   THEN  amount_value

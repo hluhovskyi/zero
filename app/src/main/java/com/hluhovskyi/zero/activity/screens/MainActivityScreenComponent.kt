@@ -5,6 +5,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
+import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
@@ -94,6 +95,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
+        val accountDetailComponentBuilder: AccountDetailComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -416,6 +418,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             AccountsScreen(
                 component = componentBuilder
                     .onAddAccountHandler { navigator.navigateTo(Destinations.Account.Edit) }
+                    .onAccountSelectedHandler { accountId ->
+                        navigator.navigateTo(
+                            Destinations.Account.Item.Detail,
+                            Destinations.Account.Item.AccountId.withValue(accountId),
+                        )
+                    }
                     .logging(logger),
             )
         }
@@ -457,6 +465,27 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .accountEditCurrencyUseCase(accountEditCurrencyUseCase)
                 .onAccountSavedHandler { navigator.back() }
                 .onCloseHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun accountDetailNavigationEntry(
+            componentBuilder: AccountDetailComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Detail) {
+            val accountId = arguments.getValue(Destinations.Account.Item.AccountId)
+            componentBuilder
+                .accountId(accountId)
+                .onBackHandler { navigator.back() }
+                .onTransactionSelectedHandler { transactionId ->
+                    navigator.navigateTo(
+                        Destinations.Transaction.Item.Edit,
+                        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
                 .logging(logger)
         }
 
