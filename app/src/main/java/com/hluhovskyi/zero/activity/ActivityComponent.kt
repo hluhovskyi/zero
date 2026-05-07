@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
@@ -61,6 +62,7 @@ abstract class ActivityComponent :
     MainActivityScreenComponent.Dependencies,
     AccountComponent.Dependencies,
     AccountEditComponent.Dependencies,
+    AccountDetailComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
@@ -137,6 +139,12 @@ abstract class ActivityComponent :
         fun accountEditComponentBuilder(
             component: ActivityComponent,
         ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun accountDetailComponentBuilder(
+            component: ActivityComponent,
+        ): AccountDetailComponent.Builder = AccountDetailComponent.builder(component)
 
         @Provides
         @ActivityScope

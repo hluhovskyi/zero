@@ -93,6 +93,7 @@ private fun AccountView(
                     account = account,
                     imageLoader = imageLoader,
                     amountFormatter = amountFormatter,
+                    onClick = { viewModel.perform(AccountViewModel.Action.Select(account.id)) },
                 )
             }
         }
@@ -187,12 +188,14 @@ private fun AccountRow(
     account: Account,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .background(SurfaceContainerLowest, shape = RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),

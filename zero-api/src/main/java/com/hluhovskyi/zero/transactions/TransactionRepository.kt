@@ -30,6 +30,13 @@ interface TransactionRepository {
             val to: LocalDate,
         ) : Criteria<List<Transaction>>
 
+        data class ForAccount(val accountId: Id.Known) : Criteria<List<Transaction>>
+        data class ForAccountBetween(
+            val accountId: Id.Known,
+            val from: LocalDate,
+            val to: LocalDate,
+        ) : Criteria<List<Transaction>>
+
         class AccountBalanceDeltas : Criteria<Map<Id.Known, Amount>>
     }
 

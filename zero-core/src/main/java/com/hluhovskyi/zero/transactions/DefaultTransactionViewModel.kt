@@ -96,6 +96,7 @@ internal class DefaultTransactionViewModel(
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when (filter) {
                 TransactionFilter.All -> allTransactionsFlow(initialTimestamp)
                 is TransactionFilter.ForCategory -> forCategoryTransactionsFlow(filter)
+                is TransactionFilter.ForAccount -> forAccountTransactionsFlow(filter)
             }
 
             // null = "no search active, use paged"; non-null = search results
@@ -226,6 +227,13 @@ internal class DefaultTransactionViewModel(
     private fun forCategoryTransactionsFlow(
         filter: TransactionFilter.ForCategory,
     ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForCategory(filter.categoryId))
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
+
+    private fun forAccountTransactionsFlow(
+        filter: TransactionFilter.ForAccount,
+    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository
+        .query(TransactionRepository.Criteria.ForAccount(filter.accountId))
         .onStartWithEmptyList()
         .onEmptyReturnEmptyList()
 

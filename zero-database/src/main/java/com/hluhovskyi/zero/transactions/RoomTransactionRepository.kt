@@ -107,6 +107,19 @@ internal class RoomTransactionRepository(
                     )
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
 
+                is TransactionRepository.Criteria.ForAccount -> transactionRoom()
+                    .selectByAccount(userId.value, criteria.accountId.value)
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
+
+                is TransactionRepository.Criteria.ForAccountBetween -> transactionRoom()
+                    .selectByAccountBetween(
+                        userId = userId.value,
+                        accountId = criteria.accountId.value,
+                        from = criteria.from.toString(),
+                        to = criteria.to.toString(),
+                    )
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
+
                 is TransactionRepository.Criteria.AccountBalanceDeltas -> transactionRoom()
                     .selectAccountBalanceDeltas(userId.value)
                     .map { rows ->
