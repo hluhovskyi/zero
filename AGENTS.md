@@ -23,7 +23,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **No git worktrees** — This is an Android/Gradle project. Worktrees break Gradle daemon and build cache. Never create worktrees; always work on a regular branch checkout.
-8. **When writing documentation** — read [Doc Writing](docs/agents/doc-writing.md) before adding or editing any `AGENTS.md` or `docs/agents/` file. Applies at the "write design doc" and "commit docs" steps of any plan.
+8. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
 
 ## Module Map
 
@@ -69,5 +69,5 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
 - [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
 - [Execution Workflow](docs/agents/execution-workflow.md) — Design-first, UI verification loop, complexity circuit breaker
-- [Doc Writing](docs/agents/doc-writing.md) — Format, placement, and self-check for agent documentation
+- [Superpowers Workflow](docs/agents/superpowers-workflow.md) — Project-specific rules for keeping plans lean and design docs focused
 - [Skills](docs/agents/skills.md) — Adding skills, plugin loader setup, troubleshooting
