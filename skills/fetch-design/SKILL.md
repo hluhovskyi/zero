@@ -1,6 +1,6 @@
 ---
 name: fetch-design
-description: Use when the user pastes a Claude Design URL (https://api.anthropic.com/v1/design/h/...) to fetch and read design assets before implementing any layout.
+description: Use when the user pastes a Claude Design URL (https://api.anthropic.com/v1/design/h/...) or says "fetch this design file". Immediately fetch and read the design assets before writing any layout code or making any layout decisions. Use this skill whenever you see that URL pattern, even if the user's main request is about implementation rather than explicitly about fetching.
 ---
 
 # Fetch Design
@@ -17,19 +17,21 @@ The user may also write "Implement: <path>" — that's the primary file to read.
 - Hash: segment after `/h/`
 - Target file: URL-decode the `open_file` param (`%2F` → `/`)
 
-**2. Fetch**
+**2. Download + extract**
 
-Use `WebFetch` on the URL as-is. If it returns file content directly, read it.
+The endpoint requires API key authentication — use curl directly:
 
-If `WebFetch` returns a binary or redirect, download and extract:
 ```bash
-curl -s -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" \
-  "https://api.anthropic.com/v1/design/h/<hash>" -o /tmp/design-<hash>.zip
+curl -s \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  "https://api.anthropic.com/v1/design/h/<hash>" \
+  -o /tmp/design-<hash>.zip
 unzip -q /tmp/design-<hash>.zip -d /tmp/design-<hash>/
 ```
 
 **3. Read — in this order**
-1. README at archive root (orientation: what screens exist, folder structure)
+1. README at the archive root (tells you what screens exist and what each folder contains)
 2. Target file from `open_file` / "Implement:" path
 
 **4. Map to codebase before writing code**
@@ -39,6 +41,6 @@ unzip -q /tmp/design-<hash>.zip -d /tmp/design-<hash>/
 
 ## Rules
 
-**Never write layout code before fetching** — "cards", "grid", "list" are ambiguous in prose; the file is the spec.
+**Never write layout code before fetching** — "cards", "grid", "list" are ambiguous in prose; the file is the authoritative spec.
 
-**README first** — it maps screen names to file paths and explains the folder structure; skipping it causes wrong-file reads.
+**README first** — it maps screen names to file paths; skipping it causes wrong-file reads.
