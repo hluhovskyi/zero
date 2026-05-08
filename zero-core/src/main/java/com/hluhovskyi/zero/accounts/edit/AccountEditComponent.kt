@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -32,6 +33,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
     interface Dependencies {
         val idGenerator: IdGenerator
+        val imageLoader: ImageLoader
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -92,9 +94,11 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun viewProvider(
             viewModel: AccountEditViewModel,
             onCloseHandler: OnCloseHandler,
+            imageLoader: ImageLoader,
         ): ViewProvider = AccountEditViewProvider(
             viewModel = viewModel,
             onClose = onCloseHandler,
+            imageLoader = imageLoader,
         )
     }
 }
