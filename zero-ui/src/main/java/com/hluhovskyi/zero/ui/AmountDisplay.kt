@@ -1,14 +1,22 @@
 package com.hluhovskyi.zero.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 @Composable
 fun AmountDisplay(
@@ -38,6 +48,7 @@ fun AmountDisplay(
     focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
     onCurrencyClick: (() -> Unit)? = null,
+    label: String = "AMOUNT",
 ) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
@@ -54,7 +65,7 @@ fun AmountDisplay(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "AMOUNT",
+            text = label,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurfaceVariant,
@@ -66,20 +77,38 @@ fun AmountDisplay(
                 .fillMaxWidth()
                 .padding(top = 8.dp),
         ) {
-            // Currency pinned to left — fixed position regardless of amount width
+            // Currency pinned to left — chip style when clickable, plain text otherwise
             Box(modifier = Modifier.align(Alignment.CenterStart)) {
-                val currencyModifier = if (onCurrencyClick != null) {
-                    Modifier.clickable(onClick = onCurrencyClick)
+                if (onCurrencyClick != null) {
+                    Row(
+                        modifier = Modifier
+                            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+                            .clickable(onClick = onCurrencyClick)
+                            .padding(start = 8.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            text = currencySymbol,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryContainer,
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = OnSurfaceVariant,
+                        )
+                    }
                 } else {
-                    Modifier
+                    Text(
+                        text = currencySymbol,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                    )
                 }
-                Text(
-                    text = currencySymbol,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
-                    modifier = currencyModifier,
-                )
             }
 
             // Amount right-aligned, independent of currency position

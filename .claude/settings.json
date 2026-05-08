@@ -9,5 +9,23 @@
         "path": ".claude/marketplace"
       }
     }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/fetch-design.sh *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // \"\"' | { read -r p; echo \"$p\" | grep -q '/tmp/design-.*/chats/' && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Blocked: chats/ in design archives are design iteration logs, not layout specs. Reading overflows context — read README and open_file only.\"}}'; } || true"
+          }
+        ]
+      }
+    ]
   }
 }

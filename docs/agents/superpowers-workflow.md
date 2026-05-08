@@ -2,6 +2,10 @@
 
 Read this before invoking `writing-plans` or `brainstorming`. These rules override the superpowers defaults for this project.
 
+## Design-to-PR flows — split into two sessions
+
+**For any task that involves fetch-design + plan + implementation: use two sessions.** Session 1: fetch design, write plan, commit. Session 2: execute plan (starts fresh; design HTML and chat logs never enter the implementation context). Running all three in one session carries the full design archive through implementation and typically forces a mid-session compaction.
+
 ## writing-plans — Keep plans under 400 lines
 
 The `writing-plans` skill generates full code blocks by default. In this project, that produces ~2000-line plans that consume the entire context window during execution. Shorten plans by replacing repeated patterns with references:
