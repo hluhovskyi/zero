@@ -22,7 +22,7 @@ The user may also write "Implement: <path>" — that's the primary file to read.
 Use the helper script (pre-approved, no permission prompt):
 
 ```bash
-/Users/google-mac/.claude/scripts/fetch-design.sh <hash>
+~/.claude/scripts/fetch-design.sh <hash>
 ```
 
 This downloads to `/tmp/design-<hash>.tar.gz` and extracts to `/tmp/design-<hash>/`.
