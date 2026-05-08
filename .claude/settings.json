@@ -10,6 +10,11 @@
       }
     }
   },
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/fetch-design.sh *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
