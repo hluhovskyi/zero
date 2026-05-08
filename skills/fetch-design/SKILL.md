@@ -19,16 +19,13 @@ The user may also write "Implement: <path>" — that's the primary file to read.
 
 **2. Download + extract**
 
-The endpoint requires API key authentication — use curl directly:
+Use the helper script (pre-approved, no permission prompt):
 
 ```bash
-curl -s \
-  -H "x-api-key: $ANTHROPIC_API_KEY" \
-  -H "anthropic-version: 2023-06-01" \
-  "https://api.anthropic.com/v1/design/h/<hash>" \
-  -o /tmp/design-<hash>.zip
-unzip -q /tmp/design-<hash>.zip -d /tmp/design-<hash>/
+/Users/google-mac/.claude/scripts/fetch-design.sh <hash>
 ```
+
+This downloads to `/tmp/design-<hash>.tar.gz` and extracts to `/tmp/design-<hash>/`.
 
 **3. Read — in this order**
 1. README at the archive root (tells you what screens exist and what each folder contains)
@@ -44,3 +41,5 @@ unzip -q /tmp/design-<hash>.zip -d /tmp/design-<hash>/
 **Never write layout code before fetching** — "cards", "grid", "list" are ambiguous in prose; the file is the authoritative spec.
 
 **README first** — it maps screen names to file paths; skipping it causes wrong-file reads.
+
+**Skip `chats/` entirely** — these are design iteration logs, not layout specs; reading one will overflow context before implementation starts.
