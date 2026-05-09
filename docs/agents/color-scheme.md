@@ -8,4 +8,3 @@
 - `ColorValue.isUnspecified()` — true for `ColorValue(0x00000000UL)`
 - `ColorValue.hex.toInt()` gives ARGB int; safe to pass to `ComposeColor(argb: Int)`
 - `colorRepository.schemeFor(id: Id.Known): ColorScheme` — synchronous lookup
-- `colorRepository.query(AllSchemes())` returns `Flow<List<ColorScheme>>`; use `scheme.swatch` directly — no `Map<ColorScheme, Color>` needed
