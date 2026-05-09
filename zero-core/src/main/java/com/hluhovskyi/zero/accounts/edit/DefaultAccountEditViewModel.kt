@@ -26,6 +26,7 @@ import java.io.Closeable
 internal class DefaultAccountEditViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
+    private val iconRepository: IconRepository,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val accountEditIconUseCase: AccountEditIconUseCase,
     private val accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
@@ -103,6 +104,14 @@ internal class DefaultAccountEditViewModel(
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             val primaryCurrency = runCatching { currencyPrimaryUseCase.getPrimaryCurrency() }.getOrNull()
+            launch {
+                iconRepository.query(IconRepository.Criteria.ById(mutableState.value.iconId))
+                    .collect { icon ->
+                        mutableState.update { state ->
+                            if (state.icon == Image.empty()) state.copy(icon = icon.image) else state
+                        }
+                    }
+            }
             launch {
                 currencyRepository.query(CurrencyRepository.Criteria.InUse())
                     .collectLatest { currencies ->

@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.IconRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -37,6 +38,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
+        val iconRepository: IconRepository
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
     }
 
@@ -76,6 +78,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
         fun viewModel(
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
+            iconRepository: IconRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
@@ -83,6 +86,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
+            iconRepository = iconRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             accountEditIconUseCase = accountEditIconUseCase,
             accountEditCurrencyUseCase = accountEditCurrencyUseCase,
