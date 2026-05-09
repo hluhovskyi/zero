@@ -1,0 +1,23 @@
+{
+  "skill_name": "fetch-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Fetch this design file, read its readme, and implement the relevant aspects of the design. https://api.anthropic.com/v1/design/h/NsZMy55O52YG5VV49pPgIQ?open_file=ui_kits%2Fzero%2Findex.html\nImplement: ui_kits/zero/index.html",
+      "expected_output": "Agent parses URL, fetches archive, reads README before target file, maps colors to zero-ui theme tokens, does not write Compose code before fetching",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Can you check this design and tell me what layout/colors I need for the new screen? https://api.anthropic.com/v1/design/h/NsZMy55O52YG5VV49pPgIQ?open_file=ui_kits%2Fzero%2Findex.html",
+      "expected_output": "Agent recognises the URL as a Claude Design URL, fetches it, reads README, extracts layout and color information rather than guessing from prose",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I want to add a new budget overview screen to the app. It should have a card at the top with total budget and a scrollable list of categories below. Can you implement it?",
+      "expected_output": "Skill should NOT trigger — no Claude Design URL present. Agent asks for a design file or proceeds without the fetch-design workflow.",
+      "files": []
+    }
+  ]
+}
