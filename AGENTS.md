@@ -8,6 +8,8 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 
 **Repo-First Documentation**: All plans and architectural docs MUST be saved directly to the repository (e.g. `docs/superpowers/plans/`). Never leave artifacts in temporary tool directories. **Commit the plan doc on the feature branch before starting implementation** — an untracked plan is a lost plan.
 
+**Doc-With-Code**: When implementing changes that affect a domain type, invariant, or pattern already described in `docs/agents/`, update the relevant doc file in the **same commit** as the code change — never defer doc updates to a retro or a follow-up PR. A doc that describes a stale API is worse than no doc.
+
 ## Cross-Cutting Rules
 
 1. **Branch Isolation** — Every distinct task MUST have a dedicated branch. Never commit directly to `master`. Verify current branch before every commit. See [Branch Management](docs/agents/branch-management.md).
