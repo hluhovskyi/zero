@@ -24,10 +24,6 @@ internal class DefaultIconPickerViewModel(
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : IconPickerViewModel {
 
-    // Keeps the domain Color object for each ColorScheme so we can call onColorSelectedHandler
-    // with the correct domain Color when the user taps a swatch.
-    private var colorSchemeToColor: Map<ColorScheme, com.hluhovskyi.zero.colors.Color> = emptyMap()
-
     private val mutableState = MutableStateFlow(IconPickerViewModel.State())
     override val state: Flow<IconPickerViewModel.State> = mutableState
 
@@ -38,7 +34,7 @@ internal class DefaultIconPickerViewModel(
             }
             is IconPickerViewModel.Action.SelectColorScheme -> {
                 mutableState.update { it.copy(selectedColorScheme = action.colorScheme) }
-                colorSchemeToColor[action.colorScheme]?.let { color ->
+                mutableState.value.colorSchemeToColor[action.colorScheme]?.let { color ->
                     onColorSelectedHandler.onColorSelected(color, action.colorScheme)
                 }
             }
@@ -51,20 +47,16 @@ internal class DefaultIconPickerViewModel(
     }
 
     private suspend fun loadColors() {
-        colorRepository.query(ColorRepository.Criteria.All())
-            .collectLatest { colors ->
-                val mapping = colors.associate { color ->
-                    colorRepository.schemeFor(color.id) to color
-                }
-                colorSchemeToColor = mapping
-
+        colorRepository.query(ColorRepository.Criteria.AllSchemes())
+            .collectLatest { schemeToColor ->
                 val selectedScheme = (colorId as? Id.Known)
                     ?.let { colorRepository.schemeFor(it) }
                     ?: ColorScheme.Grey
 
                 mutableState.update { state ->
                     state.copy(
-                        colorSchemes = mapping.keys.toList(),
+                        colorSchemes = schemeToColor.keys.toList(),
+                        colorSchemeToColor = schemeToColor,
                         selectedColorScheme = selectedScheme,
                     )
                 }

@@ -36,9 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.ui.DragHandle
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.UiColorScheme
+import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
@@ -49,12 +50,12 @@ private const val GRID_COLUMNS = 5
 @Composable
 fun IconAndColorPicker(
     sections: List<IconPickerSection>,
-    colorSchemes: List<UiColorScheme>,
+    colorSchemes: List<ColorScheme>,
     selectedIcon: Icon?,
-    selectedColorScheme: UiColorScheme?,
+    selectedColorScheme: ColorScheme?,
     imageLoader: ImageLoader,
     onIconSelected: (Icon) -> Unit,
-    onColorSchemeSelected: (UiColorScheme) -> Unit,
+    onColorSchemeSelected: (ColorScheme) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var query by remember { mutableStateOf("") }
@@ -72,11 +73,9 @@ fun IconAndColorPicker(
         }
     }
 
-    val activeScheme = selectedColorScheme ?: UiColorScheme.default()
+    val activeScheme = selectedColorScheme?.toUi() ?: UiColorScheme.default()
 
     Column(modifier = modifier.fillMaxSize()) {
-        DragHandle()
-
         Column(
             modifier = Modifier
                 .background(Surface)
@@ -140,9 +139,9 @@ fun IconAndColorPicker(
 
 @Composable
 private fun ColorSchemesRow(
-    colorSchemes: List<UiColorScheme>,
-    selected: UiColorScheme?,
-    onColorSchemeSelected: (UiColorScheme) -> Unit,
+    colorSchemes: List<ColorScheme>,
+    selected: ColorScheme?,
+    onColorSchemeSelected: (ColorScheme) -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -160,16 +159,17 @@ private fun ColorSchemesRow(
 
 @Composable
 private fun ColorSwatch(
-    scheme: UiColorScheme,
+    scheme: ColorScheme,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val uiScheme = scheme.toUi()
     Box(
         modifier = Modifier
             .size(32.dp)
             .then(
                 if (isSelected) {
-                    Modifier.border(2.dp, scheme.primary, CircleShape)
+                    Modifier.border(2.dp, uiScheme.primary, CircleShape)
                 } else {
                     Modifier
                 },
@@ -180,7 +180,7 @@ private fun ColorSwatch(
         Box(
             modifier = Modifier
                 .size(24.dp)
-                .background(scheme.primary, CircleShape),
+                .background(uiScheme.primary, CircleShape),
         )
     }
 }

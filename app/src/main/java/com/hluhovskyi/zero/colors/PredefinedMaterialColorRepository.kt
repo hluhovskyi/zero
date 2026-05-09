@@ -66,6 +66,9 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
     override fun <T> query(criteria: ColorRepository.Criteria<T>): Flow<T> = when (criteria) {
         is ColorRepository.Criteria.All -> castingFlowOf(colors.values.toList())
         is ColorRepository.Criteria.ById -> castingFlowOfNonNull(colors[criteria.id])
+        is ColorRepository.Criteria.AllSchemes -> castingFlowOf(
+            schemes.entries.associate { (id, scheme) -> scheme to colors.getValue(id) },
+        )
     }
 
     override fun schemeFor(colorId: Id.Known): ColorScheme = schemes[colorId] ?: fallbackScheme

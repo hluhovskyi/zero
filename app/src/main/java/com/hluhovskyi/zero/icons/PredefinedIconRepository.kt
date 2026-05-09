@@ -29,8 +29,8 @@ internal class PredefinedIconRepository(
         ),
         iconOf(
             id = IconRepository.defaultAccountIconId(),
-            resourceName = "ic_cash_24",
-            description = "Cash",
+            resourceName = "ic_bank_24",
+            description = "Bank",
             category = IconCategory.unknown(),
         ),
         iconOf(
