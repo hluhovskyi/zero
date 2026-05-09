@@ -1,18 +1,24 @@
 #!/bin/bash
 # Finds a UI element by text or content-desc and taps its center.
-# Usage: ./scripts/tap-label.sh <label> [--screenshot]
+# Usage: ./scripts/tap-label.sh <label> [--screenshot] [--verify <landmark>]
 #
 # Arguments:
-#   <label>        Exact text or content-desc of the element to tap
-#   --screenshot   After tapping, capture screenshot to /tmp/screen.png
+#   <label>              Exact text or content-desc of the element to tap
+#   --screenshot         After tapping, capture screenshot to /tmp/screen.png
+#   --verify <landmark>  After tapping, assert a text/content-desc landmark is visible.
+#                        Use to confirm navigation landed on the expected screen.
+#                        Exits 1 if the landmark is not found.
 #
 # Always dumps a fresh UI hierarchy before searching.
 # Exits 1 if the label is not found.
 
 LABEL="${1:-}"
 SCREENSHOT=false
-for arg in "$@"; do
-    [[ "$arg" == "--screenshot" ]] && SCREENSHOT=true
+VERIFY=""
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+    [[ "${args[$i]}" == "--screenshot" ]] && SCREENSHOT=true
+    [[ "${args[$i]}" == "--verify" ]] && VERIFY="${args[$((i + 1))]}"
 done
 
 if [ -z "$LABEL" ]; then
@@ -49,4 +55,9 @@ if $SCREENSHOT; then
     adb shell screencap -p /sdcard/screen.png
     adb pull /sdcard/screen.png /tmp/screen.png >/dev/null 2>&1
     echo "📸 /tmp/screen.png"
+fi
+
+if [ -n "$VERIFY" ]; then
+    sleep 0.5
+    "$(dirname "$0")/verify-screen.sh" "$VERIFY"
 fi
