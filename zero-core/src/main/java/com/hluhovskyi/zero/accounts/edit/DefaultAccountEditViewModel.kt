@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -117,29 +118,23 @@ internal class DefaultAccountEditViewModel(
                     }
             }
             launch(context = Dispatchers.Main) {
-                accountEditIconUseCase.state
-                    .filterIsInstance<AccountEditIconUseCase.State.Picked>()
-                    .collectLatest { iconState ->
-                        mutableState.update { state ->
+                accountEditIconUseCase.state.collect { iconState ->
+                    when (iconState) {
+                        is AccountEditIconUseCase.State.Picked -> mutableState.update { state ->
                             state.copy(
                                 iconId = iconState.icon.id,
                                 icon = iconState.icon.image,
                                 colorScheme = iconState.colorScheme ?: state.colorScheme,
                             )
                         }
-                    }
-            }
-            launch(context = Dispatchers.Main) {
-                accountEditIconUseCase.state
-                    .filterIsInstance<AccountEditIconUseCase.State.ColorChanged>()
-                    .collectLatest { colorState ->
-                        mutableState.update { state ->
+                        is AccountEditIconUseCase.State.ColorChanged -> mutableState.update { state ->
                             state.copy(
-                                colorId = colorState.colorId,
-                                colorScheme = colorState.colorScheme,
+                                colorId = iconState.colorId,
+                                colorScheme = iconState.colorScheme,
                             )
                         }
                     }
+                }
             }
             launch(context = Dispatchers.Main) {
                 accountEditCurrencyUseCase.state
