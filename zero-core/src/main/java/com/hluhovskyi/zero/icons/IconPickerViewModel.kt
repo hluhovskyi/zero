@@ -7,11 +7,13 @@ interface IconPickerViewModel : AttachableActionStateModel<IconPickerViewModel.A
 
     sealed interface Action {
         data class SelectIcon(val icon: Icon) : Action
+        data class SelectColorScheme(val colorScheme: ColorScheme) : Action
     }
 
     data class State(
-        val icons: List<Icon> = emptyList(),
+        val sections: List<IconPickerSection> = emptyList(),
+        val colorSchemes: List<ColorScheme> = emptyList(),
         val selectedIcon: Icon? = null,
-        val colorScheme: ColorScheme? = null,
+        val selectedColorScheme: ColorScheme? = null,
     )
 }
