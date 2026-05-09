@@ -42,8 +42,10 @@ internal class DefaultIconPickerViewModel(
     }
 
     override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch { loadColors() }
-        coroutineScope.launch { loadIcons() }
+        coroutineScope.launch {
+            launch { loadColors() }
+            launch { loadIcons() }
+        }
     }
 
     private suspend fun loadColors() {
