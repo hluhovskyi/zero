@@ -11,7 +11,6 @@ interface CategoryEditColorUseCase : ActionStateModel<CategoryEditColorUseCase.A
     sealed interface Action {
         object Request : Action
         data class Pick(val color: Color) : Action
-        data class PickWithoutNavigation(val color: Color) : Action
     }
 
     sealed interface State {

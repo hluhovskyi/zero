@@ -211,12 +211,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryEditColorUseCase(
             navigator: Navigator,
-            idGenerator: IdGenerator,
-            logger: Logger,
         ): CategoryEditColorUseCase = DefaultCategoryEditColorUseCase(
             navigator = navigator,
-            requestIdGenerator = idGenerator,
-            logger,
         )
 
         @Provides
@@ -578,7 +574,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 }
                 .onColorSelectedHandler { color ->
                     categoryEditColorUseCase.perform(
-                        CategoryEditColorUseCase.Action.PickWithoutNavigation(
+                        CategoryEditColorUseCase.Action.Pick(
                             color = CategoryEditColorUseCase.Color(
                                 id = color.id,
                                 color = color.value,
