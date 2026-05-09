@@ -18,6 +18,7 @@ interface CategoryEditViewModel : AttachableActionStateModel<CategoryEditViewMod
         val name: String = "",
         val icon: Image = Image.empty(),
         val colorScheme: ColorScheme = ColorScheme(
+            swatch = Color.empty(),
             primary = Color.empty(),
             background = Color.empty(),
         ),

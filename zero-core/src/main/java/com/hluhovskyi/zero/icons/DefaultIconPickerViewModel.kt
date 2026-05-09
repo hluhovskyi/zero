@@ -34,9 +34,7 @@ internal class DefaultIconPickerViewModel(
             }
             is IconPickerViewModel.Action.SelectColorScheme -> {
                 mutableState.update { it.copy(selectedColorScheme = action.colorScheme) }
-                mutableState.value.colorSchemeToColor[action.colorScheme]?.let { color ->
-                    onColorSelectedHandler.onColorSelected(color, action.colorScheme)
-                }
+                onColorSelectedHandler.onColorSelected(action.colorScheme.swatch, action.colorScheme)
             }
         }
     }
@@ -50,15 +48,14 @@ internal class DefaultIconPickerViewModel(
 
     private suspend fun loadColors() {
         colorRepository.query(ColorRepository.Criteria.AllSchemes())
-            .collectLatest { schemeToColor ->
+            .collectLatest { schemes ->
                 val selectedScheme = (colorId as? Id.Known)
                     ?.let { colorRepository.schemeFor(it) }
                     ?: ColorScheme.Grey
 
                 mutableState.update { state ->
                     state.copy(
-                        colorSchemes = schemeToColor.keys.toList(),
-                        colorSchemeToColor = schemeToColor,
+                        colorSchemes = schemes,
                         selectedColorScheme = selectedScheme,
                     )
                 }
