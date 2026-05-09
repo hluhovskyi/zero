@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.atomic.AtomicReference
 
@@ -36,6 +37,10 @@ internal class DefaultAccountEditIconUseCase(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
+    private val colorPickAction = MutableSharedFlow<AccountEditIconUseCase.Action.PickColor>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     override fun perform(action: AccountEditIconUseCase.Action) {
         when (action) {
@@ -48,6 +53,9 @@ internal class DefaultAccountEditIconUseCase(
                     (action.iconId as? Id.Known)?.let { selectedId ->
                         add(Destinations.Icon.Picker.SelectedIconId.withValue(selectedId))
                     }
+                    (action.colorId as? Id.Known)?.let { colorId ->
+                        add(Destinations.Icon.Picker.ColorId.withValue(colorId))
+                    }
                 }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
@@ -57,10 +65,13 @@ internal class DefaultAccountEditIconUseCase(
             is AccountEditIconUseCase.Action.Pick -> {
                 pickAction.tryEmit(action)
             }
+            is AccountEditIconUseCase.Action.PickColor -> {
+                colorPickAction.tryEmit(action)
+            }
         }
     }
 
-    override val state: Flow<AccountEditIconUseCase.State> =
+    override val state: Flow<AccountEditIconUseCase.State> = merge(
         navigator.observeArgumentValue(
             destination = Destinations.Icon.Picker,
             argument = Destinations.Icon.Picker.RequestId,
@@ -72,6 +83,8 @@ internal class DefaultAccountEditIconUseCase(
                 }
             }
             .filter { (requestId, _) -> requestId.value == this.requestId.get() }
-            .mapNotNull { (_, pick) -> AccountEditIconUseCase.State.Picked(pick.icon) }
-            .onEach { navigator.back() }
+            .mapNotNull { (_, pick) -> AccountEditIconUseCase.State.Picked(pick.icon, pick.colorScheme) }
+            .onEach { navigator.back() },
+        colorPickAction.map { AccountEditIconUseCase.State.ColorChanged(it.colorId, it.colorScheme) },
+    )
 }

@@ -34,12 +34,12 @@ internal class DefaultIconPickerViewModel(
     override fun perform(action: IconPickerViewModel.Action) {
         when (action) {
             is IconPickerViewModel.Action.SelectIcon -> {
-                onIconSelectedHandler.onIconSelected(action.icon)
+                onIconSelectedHandler.onIconSelected(action.icon, mutableState.value.selectedColorScheme)
             }
             is IconPickerViewModel.Action.SelectColorScheme -> {
                 mutableState.update { it.copy(selectedColorScheme = action.colorScheme) }
                 colorSchemeToColor[action.colorScheme]?.let { color ->
-                    onColorSelectedHandler.onColorSelected(color)
+                    onColorSelectedHandler.onColorSelected(color, action.colorScheme)
                 }
             }
         }

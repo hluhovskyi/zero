@@ -22,7 +22,10 @@ internal class DefaultColorPickerViewModel(
     override fun perform(action: ColorPickerViewModel.Action) {
         when (action) {
             is ColorPickerViewModel.Action.SelectColor -> {
-                onColorSelectedHandler.onColorSelected(action.color)
+                onColorSelectedHandler.onColorSelected(
+                    action.color,
+                    colorRepository.schemeFor(action.color.id),
+                )
             }
         }
     }

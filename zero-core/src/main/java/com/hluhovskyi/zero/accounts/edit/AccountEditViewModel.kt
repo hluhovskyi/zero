@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.accounts.edit
 
 import com.hluhovskyi.zero.accounts.AccountCategory
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Image
@@ -26,5 +27,6 @@ interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel
         val currencies: List<Currency> = emptyList(),
         val selectedCurrency: Currency? = null,
         val selectedIcon: Image = Image.empty(),
+        val colorScheme: ColorScheme = ColorScheme.Grey,
     )
 }
