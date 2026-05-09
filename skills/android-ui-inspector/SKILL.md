@@ -14,37 +14,51 @@ Use this skill **before committing any UI change** — not only when something l
 ## Workflow
 
 1. **Prerequisites:** Ensure an emulator or device is connected (using your shell/bash tool to run `adb devices`) and the app is installed/running.
-2. **Dump the Screen:** Run the UI dump script via your shell/bash tool to get the current XML view hierarchy:
+
+2. **Dump the Screen:** Run the UI dump script to get the current hierarchy:
    ```bash
    ./scripts/dump-ui.sh
    ```
-3. **Take a Screenshot:** Capture a visual snapshot alongside the XML — bounds tell you structure, the screenshot catches rendering artifacts (color, overflow, clipping):
-   ```bash
-   adb shell screencap -p /sdcard/screen.png
-   adb pull /sdcard/screen.png /tmp/screen.png
-   ```
-   Then read `/tmp/screen.png` with your image tool to visually inspect the result.
-
-   > **Do not use `adb exec-out screencap -p > /tmp/screen.png`** — it triggers permission prompts on this device.
-
-4. **Analyze the Layout:** Parse the XML output to find the nodes you care about. Check:
-   - `bounds="[x1,y1][x2,y2]"` — verify expected size and position; a zero-width/height bound means the view is invisible
+   Parse the output to check:
+   - `bounds="[x1,y1][x2,y2]"` — zero-width/height = invisible
+   - Expected nodes are present (missing = component not rendered)
    - No node is clipped by a parent with smaller bounds
-   - Expected nodes are present (missing node = component not rendered at all)
-   - Bottom sheets: bounds should be a partial overlay, not `[0,0][1080,2040]` (full screen = not a sheet)
-   - **Focus state: `focused="true/false"`** — a screenshot cannot capture a blinking cursor reliably (single frame). For any fix involving text field focus or cursor visibility, you MUST grep the dump: `grep 'focused="true"' /tmp/ui.xml`. A screenshot that looks clean is not proof focus was cleared.
-5. **Interact via ADB (If needed):** To tap a UI element by its visible label or content-desc, use `tap-label.sh` — it dumps the hierarchy, finds the node, and taps the center in one call:
+   - Bottom sheets: bounds should be partial overlay, not full screen `[0,0][1080,2040]`
+   - **Focus state** — a screenshot cannot capture a blinking cursor reliably. For focus fixes, grep the raw dump: `./scripts/dump-ui.sh --raw | grep 'focused="true"'`
+
+3. **Verify Navigation After Any Interaction:** This app uses single-Activity Compose navigation. After tapping anything that should keep you on the current screen (or navigate to a specific screen), immediately verify by grepping for a text landmark unique to the expected screen:
    ```bash
-   ./scripts/tap-label.sh "Food"                    # tap and continue
-   ./scripts/tap-label.sh "Add transaction" --screenshot   # tap then capture /tmp/screen.png
+   ./scripts/verify-screen.sh "Account name"   # confirms account edit screen is active
+   ```
+   Or combine with the tap in one call:
+   ```bash
+   ./scripts/tap-label.sh "Bank" --verify "Account name"
+   ```
+   **Do not skip this step** after interactions that affect navigation — a screenshot alone cannot tell you which screen you're on, and `adb dumpsys activity` won't help with Compose navigation.
+
+4. **Interact via ADB (If needed):** To tap a UI element by its visible label or content-desc:
+   ```bash
+   ./scripts/tap-label.sh "Food"                              # tap and continue
+   ./scripts/tap-label.sh "Add transaction" --verify "Name"  # tap then assert screen
+   ./scripts/tap-label.sh "Save" --screenshot                 # tap then capture screenshot
    ```
    For elements with no text/content-desc, fall back to manual coordinates from the dump:
    ```bash
    adb shell input tap <x> <y>   # (x,y) must be safely inside the bounds box
    ```
 
-   **Dismiss the soft keyboard before screenshotting** if the screen under test contains a text field — the keyboard covers the bottom half of the screen and hides bottom sheets entirely:
+   **Dismiss the soft keyboard before dumping** if the screen contains a text field — the keyboard covers the bottom half and hides bottom sheets entirely:
    ```bash
    adb shell input keyevent 111   # KEYCODE_ESCAPE — dismisses keyboard without closing the screen
    ```
-6. **Verify Fixes:** After applying UI or navigation fixes, rebuild the app, navigate back to the screen via ADB, and re-run `./scripts/dump-ui.sh` to conclusively verify your changes worked without relying on guesswork. **Anti-Hallucination Rule:** When verifying a UI state change (like focus, visibility, or bounds), you MUST copy-paste the exact XML node from the `dump-ui.sh` output into your thought process or response before claiming success. Never summarize a verification result without quoting the raw evidence.
+
+5. **Screenshot (Only When Needed):** The XML dump covers structure, bounds, and navigation. Take a screenshot only when you suspect a **visual rendering artifact** — wrong color, clipping, overflow, or a composable that the dump shows as present but looks broken:
+   ```bash
+   adb shell screencap -p /sdcard/screen.png
+   adb pull /sdcard/screen.png /tmp/screen.png
+   ```
+   Then read `/tmp/screen.png` to visually inspect.
+
+   > **Do not use `adb exec-out screencap -p > /tmp/screen.png`** — it triggers permission prompts on this device.
+
+6. **Verify Fixes:** After applying UI or navigation fixes, rebuild, navigate back to the screen, and re-run the dump and `verify-screen.sh` to confirm. **Anti-Hallucination Rule:** When verifying any state change (focus, visibility, bounds, active screen), copy-paste the raw evidence from the dump before claiming success — never summarize without quoting it.
