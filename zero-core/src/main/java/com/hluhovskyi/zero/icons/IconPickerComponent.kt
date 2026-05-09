@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.icons
 
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.colors.OnColorSelectedHandler
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
@@ -49,6 +50,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerIconPickerComponent.builder()
             .dependencies(dependencies)
             .onIconSelectedHandler(OnIconSelectedHandler.Noop)
+            .onColorSelectedHandler(OnColorSelectedHandler.Noop)
             .colorId(Id.Unknown)
             .selectedIconId(Id.Unknown)
     }
@@ -60,6 +62,9 @@ abstract class IconPickerComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onIconSelectedHandler(handler: OnIconSelectedHandler): Builder
+
+        @BindsInstance
+        fun onColorSelectedHandler(handler: OnColorSelectedHandler): Builder
 
         @BindsInstance
         fun colorId(@ColorId colorId: Id): Builder
@@ -77,12 +82,14 @@ abstract class IconPickerComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             onIconSelectedHandler: OnIconSelectedHandler,
+            onColorSelectedHandler: OnColorSelectedHandler,
             @ColorId colorId: Id,
             @SelectedIconId selectedIconId: Id,
         ): IconPickerViewModel = DefaultIconPickerViewModel(
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             onIconSelectedHandler = onIconSelectedHandler,
+            onColorSelectedHandler = onColorSelectedHandler,
             colorId = colorId,
             selectedIconId = selectedIconId,
         )

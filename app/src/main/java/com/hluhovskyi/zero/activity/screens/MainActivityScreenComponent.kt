@@ -548,6 +548,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: IconPickerComponent.Builder,
             navigatorScope: NavigatorScope,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -571,6 +572,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             icon = CategoryEditIconUseCase.Icon(
                                 id = icon.id,
                                 image = icon.image,
+                            ),
+                        ),
+                    )
+                }
+                .onColorSelectedHandler { color ->
+                    categoryEditColorUseCase.perform(
+                        CategoryEditColorUseCase.Action.PickWithoutNavigation(
+                            color = CategoryEditColorUseCase.Color(
+                                id = color.id,
+                                color = color.value,
                             ),
                         ),
                     )
