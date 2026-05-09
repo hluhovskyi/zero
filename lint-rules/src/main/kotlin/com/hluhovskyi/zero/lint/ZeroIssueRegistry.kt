@@ -16,6 +16,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         SyncEntitySerialNameDetector.ISSUE,
         NoNamedAnnotationDetector.ISSUE,
         UnhandledCloseableDetector.ISSUE,
+        UnhandledJobDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API

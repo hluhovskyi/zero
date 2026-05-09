@@ -18,7 +18,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 
-class UnhandledCloseableDetector :
+class UnhandledJobDetector :
     Detector(),
     Detector.UastScanner {
 
@@ -28,13 +28,17 @@ class UnhandledCloseableDetector :
         override fun visitCallExpression(node: UCallExpression) {
             val returnType = node.returnType as? PsiClassType ?: return
             val psiClass = returnType.resolve() ?: return
-            if (!context.evaluator.implementsInterface(psiClass, "java.io.Closeable", false)) return
+            if (!context.evaluator.implementsInterface(psiClass, "kotlinx.coroutines.Job", false)) return
+
+            // Implicit-receiver calls (launch { }) are structured coroutine children whose lifecycle
+            // is tied to the parent scope — skip them. Only flag explicit-receiver calls
+            // (scope.launch { }) where the Job escapes and must be tracked manually.
+            if (node.receiver == null) return
 
             // Walk up through wrappers to find the expression that lives directly in a block.
-            // For parentheses: always walk through.
-            // For qualified references (obj.open()): walk through only when we are the SELECTOR —
-            // if we are the RECEIVER of the next call, the result is being used (e.g. stream.read())
-            // and must not be flagged.
+            // Walk through parentheses unconditionally.
+            // Walk through a qualified reference only when we are the SELECTOR — if we are the
+            // RECEIVER of the next call (e.g. scope.launch { }.cancel()), the result is used.
             var nodeInBlock: UExpression = node
             var parent: UElement? = node.uastParent
             while (true) {
@@ -60,17 +64,11 @@ class UnhandledCloseableDetector :
                 when (val blockParent = block.uastParent) {
                     // Lambda last expression is the lambda's return value — not discarded.
                     is ULambdaExpression -> return
-                    // Method body: discarded unless the method itself returns Closeable.
-                    is UMethod -> {
-                        val methodReturn = (blockParent.returnType as? PsiClassType)?.resolve()
-                        if (methodReturn != null &&
-                            context.evaluator.implementsInterface(methodReturn, "java.io.Closeable", false)
-                        ) {
-                            return
-                        }
-                    }
-                    // If/when/try branch — the value feeds into the outer expression which
-                    // may itself be assigned or returned. Too complex to trace; assume used.
+                    // Method body: a top-level scope.launch as the last expression is typically a
+                    // structured coroutine child managed by the parent scope — skip to avoid false
+                    // positives. Non-last launches in a method body are still flagged.
+                    is UMethod -> return
+                    // If/when/try branch — feeds into the outer expression; assume used.
                     else -> return
                 }
             }
@@ -79,8 +77,9 @@ class UnhandledCloseableDetector :
                 ISSUE,
                 node,
                 context.getLocation(node),
-                "Return value of `${node.methodName}` implements `Closeable` and must not be " +
-                    "discarded — assign it and call `close()` when done.",
+                "Return value of `${node.methodName}` implements `Job` and must not be " +
+                    "discarded — assign it and call `cancel()` when done, or use structured " +
+                    "concurrency (implicit-receiver `launch { }`) instead.",
             )
         }
     }
@@ -88,19 +87,21 @@ class UnhandledCloseableDetector :
     companion object {
         val ISSUE: Issue =
             Issue.create(
-                id = "UnhandledCloseable",
-                briefDescription = "Closeable return value must not be discarded",
+                id = "UnhandledJob",
+                briefDescription = "Coroutine Job must not be discarded",
                 explanation =
-                "A call whose return type implements `Closeable` was used as a statement, so the " +
-                    "returned resource will never be closed. Assign the value and close it explicitly, " +
-                    "or use it inside a `use { }` block. If the discard is intentional, suppress with " +
-                    "`@SuppressLint(\"UnhandledCloseable\")`.",
+                "A call whose return type implements `Job` was used as a statement and the result " +
+                    "discarded. The coroutine will run but can never be cancelled. Prefer structured " +
+                    "concurrency (implicit-receiver `launch { }` inside a parent coroutine) so the " +
+                    "job is automatically tied to the parent's lifecycle. If you must keep an explicit " +
+                    "reference, assign the `Job` and cancel it when done. If the discard is intentional, " +
+                    "suppress with `@SuppressLint(\"UnhandledJob\")`.",
                 category = Category.CORRECTNESS,
                 priority = 9,
                 severity = Severity.ERROR,
                 implementation =
                 Implementation(
-                    UnhandledCloseableDetector::class.java,
+                    UnhandledJobDetector::class.java,
                     Scope.JAVA_FILE_SCOPE,
                 ),
             )
