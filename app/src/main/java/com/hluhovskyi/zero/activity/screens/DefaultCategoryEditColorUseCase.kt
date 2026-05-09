@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.atomic.AtomicReference
 
@@ -36,6 +37,10 @@ internal class DefaultCategoryEditColorUseCase(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
+    private val inlinePickAction = MutableSharedFlow<CategoryEditColorUseCase.Action.PickWithoutNavigation>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     override fun perform(action: CategoryEditColorUseCase.Action) {
         when (action) {
@@ -51,21 +56,31 @@ internal class DefaultCategoryEditColorUseCase(
             is CategoryEditColorUseCase.Action.Pick -> {
                 pickAction.tryEmit(action)
             }
+            is CategoryEditColorUseCase.Action.PickWithoutNavigation -> {
+                inlinePickAction.tryEmit(action)
+            }
         }
     }
 
-    override val state: Flow<CategoryEditColorUseCase.State> =
+    override val state: Flow<CategoryEditColorUseCase.State> = merge(
+        // Picks from the dedicated Color.Picker bottom sheet — navigate back after pick
         navigator.observeArgumentValue(
             destination = Destinations.Color.Picker,
             argument = Destinations.Color.Picker.RequestId,
         )
             .flatMapLatest { requestId ->
                 pickAction.map { pick ->
-                    logger.d("state, requestId=$requestId, pick=$pick")
-                    requestId to pick
+                    logger.d("state (picker), requestId=$requestId, pick=$pick")
+                    requestId to pick.color
                 }
             }
             .filter { (requestId, _) -> requestId.value == this.requestId.get() }
-            .mapNotNull { (_, pick) -> CategoryEditColorUseCase.State.Picked(pick.color) }
-            .onEach { navigator.back() }
+            .mapNotNull { (_, color) -> CategoryEditColorUseCase.State.Picked(color) }
+            .onEach { navigator.back() },
+
+        // Inline picks from Icon.Picker — emit state without closing the picker
+        inlinePickAction
+            .filter { this.requestId.get() is Id.Known }
+            .mapNotNull { action -> CategoryEditColorUseCase.State.Picked(action.color) },
+    )
 }
