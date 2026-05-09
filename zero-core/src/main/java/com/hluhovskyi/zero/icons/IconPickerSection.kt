@@ -1,6 +1,6 @@
 package com.hluhovskyi.zero.icons
 
 data class IconPickerSection(
-    val title: String,
+    val category: IconCategory,
     val icons: List<Icon>,
 )

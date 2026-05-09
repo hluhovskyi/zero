@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Image
 data class Icon(
     override val id: Id.Known,
     val image: Image,
+    val category: IconCategory,
 ) : Identifiable {
 
     companion object {
@@ -14,6 +15,7 @@ data class Icon(
         fun empty(): Icon = Icon(
             id = Id("empty_icon"),
             image = Image.empty(),
+            category = IconCategory.unknown(),
         )
     }
 }

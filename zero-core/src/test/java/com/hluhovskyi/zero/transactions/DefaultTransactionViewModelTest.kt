@@ -15,6 +15,7 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
+import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -324,8 +325,8 @@ class DefaultTransactionViewModelTest {
             details = null,
         )
         val currency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
-        val icon = Icon(id = Id.Known("i1"), image = Image.empty())
-        val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty())
+        val icon = Icon(id = Id.Known("i1"), image = Image.empty(), category = IconCategory.unknown())
+        val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty(), category = IconCategory.unknown())
 
         // Override the setUp() stub for ForCategory queries
         val forCategoryCriteria = argThat<TransactionRepository.Criteria<*>> {

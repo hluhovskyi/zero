@@ -14,16 +14,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
-// Maps icon id values to their section title. Icons not in any list end up in "Other".
-private val SECTION_DEFINITIONS: List<Pair<String, List<String>>> = listOf(
-    "Money & Banking" to listOf("cash", "bank", "credit_card"),
-    "Food & Drink" to listOf("flowers", "grocery", "fastfood"),
-    "Travel" to listOf("car", "car_repair", "beach"),
-    "Shopping" to listOf("diamond"),
-    "Entertainment" to listOf("game_controller", "movie"),
-    "Education" to listOf("book"),
-)
-
 internal class DefaultIconPickerViewModel(
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
@@ -84,7 +74,9 @@ internal class DefaultIconPickerViewModel(
     private suspend fun loadIcons() {
         iconRepository.query(IconRepository.Criteria.All())
             .collectLatest { icons ->
-                val sections = buildSections(icons)
+                val sections = icons
+                    .groupBy { it.category }
+                    .map { (category, categoryIcons) -> IconPickerSection(category, categoryIcons) }
                 val selectedIcon = (selectedIconId as? Id.Known)
                     ?.let { id -> icons.find { it.id == id } }
 
@@ -95,16 +87,5 @@ internal class DefaultIconPickerViewModel(
                     )
                 }
             }
-    }
-
-    private fun buildSections(icons: List<Icon>): List<IconPickerSection> {
-        val iconById = icons.associateBy { it.id.value }
-        val sections = SECTION_DEFINITIONS.mapNotNull { (title, ids) ->
-            val sectionIcons = ids.mapNotNull { iconById[it] }
-            if (sectionIcons.isEmpty()) null else IconPickerSection(title, sectionIcons)
-        }
-        val assignedIds = SECTION_DEFINITIONS.flatMap { (_, ids) -> ids }.toSet()
-        val other = icons.filter { it.id.value !in assignedIds }
-        return if (other.isEmpty()) sections else sections + IconPickerSection("Other", other)
     }
 }

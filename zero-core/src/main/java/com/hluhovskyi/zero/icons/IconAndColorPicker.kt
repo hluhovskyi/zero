@@ -118,7 +118,7 @@ fun IconAndColorPicker(
             } else {
                 filteredSections.forEach { section ->
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        SectionTitle(title = section.title)
+                        SectionTitle(title = section.category.name)
                     }
                     items(section.icons, key = { it.id.value }) { icon ->
                         IconPickerCell(
