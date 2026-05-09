@@ -28,12 +28,6 @@ internal class PredefinedIconRepository(
             category = IconCategory.unknown(),
         ),
         iconOf(
-            id = IconRepository.defaultAccountIconId(),
-            resourceName = "ic_bank_24",
-            description = "Bank",
-            category = IconCategory.unknown(),
-        ),
-        iconOf(
             id = IconRepository.transferIconId(),
             resourceName = "ic_transfer_24",
             description = "Transfer",

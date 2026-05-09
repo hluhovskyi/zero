@@ -17,7 +17,7 @@ interface IconRepository {
     companion object {
 
         fun unknownCategoryIconId(): Id.Known = Id("unknown_category_icon")
-        fun defaultAccountIconId(): Id.Known = Id("default_account_icon")
+        fun defaultAccountIconId(): Id.Known = Id("bank")
         fun transferIconId(): Id.Known = Id("transfer_icon")
     }
 }
