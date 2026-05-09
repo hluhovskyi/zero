@@ -16,6 +16,11 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
         color(id = "blue", hex = 0xFF1E88E5UL),
         color(id = "red", hex = 0xFFE53935UL),
         color(id = "orange", hex = 0xFFFF9800UL),
+        color(id = "green", hex = 0xFF2E7D32UL),
+        color(id = "purple", hex = 0xFF6A1B9AUL),
+        color(id = "teal", hex = 0xFF00695CUL),
+        color(id = "pink", hex = 0xFFAD1457UL),
+        color(id = "grey", hex = 0xFF424242UL),
     )
 
     private val schemes = mapOf(
@@ -30,6 +35,26 @@ internal class PredefinedMaterialColorRepository : ColorRepository {
         Id("orange") to ColorScheme(
             primary = Color(id = Id("orange_primary"), value = ColorValue(0xFFE65100UL)),
             background = Color(id = Id("orange_background"), value = ColorValue(0xFFFFF3E0UL)),
+        ),
+        Id("green") to ColorScheme(
+            primary = Color(id = Id("green_primary"), value = ColorValue(0xFF1B5E20UL)),
+            background = Color(id = Id("green_background"), value = ColorValue(0xFFE8F5E9UL)),
+        ),
+        Id("purple") to ColorScheme(
+            primary = Color(id = Id("purple_primary"), value = ColorValue(0xFF4A148CUL)),
+            background = Color(id = Id("purple_background"), value = ColorValue(0xFFF3E5F5UL)),
+        ),
+        Id("teal") to ColorScheme(
+            primary = Color(id = Id("teal_primary"), value = ColorValue(0xFF006064UL)),
+            background = Color(id = Id("teal_background"), value = ColorValue(0xFFE0F7FAUL)),
+        ),
+        Id("pink") to ColorScheme(
+            primary = Color(id = Id("pink_primary"), value = ColorValue(0xFFAD1457UL)),
+            background = Color(id = Id("pink_background"), value = ColorValue(0xFFFCE4ECUL)),
+        ),
+        Id("grey") to ColorScheme(
+            primary = Color(id = Id("grey_primary"), value = ColorValue(0xFF424242UL)),
+            background = Color(id = Id("grey_background"), value = ColorValue(0xFFF5F5F5UL)),
         ),
     )
 
