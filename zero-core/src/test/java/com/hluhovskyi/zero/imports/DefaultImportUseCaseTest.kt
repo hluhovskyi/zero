@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.icons.Icon
+import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.users.CurrentUserRepository
@@ -135,7 +136,7 @@ class DefaultImportUseCaseTest {
             uri = Uri("file://food-icon.png") as Uri.NonEmpty,
             description = "food icon",
         )
-        val matchedIcon = Icon(id = existingIconId, image = matchedImage)
+        val matchedIcon = Icon(id = existingIconId, image = matchedImage, category = IconCategory.unknown())
         whenever(iconRepository.query(any<IconRepository.Criteria<List<Icon>>>()))
             .thenReturn(flowOf(listOf(matchedIcon)))
 

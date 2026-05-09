@@ -211,12 +211,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryEditColorUseCase(
             navigator: Navigator,
-            idGenerator: IdGenerator,
-            logger: Logger,
         ): CategoryEditColorUseCase = DefaultCategoryEditColorUseCase(
             navigator = navigator,
-            requestIdGenerator = idGenerator,
-            logger,
         )
 
         @Provides
@@ -548,6 +544,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: IconPickerComponent.Builder,
             navigatorScope: NavigatorScope,
             categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
             accountEditIconUseCase: AccountEditIconUseCase,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -557,13 +554,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
                 .selectedIconId(arguments.getValue(Destinations.Icon.Picker.SelectedIconId))
-                .onIconSelectedHandler { icon ->
+                .onIconSelectedHandler { icon, colorScheme ->
                     accountEditIconUseCase.perform(
                         AccountEditIconUseCase.Action.Pick(
                             icon = AccountEditIconUseCase.Icon(
                                 id = icon.id,
                                 image = icon.image,
                             ),
+                            colorScheme = colorScheme,
                         ),
                     )
                     categoryEditIconUseCase.perform(
@@ -571,6 +569,22 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             icon = CategoryEditIconUseCase.Icon(
                                 id = icon.id,
                                 image = icon.image,
+                            ),
+                        ),
+                    )
+                }
+                .onColorSelectedHandler { color, colorScheme ->
+                    accountEditIconUseCase.perform(
+                        AccountEditIconUseCase.Action.PickColor(
+                            colorId = color.id,
+                            colorScheme = colorScheme,
+                        ),
+                    )
+                    categoryEditColorUseCase.perform(
+                        CategoryEditColorUseCase.Action.Pick(
+                            color = CategoryEditColorUseCase.Color(
+                                id = color.id,
+                                color = color.value,
                             ),
                         ),
                     )
@@ -591,7 +605,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
             componentFactory.create(
-                onColorSelectedHandler = { color ->
+                onColorSelectedHandler = { color, _ ->
                     categoryEditColorUseCase.perform(
                         CategoryEditColorUseCase.Action.Pick(
                             color = CategoryEditColorUseCase.Color(

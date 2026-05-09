@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.ActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -9,12 +10,14 @@ import kotlinx.coroutines.flow.emptyFlow
 interface AccountEditIconUseCase : ActionStateModel<AccountEditIconUseCase.Action, AccountEditIconUseCase.State> {
 
     sealed interface Action {
-        data class Request(val iconId: Id = Id.Unknown) : Action
-        data class Pick(val icon: Icon) : Action
+        data class Request(val iconId: Id = Id.Unknown, val colorId: Id = Id.Unknown) : Action
+        data class Pick(val icon: Icon, val colorScheme: ColorScheme?) : Action
+        data class PickColor(val colorId: Id.Known, val colorScheme: ColorScheme) : Action
     }
 
     sealed interface State {
-        data class Picked(val icon: Icon) : State
+        data class Picked(val icon: Icon, val colorScheme: ColorScheme?) : State
+        data class ColorChanged(val colorId: Id.Known, val colorScheme: ColorScheme) : State
     }
 
     data class Icon(

@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.accounts.edit
 
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
@@ -14,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -24,6 +26,7 @@ import java.io.Closeable
 internal class DefaultAccountEditViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
+    private val iconRepository: IconRepository,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val accountEditIconUseCase: AccountEditIconUseCase,
     private val accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
@@ -42,6 +45,7 @@ internal class DefaultAccountEditViewModel(
                 currencies = state.currencies,
                 selectedCurrency = state.selectedCurrency,
                 selectedIcon = state.icon,
+                colorScheme = state.colorScheme,
             )
         }
 
@@ -73,6 +77,7 @@ internal class DefaultAccountEditViewModel(
                 accountEditIconUseCase.perform(
                     AccountEditIconUseCase.Action.Request(
                         iconId = mutableState.value.iconId,
+                        colorId = mutableState.value.colorId,
                     ),
                 )
             }
@@ -100,6 +105,14 @@ internal class DefaultAccountEditViewModel(
         coroutineScope.launch {
             val primaryCurrency = runCatching { currencyPrimaryUseCase.getPrimaryCurrency() }.getOrNull()
             launch {
+                iconRepository.query(IconRepository.Criteria.ById(mutableState.value.iconId))
+                    .collect { icon ->
+                        mutableState.update { state ->
+                            if (state.icon == Image.empty()) state.copy(icon = icon.image) else state
+                        }
+                    }
+            }
+            launch {
                 currencyRepository.query(CurrencyRepository.Criteria.InUse())
                     .collectLatest { currencies ->
                         mutableState.update { state ->
@@ -114,16 +127,23 @@ internal class DefaultAccountEditViewModel(
                     }
             }
             launch(context = Dispatchers.Main) {
-                accountEditIconUseCase.state
-                    .filterIsInstance<AccountEditIconUseCase.State.Picked>()
-                    .collectLatest { iconState ->
-                        mutableState.update { state ->
+                accountEditIconUseCase.state.collect { iconState ->
+                    when (iconState) {
+                        is AccountEditIconUseCase.State.Picked -> mutableState.update { state ->
                             state.copy(
                                 iconId = iconState.icon.id,
                                 icon = iconState.icon.image,
+                                colorScheme = iconState.colorScheme ?: state.colorScheme,
+                            )
+                        }
+                        is AccountEditIconUseCase.State.ColorChanged -> mutableState.update { state ->
+                            state.copy(
+                                colorId = iconState.colorId,
+                                colorScheme = iconState.colorScheme,
                             )
                         }
                     }
+                }
             }
             launch(context = Dispatchers.Main) {
                 accountEditCurrencyUseCase.state
@@ -146,5 +166,7 @@ internal class DefaultAccountEditViewModel(
         val currencies: List<Currency> = emptyList(),
         val iconId: Id.Known = IconRepository.defaultAccountIconId(),
         val icon: Image = Image.empty(),
+        val colorId: Id = Id.Unknown,
+        val colorScheme: ColorScheme = ColorScheme.Grey,
     )
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,21 +45,23 @@ internal class DefaultSettingsViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            mutableState.update { state ->
-                state.copy(selectedCurrencyName = currencyPrimaryUseCase.getPrimaryCurrency().name)
+            launch {
+                mutableState.update { state ->
+                    state.copy(selectedCurrencyName = currencyPrimaryUseCase.getPrimaryCurrency().name)
+                }
             }
-        }
-        coroutineScope.launch(Dispatchers.Main) {
-            settingsCurrencyUseCase.state
-                .filterIsInstance<SettingsCurrencyUseCase.State.Picked>()
-                .collect { picked ->
-                    coroutineScope.launch {
-                        currencyPrimaryUseCase.setPrimaryCurrency(picked.currency.id)
-                        mutableState.update { state ->
-                            state.copy(selectedCurrencyName = picked.currency.name)
+            launch(Dispatchers.Main) {
+                settingsCurrencyUseCase.state
+                    .filterIsInstance<SettingsCurrencyUseCase.State.Picked>()
+                    .collect { picked ->
+                        launch(Dispatchers.IO) {
+                            currencyPrimaryUseCase.setPrimaryCurrency(picked.currency.id)
+                            mutableState.update { state ->
+                                state.copy(selectedCurrencyName = picked.currency.name)
+                            }
                         }
                     }
-                }
+            }
         }
     }
 }

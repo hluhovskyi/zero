@@ -47,6 +47,7 @@ import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.UiColorScheme
+import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
@@ -108,15 +109,6 @@ private fun AccountEditView(
                     },
                 )
 
-                FormCard(
-                    label = "Account Name",
-                    value = state.name,
-                    placeholder = state.category.namePlaceholder,
-                    onValueChange = { name ->
-                        viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
-                    },
-                )
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,20 +118,31 @@ private fun AccountEditView(
                     IconTile(
                         modifier = Modifier.fillMaxHeight(),
                         image = state.selectedIcon,
+                        colorScheme = state.colorScheme.toUi(),
                         imageLoader = imageLoader,
                         onClick = { viewModel.perform(AccountEditViewModel.Action.SelectIcon) },
                     )
-                    SelectorCard(
+                    FormCard(
                         modifier = Modifier.weight(1f),
-                        label = "Type",
-                        value = state.category.displayName,
-                        items = AccountCategory.entries,
-                        nameMapping = { it.displayName },
-                        onItemSelected = { category ->
-                            viewModel.perform(AccountEditViewModel.Action.ChangeCategory(category))
+                        label = "Account Name",
+                        value = state.name,
+                        placeholder = state.category.namePlaceholder,
+                        onValueChange = { name ->
+                            viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
                         },
                     )
                 }
+
+                SelectorCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Type",
+                    value = state.category.displayName,
+                    items = AccountCategory.entries,
+                    nameMapping = { it.displayName },
+                    onItemSelected = { category ->
+                        viewModel.perform(AccountEditViewModel.Action.ChangeCategory(category))
+                    },
+                )
 
                 if (state.category != AccountCategory.CASH) {
                     FormCard(
@@ -218,10 +221,11 @@ private fun FormCard(
 private fun IconTile(
     modifier: Modifier = Modifier,
     image: Image,
+    colorScheme: UiColorScheme,
     imageLoader: ImageLoader,
     onClick: () -> Unit,
 ) {
-    val scheme = UiColorScheme.default()
+    val scheme = colorScheme
     Box(
         modifier = modifier
             .aspectRatio(1f)

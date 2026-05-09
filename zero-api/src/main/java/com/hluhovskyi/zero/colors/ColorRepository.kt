@@ -12,6 +12,7 @@ interface ColorRepository {
     sealed interface Criteria<T> {
         class All : Criteria<List<Color>>
         data class ById(val id: Id.Known) : Criteria<Color>
+        class AllSchemes : Criteria<List<ColorScheme>>
     }
 
     companion object {
