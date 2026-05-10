@@ -15,12 +15,15 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data object LoadMore : Action
         data class UpdateSearchQuery(val query: String) : Action
         data class DeleteTransaction(val id: Id.Known) : Action
-        data object OpenFilterSheet : Action
-        data object RemoveFilterPeriod : Action
-        data object RemoveFilterType : Action
-        data object RemoveFilterCategories : Action
-        data object RemoveFilterAccounts : Action
-        data object ClearFilter : Action
+
+        sealed interface Filter : Action {
+            data object Open : Filter
+            data object RemovePeriod : Filter
+            data object RemoveType : Filter
+            data object RemoveCategories : Filter
+            data object RemoveAccounts : Filter
+            data object Clear : Filter
+        }
     }
 
     data class State(

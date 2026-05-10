@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -20,9 +21,7 @@ internal class DefaultTransactionFilterSheetViewModel(
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : TransactionFilterSheetViewModel {
 
-    private val mutableState = MutableStateFlow(
-        TransactionFilterSheetViewModel.State(activeFilter = transactionFilterUseCase.pendingFilter),
-    )
+    private val mutableState = MutableStateFlow(TransactionFilterSheetViewModel.State())
     override val state: Flow<TransactionFilterSheetViewModel.State> = mutableState
 
     override fun perform(action: TransactionFilterSheetViewModel.Action) {
@@ -36,6 +35,11 @@ internal class DefaultTransactionFilterSheetViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            launch {
+                transactionFilterUseCase.pendingFilter.take(1).collect { filter ->
+                    mutableState.update { it.copy(activeFilter = filter) }
+                }
+            }
             combine(
                 categoriesQueryUseCase.queryAll().onEmptyReturnEmptyList(),
                 accountRepository.query(AccountRepository.Criteria.All()).onEmptyReturnEmptyList(),

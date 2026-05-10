@@ -19,6 +19,7 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -36,11 +37,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
-import kotlinx.datetime.minus
 import java.io.Closeable
 
 internal class DefaultTransactionViewModel(
@@ -53,7 +50,8 @@ internal class DefaultTransactionViewModel(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val filter: TransactionFilter = TransactionFilter.All,
-    private val transactionFilterUseCase: com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase? = null,
+    private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
+    private val transactionFilterApplicator: TransactionFilterApplicator,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -91,44 +89,39 @@ internal class DefaultTransactionViewModel(
                 }
             }
 
-            is TransactionViewModel.Action.OpenFilterSheet -> {
-                transactionFilterUseCase?.perform(
-                    com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.Action.Open(
-                        mutableState.value.activeFilter,
-                    )
+            is TransactionViewModel.Action.Filter.Open -> {
+                transactionFilterUseCase.perform(
+                    TransactionFilterUseCase.Action.Open(mutableState.value.activeFilter),
                 )
             }
 
-            is TransactionViewModel.Action.RemoveFilterPeriod -> {
+            is TransactionViewModel.Action.Filter.RemovePeriod -> {
                 updateFilter { it.copy(period = null) }
             }
 
-            is TransactionViewModel.Action.RemoveFilterType -> {
+            is TransactionViewModel.Action.Filter.RemoveType -> {
                 updateFilter { it.copy(type = TransactionFilter.TransactionType.All) }
             }
 
-            is TransactionViewModel.Action.RemoveFilterCategories -> {
+            is TransactionViewModel.Action.Filter.RemoveCategories -> {
                 updateFilter { it.copy(categoryIds = null) }
             }
 
-            is TransactionViewModel.Action.RemoveFilterAccounts -> {
+            is TransactionViewModel.Action.Filter.RemoveAccounts -> {
                 updateFilter { it.copy(accountIds = null) }
             }
 
-            is TransactionViewModel.Action.ClearFilter -> {
+            is TransactionViewModel.Action.Filter.Clear -> {
                 updateFilter { TransactionFilter() }
             }
         }
     }
 
     private fun updateFilter(transform: (TransactionFilter) -> TransactionFilter) {
-        val newFilter = transform(mutableState.value.activeFilter)
-        if (transactionFilterUseCase != null) {
-            transactionFilterUseCase.perform(
-                com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.Action.Apply(newFilter)
-            )
-        } else {
-            mutableState.update { it.copy(activeFilter = newFilter) }
+        mutableState.update { state ->
+            val newFilter = transform(state.activeFilter)
+            transactionFilterUseCase.perform(TransactionFilterUseCase.Action.Apply(newFilter))
+            state.copy(activeFilter = newFilter)
         }
     }
 
@@ -136,8 +129,8 @@ internal class DefaultTransactionViewModel(
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             launch {
-                transactionFilterUseCase?.state?.collect { useCaseState ->
-                    if (useCaseState is com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.State.Applied) {
+                transactionFilterUseCase.state.collect { useCaseState ->
+                    if (useCaseState is TransactionFilterUseCase.State.Applied) {
                         mutableState.update { it.copy(activeFilter = useCaseState.filter) }
                     }
                 }
@@ -145,20 +138,20 @@ internal class DefaultTransactionViewModel(
 
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
 
-            // Use DB-level query for simple single-category or single-account filters (e.g. detail screens).
+            // Use DB-level query for simple category or account filters (e.g. detail screens).
             // All other cases load everything and apply the filter in memory.
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when {
-                filter.categoryIds?.size == 1
+                filter.categoryIds != null
                         && filter.period == null
                         && filter.type == TransactionFilter.TransactionType.All
                         && filter.accountIds == null ->
-                    forCategoryTransactionsFlow(filter.categoryIds!!.first())
+                    forCategoriesTransactionsFlow(filter.categoryIds)
 
-                filter.accountIds?.size == 1
+                filter.accountIds != null
                         && filter.period == null
                         && filter.type == TransactionFilter.TransactionType.All
                         && filter.categoryIds == null ->
-                    forAccountTransactionsFlow(filter.accountIds!!.first())
+                    forAccountsTransactionsFlow(filter.accountIds)
 
                 else -> allTransactionsFlow(initialTimestamp)
             }
@@ -186,10 +179,8 @@ internal class DefaultTransactionViewModel(
 
             val activeFilterFlow = mutableState.map { it.activeFilter }.distinctUntilChanged()
 
-            // Apply the active filter to raw transactions reactively before resolution
             val filteredRawTransactions = combine(rawTransactions, activeFilterFlow) { transactions, activeFilter ->
-                val today = clock.localDateTime(zoneProvider.timeZone()).date
-                applyFilter(transactions, activeFilter, today)
+                transactionFilterApplicator.apply(transactions, activeFilter)
             }
 
             val categoriesFlow = categoriesQueryUseCase.queryAll()
@@ -280,62 +271,6 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    private fun applyFilter(
-        transactions: List<TransactionRepository.Transaction>,
-        filter: TransactionFilter,
-        today: LocalDate,
-    ): List<TransactionRepository.Transaction> {
-        if (!filter.isActive) return transactions
-        var result = transactions
-
-        filter.period?.let { period ->
-            val (startDate, endDate) = period.toDateRange(today)
-            result = result.filter { it.dateTime.date in startDate..endDate }
-        }
-
-        if (filter.type != TransactionFilter.TransactionType.All) {
-            result = result.filter { tx ->
-                when (filter.type) {
-                    TransactionFilter.TransactionType.Expense -> tx is TransactionRepository.Transaction.Expense
-                    TransactionFilter.TransactionType.Income -> tx is TransactionRepository.Transaction.Income
-                    TransactionFilter.TransactionType.Transfer -> tx is TransactionRepository.Transaction.Transfer
-                    TransactionFilter.TransactionType.All -> true
-                }
-            }
-        }
-
-        filter.categoryIds?.let { ids ->
-            result = result.filter { tx ->
-                when (tx) {
-                    is TransactionRepository.Transaction.Expense -> tx.categoryId in ids
-                    is TransactionRepository.Transaction.Income -> tx.categoryId in ids
-                    is TransactionRepository.Transaction.Transfer -> false
-                }
-            }
-        }
-
-        filter.accountIds?.let { ids ->
-            result = result.filter { tx -> tx.accountId in ids }
-        }
-
-        return result
-    }
-
-    private fun TransactionFilter.DatePeriod.toDateRange(today: LocalDate): Pair<LocalDate, LocalDate> = when (this) {
-        TransactionFilter.DatePeriod.Today -> today to today
-        TransactionFilter.DatePeriod.ThisWeek -> {
-            val daysFromMonday = today.dayOfWeek.value - 1
-            today.minus(DatePeriod(days = daysFromMonday)) to today
-        }
-        TransactionFilter.DatePeriod.ThisMonth -> LocalDate(today.year, today.month, 1) to today
-        TransactionFilter.DatePeriod.LastMonth -> {
-            val firstOfThisMonth = LocalDate(today.year, today.month, 1)
-            val lastDayOfLastMonth = firstOfThisMonth.minus(DatePeriod(days = 1))
-            LocalDate(lastDayOfLastMonth.year, lastDayOfLastMonth.month, 1) to lastDayOfLastMonth
-        }
-        TransactionFilter.DatePeriod.ThisYear -> LocalDate(today.year, Month.JANUARY, 1) to today
-    }
-
     private fun allTransactionsFlow(
         initialTimestamp: LocalDateTime,
     ): Flow<List<TransactionRepository.Transaction>> = combine(
@@ -359,18 +294,31 @@ internal class DefaultTransactionViewModel(
         (added + merged).sortedByDescending { it.dateTime }
     }
 
-    private fun forCategoryTransactionsFlow(
-        categoryId: Id.Known,
-    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForCategory(categoryId))
-        .onStartWithEmptyList()
-        .onEmptyReturnEmptyList()
+    private fun forCategoriesTransactionsFlow(
+        categoryIds: Set<Id.Known>,
+    ): Flow<List<TransactionRepository.Transaction>> =
+        if (categoryIds.size == 1) {
+            transactionRepository.query(TransactionRepository.Criteria.ForCategory(categoryIds.first()))
+                .onStartWithEmptyList()
+                .onEmptyReturnEmptyList()
+        } else {
+            transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
+                .onStartWithEmptyList()
+                .onEmptyReturnEmptyList()
+        }
 
-    private fun forAccountTransactionsFlow(
-        accountId: Id.Known,
-    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository
-        .query(TransactionRepository.Criteria.ForAccount(accountId))
-        .onStartWithEmptyList()
-        .onEmptyReturnEmptyList()
+    private fun forAccountsTransactionsFlow(
+        accountIds: Set<Id.Known>,
+    ): Flow<List<TransactionRepository.Transaction>> =
+        if (accountIds.size == 1) {
+            transactionRepository.query(TransactionRepository.Criteria.ForAccount(accountIds.first()))
+                .onStartWithEmptyList()
+                .onEmptyReturnEmptyList()
+        } else {
+            transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
+                .onStartWithEmptyList()
+                .onEmptyReturnEmptyList()
+        }
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,

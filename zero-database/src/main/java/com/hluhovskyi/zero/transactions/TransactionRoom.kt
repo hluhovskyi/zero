@@ -154,6 +154,17 @@ internal interface TransactionRoom {
         """
         SELECT * FROM TransactionEntity
         WHERE userId     = :userId
+          AND categoryId IN (:categoryIds)
+          AND deletedAt  IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByCategories(userId: String, categoryIds: List<String>): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
           AND categoryId = :categoryId
           AND deletedAt  IS NULL
           AND date(enteredDateTime) >= date(:from)
@@ -178,6 +189,17 @@ internal interface TransactionRoom {
     """,
     )
     fun selectByAccount(userId: String, accountId: String): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId     = :userId
+          AND accountId  IN (:accountIds)
+          AND deletedAt  IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectByAccounts(userId: String, accountIds: List<String>): Flow<List<TransactionEntity>>
 
     @Query(
         """

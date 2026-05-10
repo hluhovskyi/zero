@@ -2,6 +2,8 @@ package com.hluhovskyi.zero.transactions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.pluralStringResource
+import com.hluhovskyi.zero.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -135,7 +137,7 @@ private fun TransactionView(
                         }
                         FilterButton(
                             activeCount = state.activeFilter.activeCount,
-                            onClick = { viewModel.perform(TransactionViewModel.Action.OpenFilterSheet) },
+                            onClick = { viewModel.perform(TransactionViewModel.Action.Filter.Open) },
                         )
                     }
                 }
@@ -145,11 +147,11 @@ private fun TransactionView(
             if (state.activeFilter.isActive) {
                 FilterChipsRow(
                     filter = state.activeFilter,
-                    onRemovePeriod = { viewModel.perform(TransactionViewModel.Action.RemoveFilterPeriod) },
-                    onRemoveType = { viewModel.perform(TransactionViewModel.Action.RemoveFilterType) },
-                    onRemoveCategories = { viewModel.perform(TransactionViewModel.Action.RemoveFilterCategories) },
-                    onRemoveAccounts = { viewModel.perform(TransactionViewModel.Action.RemoveFilterAccounts) },
-                    onClearAll = { viewModel.perform(TransactionViewModel.Action.ClearFilter) },
+                    onRemovePeriod = { viewModel.perform(TransactionViewModel.Action.Filter.RemovePeriod) },
+                    onRemoveType = { viewModel.perform(TransactionViewModel.Action.Filter.RemoveType) },
+                    onRemoveCategories = { viewModel.perform(TransactionViewModel.Action.Filter.RemoveCategories) },
+                    onRemoveAccounts = { viewModel.perform(TransactionViewModel.Action.Filter.RemoveAccounts) },
+                    onClearAll = { viewModel.perform(TransactionViewModel.Action.Filter.Clear) },
                 )
             }
 
@@ -384,13 +386,13 @@ private fun FilterChipsRow(
             }
             filter.categoryIds?.let { ids ->
                 FilterChip(
-                    label = "${ids.size} categor${if (ids.size == 1) "y" else "ies"}",
+                    label = pluralStringResource(R.plurals.filter_chip_categories, ids.size, ids.size),
                     onRemove = onRemoveCategories,
                 )
             }
             filter.accountIds?.let { ids ->
                 FilterChip(
-                    label = "${ids.size} account${if (ids.size == 1) "" else "s"}",
+                    label = pluralStringResource(R.plurals.filter_chip_accounts, ids.size, ids.size),
                     onRemove = onRemoveAccounts,
                 )
             }

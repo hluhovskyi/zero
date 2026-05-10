@@ -24,6 +24,7 @@ interface TransactionRepository {
             val to: LocalDate,
         ) : Criteria<List<CategorySpendingStatistic>>
         data class ForCategory(val categoryId: Id.Known) : Criteria<List<Transaction>>
+        data class ForCategories(val categoryIds: Set<Id.Known>) : Criteria<List<Transaction>>
         data class ForCategoryBetween(
             val categoryId: Id.Known,
             val from: LocalDate,
@@ -31,6 +32,7 @@ interface TransactionRepository {
         ) : Criteria<List<Transaction>>
 
         data class ForAccount(val accountId: Id.Known) : Criteria<List<Transaction>>
+        data class ForAccounts(val accountIds: Set<Id.Known>) : Criteria<List<Transaction>>
         data class ForAccountBetween(
             val accountId: Id.Known,
             val from: LocalDate,

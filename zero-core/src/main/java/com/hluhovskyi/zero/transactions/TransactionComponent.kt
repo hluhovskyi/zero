@@ -87,6 +87,11 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @Provides
         @TransactionScope
+        fun transactionFilterApplicator(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterApplicator =
+            DefaultTransactionFilterApplicator(clock, zoneProvider)
+
+        @Provides
+        @TransactionScope
         fun viewModel(
             transactionRepository: TransactionRepository,
             accountRepository: AccountRepository,
@@ -98,6 +103,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
             filter: TransactionFilter,
             transactionFilterUseCase: TransactionFilterUseCase,
+            transactionFilterApplicator: TransactionFilterApplicator,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
@@ -111,6 +117,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             onTransactionSelectedHandler = onTransactionSelectedHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
+            transactionFilterApplicator = transactionFilterApplicator,
             clock = clock,
             zoneProvider = zoneProvider,
         )

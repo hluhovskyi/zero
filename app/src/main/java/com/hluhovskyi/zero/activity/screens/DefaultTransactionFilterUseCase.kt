@@ -13,14 +13,22 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicReference
 
 internal class DefaultTransactionFilterUseCase(
     private val navigator: Navigator,
 ) : TransactionFilterUseCase {
 
-    private val _pendingFilter = AtomicReference(TransactionFilter())
-    override val pendingFilter: TransactionFilter get() = _pendingFilter.get()
+    private val pendingFilterFlow = MutableSharedFlow<TransactionFilter>(
+        replay = 1,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    override val pendingFilter: Flow<TransactionFilter> = pendingFilterFlow
+
+    init {
+        pendingFilterFlow.tryEmit(TransactionFilter())
+    }
 
     private val applyAction = MutableSharedFlow<TransactionFilterUseCase.Action.Apply>(
         extraBufferCapacity = 1,
@@ -30,7 +38,7 @@ internal class DefaultTransactionFilterUseCase(
     override fun perform(action: TransactionFilterUseCase.Action) {
         when (action) {
             is TransactionFilterUseCase.Action.Open -> {
-                _pendingFilter.set(action.filter)
+                pendingFilterFlow.tryEmit(action.filter)
                 navigator.navigateTo(Destinations.Transaction.Filter)
             }
             is TransactionFilterUseCase.Action.Apply -> {
