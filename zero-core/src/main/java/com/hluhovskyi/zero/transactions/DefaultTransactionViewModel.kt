@@ -19,6 +19,7 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -49,6 +50,8 @@ internal class DefaultTransactionViewModel(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val filter: TransactionFilter = TransactionFilter.All,
+    private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
+    private val transactionFilterApplicator: TransactionFilterApplicator,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -85,18 +88,72 @@ internal class DefaultTransactionViewModel(
                     transactionRepository.delete(action.id)
                 }
             }
+
+            is TransactionViewModel.Action.Filter.Open -> {
+                transactionFilterUseCase.perform(
+                    TransactionFilterUseCase.Action.Open(mutableState.value.activeFilter),
+                )
+            }
+
+            is TransactionViewModel.Action.Filter.RemovePeriod -> {
+                updateFilter { it.copy(period = null) }
+            }
+
+            is TransactionViewModel.Action.Filter.RemoveType -> {
+                updateFilter { it.copy(type = TransactionFilter.TransactionType.All) }
+            }
+
+            is TransactionViewModel.Action.Filter.RemoveCategories -> {
+                updateFilter { it.copy(categoryIds = null) }
+            }
+
+            is TransactionViewModel.Action.Filter.RemoveAccounts -> {
+                updateFilter { it.copy(accountIds = null) }
+            }
+
+            is TransactionViewModel.Action.Filter.Clear -> {
+                updateFilter { TransactionFilter() }
+            }
+        }
+    }
+
+    private fun updateFilter(transform: (TransactionFilter) -> TransactionFilter) {
+        mutableState.update { state ->
+            val newFilter = transform(state.activeFilter)
+            transactionFilterUseCase.perform(TransactionFilterUseCase.Action.Apply(newFilter))
+            state.copy(activeFilter = newFilter)
         }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            launch {
+                transactionFilterUseCase.state.collect { useCaseState ->
+                    if (useCaseState is TransactionFilterUseCase.State.Applied) {
+                        mutableState.update { it.copy(activeFilter = useCaseState.filter) }
+                    }
+                }
+            }
+
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
 
-            val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when (filter) {
-                TransactionFilter.All -> allTransactionsFlow(initialTimestamp)
-                is TransactionFilter.ForCategory -> forCategoryTransactionsFlow(filter)
-                is TransactionFilter.ForAccount -> forAccountTransactionsFlow(filter)
+            // Use DB-level query for simple category or account filters (e.g. detail screens).
+            // All other cases load everything and apply the filter in memory.
+            val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when {
+                filter.categoryIds != null
+                        && filter.period == null
+                        && filter.type == TransactionFilter.TransactionType.All
+                        && filter.accountIds == null ->
+                    forCategoriesTransactionsFlow(filter.categoryIds)
+
+                filter.accountIds != null
+                        && filter.period == null
+                        && filter.type == TransactionFilter.TransactionType.All
+                        && filter.categoryIds == null ->
+                    forAccountsTransactionsFlow(filter.accountIds)
+
+                else -> allTransactionsFlow(initialTimestamp)
             }
 
             // null = "no search active, use paged"; non-null = search results
@@ -116,19 +173,29 @@ internal class DefaultTransactionViewModel(
                     }
                 }
 
-            val activeTransactions = combine(pagedTransactions, searchTransactions) { paged, searchResult ->
+            val rawTransactions = combine(pagedTransactions, searchTransactions) { paged, searchResult ->
                 searchResult ?: paged
             }
 
+            val activeFilterFlow = mutableState.map { it.activeFilter }.distinctUntilChanged()
+
+            val filteredRawTransactions = combine(rawTransactions, activeFilterFlow) { transactions, activeFilter ->
+                transactionFilterApplicator.apply(transactions, activeFilter)
+            }
+
+            val categoriesFlow = categoriesQueryUseCase.queryAll()
+                .onStartWithEmptyList()
+                .onEmptyReturnEmptyList()
+                .associateById()
+
+            val accountsFlow = accountRepository.query(AccountRepository.Criteria.All())
+                .onEmptyReturnEmptyList()
+                .associateById()
+
             combine(
-                activeTransactions,
-                categoriesQueryUseCase.queryAll()
-                    .onStartWithEmptyList()
-                    .onEmptyReturnEmptyList()
-                    .associateById(),
-                accountRepository.query(AccountRepository.Criteria.All())
-                    .onEmptyReturnEmptyList()
-                    .associateById(),
+                filteredRawTransactions,
+                categoriesFlow,
+                accountsFlow,
                 currencyRepository.query(CurrencyRepository.Criteria.All())
                     .onEmptyReturnEmptyList()
                     .associateById(),
@@ -137,7 +204,8 @@ internal class DefaultTransactionViewModel(
                     .associateById(),
             ) { transactions, idToCategories, idToAccounts, idToCurrencies, idToIcons ->
                 val primaryCurrency = currencyPrimaryUseCase.getPrimaryCurrency()
-                transactions
+
+                val items = transactions
                     .mapNotNull { transaction ->
                         resolve(
                             transaction = transaction,
@@ -193,6 +261,8 @@ internal class DefaultTransactionViewModel(
                             ),
                         ) + transactions
                     }
+
+                items
             }.collectLatest { items ->
                 mutableState.update { state ->
                     state.copy(transactions = items)
@@ -224,18 +294,19 @@ internal class DefaultTransactionViewModel(
         (added + merged).sortedByDescending { it.dateTime }
     }
 
-    private fun forCategoryTransactionsFlow(
-        filter: TransactionFilter.ForCategory,
-    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForCategory(filter.categoryId))
-        .onStartWithEmptyList()
-        .onEmptyReturnEmptyList()
+    private fun forCategoriesTransactionsFlow(
+        categoryIds: Set<Id.Known>,
+    ): Flow<List<TransactionRepository.Transaction>> =
+        transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
 
-    private fun forAccountTransactionsFlow(
-        filter: TransactionFilter.ForAccount,
-    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository
-        .query(TransactionRepository.Criteria.ForAccount(filter.accountId))
-        .onStartWithEmptyList()
-        .onEmptyReturnEmptyList()
+    private fun forAccountsTransactionsFlow(
+        accountIds: Set<Id.Known>,
+    ): Flow<List<TransactionRepository.Transaction>> =
+        transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,

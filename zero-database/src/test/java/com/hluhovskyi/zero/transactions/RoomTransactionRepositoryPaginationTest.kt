@@ -175,21 +175,21 @@ class RoomTransactionRepositoryPaginationTest {
         )
     }
 
-    // --- Criteria.ForCategory ---
+    // --- Criteria.ForCategories ---
 
     @Test
-    fun `ForCategory criterion calls selectByCategory with the right userId and categoryId`() = runTest {
+    fun `ForCategories criterion calls selectByCategories with the right userId and categoryIds`() = runTest {
         val categoryId = Id.Known("cat1")
-        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+        whenever(transactionRoom.selectByCategories(userId.value, listOf(categoryId.value)))
             .thenReturn(flowOf(emptyList()))
 
-        repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+        repo.query(TransactionRepository.Criteria.ForCategories(setOf(categoryId))).first()
 
-        verify(transactionRoom).selectByCategory(userId.value, categoryId.value)
+        verify(transactionRoom).selectByCategories(userId.value, listOf(categoryId.value))
     }
 
     @Test
-    fun `ForCategory criterion maps expense entity to Expense transaction`() = runTest {
+    fun `ForCategories criterion maps expense entity to Expense transaction`() = runTest {
         val categoryId = Id.Known("cat1")
         val entity = TransactionEntity(
             id = Id.Known("t1"),
@@ -206,10 +206,10 @@ class RoomTransactionRepositoryPaginationTest {
             creationDateTime = jan15h10,
             updatedDateTime = jan15h10,
         )
-        whenever(transactionRoom.selectByCategory(userId.value, categoryId.value))
+        whenever(transactionRoom.selectByCategories(userId.value, listOf(categoryId.value)))
             .thenReturn(flowOf(listOf(entity)))
 
-        val result = repo.query(TransactionRepository.Criteria.ForCategory(categoryId)).first()
+        val result = repo.query(TransactionRepository.Criteria.ForCategories(setOf(categoryId))).first()
 
         assertEquals(1, result.size)
         val tx = result.first()

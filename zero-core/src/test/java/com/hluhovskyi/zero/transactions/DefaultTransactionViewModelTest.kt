@@ -268,18 +268,18 @@ class DefaultTransactionViewModelTest {
     }
 
     @Test
-    fun `ForCategory filter queries ForCategory criterion instead of All`() = runTest {
+    fun `ForCategory filter queries ForCategories criterion instead of All`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
         val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
         verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
 
-        val forCat = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.ForCategory>()
+        val forCat = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.ForCategories>()
         assertEquals(1, forCat.size)
-        assertEquals(categoryId, forCat.first().categoryId)
+        assertEquals(setOf(categoryId), forCat.first().categoryIds)
 
         val allCriteria = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.All>()
         assertEquals(0, allCriteria.size)
@@ -288,7 +288,7 @@ class DefaultTransactionViewModelTest {
     @Test
     fun `ForCategory filter makes LoadMore a no-op`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
@@ -328,9 +328,9 @@ class DefaultTransactionViewModelTest {
         val icon = Icon(id = Id.Known("i1"), image = Image.empty(), category = IconCategory.unknown())
         val categoryIcon = Icon(id = Id.Known("i_cat"), image = Image.empty(), category = IconCategory.unknown())
 
-        // Override the setUp() stub for ForCategory queries
+        // Override the setUp() stub for ForCategories queries
         val forCategoryCriteria = argThat<TransactionRepository.Criteria<*>> {
-            this is TransactionRepository.Criteria.ForCategory && this.categoryId == categoryId
+            this is TransactionRepository.Criteria.ForCategories && this.categoryIds == setOf(categoryId)
         }
         whenever(transactionRepository.query(forCategoryCriteria, any())).thenReturn(flowOf(listOf(oneExpenseTransaction)))
         whenever(accountRepository.query(isA<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(account)))
@@ -346,7 +346,7 @@ class DefaultTransactionViewModelTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(currency)
         whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
 
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
         advanceUntilIdle()
@@ -371,6 +371,7 @@ class DefaultTransactionViewModelTest {
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
         filter = filter,
+        transactionFilterApplicator = TransactionFilterApplicator.Identity,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
         coroutineScope = coroutineScope,

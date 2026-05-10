@@ -14,6 +14,7 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -59,6 +60,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
             .transactionFilter(TransactionFilter.All)
+            .transactionFilterUseCase(TransactionFilterUseCase.Noop)
             .displayConfig(DisplayConfig())
     }
 
@@ -74,11 +76,19 @@ abstract class TransactionComponent : AttachableViewComponent {
         fun transactionFilter(filter: TransactionFilter): Builder
 
         @BindsInstance
+        fun transactionFilterUseCase(useCase: TransactionFilterUseCase): Builder
+
+        @BindsInstance
         fun displayConfig(config: DisplayConfig): Builder
     }
 
     @dagger.Module
     object Module {
+
+        @Provides
+        @TransactionScope
+        fun transactionFilterApplicator(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterApplicator =
+            DefaultTransactionFilterApplicator(clock, zoneProvider)
 
         @Provides
         @TransactionScope
@@ -92,6 +102,8 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyConvertUseCase: CurrencyConvertUseCase,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
             filter: TransactionFilter,
+            transactionFilterUseCase: TransactionFilterUseCase,
+            transactionFilterApplicator: TransactionFilterApplicator,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
@@ -104,6 +116,8 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyConvertUseCase = currencyConvertUseCase,
             onTransactionSelectedHandler = onTransactionSelectedHandler,
             filter = filter,
+            transactionFilterUseCase = transactionFilterUseCase,
+            transactionFilterApplicator = transactionFilterApplicator,
             clock = clock,
             zoneProvider = zoneProvider,
         )

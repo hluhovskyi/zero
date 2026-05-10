@@ -132,8 +132,8 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             categoryId: Id.Known,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
         ): TransactionComponent = builder
-            .transactionFilter(TransactionFilter.ForCategory(categoryId))
-            .displayConfig(DisplayConfig(showSearchBar = false))
+            .transactionFilter(TransactionFilter.forCategory(categoryId))
+            .displayConfig(DisplayConfig(showSearchBar = false, showFilterButton = false))
             .onTransactionSelectHandler(onTransactionSelectedHandler)
             .build()
 

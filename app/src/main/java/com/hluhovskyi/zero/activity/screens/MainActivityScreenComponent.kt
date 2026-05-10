@@ -47,6 +47,8 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.TransactionComponent
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
@@ -99,6 +101,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
+        val transactionFilterSheetComponentBuilder: TransactionFilterSheetComponent.Builder
         val colorPickerComponentFactory: ColorPickerComponent.Factory
 
         val settingsComponentBuilder: SettingsComponent.Builder
@@ -216,10 +219,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         )
 
         @Provides
+        @MainActivityScreenScope
+        fun transactionFilterUseCase(navigator: Navigator): TransactionFilterUseCase =
+            DefaultTransactionFilterUseCase(navigator = navigator)
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionNavigationEntry(
             component: TransactionComponent.Builder,
+            transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(
@@ -234,9 +243,25 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                         )
                     }
+                    .transactionFilterUseCase(transactionFilterUseCase)
                     .logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) },
             )
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun transactionFilterNavigationEntry(
+            transactionFilterSheetComponentBuilder: TransactionFilterSheetComponent.Builder,
+            transactionFilterUseCase: TransactionFilterUseCase,
+            navigatorScope: NavigatorScope,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Transaction.Filter,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            transactionFilterSheetComponentBuilder
+                .transactionFilterUseCase(transactionFilterUseCase)
         }
 
         @Provides

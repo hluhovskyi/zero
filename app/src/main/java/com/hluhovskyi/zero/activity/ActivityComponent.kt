@@ -38,6 +38,7 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
@@ -72,7 +73,8 @@ abstract class ActivityComponent :
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
-    ColorPickerComponent.Dependencies {
+    ColorPickerComponent.Dependencies,
+    TransactionFilterSheetComponent.Dependencies {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -193,6 +195,12 @@ abstract class ActivityComponent :
         fun iconPickerComponentBuilder(
             component: ActivityComponent,
         ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun transactionFilterSheetComponentBuilder(
+            component: ActivityComponent,
+        ): TransactionFilterSheetComponent.Builder = TransactionFilterSheetComponent.builder(component)
 
         @Provides
         @ActivityScope

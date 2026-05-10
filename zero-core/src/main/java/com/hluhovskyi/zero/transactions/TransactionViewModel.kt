@@ -15,11 +15,21 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data object LoadMore : Action
         data class UpdateSearchQuery(val query: String) : Action
         data class DeleteTransaction(val id: Id.Known) : Action
+
+        sealed interface Filter : Action {
+            data object Open : Filter
+            data object RemovePeriod : Filter
+            data object RemoveType : Filter
+            data object RemoveCategories : Filter
+            data object RemoveAccounts : Filter
+            data object Clear : Filter
+        }
     }
 
     data class State(
         val transactions: List<Item> = emptyList(),
         val searchQuery: String = "",
+        val activeFilter: TransactionFilter = TransactionFilter(),
     )
 
     sealed interface Item {
