@@ -6,6 +6,8 @@ internal object KnownIconIds {
     val cash: Id.Known = Id("cash")
     val bank: Id.Known = Id("bank")
     val creditCard: Id.Known = Id("credit_card")
+    val wallet: Id.Known = Id("wallet")
+    val crypto: Id.Known = Id("crypto")
 
     val flowers: Id.Known = Id("flowers")
     val grocery: Id.Known = Id("grocery")

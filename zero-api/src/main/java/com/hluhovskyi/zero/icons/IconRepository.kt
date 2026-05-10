@@ -1,11 +1,14 @@
 package com.hluhovskyi.zero.icons
 
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 
 interface IconRepository {
 
     fun <T> query(criteria: Criteria<T>): Flow<T>
+
+    fun iconFor(category: AccountCategory): Icon
 
     sealed interface Criteria<T> {
 

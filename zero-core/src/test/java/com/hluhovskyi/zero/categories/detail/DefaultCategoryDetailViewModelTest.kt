@@ -65,6 +65,7 @@ class DefaultCategoryDetailViewModelTest {
     @Test
     fun `state reflects category name and color scheme from queryById`() = runTest {
         val blueScheme = ColorScheme(
+            swatch = Color(id = Id("s"), value = ColorValue(0xFF1565C0UL)),
             primary = Color(id = Id("p"), value = ColorValue(0xFF1565C0UL)),
             background = Color(id = Id("b"), value = ColorValue(0xFFE3F2FDUL)),
         )

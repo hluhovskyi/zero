@@ -67,6 +67,7 @@ internal class DefaultIconPickerViewModel(
             .collectLatest { icons ->
                 val sections = icons
                     .groupBy { it.category }
+                    .filter { (category, _) -> category != IconCategory.system() }
                     .map { (category, categoryIcons) -> IconPickerSection(category, categoryIcons) }
                 val selectedIcon = (selectedIconId as? Id.Known)
                     ?.let { id -> icons.find { it.id == id } }
