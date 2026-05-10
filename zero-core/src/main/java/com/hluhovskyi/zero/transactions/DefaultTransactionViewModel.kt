@@ -53,6 +53,7 @@ internal class DefaultTransactionViewModel(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
     private val filter: TransactionFilter = TransactionFilter.All,
+    private val transactionFilterUseCase: com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase? = null,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -91,34 +92,57 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.OpenFilterSheet -> {
-                // TODO: call OnOpenFilterSheetHandler — wired by parent to show TransactionFilterSheetComponent
+                transactionFilterUseCase?.perform(
+                    com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.Action.Open(
+                        mutableState.value.activeFilter,
+                    )
+                )
             }
 
             is TransactionViewModel.Action.RemoveFilterPeriod -> {
-                mutableState.update { it.copy(activeFilter = it.activeFilter.copy(period = null)) }
+                updateFilter { it.copy(period = null) }
             }
 
             is TransactionViewModel.Action.RemoveFilterType -> {
-                mutableState.update { it.copy(activeFilter = it.activeFilter.copy(type = TransactionFilter.TransactionType.All)) }
+                updateFilter { it.copy(type = TransactionFilter.TransactionType.All) }
             }
 
             is TransactionViewModel.Action.RemoveFilterCategories -> {
-                mutableState.update { it.copy(activeFilter = it.activeFilter.copy(categoryIds = null)) }
+                updateFilter { it.copy(categoryIds = null) }
             }
 
             is TransactionViewModel.Action.RemoveFilterAccounts -> {
-                mutableState.update { it.copy(activeFilter = it.activeFilter.copy(accountIds = null)) }
+                updateFilter { it.copy(accountIds = null) }
             }
 
             is TransactionViewModel.Action.ClearFilter -> {
-                mutableState.update { it.copy(activeFilter = TransactionFilter()) }
+                updateFilter { TransactionFilter() }
             }
+        }
+    }
+
+    private fun updateFilter(transform: (TransactionFilter) -> TransactionFilter) {
+        val newFilter = transform(mutableState.value.activeFilter)
+        if (transactionFilterUseCase != null) {
+            transactionFilterUseCase.perform(
+                com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.Action.Apply(newFilter)
+            )
+        } else {
+            mutableState.update { it.copy(activeFilter = newFilter) }
         }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            launch {
+                transactionFilterUseCase?.state?.collect { useCaseState ->
+                    if (useCaseState is com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase.State.Applied) {
+                        mutableState.update { it.copy(activeFilter = useCaseState.filter) }
+                    }
+                }
+            }
+
             val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
 
             // Use DB-level query for simple single-category or single-account filters (e.g. detail screens).

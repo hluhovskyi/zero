@@ -319,7 +319,6 @@ private fun TransactionView(
             }
         }
 
-        // Filter sheet is rendered by TransactionFilterSheetComponent — managed by the parent
     }
 }
 

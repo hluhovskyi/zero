@@ -1,9 +1,10 @@
 package com.hluhovskyi.zero.transactions.filter
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import dagger.BindsInstance
 import dagger.Provides
@@ -30,13 +31,14 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
 
     interface Dependencies {
         val imageLoader: ImageLoader
-        val transactionFilterUseCase: TransactionFilterUseCase
+        val categoriesQueryUseCase: CategoriesQueryUseCase
+        val accountRepository: AccountRepository
     }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionFilterSheetComponent.builder()
             .dependencies(dependencies)
-            .onBackHandler(OnBackHandler.Noop)
+            .transactionFilterUseCase(TransactionFilterUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -44,13 +46,7 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun availableCategories(categories: List<TransactionFilterSheetViewModel.FilterCategory>): Builder
-
-        @BindsInstance
-        fun availableAccounts(accounts: List<TransactionFilterSheetViewModel.FilterAccount>): Builder
-
-        @BindsInstance
-        fun onBackHandler(handler: OnBackHandler): Builder
+        fun transactionFilterUseCase(useCase: TransactionFilterUseCase): Builder
     }
 
     @dagger.Module
@@ -59,15 +55,13 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
         @Provides
         @TransactionFilterSheetScope
         fun viewModel(
-            availableCategories: List<TransactionFilterSheetViewModel.FilterCategory>,
-            availableAccounts: List<TransactionFilterSheetViewModel.FilterAccount>,
             transactionFilterUseCase: TransactionFilterUseCase,
-            onBackHandler: OnBackHandler,
+            categoriesQueryUseCase: CategoriesQueryUseCase,
+            accountRepository: AccountRepository,
         ): TransactionFilterSheetViewModel = DefaultTransactionFilterSheetViewModel(
-            availableCategories = availableCategories,
-            availableAccounts = availableAccounts,
             transactionFilterUseCase = transactionFilterUseCase,
-            onBackHandler = onBackHandler,
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            accountRepository = accountRepository,
         )
 
         @Provides
