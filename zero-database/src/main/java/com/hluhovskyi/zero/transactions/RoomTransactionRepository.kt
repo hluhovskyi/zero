@@ -94,10 +94,6 @@ internal class RoomTransactionRepository(
                         }
                     }
 
-                is TransactionRepository.Criteria.ForCategory -> transactionRoom()
-                    .selectByCategory(userId.value, criteria.categoryId.value)
-                    .map { entities -> entities.mapNotNull { it.toRepository() } }
-
                 is TransactionRepository.Criteria.ForCategories -> transactionRoom()
                     .selectByCategories(userId.value, criteria.categoryIds.map { it.value })
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
@@ -109,10 +105,6 @@ internal class RoomTransactionRepository(
                         from = criteria.from.toString(),
                         to = criteria.to.toString(),
                     )
-                    .map { entities -> entities.mapNotNull { it.toRepository() } }
-
-                is TransactionRepository.Criteria.ForAccount -> transactionRoom()
-                    .selectByAccount(userId.value, criteria.accountId.value)
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
 
                 is TransactionRepository.Criteria.ForAccounts -> transactionRoom()
