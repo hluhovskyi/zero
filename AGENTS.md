@@ -24,8 +24,7 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 4. **Shared Agent Skills** — Skills live in `skills/` and are symlinked into `.claude/plugins/zero-project/skills/` to keep a single source of truth. Edit via the real path, not the symlink — see [Skills](docs/agents/skills.md).
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
-7. **No git worktrees** — This is an Android/Gradle project. Worktrees break Gradle daemon and build cache. Never create worktrees; always work on a regular branch checkout.
-8. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
+7. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
 
 ## Module Map
 
