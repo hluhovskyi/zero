@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -45,7 +44,6 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.Error
@@ -54,7 +52,6 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
@@ -69,23 +66,11 @@ internal fun TransactionFilterSheet(
 ) {
     var draft by remember(activeFilter) { mutableStateOf(activeFilter) }
 
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.36f))
-            .clickable(onClick = onClose),
-        contentAlignment = Alignment.BottomCenter,
+            .fillMaxWidth()
+            .fillMaxHeight(0.9f),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.9f)
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .background(Surface)
-                .clickable(enabled = false, onClick = {}),
-        ) {
-            DragHandle()
-
             ModalHeader(
                 title = "Filter",
                 onClose = onClose,
@@ -202,7 +187,6 @@ internal fun TransactionFilterSheet(
                 activeCount = draft.activeCount,
                 onClick = { onApply(draft) },
             )
-        }
     }
 }
 
