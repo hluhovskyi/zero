@@ -29,7 +29,7 @@ internal class DatePeriodTransactionFilterApplicator(
         val period = filter.period ?: return transactions
         val today = clock.localDateTime(zoneProvider.timeZone()).date
         val range = period.toDateRange(today)
-        return transactions.filter { it.dateTime.date in range.start..range.end }
+        return transactions.filter { it.dateTime.date in range }
     }
 }
 
