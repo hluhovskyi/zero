@@ -91,15 +91,7 @@ internal class DefaultTransactionViewModel(
             }
 
             is TransactionViewModel.Action.OpenFilterSheet -> {
-                mutableState.update { it.copy(showFilterSheet = true) }
-            }
-
-            is TransactionViewModel.Action.CloseFilterSheet -> {
-                mutableState.update { it.copy(showFilterSheet = false) }
-            }
-
-            is TransactionViewModel.Action.ApplyFilter -> {
-                mutableState.update { it.copy(activeFilter = action.filter, showFilterSheet = false) }
+                // TODO: call OnOpenFilterSheetHandler — wired by parent to show TransactionFilterSheetComponent
             }
 
             is TransactionViewModel.Action.RemoveFilterPeriod -> {
@@ -198,19 +190,6 @@ internal class DefaultTransactionViewModel(
             ) { transactions, idToCategories, idToAccounts, idToCurrencies, idToIcons ->
                 val primaryCurrency = currencyPrimaryUseCase.getPrimaryCurrency()
 
-                val filterableCategories = idToCategories.values.map { c ->
-                    TransactionViewModel.FilterCategory(
-                        id = c.id,
-                        name = c.name,
-                        colorScheme = c.colorScheme,
-                        icon = c.icon,
-                    )
-                }.sortedBy { it.name }
-
-                val filterableAccounts = idToAccounts.values.map { a ->
-                    TransactionViewModel.FilterAccount(id = a.id, name = a.name)
-                }.sortedBy { it.name }
-
                 val items = transactions
                     .mapNotNull { transaction ->
                         resolve(
@@ -268,14 +247,10 @@ internal class DefaultTransactionViewModel(
                         ) + transactions
                     }
 
-                Triple(items, filterableCategories, filterableAccounts)
-            }.collectLatest { (items, categories, accounts) ->
+                items
+            }.collectLatest { items ->
                 mutableState.update { state ->
-                    state.copy(
-                        transactions = items,
-                        availableCategories = categories,
-                        availableAccounts = accounts,
-                    )
+                    state.copy(transactions = items)
                 }
             }
         }

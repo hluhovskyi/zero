@@ -319,16 +319,7 @@ private fun TransactionView(
             }
         }
 
-        if (state.showFilterSheet) {
-            TransactionFilterSheet(
-                activeFilter = state.activeFilter,
-                availableCategories = state.availableCategories,
-                availableAccounts = state.availableAccounts,
-                imageLoader = imageLoader,
-                onApply = { viewModel.perform(TransactionViewModel.Action.ApplyFilter(it)) },
-                onClose = { viewModel.perform(TransactionViewModel.Action.CloseFilterSheet) },
-            )
-        }
+        // Filter sheet is rendered by TransactionFilterSheetComponent — managed by the parent
     }
 }
 

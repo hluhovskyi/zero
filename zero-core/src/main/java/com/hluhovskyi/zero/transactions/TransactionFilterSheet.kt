@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.ModalHeader
@@ -59,8 +60,8 @@ import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 @Composable
 internal fun TransactionFilterSheet(
     activeFilter: TransactionFilter,
-    availableCategories: List<TransactionViewModel.FilterCategory>,
-    availableAccounts: List<TransactionViewModel.FilterAccount>,
+    availableCategories: List<TransactionFilterSheetViewModel.FilterCategory>,
+    availableAccounts: List<TransactionFilterSheetViewModel.FilterAccount>,
     imageLoader: ImageLoader,
     onApply: (TransactionFilter) -> Unit,
     onClose: () -> Unit,
@@ -350,11 +351,11 @@ private interface GridItem {
     val gridId: Id.Known
 }
 
-private data class CategoryGridWrapper(val category: TransactionViewModel.FilterCategory) : GridItem {
+private data class CategoryGridWrapper(val category: TransactionFilterSheetViewModel.FilterCategory) : GridItem {
     override val gridId = category.id
 }
 
-private data class AccountGridWrapper(val account: TransactionViewModel.FilterAccount) : GridItem {
+private data class AccountGridWrapper(val account: TransactionFilterSheetViewModel.FilterAccount) : GridItem {
     override val gridId = account.id
 }
 
@@ -394,7 +395,7 @@ private fun <T : GridItem> ItemGrid(
 
 @Composable
 private fun CategoryGridItem(
-    category: TransactionViewModel.FilterCategory,
+    category: TransactionFilterSheetViewModel.FilterCategory,
     isActive: Boolean,
     isDimmed: Boolean,
     imageLoader: ImageLoader,
@@ -435,7 +436,7 @@ private fun CategoryGridItem(
 
 @Composable
 private fun AccountGridItem(
-    account: TransactionViewModel.FilterAccount,
+    account: TransactionFilterSheetViewModel.FilterAccount,
     isActive: Boolean,
     isDimmed: Boolean,
 ) {

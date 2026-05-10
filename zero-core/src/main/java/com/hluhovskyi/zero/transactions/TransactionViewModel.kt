@@ -16,8 +16,6 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data class UpdateSearchQuery(val query: String) : Action
         data class DeleteTransaction(val id: Id.Known) : Action
         data object OpenFilterSheet : Action
-        data object CloseFilterSheet : Action
-        data class ApplyFilter(val filter: TransactionFilter) : Action
         data object RemoveFilterPeriod : Action
         data object RemoveFilterType : Action
         data object RemoveFilterCategories : Action
@@ -29,21 +27,6 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         val transactions: List<Item> = emptyList(),
         val searchQuery: String = "",
         val activeFilter: TransactionFilter = TransactionFilter(),
-        val showFilterSheet: Boolean = false,
-        val availableCategories: List<FilterCategory> = emptyList(),
-        val availableAccounts: List<FilterAccount> = emptyList(),
-    )
-
-    data class FilterCategory(
-        val id: Id.Known,
-        val name: String,
-        val colorScheme: ColorScheme,
-        val icon: Image,
-    )
-
-    data class FilterAccount(
-        val id: Id.Known,
-        val name: String,
     )
 
     sealed interface Item {
