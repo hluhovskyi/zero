@@ -8,5 +8,7 @@ data class IconCategory(
     companion object {
 
         fun unknown(): IconCategory = IconCategory(id = "", name = "")
+
+        fun system(): IconCategory = IconCategory(id = "system", name = "System")
     }
 }

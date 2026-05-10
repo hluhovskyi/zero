@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.common.Amount
-import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
@@ -39,7 +38,8 @@ internal class DefaultAccountUseCase(
                 name = account.name,
                 balance = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
                 currencySymbol = idToCurrency[account.currencyId]?.symbol.orEmpty(),
-                icon = idToIcon[account.iconId]?.image ?: Image.empty(),
+                icon = idToIcon[account.iconId]?.image
+                    ?: iconRepository.iconFor(account.category).image,
                 category = account.category,
                 details = account.details,
             )

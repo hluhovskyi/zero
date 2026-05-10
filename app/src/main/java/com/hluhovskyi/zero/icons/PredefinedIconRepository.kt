@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.icons
 
+import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -25,13 +26,13 @@ internal class PredefinedIconRepository(
             id = IconRepository.unknownCategoryIconId(),
             resourceName = "ic_unknown_category_24",
             description = "Unknown",
-            category = IconCategory.unknown(),
+            category = IconCategory.system(),
         ),
         iconOf(
             id = IconRepository.transferIconId(),
             resourceName = "ic_transfer_24",
             description = "Transfer",
-            category = IconCategory.unknown(),
+            category = IconCategory.system(),
         ),
     )
 
@@ -39,6 +40,8 @@ internal class PredefinedIconRepository(
         iconOf(id = KnownIconIds.cash, resourceName = "ic_cash_24", description = "Cash", category = Categories.moneyBanking),
         iconOf(id = KnownIconIds.bank, resourceName = "ic_bank_24", description = "Bank", category = Categories.moneyBanking),
         iconOf(id = KnownIconIds.creditCard, resourceName = "ic_credit_card_24", description = "Credit card", category = Categories.moneyBanking),
+        iconOf(id = KnownIconIds.wallet, resourceName = "ic_wallet_24", description = "Wallet", category = Categories.moneyBanking),
+        iconOf(id = KnownIconIds.crypto, resourceName = "ic_crypto_24", description = "Crypto", category = Categories.moneyBanking),
 
         iconOf(id = KnownIconIds.flowers, resourceName = "ic_florist_24", description = "Flowers", category = Categories.foodDrink),
         iconOf(id = KnownIconIds.grocery, resourceName = "ic_grocery_store_24", description = "Grocery", category = Categories.foodDrink),
@@ -57,8 +60,20 @@ internal class PredefinedIconRepository(
     )
 
     override fun <T> query(criteria: IconRepository.Criteria<T>): Flow<T> = when (criteria) {
-        is IconRepository.Criteria.All -> castingFlowOf(icons.values.toList())
+        is IconRepository.Criteria.All -> castingFlowOf(icons.values.toList() + systemIcons.values.toList())
         is IconRepository.Criteria.ById -> castingFlowOfNonNull(icons[criteria.id] ?: systemIcons[criteria.id])
+    }
+
+    override fun iconFor(category: AccountCategory): Icon {
+        val id = when (category) {
+            AccountCategory.CASH -> KnownIconIds.cash
+            AccountCategory.BANK -> KnownIconIds.bank
+            AccountCategory.CREDIT_CARDS -> KnownIconIds.creditCard
+            AccountCategory.DIGITAL_WALLETS -> KnownIconIds.wallet
+            AccountCategory.CRYPTO -> KnownIconIds.crypto
+            AccountCategory.OTHER -> KnownIconIds.bank
+        }
+        return icons.getValue(id)
     }
 
     private fun iconOf(
