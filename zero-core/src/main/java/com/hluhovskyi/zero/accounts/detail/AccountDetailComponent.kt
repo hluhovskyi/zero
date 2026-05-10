@@ -122,8 +122,8 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             accountId: Id.Known,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
         ): TransactionComponent = builder
-            .transactionFilter(TransactionFilter.ForAccount(accountId))
-            .displayConfig(DisplayConfig(showSearchBar = false))
+            .transactionFilter(TransactionFilter.forAccount(accountId))
+            .displayConfig(DisplayConfig(showSearchBar = false, showFilterButton = false))
             .onTransactionSelectHandler(onTransactionSelectedHandler)
             .build()
 

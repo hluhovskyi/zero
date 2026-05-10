@@ -270,7 +270,7 @@ class DefaultTransactionViewModelTest {
     @Test
     fun `ForCategory filter queries ForCategory criterion instead of All`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
@@ -288,7 +288,7 @@ class DefaultTransactionViewModelTest {
     @Test
     fun `ForCategory filter makes LoadMore a no-op`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
@@ -346,7 +346,7 @@ class DefaultTransactionViewModelTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(currency)
         whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
 
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.ForCategory(categoryId))
+        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
         advanceUntilIdle()
