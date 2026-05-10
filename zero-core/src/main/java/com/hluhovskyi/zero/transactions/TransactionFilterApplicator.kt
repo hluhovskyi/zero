@@ -9,6 +9,13 @@ interface TransactionFilterApplicator {
         transactions: List<TransactionRepository.Transaction>,
         filter: TransactionFilter,
     ): List<TransactionRepository.Transaction>
+
+    object Identity : TransactionFilterApplicator {
+        override fun apply(
+            transactions: List<TransactionRepository.Transaction>,
+            filter: TransactionFilter,
+        ) = transactions
+    }
 }
 
 internal class DatePeriodTransactionFilterApplicator(
@@ -21,8 +28,8 @@ internal class DatePeriodTransactionFilterApplicator(
     ): List<TransactionRepository.Transaction> {
         val period = filter.period ?: return transactions
         val today = clock.localDateTime(zoneProvider.timeZone()).date
-        val (startDate, endDate) = period.toDateRange(today)
-        return transactions.filter { it.dateTime.date in startDate..endDate }
+        val range = period.toDateRange(today)
+        return transactions.filter { it.dateTime.date in range.start..range.end }
     }
 }
 

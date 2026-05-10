@@ -297,28 +297,16 @@ internal class DefaultTransactionViewModel(
     private fun forCategoriesTransactionsFlow(
         categoryIds: Set<Id.Known>,
     ): Flow<List<TransactionRepository.Transaction>> =
-        if (categoryIds.size == 1) {
-            transactionRepository.query(TransactionRepository.Criteria.ForCategory(categoryIds.first()))
-                .onStartWithEmptyList()
-                .onEmptyReturnEmptyList()
-        } else {
-            transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
-                .onStartWithEmptyList()
-                .onEmptyReturnEmptyList()
-        }
+        transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
 
     private fun forAccountsTransactionsFlow(
         accountIds: Set<Id.Known>,
     ): Flow<List<TransactionRepository.Transaction>> =
-        if (accountIds.size == 1) {
-            transactionRepository.query(TransactionRepository.Criteria.ForAccount(accountIds.first()))
-                .onStartWithEmptyList()
-                .onEmptyReturnEmptyList()
-        } else {
-            transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
-                .onStartWithEmptyList()
-                .onEmptyReturnEmptyList()
-        }
+        transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
+            .onStartWithEmptyList()
+            .onEmptyReturnEmptyList()
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,
