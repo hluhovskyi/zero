@@ -18,6 +18,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v3
 
+      - name: Run spotless check
+        run: ./gradlew spotlessCheck
+
       - name: Run unit tests
         run: ./gradlew test
 
