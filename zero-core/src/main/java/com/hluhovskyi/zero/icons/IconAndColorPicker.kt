@@ -44,7 +44,7 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
-private const val GRID_COLUMNS = 5
+private const val GRID_COLUMNS = 6
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
