@@ -1,11 +1,6 @@
 ---
 name: retro
-description: >
-  Run a retrospective on a development session or feature branch. Use this when the user asks
-  "what went well / what didn't", "document learnings", "anything worth documenting?",
-  "update the docs", or at natural wrap-up points (feature complete, PR ready, branch done).
-  Investigates history + codebase + existing docs to surface what caused extra iterations,
-  what was discovered late, and what's worth writing down so the next session starts smarter.
+description: Run a retrospective on the current feature branch or session. Use at wrap-up points or when the user asks about learnings, docs, or "what went well".
 ---
 
 # Retro

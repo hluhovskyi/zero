@@ -30,6 +30,10 @@ skills/
 git add skills/<name>/SKILL.md
 ```
 
+## Description length
+
+Descriptions are always in context — keep them under 25 words. Name the trigger phrases/contexts only; all implementation detail belongs in the skill body.
+
 ## Plugin loader trap
 
 The Claude Code plugin loader resolves plugins by looking for a directory at `<marketplace installLocation>/plugins/<plugin-name>/`. The `source` field in `marketplace.json` and `enabledPlugins` in `settings.json` are **necessary but not sufficient** — the directory must physically exist at that path (symlink is fine).

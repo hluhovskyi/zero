@@ -1,10 +1,6 @@
 ---
 name: pr-address
-description: >
-  Pull review comments from a GitHub PR and address them one by one. Use this when the user says
-  "address PR comments", "fix review feedback", "respond to review", or similar.
-  Supports special prefixes: /harness-issue, /optimization-issue, /feature-issue —
-  these create GitHub issues instead of code changes.
+description: Pull and address GitHub PR review comments one by one. Use when the user says "address PR comments", "fix review feedback", or "respond to review".
 ---
 
 # PR Address

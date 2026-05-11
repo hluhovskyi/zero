@@ -1,9 +1,6 @@
 ---
 name: pr-merge
-description: >
-  Merge a GitHub PR and delete the remote branch. If the current local branch is the one being
-  merged, run unit tests, linters, and a full build first and abort on failure.
-  Use when the user says "merge the PR", "merge and clean up", or "ship this".
+description: Merge a GitHub PR and clean up the branch. Use when the user says "merge the PR", "merge and clean up", or "ship this".
 ---
 
 # PR Merge
