@@ -31,6 +31,7 @@ interface TransactionFilterSheetViewModel : AttachableActionStateModel<Transacti
     data class FilterAccount(
         val id: Id.Known,
         val name: String,
+        val icon: Image,
     )
 
     object Noop : TransactionFilterSheetViewModel {
