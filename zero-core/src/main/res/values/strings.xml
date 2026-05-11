@@ -27,7 +27,8 @@
     <string name="account_detail_transactions">TRANSACTIONS</string>
 
     <!-- Account Edit -->
-    <string name="account_edit_title">New Account</string>
+    <string name="account_edit_title_new">New Account</string>
+    <string name="account_edit_title_edit">Edit Account</string>
     <string name="account_edit_opening_balance_label">OPENING BALANCE</string>
     <string name="account_edit_name_label">Account Name</string>
     <string name="account_edit_type_label">Type</string>

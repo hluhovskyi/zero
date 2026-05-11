@@ -34,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
@@ -132,7 +134,7 @@ private fun NetWorthHeader(balance: String) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = "TOTAL NET WORTH",
+            text = stringResource(R.string.account_total_net_worth),
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
@@ -162,7 +164,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "My Accounts",
+            text = stringResource(R.string.account_my_accounts),
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -179,7 +181,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
-                text = "Add Account",
+                text = stringResource(R.string.account_add),
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
@@ -193,7 +195,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
 @Composable
 private fun CategoryHeader(category: AccountCategory) {
     Text(
-        text = category.displayName,
+        text = category.displayName(),
         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
         style = TextStyle(
             fontSize = 11.sp,
@@ -288,12 +290,12 @@ private fun AccountRow(
     }
 }
 
-private val AccountCategory.displayName: String
-    get() = when (this) {
-        AccountCategory.CASH -> "CASH"
-        AccountCategory.BANK -> "BANK"
-        AccountCategory.CREDIT_CARDS -> "CREDIT CARDS"
-        AccountCategory.DIGITAL_WALLETS -> "DIGITAL WALLETS"
-        AccountCategory.CRYPTO -> "CRYPTO"
-        AccountCategory.OTHER -> "OTHER"
-    }
+@Composable
+private fun AccountCategory.displayName(): String = when (this) {
+    AccountCategory.CASH -> stringResource(R.string.account_header_cash)
+    AccountCategory.BANK -> stringResource(R.string.account_header_bank)
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_header_credit_cards)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_header_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_header_crypto)
+    AccountCategory.OTHER -> stringResource(R.string.account_header_other)
+}

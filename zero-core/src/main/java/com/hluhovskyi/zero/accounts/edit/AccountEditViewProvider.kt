@@ -35,9 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.accounts.AccountCategory
@@ -76,6 +78,7 @@ private fun AccountEditView(
 ) {
     val state by viewModel.state.collectAsState(initial = AccountEditViewModel.State())
     val focusRequester = remember { FocusRequester() }
+    val categoryDisplayNames = AccountCategory.entries.associateWith { it.displayName() }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -84,7 +87,7 @@ private fun AccountEditView(
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
             ModalHeader(
-                title = if (state.isEditMode) "Edit Account" else "New Account",
+                title = if (state.isEditMode) stringResource(R.string.account_edit_title_edit) else stringResource(R.string.account_edit_title_new),
                 onClose = { onClose.onClose() },
             )
             Column(
@@ -97,7 +100,7 @@ private fun AccountEditView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 16.dp),
-                    label = "OPENING BALANCE",
+                    label = stringResource(R.string.account_edit_opening_balance_label),
                     amount = state.balance,
                     currencySymbol = state.selectedCurrency?.symbol ?: "",
                     focusRequester = focusRequester,
@@ -124,9 +127,9 @@ private fun AccountEditView(
                     )
                     FormCard(
                         modifier = Modifier.weight(1f),
-                        label = "Account Name",
+                        label = stringResource(R.string.account_edit_name_label),
                         value = state.name,
-                        placeholder = state.category.namePlaceholder,
+                        placeholder = state.category.namePlaceholder(),
                         onValueChange = { name ->
                             viewModel.perform(AccountEditViewModel.Action.ChangeName(name))
                         },
@@ -135,10 +138,10 @@ private fun AccountEditView(
 
                 SelectorCard(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Type",
-                    value = state.category.displayName,
+                    label = stringResource(R.string.account_edit_type_label),
+                    value = categoryDisplayNames.getValue(state.category),
                     items = AccountCategory.entries,
-                    nameMapping = { it.displayName },
+                    nameMapping = { categoryDisplayNames.getValue(it) },
                     onItemSelected = { category ->
                         viewModel.perform(AccountEditViewModel.Action.ChangeCategory(category))
                     },
@@ -146,9 +149,9 @@ private fun AccountEditView(
 
                 if (state.category != AccountCategory.CASH) {
                     FormCard(
-                        label = state.category.detailLabel,
+                        label = state.category.detailLabel(),
                         value = state.details,
-                        placeholder = state.category.detailPlaceholder,
+                        placeholder = state.category.detailPlaceholder(),
                         onValueChange = { details ->
                             viewModel.perform(AccountEditViewModel.Action.ChangeDetails(details))
                         },
@@ -163,8 +166,8 @@ private fun AccountEditView(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = { Icon(Icons.Filled.Check, contentDescription = "Save account") },
-            text = { Text("Save") },
+            icon = { Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.account_edit_save_description)) },
+            text = { Text(stringResource(R.string.account_edit_save)) },
             onClick = { viewModel.perform(AccountEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
@@ -251,42 +254,42 @@ private fun IconTile(
     }
 }
 
-private val AccountCategory.displayName: String
-    get() = when (this) {
-        AccountCategory.CASH -> "Cash"
-        AccountCategory.BANK -> "Bank"
-        AccountCategory.CREDIT_CARDS -> "Credit Cards"
-        AccountCategory.DIGITAL_WALLETS -> "Digital Wallets"
-        AccountCategory.CRYPTO -> "Crypto"
-        AccountCategory.OTHER -> "Other"
-    }
+@Composable
+private fun AccountCategory.displayName(): String = when (this) {
+    AccountCategory.CASH -> stringResource(R.string.account_type_cash)
+    AccountCategory.BANK -> stringResource(R.string.account_type_bank)
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_type_credit_cards)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_type_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_type_crypto)
+    AccountCategory.OTHER -> stringResource(R.string.account_type_other)
+}
 
-private val AccountCategory.namePlaceholder: String
-    get() = when (this) {
-        AccountCategory.CASH -> "e.g. Wallet"
-        AccountCategory.CREDIT_CARDS -> "e.g. Amex Gold"
-        AccountCategory.BANK -> "e.g. Chase Sapphire"
-        AccountCategory.DIGITAL_WALLETS -> "e.g. PayPal"
-        AccountCategory.CRYPTO -> "e.g. Bitcoin"
-        AccountCategory.OTHER -> "e.g. Savings"
-    }
+@Composable
+private fun AccountCategory.namePlaceholder(): String = when (this) {
+    AccountCategory.CASH -> stringResource(R.string.account_name_placeholder_cash)
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_name_placeholder_credit_cards)
+    AccountCategory.BANK -> stringResource(R.string.account_name_placeholder_bank)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_name_placeholder_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_name_placeholder_crypto)
+    AccountCategory.OTHER -> stringResource(R.string.account_name_placeholder_other)
+}
 
-private val AccountCategory.detailLabel: String
-    get() = when (this) {
-        AccountCategory.CASH -> ""
-        AccountCategory.CREDIT_CARDS -> "Last 4 / Nickname"
-        AccountCategory.BANK -> "Account Number / Type"
-        AccountCategory.DIGITAL_WALLETS -> "Account Details"
-        AccountCategory.CRYPTO -> "Wallet Address"
-        AccountCategory.OTHER -> "Details"
-    }
+@Composable
+private fun AccountCategory.detailLabel(): String = when (this) {
+    AccountCategory.CASH -> ""
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_detail_label_credit_cards)
+    AccountCategory.BANK -> stringResource(R.string.account_detail_label_bank)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_detail_label_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_detail_label_crypto)
+    AccountCategory.OTHER -> stringResource(R.string.account_detail_label_other)
+}
 
-private val AccountCategory.detailPlaceholder: String
-    get() = when (this) {
-        AccountCategory.CASH -> ""
-        AccountCategory.CREDIT_CARDS -> "••• 1209"
-        AccountCategory.BANK -> "Checking"
-        AccountCategory.DIGITAL_WALLETS -> "user@example.com"
-        AccountCategory.CRYPTO -> "bc1q..."
-        AccountCategory.OTHER -> ""
-    }
+@Composable
+private fun AccountCategory.detailPlaceholder(): String = when (this) {
+    AccountCategory.CASH -> ""
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_detail_placeholder_credit_cards)
+    AccountCategory.BANK -> stringResource(R.string.account_detail_placeholder_bank)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_detail_placeholder_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_detail_placeholder_crypto)
+    AccountCategory.OTHER -> ""
+}
