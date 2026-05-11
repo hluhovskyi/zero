@@ -9,7 +9,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.math.BigDecimal
@@ -31,41 +30,38 @@ class TransactionFilterApplicatorTest {
 
     // Helpers ---------------------------------------------------------------------------------
 
-    private fun expense(date: LocalDate, id: String = "t", categoryId: String = "cat1", accountId: String = "acc1") =
-        TransactionRepository.Transaction.Expense(
-            id = Id.Known(id),
-            dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            amount = Amount(BigDecimal.TEN),
-            currencyId = Id.Known("cur"),
-            accountId = Id.Known(accountId),
-            categoryId = Id.Known(categoryId),
-            rate = Rate.Same,
-        )
+    private fun expense(date: LocalDate, id: String = "t", categoryId: String = "cat1", accountId: String = "acc1") = TransactionRepository.Transaction.Expense(
+        id = Id.Known(id),
+        dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        amount = Amount(BigDecimal.TEN),
+        currencyId = Id.Known("cur"),
+        accountId = Id.Known(accountId),
+        categoryId = Id.Known(categoryId),
+        rate = Rate.Same,
+    )
 
-    private fun income(date: LocalDate, id: String = "t", categoryId: String = "cat1", accountId: String = "acc1") =
-        TransactionRepository.Transaction.Income(
-            id = Id.Known(id),
-            dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            amount = Amount(BigDecimal.TEN),
-            currencyId = Id.Known("cur"),
-            accountId = Id.Known(accountId),
-            categoryId = Id.Known(categoryId),
-            rate = Rate.Same,
-        )
+    private fun income(date: LocalDate, id: String = "t", categoryId: String = "cat1", accountId: String = "acc1") = TransactionRepository.Transaction.Income(
+        id = Id.Known(id),
+        dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        amount = Amount(BigDecimal.TEN),
+        currencyId = Id.Known("cur"),
+        accountId = Id.Known(accountId),
+        categoryId = Id.Known(categoryId),
+        rate = Rate.Same,
+    )
 
-    private fun transfer(date: LocalDate, id: String = "t", accountId: String = "acc1") =
-        TransactionRepository.Transaction.Transfer(
-            id = Id.Known(id),
-            dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
-            amount = Amount(BigDecimal.TEN),
-            currencyId = Id.Known("cur"),
-            accountId = Id.Known(accountId),
-            targetAccount = Id.Known("acc2"),
-            targetAmount = Amount(BigDecimal.TEN),
-        )
+    private fun transfer(date: LocalDate, id: String = "t", accountId: String = "acc1") = TransactionRepository.Transaction.Transfer(
+        id = Id.Known(id),
+        dateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        updatedDateTime = LocalDateTime(date.year, date.month, date.dayOfMonth, 12, 0),
+        amount = Amount(BigDecimal.TEN),
+        currencyId = Id.Known("cur"),
+        accountId = Id.Known(accountId),
+        targetAccount = Id.Known("acc2"),
+        targetAmount = Amount(BigDecimal.TEN),
+    )
 
     // DatePeriodTransactionFilterApplicator ---------------------------------------------------
 
@@ -89,10 +85,10 @@ class TransactionFilterApplicatorTest {
         val applicator = DatePeriodTransactionFilterApplicator(fakeClock, fakeZoneProvider)
         val filter = TransactionFilter(period = TransactionFilter.DatePeriod.ThisWeek)
         val transactions = listOf(
-            expense(LocalDate(2024, 6, 2), "sunday-before"),  // Sun before the week
-            expense(LocalDate(2024, 6, 3), "monday"),          // Mon
-            expense(LocalDate(2024, 6, 5), "wednesday"),       // Wed (today)
-            expense(LocalDate(2024, 6, 6), "thursday"),        // Thu (future)
+            expense(LocalDate(2024, 6, 2), "sunday-before"), // Sun before the week
+            expense(LocalDate(2024, 6, 3), "monday"), // Mon
+            expense(LocalDate(2024, 6, 5), "wednesday"), // Wed (today)
+            expense(LocalDate(2024, 6, 6), "thursday"), // Thu (future)
         )
 
         val result = applicator.apply(transactions, filter)

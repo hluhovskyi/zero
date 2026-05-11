@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,7 +23,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,122 +70,124 @@ internal fun TransactionFilterSheet(
             .fillMaxWidth()
             .fillMaxHeight(0.9f),
     ) {
-            ModalHeader(
-                title = "Filter",
-                onClose = onClose,
-                trailingContent = if (draft.isActive) {
-                    {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .clickable { draft = TransactionFilter() },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "Reset",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Error,
-                            )
-                        }
-                    }
-                } else null,
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-            ) {
-                FilterSection(label = "Period") {
-                    PeriodPillRow(
-                        selected = draft.period,
-                        onSelect = { id ->
-                            draft = draft.copy(period = if (draft.period == id) null else id)
-                        },
-                    )
-                }
-
-                FilterSection(label = "Type") {
-                    TypePillRow(
-                        selected = draft.type,
-                        onSelect = { type -> draft = draft.copy(type = type) },
-                    )
-                }
-
-                if (availableCategories.isNotEmpty()) {
-                    FilterSection(label = "Categories") {
-                        SelectionGridSection(
-                            allLabel = "All categories",
-                            totalCount = availableCategories.size,
-                            selectedIds = draft.categoryIds,
-                            onToggleAll = { draft = draft.copy(categoryIds = null) },
-                        ) {
-                            ItemGrid(
-                                items = availableCategories.map { CategoryGridWrapper(it) },
-                                selectedIds = draft.categoryIds,
-                                onToggle = { id ->
-                                    draft = draft.copy(
-                                        categoryIds = toggleCategoryId(
-                                            current = draft.categoryIds,
-                                            id = id,
-                                            total = availableCategories.size,
-                                        ),
-                                    )
-                                },
-                                itemContent = { wrapper, isActive, isDimmed ->
-                                    CategoryGridItem(
-                                        category = wrapper.category,
-                                        isActive = isActive,
-                                        isDimmed = isDimmed,
-                                        imageLoader = imageLoader,
-                                    )
-                                },
-                            )
-                        }
+        ModalHeader(
+            title = "Filter",
+            onClose = onClose,
+            trailingContent = if (draft.isActive) {
+                {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable { draft = TransactionFilter() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Reset",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Error,
+                        )
                     }
                 }
+            } else {
+                null
+            },
+        )
 
-                if (availableAccounts.isNotEmpty()) {
-                    FilterSection(label = "Accounts") {
-                        SelectionGridSection(
-                            allLabel = "All accounts",
-                            totalCount = availableAccounts.size,
-                            selectedIds = draft.accountIds,
-                            onToggleAll = { draft = draft.copy(accountIds = null) },
-                        ) {
-                            ItemGrid(
-                                items = availableAccounts.map { AccountGridWrapper(it) },
-                                selectedIds = draft.accountIds,
-                                onToggle = { id ->
-                                    draft = draft.copy(
-                                        accountIds = toggleAccountId(
-                                            current = draft.accountIds,
-                                            id = id,
-                                            total = availableAccounts.size,
-                                        ),
-                                    )
-                                },
-                                itemContent = { wrapper, isActive, isDimmed ->
-                                    AccountGridItem(
-                                        account = wrapper.account,
-                                        isActive = isActive,
-                                        isDimmed = isDimmed,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+        ) {
+            FilterSection(label = "Period") {
+                PeriodPillRow(
+                    selected = draft.period,
+                    onSelect = { id ->
+                        draft = draft.copy(period = if (draft.period == id) null else id)
+                    },
+                )
             }
 
-            ApplyButton(
-                activeCount = draft.activeCount,
-                onClick = { onApply(draft) },
-            )
+            FilterSection(label = "Type") {
+                TypePillRow(
+                    selected = draft.type,
+                    onSelect = { type -> draft = draft.copy(type = type) },
+                )
+            }
+
+            if (availableCategories.isNotEmpty()) {
+                FilterSection(label = "Categories") {
+                    SelectionGridSection(
+                        allLabel = "All categories",
+                        totalCount = availableCategories.size,
+                        selectedIds = draft.categoryIds,
+                        onToggleAll = { draft = draft.copy(categoryIds = null) },
+                    ) {
+                        ItemGrid(
+                            items = availableCategories.map { CategoryGridWrapper(it) },
+                            selectedIds = draft.categoryIds,
+                            onToggle = { id ->
+                                draft = draft.copy(
+                                    categoryIds = toggleCategoryId(
+                                        current = draft.categoryIds,
+                                        id = id,
+                                        total = availableCategories.size,
+                                    ),
+                                )
+                            },
+                            itemContent = { wrapper, isActive, isDimmed ->
+                                CategoryGridItem(
+                                    category = wrapper.category,
+                                    isActive = isActive,
+                                    isDimmed = isDimmed,
+                                    imageLoader = imageLoader,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
+            if (availableAccounts.isNotEmpty()) {
+                FilterSection(label = "Accounts") {
+                    SelectionGridSection(
+                        allLabel = "All accounts",
+                        totalCount = availableAccounts.size,
+                        selectedIds = draft.accountIds,
+                        onToggleAll = { draft = draft.copy(accountIds = null) },
+                    ) {
+                        ItemGrid(
+                            items = availableAccounts.map { AccountGridWrapper(it) },
+                            selectedIds = draft.accountIds,
+                            onToggle = { id ->
+                                draft = draft.copy(
+                                    accountIds = toggleAccountId(
+                                        current = draft.accountIds,
+                                        id = id,
+                                        total = availableAccounts.size,
+                                    ),
+                                )
+                            },
+                            itemContent = { wrapper, isActive, isDimmed ->
+                                AccountGridItem(
+                                    account = wrapper.account,
+                                    isActive = isActive,
+                                    isDimmed = isDimmed,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        ApplyButton(
+            activeCount = draft.activeCount,
+            onClick = { onApply(draft) },
+        )
     }
 }
 
@@ -395,10 +396,14 @@ private fun CategoryGridItem(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         CategoryIconView(
-            colorScheme = if (isActive) category.colorScheme.toUi() else category.colorScheme.toUi().copy(
-                primary = Outline,
-                background = SurfaceContainer,
-            ),
+            colorScheme = if (isActive) {
+                category.colorScheme.toUi()
+            } else {
+                category.colorScheme.toUi().copy(
+                    primary = Outline,
+                    background = SurfaceContainer,
+                )
+            },
             size = 32.dp,
             contentPadding = 7.dp,
         ) { iconTint ->
@@ -509,8 +514,12 @@ private fun toggleCategoryId(
     id: Id.Known,
     total: Int,
 ): Set<Id.Known>? {
-    val next = if (current == null) mutableSetOf(id) else current.toMutableSet().also {
-        if (it.contains(id)) it.remove(id) else it.add(id)
+    val next = if (current == null) {
+        mutableSetOf(id)
+    } else {
+        current.toMutableSet().also {
+            if (it.contains(id)) it.remove(id) else it.add(id)
+        }
     }
     return if (next.isEmpty() || next.size == total) null else next
 }
@@ -520,9 +529,12 @@ private fun toggleAccountId(
     id: Id.Known,
     total: Int,
 ): Set<Id.Known>? {
-    val next = if (current == null) mutableSetOf(id) else current.toMutableSet().also {
-        if (it.contains(id)) it.remove(id) else it.add(id)
+    val next = if (current == null) {
+        mutableSetOf(id)
+    } else {
+        current.toMutableSet().also {
+            if (it.contains(id)) it.remove(id) else it.add(id)
+        }
     }
     return if (next.isEmpty() || next.size == total) null else next
 }
-

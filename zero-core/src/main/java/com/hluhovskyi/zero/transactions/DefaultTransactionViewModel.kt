@@ -141,16 +141,16 @@ internal class DefaultTransactionViewModel(
             // Use DB-level query for simple category or account filters (e.g. detail screens).
             // All other cases load everything and apply the filter in memory.
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when {
-                filter.categoryIds != null
-                        && filter.period == null
-                        && filter.type == TransactionFilter.TransactionType.All
-                        && filter.accountIds == null ->
+                filter.categoryIds != null &&
+                    filter.period == null &&
+                    filter.type == TransactionFilter.TransactionType.All &&
+                    filter.accountIds == null ->
                     forCategoriesTransactionsFlow(filter.categoryIds)
 
-                filter.accountIds != null
-                        && filter.period == null
-                        && filter.type == TransactionFilter.TransactionType.All
-                        && filter.categoryIds == null ->
+                filter.accountIds != null &&
+                    filter.period == null &&
+                    filter.type == TransactionFilter.TransactionType.All &&
+                    filter.categoryIds == null ->
                     forAccountsTransactionsFlow(filter.accountIds)
 
                 else -> allTransactionsFlow(initialTimestamp)
@@ -296,17 +296,15 @@ internal class DefaultTransactionViewModel(
 
     private fun forCategoriesTransactionsFlow(
         categoryIds: Set<Id.Known>,
-    ): Flow<List<TransactionRepository.Transaction>> =
-        transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
-            .onStartWithEmptyList()
-            .onEmptyReturnEmptyList()
+    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForCategories(categoryIds))
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
 
     private fun forAccountsTransactionsFlow(
         accountIds: Set<Id.Known>,
-    ): Flow<List<TransactionRepository.Transaction>> =
-        transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
-            .onStartWithEmptyList()
-            .onEmptyReturnEmptyList()
+    ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,
