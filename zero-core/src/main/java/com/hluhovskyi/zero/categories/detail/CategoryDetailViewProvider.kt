@@ -34,8 +34,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
@@ -75,7 +77,7 @@ internal class CategoryDetailViewProvider(
                             IconButton(onClick = { menuExpanded = true }) {
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = "More options",
+                                    contentDescription = stringResource(R.string.category_detail_more_options_description),
                                     tint = PrimaryContainer,
                                 )
                             }
@@ -95,7 +97,7 @@ internal class CategoryDetailViewProvider(
                                         modifier = Modifier.size(18.dp),
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Edit category")
+                                    Text(stringResource(R.string.category_detail_edit))
                                 }
                             }
                         },
@@ -109,7 +111,7 @@ internal class CategoryDetailViewProvider(
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 32.dp),
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Add transaction") },
+                text = { Text(stringResource(R.string.category_detail_add_transaction)) },
                 onClick = { viewModel.perform(CategoryDetailViewModel.Action.CreateTransaction) },
                 elevation = FloatingActionButtonDefaults.elevation(8.dp),
             )
@@ -172,21 +174,21 @@ private fun HeroCard(
             Spacer(Modifier.size(16.dp))
             Row {
                 DetailStatColumn(
-                    label = "TRANSACTIONS",
+                    label = stringResource(R.string.category_detail_stat_transactions),
                     value = state.transactionCount.toString(),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = "AVG PER TX",
+                    label = stringResource(R.string.category_detail_stat_avg_per_tx),
                     value = amountFormatter.format(state.averageAmount, state.currencySymbol),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = "LARGEST",
+                    label = stringResource(R.string.category_detail_stat_largest),
                     value = amountFormatter.format(state.largestAmount, state.currencySymbol),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,

@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
 internal class CategoryViewProvider(
@@ -75,7 +78,7 @@ private fun CategoryView(
     LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)) {
         item {
             Text(
-                text = "Categories",
+                text = stringResource(R.string.category_title),
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
                 style = TextStyle(
                     fontSize = 22.sp,
@@ -113,7 +116,7 @@ private fun CategoryView(
         if (inactive.isNotEmpty()) {
             item {
                 Text(
-                    text = "Unused this month",
+                    text = stringResource(R.string.category_unused_this_month),
                     modifier = Modifier.padding(
                         start = 20.dp,
                         end = 20.dp,
@@ -195,12 +198,12 @@ private fun ActiveCategoryCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${spending.transactionCount} transaction${if (spending.transactionCount != 1) "s" else ""}",
+                        text = pluralStringResource(R.plurals.category_transaction_count, spending.transactionCount, spending.transactionCount),
                         modifier = Modifier.weight(1f),
                         style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
                     )
                     Text(
-                        text = "$percentOfTotal% of total",
+                        text = stringResource(R.string.category_percent_of_total, percentOfTotal),
                         style = TextStyle(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -255,7 +258,7 @@ private fun InactiveCategoryCard(
             ),
         )
         Text(
-            text = "No activity",
+            text = stringResource(R.string.category_no_activity),
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
