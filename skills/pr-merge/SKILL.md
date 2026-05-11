@@ -14,102 +14,84 @@ Safely merge a GitHub PR and clean up the branch.
 - If no PR is found, ask for the PR number.
 
 Record:
-- `pr_number` — the PR number
-- `pr_branch` — the head branch name (e.g. `feat/my-feature`)
-- `is_current_branch` — whether the local HEAD is on `pr_branch`
+- `pr_number`, `pr_branch` (e.g. `feat/my-feature`)
+- `is_current_branch` — whether local HEAD is on `pr_branch`
+- `is_worktree` — `git rev-parse --git-dir` returns `.git` in the main repo, a longer path inside a worktree. Also record `worktree_path` (current directory) and `main_repo_path` (first line of `git worktree list --porcelain | head -1 | sed 's/^worktree //'`).
 
 ## Step 2 — Pre-merge checks (only if `is_current_branch`)
 
-If the local branch matches `pr_branch`, run the full quality gate in this order. **Stop and report failure after the first failing step — do not continue to merge.**
+Run in order — stop and report on first failure, do not continue to merge.
 
-### 2a. Unit tests
 ```bash
 ./gradlew testDebugUnitTest
-```
-
-### 2b. Lint
-```bash
-./gradlew lint
-```
-Parse output for errors (warnings are OK). Fail if any module reports lint errors.
-
-### 2c. Build
-```bash
+./gradlew lint          # warnings OK; fail on errors
 ./gradlew assembleDebug
 ```
 
-If all three pass, report: `✓ Tests, lint, and build passed — proceeding with merge.`
-
-If the branch is not current (user is merging someone else's PR or a different branch), skip this step entirely.
+If all pass: `✓ Tests, lint, and build passed — proceeding with merge.`
 
 ## Step 3 — Check for conflicts
-
-Before merging, check if the PR has conflicts with master:
 
 ```bash
 gh pr view <pr_number> --json mergeable,mergeStateStatus
 ```
 
-- **`mergeable: MERGEABLE`** — no conflicts, proceed to Step 4.
-- **`mergeable: CONFLICTING`** — resolve conflicts:
-  1. Checkout the PR branch and rebase onto master:
-     ```bash
-     git checkout <pr_branch>
-     git fetch origin
-     git rebase origin/master
-     ```
-  2. For each conflicted file, resolve manually — keep the correct version, stage with `git add <file>`.
-  3. Continue the rebase: `git rebase --continue`
-  4. Force-push the resolved branch: `git push --force-with-lease`
-  5. Re-check `gh pr view <pr_number> --json mergeable` until `MERGEABLE`, then proceed.
-- **`mergeable: UNKNOWN`** — wait 5 seconds and re-check; GitHub is still computing mergeability.
+- **`MERGEABLE`** — proceed.
+- **`UNKNOWN`** — wait 5 s, re-check.
+- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git rebase origin/master`, resolve conflicts, `git rebase --continue`, `git push --force-with-lease`, re-check until `MERGEABLE`.
 
-## Step 4 — Merge the PR
+## Step 4 — Merge
 
 ```bash
 gh pr merge <pr_number> --squash --delete-branch
 ```
 
-Use `--squash` to keep the main branch history clean. `--delete-branch` removes the remote branch automatically.
+Stop on failure — do not force-merge.
 
-If the merge fails, report the error and stop — do not force-merge.
-
-## Step 5 — Wait for CI checks
-
-After merging, wait for any CI checks to complete using the polling script:
+## Step 5 — Wait for CI
 
 ```bash
 ./scripts/github/wait-for-ci.sh <pr_number>
 ```
 
-The script polls `gh pr checks` every 15 seconds until all checks resolve, then exits 0 (pass) or 1 (fail). If CI fails after merge, report the failure — the merge is already done, but master may need attention.
+Polls every 15 s; exits 0 on pass, 1 on fail. Report failure if CI fails — the merge is done but master may need attention.
 
-## Step 6 — Clean up and update master (only if `is_current_branch`)
+## Step 6 — Clean up
 
-Switch to master, delete the local branch, and pull the latest:
+**If `is_worktree`:** run all git commands with `-C <main_repo_path>`.
 
-```bash
-git checkout master
-git branch -d <pr_branch>
-git pull origin master
-```
+1. Remove the worktree (can't checkout master in a worktree when master is already in the main repo):
+   ```bash
+   git -C <main_repo_path> worktree remove <worktree_path> --force
+   ```
+2. Delete the local branch:
+   ```bash
+   git -C <main_repo_path> branch -D <pr_branch>
+   ```
+3. Delete the remote branch (skip silently if 404):
+   ```bash
+   gh api repos/{owner}/{repo}/git/refs/heads/<pr_branch> -X DELETE
+   ```
+4. Pull master:
+   ```bash
+   git -C <main_repo_path> pull origin master
+   ```
 
-Use `-d` (safe delete) — if it fails because the branch is not fully merged locally, report it and do not force-delete.
+**If not `is_worktree`:** same steps 2–4 without `-C`, plus `git checkout master` first.
 
-Always run `git pull origin master` after switching so the local copy reflects the merge commit.
+Use `-D` throughout — squash-merged branches never pass git's safe-delete check.
 
 ## Step 7 — Report
 
 ```
 Merged PR #<N> "<title>"
 Branch <pr_branch> deleted (remote + local)
-Now on: master (<latest commit hash> <commit message>)
+Now on: master (<hash> <message>)
+[if worktree] Worktree <worktree_path> removed — cd to <main_repo_path>
 ```
 
 ## Guardrails
 
-- **Never force-merge** — if checks fail or there are conflicts, stop and tell the user.
-- **Never force-delete** the local branch (`-D`) — use safe delete (`-d`) only.
-- **Skip pre-merge checks** if the current branch is not the PR branch — don't run tests on unrelated code.
-- **Always pull master** after switching to it so the local copy is up to date.
-- If `--delete-branch` is not supported or the remote branch was already deleted, skip that step without error.
+- Never force-merge.
+- Skip pre-merge checks if not on `pr_branch`.
+- Always pull master after cleanup.
