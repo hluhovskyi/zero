@@ -47,11 +47,11 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.TransactionComponent
-import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
-import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -220,8 +220,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @Provides
         @MainActivityScreenScope
-        fun transactionFilterUseCase(navigator: Navigator): TransactionFilterUseCase =
-            DefaultTransactionFilterUseCase(navigator = navigator)
+        fun transactionFilterUseCase(navigator: Navigator): TransactionFilterUseCase = DefaultTransactionFilterUseCase(navigator = navigator)
 
         @Provides
         @IntoSet

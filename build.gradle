@@ -87,7 +87,7 @@ spotless {
         ktlint('1.5.0')
     }
     format 'misc', {
-        target '**/*.gradle', '**/.gitignore', '**/*.md'
+        target '**/*.gradle', '**/.gitignore'
         leadingTabsToSpaces()
         trimTrailingWhitespace()
         endWithNewline()

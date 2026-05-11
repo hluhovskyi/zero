@@ -13,7 +13,6 @@ import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
-import kotlinx.datetime.LocalDateTime
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before

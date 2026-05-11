@@ -2,10 +2,10 @@ package com.hluhovskyi.zero.transactions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.ui.res.pluralStringResource
-import com.hluhovskyi.zero.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ContentAlpha
@@ -43,10 +44,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
@@ -61,9 +64,6 @@ import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.rememberScrollState
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -320,7 +320,6 @@ private fun TransactionView(
                 }
             }
         }
-
     }
 }
 
