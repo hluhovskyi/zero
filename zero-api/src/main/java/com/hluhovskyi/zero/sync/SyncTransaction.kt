@@ -20,6 +20,7 @@ data class SyncTransaction(
     @SerialName("creationDateTime") val creationDateTime: LocalDateTime,
     @SerialName("updatedDateTime") override val updatedDateTime: LocalDateTime,
     @SerialName("deletedAt") override val deletedAt: LocalDateTime?,
+    @SerialName("notes") val notes: String? = null,
 ) : SyncEntity {
 
     @Serializable

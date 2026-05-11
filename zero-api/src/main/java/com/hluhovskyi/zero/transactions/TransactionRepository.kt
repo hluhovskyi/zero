@@ -82,6 +82,7 @@ interface TransactionRepository {
             override val updatedDateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
+            val notes: String? = null,
         ) : Transaction
 
         data class Income(
@@ -93,6 +94,7 @@ interface TransactionRepository {
             override val updatedDateTime: LocalDateTime,
             val categoryId: Id.Known,
             val rate: Rate,
+            val notes: String? = null,
         ) : Transaction
 
         data class Transfer(
@@ -104,6 +106,7 @@ interface TransactionRepository {
             override val updatedDateTime: LocalDateTime,
             val targetAccount: Id.Known,
             val targetAmount: Amount,
+            val notes: String? = null,
         ) : Transaction
     }
 
