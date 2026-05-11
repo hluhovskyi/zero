@@ -374,6 +374,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
@@ -392,6 +393,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
