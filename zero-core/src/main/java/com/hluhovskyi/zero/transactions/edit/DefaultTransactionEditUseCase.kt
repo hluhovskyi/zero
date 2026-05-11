@@ -75,6 +75,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
+                    notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                 )
 
@@ -87,6 +88,7 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
+                    notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                 )
 
@@ -107,6 +109,7 @@ internal class DefaultTransactionEditUseCase(
                         transferRateMode = state.transferRateMode,
                         sourceCurrencySymbol = sourceCurrencySymbol,
                         targetCurrencySymbol = targetCurrencySymbol,
+                        notes = state.notes,
                         date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                     )
                 }
@@ -224,6 +227,12 @@ internal class DefaultTransactionEditUseCase(
                 }
             }
 
+            is TransactionEditUseCase.Action.ChangeNotes -> {
+                mutableState.update { state ->
+                    state.copy(notes = action.notes)
+                }
+            }
+
             is TransactionEditUseCase.Action.Save -> save()
             is TransactionEditUseCase.Action.CycleTransferRateMode -> cycleTransferRateMode()
             is TransactionEditUseCase.Action.SwapAccounts -> swapAccounts()
@@ -265,6 +274,7 @@ internal class DefaultTransactionEditUseCase(
                                 selectedCurrency = currencyToSelect ?: state.selectedCurrency,
                                 selectedAccount = accountToSelect ?: state.selectedAccount,
                                 localDateTime = transaction.dateTime,
+                                notes = transaction.notes ?: "",
                             )
 
                             when (transaction) {
@@ -482,6 +492,7 @@ internal class DefaultTransactionEditUseCase(
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         rate = Rate(state.rate.toBigDecimalOrNull()),
+                        notes = state.notes.ifBlank { null },
                     )
                 }
 
@@ -498,6 +509,7 @@ internal class DefaultTransactionEditUseCase(
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         rate = Rate(state.rate.toBigDecimalOrNull()),
+                        notes = state.notes.ifBlank { null },
                     )
                 }
 
@@ -526,6 +538,7 @@ internal class DefaultTransactionEditUseCase(
                         dateTime = dateTime,
                         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
                         targetAmount = computedTargetAmount,
+                        notes = state.notes.ifBlank { null },
                     )
                 }
             }
@@ -649,5 +662,6 @@ internal class DefaultTransactionEditUseCase(
         val rate: String = "",
         val targetAmount: String = "",
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
+        val notes: String = "",
     )
 }
