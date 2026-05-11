@@ -37,8 +37,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -63,6 +65,8 @@ internal class SettingsViewProvider(
 private fun MoreView(viewModel: SettingsViewModel) {
     val state by viewModel.state.collectAsState(initial = SettingsViewModel.State())
     val snackbarHostState = remember { SnackbarHostState() }
+    val backupSaved = stringResource(R.string.settings_backup_saved)
+    val exportFailedTemplate = stringResource(R.string.settings_export_failed)
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
@@ -78,9 +82,9 @@ private fun MoreView(viewModel: SettingsViewModel) {
     LaunchedEffect(state.exportFeedback) {
         when (val feedback = state.exportFeedback) {
             SettingsViewModel.ExportFeedback.Success ->
-                snackbarHostState.showSnackbar("Backup saved")
+                snackbarHostState.showSnackbar(backupSaved)
             is SettingsViewModel.ExportFeedback.Error ->
-                snackbarHostState.showSnackbar("Export failed: ${feedback.message}")
+                snackbarHostState.showSnackbar(String.format(exportFailedTemplate, feedback.message))
             null -> Unit
         }
     }
@@ -93,27 +97,27 @@ private fun MoreView(viewModel: SettingsViewModel) {
         ) {
             item { MoreHeader() }
             item {
-                MoreSection(title = "PREFERENCES") {
+                MoreSection(title = stringResource(R.string.settings_section_preferences)) {
                     MoreRow(
                         icon = Icons.Outlined.Payments,
-                        primaryText = "Primary Currency",
-                        secondaryText = state.selectedCurrencyName.ifEmpty { "Loading…" },
+                        primaryText = stringResource(R.string.settings_primary_currency),
+                        secondaryText = state.selectedCurrencyName.ifEmpty { stringResource(R.string.settings_currency_loading) },
                         onClick = { viewModel.perform(SettingsViewModel.Action.OpenCurrencyPicker) },
                     )
                 }
             }
             item {
-                MoreSection(title = "DATA") {
+                MoreSection(title = stringResource(R.string.settings_section_data)) {
                     MoreRow(
                         icon = Icons.Outlined.MoveToInbox,
-                        primaryText = "Import Data",
-                        secondaryText = "Migrate history from other apps",
+                        primaryText = stringResource(R.string.settings_import_data),
+                        secondaryText = stringResource(R.string.settings_import_data_description),
                         onClick = { viewModel.perform(SettingsViewModel.Action.Import) },
                     )
                     MoreRow(
                         icon = Icons.Outlined.Download,
-                        primaryText = "Export Data",
-                        secondaryText = "Save a backup of your data",
+                        primaryText = stringResource(R.string.settings_export_data),
+                        secondaryText = stringResource(R.string.settings_export_data_description),
                         onClick = {
                             val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
                             exportLauncher.launch("zero-backup-$date.json")
@@ -122,11 +126,11 @@ private fun MoreView(viewModel: SettingsViewModel) {
                 }
             }
             item {
-                MoreSection(title = "SECURITY") {
+                MoreSection(title = stringResource(R.string.settings_section_security)) {
                     MoreRow(
                         icon = Icons.Outlined.Fingerprint,
-                        primaryText = "Biometric Lock",
-                        secondaryText = "Face ID or Fingerprint required on open",
+                        primaryText = stringResource(R.string.settings_biometric_lock),
+                        secondaryText = stringResource(R.string.settings_biometric_lock_description),
                         onClick = { /* placeholder */ },
                         showChevron = false,
                     )
@@ -140,7 +144,7 @@ private fun MoreView(viewModel: SettingsViewModel) {
 @Composable
 private fun MoreHeader() {
     Text(
-        text = "More",
+        text = stringResource(R.string.settings_title),
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
         style = TextStyle(
             fontSize = 28.sp,

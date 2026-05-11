@@ -24,8 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.SearchBar
@@ -55,7 +57,7 @@ private fun CurrencyPickerView(viewModel: CurrencyPickerViewModel) {
             onQueryChange = { query ->
                 viewModel.perform(CurrencyPickerViewModel.Action.UpdateSearchQuery(query))
             },
-            placeholder = "Search currencies…",
+            placeholder = stringResource(R.string.currency_picker_search_placeholder),
         )
         LazyVerticalGrid(
             modifier = Modifier.weight(1f),
