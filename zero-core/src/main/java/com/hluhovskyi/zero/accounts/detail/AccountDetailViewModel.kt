@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
+import java.io.Closeable
 
 interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewModel.Action, AccountDetailViewModel.State> {
 
@@ -29,6 +30,6 @@ interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewM
     object Noop : AccountDetailViewModel {
         override val state: Flow<State> = emptyFlow()
         override fun perform(action: Action) = Unit
-        override fun attach(): java.io.Closeable = java.io.Closeable { }
+        override fun attach(): Closeable = Closeable { }
     }
 }

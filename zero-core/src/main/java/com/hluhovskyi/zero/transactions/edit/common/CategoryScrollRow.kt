@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -70,7 +71,7 @@ private fun ShowAllItem(onClick: () -> Unit) {
             size = 48.dp,
             contentPadding = 12.dp,
         ) {
-            androidx.compose.material.Icon(
+            Icon(
                 imageVector = Icons.Filled.Apps,
                 contentDescription = "Show all categories",
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
