@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
@@ -125,17 +126,19 @@ internal class DefaultCategoryEditViewModel(
     }
 
     private suspend fun loadDefaults() {
-        launch {
-            iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
-                .firstOrNull()?.let { icon ->
-                    mutableState.update { it.copy(iconId = icon.id, icon = icon.image) }
-                }
-        }
-        launch {
-            colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
-                .firstOrNull()?.let { color ->
-                    mutableState.update { it.copy(colorId = color.id, colorScheme = colorRepository.schemeFor(color.id)) }
-                }
+        coroutineScope {
+            launch {
+                iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
+                    .firstOrNull()?.let { icon ->
+                        mutableState.update { it.copy(iconId = icon.id, icon = icon.image) }
+                    }
+            }
+            launch {
+                colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
+                    .firstOrNull()?.let { color ->
+                        mutableState.update { it.copy(colorId = color.id, colorScheme = colorRepository.schemeFor(color.id)) }
+                    }
+            }
         }
     }
 
