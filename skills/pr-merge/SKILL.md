@@ -58,7 +58,29 @@ If all three pass, report: `✓ Tests, lint, and build passed — proceeding wit
 
 If the branch is not current (user is merging someone else's PR or a different branch), skip this step entirely.
 
-## Step 4 — Merge the PR
+## Step 4 — Check for conflicts
+
+Before merging, check if the PR has conflicts with master:
+
+```bash
+gh pr view <pr_number> --json mergeable,mergeStateStatus
+```
+
+- **`mergeable: MERGEABLE`** — no conflicts, proceed to Step 5.
+- **`mergeable: CONFLICTING`** — resolve conflicts:
+  1. Checkout the PR branch and rebase onto master:
+     ```bash
+     git checkout <pr_branch>
+     git fetch origin
+     git rebase origin/master
+     ```
+  2. For each conflicted file, resolve manually — keep the correct version, stage with `git add <file>`.
+  3. Continue the rebase: `git rebase --continue`
+  4. Force-push the resolved branch: `git push --force-with-lease`
+  5. Re-check `gh pr view <pr_number> --json mergeable` until `MERGEABLE`, then proceed.
+- **`mergeable: UNKNOWN`** — wait 5 seconds and re-check; GitHub is still computing mergeability.
+
+## Step 5 — Merge the PR
 
 ```bash
 gh pr merge <pr_number> --squash --delete-branch
@@ -66,9 +88,9 @@ gh pr merge <pr_number> --squash --delete-branch
 
 Use `--squash` to keep the main branch history clean. `--delete-branch` removes the remote branch automatically.
 
-If the merge fails (e.g. merge conflicts, required checks not passing), report the error and stop — do not force-merge.
+If the merge fails, report the error and stop — do not force-merge.
 
-## Step 5 — Clean up and update master (only if `is_current_branch`)
+## Step 6 — Clean up and update master (only if `is_current_branch`)
 
 Switch to master, delete the local branch, and pull the latest:
 
@@ -82,7 +104,7 @@ Use `-d` (safe delete) — if it fails because the branch is not fully merged lo
 
 Always run `git pull` after switching to master so the local copy reflects the merge commit.
 
-## Step 6 — Report
+## Step 7 — Report
 
 ```
 Merged PR #<N> "<title>"
