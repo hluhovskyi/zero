@@ -16,12 +16,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
@@ -59,7 +61,7 @@ private fun CategoryPickerView(
             onQueryChange = { query ->
                 viewModel.perform(CategoryPickerViewModel.Action.UpdateSearchQuery(query))
             },
-            placeholder = "Search categories…",
+            placeholder = stringResource(R.string.category_picker_search_placeholder),
         )
         LazyVerticalGrid(
             modifier = Modifier.weight(1f),
