@@ -15,6 +15,7 @@ data class CategoryEntity(
     val name: String,
     val iconId: String?,
     val colorId: String?,
+    val type: String = "EXPENSE",
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
     val deletedAt: LocalDateTime? = null,

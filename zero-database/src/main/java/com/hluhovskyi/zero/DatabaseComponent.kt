@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.MIGRATION_4_5
 import com.hluhovskyi.zero.categories.RoomCategoryRepository
 import com.hluhovskyi.zero.categories.RoomCategorySyncSink
 import com.hluhovskyi.zero.categories.RoomCategorySyncSource
@@ -123,7 +124,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
         @Provides
