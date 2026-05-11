@@ -20,6 +20,7 @@ import org.mockito.kotlin.whenever
 class DefaultAccountViewModelTest {
 
     @Mock private lateinit var accountUseCase: AccountUseCase
+
     @Mock private lateinit var accountRepository: AccountRepository
 
     private val dispatcher = UnconfinedTestDispatcher()

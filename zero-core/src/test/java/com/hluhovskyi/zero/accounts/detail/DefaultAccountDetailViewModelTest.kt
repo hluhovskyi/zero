@@ -45,7 +45,9 @@ import java.math.BigDecimal
 class DefaultAccountDetailViewModelTest {
 
     @Mock private lateinit var accountUseCase: AccountUseCase
+
     @Mock private lateinit var spendingUseCase: AccountDetailSpendingUseCase
+
     @Mock private lateinit var accountRepository: AccountRepository
 
     private val testDispatcher = UnconfinedTestDispatcher()
