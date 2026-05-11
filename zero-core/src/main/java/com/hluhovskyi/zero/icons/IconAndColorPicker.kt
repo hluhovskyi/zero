@@ -44,7 +44,7 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
-private const val GRID_COLUMNS = 5
+private const val GRID_COLUMNS = 6
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -224,7 +224,7 @@ private fun IconPickerCell(
         contentAlignment = Alignment.Center,
     ) {
         imageLoader.View(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(24.dp),
             image = icon.image,
             tint = if (isSelected) colorScheme.primary else OnSurfaceVariant,
         )

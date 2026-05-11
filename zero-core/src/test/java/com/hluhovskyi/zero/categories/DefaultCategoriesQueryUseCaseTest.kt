@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
@@ -51,7 +52,7 @@ class DefaultCategoriesQueryUseCaseTest {
     fun setUp() {
         whenever(iconRepository.query(any<IconRepository.Criteria<List<Icon>>>()))
             .thenReturn(flowOf(emptyList()))
-        whenever(colorRepository.query(any<ColorRepository.Criteria<List<com.hluhovskyi.zero.colors.Color>>>()))
+        whenever(colorRepository.query(any<ColorRepository.Criteria<List<Color>>>()))
             .thenReturn(flowOf(emptyList()))
         whenever(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
     }

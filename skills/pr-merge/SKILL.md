@@ -1,9 +1,6 @@
 ---
 name: pr-merge
-description: >
-  Merge a GitHub PR and delete the remote branch. If the current local branch is the one being
-  merged, run unit tests, linters, and a full build first and abort on failure.
-  Use when the user says "merge the PR", "merge and clean up", or "ship this".
+description: Merge a GitHub PR and clean up the branch. Use when the user says "merge the PR", "merge and clean up", or "ship this".
 ---
 
 # PR Merge
@@ -45,7 +42,29 @@ If all three pass, report: `✓ Tests, lint, and build passed — proceeding wit
 
 If the branch is not current (user is merging someone else's PR or a different branch), skip this step entirely.
 
-## Step 3 — Merge the PR
+## Step 3 — Check for conflicts
+
+Before merging, check if the PR has conflicts with master:
+
+```bash
+gh pr view <pr_number> --json mergeable,mergeStateStatus
+```
+
+- **`mergeable: MERGEABLE`** — no conflicts, proceed to Step 4.
+- **`mergeable: CONFLICTING`** — resolve conflicts:
+  1. Checkout the PR branch and rebase onto master:
+     ```bash
+     git checkout <pr_branch>
+     git fetch origin
+     git rebase origin/master
+     ```
+  2. For each conflicted file, resolve manually — keep the correct version, stage with `git add <file>`.
+  3. Continue the rebase: `git rebase --continue`
+  4. Force-push the resolved branch: `git push --force-with-lease`
+  5. Re-check `gh pr view <pr_number> --json mergeable` until `MERGEABLE`, then proceed.
+- **`mergeable: UNKNOWN`** — wait 5 seconds and re-check; GitHub is still computing mergeability.
+
+## Step 4 — Merge the PR
 
 ```bash
 gh pr merge <pr_number> --squash --delete-branch
@@ -53,21 +72,33 @@ gh pr merge <pr_number> --squash --delete-branch
 
 Use `--squash` to keep the main branch history clean. `--delete-branch` removes the remote branch automatically.
 
-If the merge fails (e.g. merge conflicts, required checks not passing), report the error and stop — do not force-merge.
+If the merge fails, report the error and stop — do not force-merge.
 
-## Step 4 — Clean up local branch (only if `is_current_branch`)
+## Step 5 — Wait for CI checks
 
-Switch to the main branch and delete the local branch:
+After merging, wait for any CI checks to complete using the polling script:
+
+```bash
+./scripts/github/wait-for-ci.sh <pr_number>
+```
+
+The script polls `gh pr checks` every 15 seconds until all checks resolve, then exits 0 (pass) or 1 (fail). If CI fails after merge, report the failure — the merge is already done, but master may need attention.
+
+## Step 6 — Clean up and update master (only if `is_current_branch`)
+
+Switch to master, delete the local branch, and pull the latest:
 
 ```bash
 git checkout master
 git branch -d <pr_branch>
-git pull
+git pull origin master
 ```
 
 Use `-d` (safe delete) — if it fails because the branch is not fully merged locally, report it and do not force-delete.
 
-## Step 5 — Report
+Always run `git pull origin master` after switching so the local copy reflects the merge commit.
+
+## Step 7 — Report
 
 ```
 Merged PR #<N> "<title>"
