@@ -46,6 +46,8 @@ abstract class CategoryEditComponent : AttachableViewComponent {
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryEditComponent.builder()
             .dependencies(dependencies)
+            .categoryEditIconUseCase(CategoryEditIconUseCase.Noop)
+            .categoryEditColorUseCase(CategoryEditColorUseCase.Noop)
             .onCategorySavedHandler(OnCategorySavedHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
     }
@@ -57,6 +59,12 @@ abstract class CategoryEditComponent : AttachableViewComponent {
 
         @BindsInstance
         fun categoryId(@CategoryEditId categoryId: Id): Builder
+
+        @BindsInstance
+        fun categoryEditIconUseCase(useCase: CategoryEditIconUseCase): Builder
+
+        @BindsInstance
+        fun categoryEditColorUseCase(useCase: CategoryEditColorUseCase): Builder
 
         @BindsInstance
         fun onCategorySavedHandler(handler: OnCategorySavedHandler): Builder
@@ -75,12 +83,16 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
+            categoryEditIconUseCase: CategoryEditIconUseCase,
+            categoryEditColorUseCase: CategoryEditColorUseCase,
             onCategorySavedHandler: OnCategorySavedHandler,
         ): CategoryEditViewModel = DefaultCategoryEditViewModel(
             categoryId = categoryId,
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
+            categoryEditIconUseCase = categoryEditIconUseCase,
+            categoryEditColorUseCase = categoryEditColorUseCase,
             onCategorySavedHandler = onCategorySavedHandler,
         )
 

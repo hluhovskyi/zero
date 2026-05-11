@@ -30,24 +30,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.icons.IconAndColorPicker
-import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 internal class CategoriesEditViewProvider(
@@ -97,7 +91,7 @@ private fun CategoryEditView(
                         colorScheme = state.colorScheme.toUi(),
                         imageLoader = imageLoader,
                         icon = state.icon,
-                        onClick = { viewModel.perform(CategoryEditViewModel.Action.TogglePicker) },
+                        onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectIcon) },
                     )
                     NameFormCard(
                         modifier = Modifier.weight(1f),
@@ -119,46 +113,6 @@ private fun CategoryEditView(
             onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
-
-        if (state.pickerVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(10f),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.32f))
-                        .clickable { viewModel.perform(CategoryEditViewModel.Action.TogglePicker) },
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.78f)
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(Surface),
-                ) {
-                    Column {
-                        DragHandle()
-                        IconAndColorPicker(
-                            sections = state.iconSections,
-                            colorSchemes = state.colorSchemes,
-                            selectedIcon = state.selectedIcon,
-                            selectedColorScheme = state.colorScheme.takeIf { it.swatch.id.value.isNotEmpty() },
-                            imageLoader = imageLoader,
-                            onIconSelected = { icon ->
-                                viewModel.perform(CategoryEditViewModel.Action.PickIcon(icon))
-                            },
-                            onColorSchemeSelected = { scheme ->
-                                viewModel.perform(CategoryEditViewModel.Action.PickColorScheme(scheme))
-                            },
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
