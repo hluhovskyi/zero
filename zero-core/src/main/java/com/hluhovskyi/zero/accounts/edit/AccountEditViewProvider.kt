@@ -84,7 +84,7 @@ private fun AccountEditView(
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
             ModalHeader(
-                title = "New Account",
+                title = if (state.isEditMode) "Edit Account" else "New Account",
                 onClose = { onClose.onClose() },
             )
             Column(
