@@ -47,7 +47,7 @@ gh pr view <pr_number> --json mergeable,mergeStateStatus
 
 - **`MERGEABLE`** — proceed.
 - **`UNKNOWN`** — wait 5 s, re-check.
-- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git rebase origin/master`, resolve conflicts, `git rebase --continue`, `git push --force-with-lease`, re-check until `MERGEABLE`.
+- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git merge origin/master`, resolve conflicts (see [Conflict Resolution](docs/agents/branch-management.md#conflict-resolution)), `git push`, re-check until `MERGEABLE`.
 
 ## Step 4 — Merge
 

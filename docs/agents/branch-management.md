@@ -29,6 +29,12 @@ Extends TransactionComponent with TransactionFilter and DisplayConfig for reuse 
 Also ships the scaffold-feature skill that generates structural stubs for future features.
 ```
 
+## Conflict Resolution
+
+**Use `git merge origin/master`, not rebase, to update a feature branch** — rebase only for stacked PRs where linear history is required.
+
+**Read both sides of every conflict before resolving** — never blindly accept your own version; the incoming side may contain intentional changes that must be preserved.
+
 ### Local Enforcement:
 To prevent accidental commits and pushes, this project includes a tracked `.githooks/` directory.
 
