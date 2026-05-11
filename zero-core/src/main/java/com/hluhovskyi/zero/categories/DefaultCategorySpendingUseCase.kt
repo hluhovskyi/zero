@@ -21,14 +21,12 @@ internal class DefaultCategorySpendingUseCase(
     private val zoneProvider: ZoneProvider,
 ) : CategorySpendingUseCase {
 
-
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
         val (from, to) = period.resolve()
         return transactionRepository
             .query(TransactionRepository.Criteria.CategorySpendingBetween(from = from, to = to))
             .flatMapLatest { rows -> flow { emit(aggregate(rows)) } }
     }
-
 
     override fun queryForCategory(id: Id.Known, period: CategorySpendingUseCase.Period): Flow<CategorySpendingUseCase.CategorySpending?> {
         val (from, to) = period.resolve()
