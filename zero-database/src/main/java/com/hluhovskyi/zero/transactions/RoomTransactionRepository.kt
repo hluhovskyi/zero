@@ -11,7 +11,6 @@ import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.localDateTime
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,7 +33,6 @@ internal class RoomTransactionRepository(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun <T> query(
         criteria: TransactionRepository.Criteria<T>,
         trigger: Flow<*>,
