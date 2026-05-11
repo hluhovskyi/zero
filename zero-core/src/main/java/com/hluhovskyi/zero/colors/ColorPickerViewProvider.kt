@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.colors
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -25,7 +24,6 @@ internal class ColorPickerViewProvider(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ColorPickerView(
     viewModel: ColorPickerViewModel,

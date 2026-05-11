@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.categories.picker
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,7 +45,6 @@ internal class CategoryPickerViewProvider(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CategoryPickerView(
     viewModel: CategoryPickerViewModel,

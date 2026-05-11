@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
@@ -47,7 +46,6 @@ internal class MainActivityScreenViewProvider(
     private val modalBottomSheetState: ModalBottomSheetState,
 ) : ViewProvider {
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun View() {
         val isKeyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
