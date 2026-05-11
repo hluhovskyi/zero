@@ -4,6 +4,9 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+def versionProps = new Properties()
+file('../version.properties').withInputStream { versionProps.load(it) }
+
 android {
     compileSdk versions.compileSdk
 
@@ -11,8 +14,8 @@ android {
         applicationId "com.hluhovskyi.zero"
         minSdk versions.minSdk
         targetSdk versions.targetSdk
-        versionCode 1
-        versionName "1.0"
+        versionCode versionProps['versionCode'].toInteger()
+        versionName versionProps['versionName']
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -20,8 +23,19 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def keystoreFile = System.getenv("KEYSTORE_FILE")
+            storeFile keystoreFile ? file(keystoreFile) : null
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias System.getenv("KEY_ALIAS") ?: ""
+            keyPassword System.getenv("KEY_PASSWORD") ?: ""
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
