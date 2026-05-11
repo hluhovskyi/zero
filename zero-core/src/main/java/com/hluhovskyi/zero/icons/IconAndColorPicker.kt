@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.icons
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,7 +45,6 @@ import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 private const val GRID_COLUMNS = 6
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IconAndColorPicker(
     sections: List<IconPickerSection>,

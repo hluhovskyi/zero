@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -22,7 +21,7 @@ internal class DefaultCategorySpendingUseCase(
     private val zoneProvider: ZoneProvider,
 ) : CategorySpendingUseCase {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
         val (from, to) = period.resolve()
         return transactionRepository
@@ -30,7 +29,7 @@ internal class DefaultCategorySpendingUseCase(
             .flatMapLatest { rows -> flow { emit(aggregate(rows)) } }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+
     override fun queryForCategory(id: Id.Known, period: CategorySpendingUseCase.Period): Flow<CategorySpendingUseCase.CategorySpending?> {
         val (from, to) = period.resolve()
         return transactionRepository

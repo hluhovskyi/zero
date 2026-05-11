@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -19,7 +18,6 @@ internal class DefaultAccountDetailSpendingUseCase(
     private val zoneProvider: ZoneProvider,
 ) : AccountDetailSpendingUseCase {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun queryForAccount(
         accountId: Id.Known,
         period: AccountDetailSpendingUseCase.Period,
