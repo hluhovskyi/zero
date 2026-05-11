@@ -38,7 +38,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
@@ -71,7 +73,7 @@ internal fun TransactionFilterSheet(
             .fillMaxHeight(0.9f),
     ) {
         ModalHeader(
-            title = "Filter",
+            title = stringResource(R.string.filter_title),
             onClose = onClose,
             trailingContent = if (draft.isActive) {
                 {
@@ -82,7 +84,7 @@ internal fun TransactionFilterSheet(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "Reset",
+                            text = stringResource(R.string.filter_reset),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Error,
@@ -100,7 +102,7 @@ internal fun TransactionFilterSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
         ) {
-            FilterSection(label = "Period") {
+            FilterSection(label = stringResource(R.string.filter_section_period)) {
                 PeriodPillRow(
                     selected = draft.period,
                     onSelect = { id ->
@@ -109,7 +111,7 @@ internal fun TransactionFilterSheet(
                 )
             }
 
-            FilterSection(label = "Type") {
+            FilterSection(label = stringResource(R.string.filter_section_type)) {
                 TypePillRow(
                     selected = draft.type,
                     onSelect = { type -> draft = draft.copy(type = type) },
@@ -117,9 +119,9 @@ internal fun TransactionFilterSheet(
             }
 
             if (availableCategories.isNotEmpty()) {
-                FilterSection(label = "Categories") {
+                FilterSection(label = stringResource(R.string.filter_section_categories)) {
                     SelectionGridSection(
-                        allLabel = "All categories",
+                        allLabel = stringResource(R.string.filter_all_categories),
                         totalCount = availableCategories.size,
                         selectedIds = draft.categoryIds,
                         onToggleAll = { draft = draft.copy(categoryIds = null) },
@@ -150,9 +152,9 @@ internal fun TransactionFilterSheet(
             }
 
             if (availableAccounts.isNotEmpty()) {
-                FilterSection(label = "Accounts") {
+                FilterSection(label = stringResource(R.string.filter_section_accounts)) {
                     SelectionGridSection(
-                        allLabel = "All accounts",
+                        allLabel = stringResource(R.string.filter_all_accounts),
                         totalCount = availableAccounts.size,
                         selectedIds = draft.accountIds,
                         onToggleAll = { draft = draft.copy(accountIds = null) },
@@ -482,7 +484,7 @@ private fun ApplyButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Apply filters",
+            text = stringResource(R.string.filter_apply),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,

@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -163,7 +164,7 @@ private fun TransactionView(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "No transactions found",
+                        text = stringResource(R.string.transaction_empty_state),
                         fontSize = 15.sp,
                         color = Color(0xFF44464F),
                     )
@@ -307,7 +308,7 @@ private fun TransactionView(
                                                 )
                                                 Spacer(modifier = Modifier.size(8.dp))
                                                 Text(
-                                                    text = "Delete",
+                                                    text = stringResource(R.string.transaction_delete),
                                                     color = Color(0xFFBA1A1A),
                                                 )
                                             }
@@ -338,7 +339,7 @@ private fun FilterButton(
     ) {
         Icon(
             imageVector = Icons.Filled.FilterList,
-            contentDescription = "Filter",
+            contentDescription = stringResource(R.string.transaction_filter_icon_description),
             tint = if (activeCount > 0) Color.White else OnSurfaceVariant,
             modifier = Modifier.size(20.dp),
         )
@@ -405,7 +406,7 @@ private fun FilterChipsRow(
                 .padding(horizontal = 12.dp, vertical = 5.dp),
         ) {
             Text(
-                text = "Clear all",
+                text = stringResource(R.string.transaction_clear_all),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OnSurfaceVariant,
@@ -443,7 +444,7 @@ private fun FilterChip(
         ) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Remove filter",
+                contentDescription = stringResource(R.string.transaction_remove_filter_description),
                 tint = Color.White,
                 modifier = Modifier.size(10.dp),
             )
