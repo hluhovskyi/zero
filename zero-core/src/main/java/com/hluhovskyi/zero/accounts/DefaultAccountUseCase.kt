@@ -50,6 +50,7 @@ internal class DefaultAccountUseCase(
                 colorScheme = colorScheme,
                 category = account.category,
                 details = account.details,
+                archivedAt = account.archivedAt,
             )
         }
         val balance = accounts.fold(Amount.zero()) { total, account ->
