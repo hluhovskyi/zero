@@ -24,6 +24,7 @@ internal class RoomAccountSyncSink(
         currencyId = currencyId,
         name = name,
         iconId = iconId,
+        colorId = null,
         initialBalance = AmountEntity(BigDecimal(initialBalance)),
         category = category,
         details = details,

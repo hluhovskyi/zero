@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
@@ -17,6 +19,7 @@ internal class DefaultAccountUseCase(
     transactionRepository: TransactionRepository,
     currencyRepository: CurrencyRepository,
     iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     currencyConvertUseCase: CurrencyConvertUseCase,
 ) : AccountUseCase {
@@ -33,6 +36,9 @@ internal class DefaultAccountUseCase(
             .associateById(),
     ) { accounts, accountIdToBalance, idToCurrency, idToIcon ->
         val resultAccounts = accounts.map { account ->
+            val colorScheme = (account.colorId as? com.hluhovskyi.zero.common.Id.Known)
+                ?.let { colorRepository.schemeFor(it) }
+                ?: ColorScheme.Grey
             Account(
                 id = account.id,
                 name = account.name,
@@ -40,6 +46,7 @@ internal class DefaultAccountUseCase(
                 currencySymbol = idToCurrency[account.currencyId]?.symbol.orEmpty(),
                 icon = idToIcon[account.iconId]?.image
                     ?: iconRepository.iconFor(account.category).image,
+                colorScheme = colorScheme,
                 category = account.category,
                 details = account.details,
             )
