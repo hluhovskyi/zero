@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.sync.EntitySyncSink
 import com.hluhovskyi.zero.sync.SyncCategory
@@ -22,6 +23,7 @@ internal class RoomCategorySyncSink(
         name = name,
         iconId = iconId,
         colorId = colorId,
+        type = type ?: CategoryType.EXPENSE.name,
         creationDateTime = creationDateTime,
         updatedDateTime = updatedDateTime,
         deletedAt = deletedAt,
