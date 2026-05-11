@@ -1,5 +1,9 @@
 package com.hluhovskyi.zero.categories
 
 fun interface OnAddCategoryHandler {
-    fun onAdd(type: CategoryType)
+    fun onAdd()
+
+    object Noop : OnAddCategoryHandler {
+        override fun onAdd() = Unit
+    }
 }

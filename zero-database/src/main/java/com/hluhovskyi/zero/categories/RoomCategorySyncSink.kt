@@ -23,7 +23,7 @@ internal class RoomCategorySyncSink(
         name = name,
         iconId = iconId,
         colorId = colorId,
-        type = type ?: CategoryType.EXPENSE.name,
+        type = CategoryType.from(type).name,
         creationDateTime = creationDateTime,
         updatedDateTime = updatedDateTime,
         deletedAt = deletedAt,

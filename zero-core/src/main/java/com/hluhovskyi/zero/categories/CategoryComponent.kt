@@ -67,7 +67,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
-            .onAddCategoryHandler { _ -> }
+            .onAddCategoryHandler(OnAddCategoryHandler.Noop)
     }
 
     @dagger.Component.Builder

@@ -168,7 +168,7 @@ private fun CategoryView(
                 .padding(end = 16.dp, bottom = 32.dp),
             icon = { Icon(Icons.Filled.Add, contentDescription = "Add category") },
             text = { Text("Add category") },
-            onClick = { onAddCategory.onAdd(state.selectedTab) },
+            onClick = { onAddCategory.onAdd() },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
     }

@@ -63,7 +63,7 @@ internal class RoomCategoryRepository(
         name = name,
         colorId = Id(colorId),
         iconId = Id(iconId),
-        type = runCatching { CategoryType.valueOf(type) }.getOrElse { CategoryType.EXPENSE },
+        type = CategoryType.from(type),
     )
 
     private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity = CategoryEntity(

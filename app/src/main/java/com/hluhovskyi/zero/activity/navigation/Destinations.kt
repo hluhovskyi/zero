@@ -31,9 +31,7 @@ internal object Destinations {
 
     sealed interface Category : Destination {
         object All : Category, Destination by destinationOf("categories")
-        object Edit : Category, Destination by destinationOf("categories/edit", InitialType) {
-            object InitialType : Argument<String> by stringOptionalValueOf("initialType")
-        }
+        object Edit : Category, Destination by destinationOf("categories/edit")
         object Picker : Category, Destination by destinationOf("categories/picker", RequestId, SelectedCategoryId) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
             object SelectedCategoryId : Argument<Id> by idOptionalValueOf("selectedCategoryId")
