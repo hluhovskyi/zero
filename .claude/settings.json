@@ -14,6 +14,7 @@
     "allow": [
       "Bash(./scripts/fetch-design.sh *)",
       "Bash(./scripts/detect-worktree.sh)",
+      "Bash(./scripts/guard-branch-switch.sh)",
       "Bash(./scripts/github/wait-for-ci.sh *)"
     ]
   },
@@ -25,7 +26,17 @@
           {
             "type": "command",
             "if": "Bash(git *)",
-            "command": "jq -r '.tool_input.command // \"\"' | grep -qE 'git (checkout -b|switch (-c|--create)|branch [^-])' && echo '{\"continue\":false,\"stopReason\":\"Use /lets-do — it creates a worktree automatically. Direct branches break concurrent sessions.\"}' || true"
+            "command": "./scripts/guard-branch-switch.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh *)",
+            "command": "./scripts/guard-branch-switch.sh"
           }
         ]
       },
