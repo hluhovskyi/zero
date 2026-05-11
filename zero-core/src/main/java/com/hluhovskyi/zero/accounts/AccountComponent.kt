@@ -104,11 +104,13 @@ abstract class AccountComponent : AttachableViewComponent {
             dispatcherProvider: DispatcherProvider,
             onAccountSelectedHandler: OnAccountSelectedHandler,
             onEditAccountHandler: OnEditAccountHandler,
+            accountRepository: AccountRepository,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
             dispatchers = dispatcherProvider,
             onAccountSelectedHandler = onAccountSelectedHandler,
             onEditAccountHandler = onEditAccountHandler,
+            accountRepository = accountRepository,
         )
 
         @Provides
