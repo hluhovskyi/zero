@@ -22,6 +22,7 @@ import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -125,7 +126,7 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             launch {
