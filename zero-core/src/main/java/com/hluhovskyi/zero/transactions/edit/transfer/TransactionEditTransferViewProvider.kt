@@ -31,9 +31,11 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
@@ -126,7 +128,7 @@ private fun TransactionEditTransferView(
         state.date?.let { date ->
             DatePickerCard(
                 modifier = Modifier.fillMaxWidth(),
-                label = "Date",
+                label = stringResource(R.string.transaction_edit_date_label),
                 date = date,
                 onDateSelected = {
                     viewModel.perform(TransactionEditTransferViewModel.Action.ChangeDate(it))
@@ -176,14 +178,14 @@ private fun RateModePill(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "RATE",
+                        text = stringResource(R.string.transfer_edit_rate_label),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
-                        text = "CHANGE",
+                        text = stringResource(R.string.transfer_edit_change),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,
@@ -207,7 +209,7 @@ private fun RateModePill(
                     decorationBox = { innerTextField ->
                         if (mode.rate.isEmpty()) {
                             Text(
-                                text = "Enter rate",
+                                text = stringResource(R.string.transfer_edit_enter_rate),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = OnSurfaceVariant.copy(alpha = 0.5f),
@@ -235,14 +237,14 @@ private fun RateModePill(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "DESTINATION AMOUNT",
+                        text = stringResource(R.string.transfer_edit_destination_amount),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
-                        text = "CHANGE",
+                        text = stringResource(R.string.transfer_edit_change),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,
@@ -312,7 +314,7 @@ private fun AccountSelectorsWithSwap(
         ) {
             SelectorCard(
                 modifier = Modifier.fillMaxWidth(),
-                label = "From",
+                label = stringResource(R.string.transfer_edit_from_label),
                 value = state.selectedAccount?.name ?: "",
                 items = state.accounts,
                 nameMapping = { it.name },
@@ -320,7 +322,7 @@ private fun AccountSelectorsWithSwap(
             )
             SelectorCard(
                 modifier = Modifier.fillMaxWidth(),
-                label = "To",
+                label = stringResource(R.string.transfer_edit_to_label),
                 value = state.selectedTargetAccount?.name ?: "",
                 items = state.targetAccounts,
                 nameMapping = { it.name },
@@ -340,7 +342,7 @@ private fun AccountSelectorsWithSwap(
         ) {
             Icon(
                 imageVector = Icons.Filled.SwapVert,
-                contentDescription = "Swap accounts",
+                contentDescription = stringResource(R.string.transfer_edit_swap_description),
                 modifier = Modifier.size(20.dp),
                 tint = OnSurfaceVariant,
             )
@@ -350,6 +352,7 @@ private fun AccountSelectorsWithSwap(
 
 private val amountFormat = DecimalFormat("#,##0.00")
 
+@Composable
 private fun formatDefaultPillText(
     amount: String,
     rate: Rate,
@@ -361,13 +364,14 @@ private fun formatDefaultPillText(
     val formattedTarget = amountFormat.format(targetAmount)
 
     return if (sourceCurrencySymbol == targetCurrencySymbol) {
-        "Receives $formattedTarget"
+        stringResource(R.string.transfer_receives_amount, formattedTarget)
     } else {
         val formattedRate = rate.value.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-        "Receives $targetCurrencySymbol$formattedTarget \u00B7 1 $sourceCurrencySymbol = $formattedRate $targetCurrencySymbol"
+        stringResource(R.string.transfer_receives_with_rate, targetCurrencySymbol, formattedTarget, sourceCurrencySymbol, formattedRate, targetCurrencySymbol)
     }
 }
 
+@Composable
 private fun computeTargetFromRate(
     sourceAmount: String,
     rateStr: String,
@@ -379,8 +383,8 @@ private fun computeTargetFromRate(
     val target = amount.multiply(rate)
     val formatted = amountFormat.format(target)
     return if (targetCurrencySymbol.isNotEmpty()) {
-        "Receives $targetCurrencySymbol$formatted"
+        stringResource(R.string.transfer_receives_with_symbol, targetCurrencySymbol, formatted)
     } else {
-        "Receives $formatted"
+        stringResource(R.string.transfer_receives_amount, formatted)
     }
 }
