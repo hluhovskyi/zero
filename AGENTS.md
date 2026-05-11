@@ -10,6 +10,21 @@ If you discover a non-obvious gotcha, a new pattern, or a rule that isn't docume
 
 **Doc-With-Code**: When implementing changes that affect a domain type, invariant, or pattern already described in `docs/agents/`, update the relevant doc file in the **same commit** as the code change — never defer doc updates to a retro or a follow-up PR.
 
+## Starting New Work
+
+Use the `/lets-do` skill (invoke via `Skill` tool as `zero-project:lets-do`) to kick off any
+feature, bug fix, or refactor. It orchestrates the full workflow automatically:
+
+1. **Worktree isolation** — creates a branch + worktree via `superpowers:using-git-worktrees`;
+   never lets you touch master
+2. **Brainstorming** — `superpowers:brainstorming` (skipped for tiny fixes or with `--no-questions`)
+3. **Planning** — `superpowers:writing-plans` for anything >~100 LOC
+4. **Execution** — `superpowers:subagent-driven-development`
+5. **Verification** — tests + lint + `zero-project:android-ui-inspector` if UI is touched
+6. **PR** — opens a GitHub PR as the final deliverable
+
+Pass `--no-questions` to skip brainstorming and proceed straight to execution.
+
 ## Cross-Cutting Rules
 
 1. **Branch Isolation** — Every distinct task MUST have a dedicated branch. Never commit directly to `master`. Verify current branch before every commit. See [Branch Management](docs/agents/branch-management.md).

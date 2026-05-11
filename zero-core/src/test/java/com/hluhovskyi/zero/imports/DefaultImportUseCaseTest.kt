@@ -10,7 +10,10 @@ import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSnapshot
+import kotlinx.datetime.LocalDateTime
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
 import kotlinx.coroutines.CoroutineScope
@@ -142,20 +145,20 @@ class DefaultImportUseCaseTest {
 
         whenever(colorRepository.schemeFor(existingColorId)).thenReturn(ColorScheme.Grey)
 
-        val syncCategory = com.hluhovskyi.zero.sync.SyncCategory(
+        val syncCategory = SyncCategory(
             id = Id.Known("import-cat-1"),
             name = "food",
             iconId = "icon-000",
             colorId = "color-000",
             parentCategoryId = null,
-            creationDateTime = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
-            updatedDateTime = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            creationDateTime = LocalDateTime(2024, 1, 1, 0, 0),
+            updatedDateTime = LocalDateTime(2024, 1, 1, 0, 0),
             deletedAt = null,
         )
-        val snapshot = com.hluhovskyi.zero.sync.SyncSnapshot(
+        val snapshot = SyncSnapshot(
             version = 1,
             userId = userId,
-            exportedAt = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            exportedAt = LocalDateTime(2024, 1, 1, 0, 0),
             categories = listOf(syncCategory),
             accounts = emptyList(),
             transactions = emptyList(),
@@ -179,10 +182,10 @@ class DefaultImportUseCaseTest {
 
     @Test
     fun `SelectFile transitions to UpToDate when delta is completely empty`() = runTest {
-        val emptySnapshot = com.hluhovskyi.zero.sync.SyncSnapshot(
+        val emptySnapshot = SyncSnapshot(
             version = 1,
             userId = userId,
-            exportedAt = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            exportedAt = LocalDateTime(2024, 1, 1, 0, 0),
             categories = emptyList(),
             accounts = emptyList(),
             transactions = emptyList(),
@@ -201,10 +204,10 @@ class DefaultImportUseCaseTest {
 
     @Test
     fun `Back from UpToDate returns to SourceSelection`() = runTest {
-        val emptySnapshot = com.hluhovskyi.zero.sync.SyncSnapshot(
+        val emptySnapshot = SyncSnapshot(
             version = 1,
             userId = userId,
-            exportedAt = kotlinx.datetime.LocalDateTime(2024, 1, 1, 0, 0),
+            exportedAt = LocalDateTime(2024, 1, 1, 0, 0),
             categories = emptyList(),
             accounts = emptyList(),
             transactions = emptyList(),
