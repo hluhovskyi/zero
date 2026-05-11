@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,10 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,7 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -44,7 +47,6 @@ import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
@@ -73,18 +75,15 @@ private fun CategoryEditView(
     val state by viewModel.state.collectAsState(initial = CategoryEditViewModel.State())
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            DragHandle()
+        Column {
             ModalHeader(
                 title = "Add Category",
                 onClose = { onDiscard.onDiscard() },
             )
             Column(
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Row(
@@ -106,14 +105,20 @@ private fun CategoryEditView(
                         onValueChange = { viewModel.perform(CategoryEditViewModel.Action.ChangeName(it)) },
                     )
                 }
-                SaveButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 14.dp, bottom = 32.dp),
-                    onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) },
-                )
+
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
+
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
+            icon = { Icon(Icons.Filled.Check, contentDescription = "Save category") },
+            text = { Text("Save") },
+            onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) },
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+        )
 
         if (state.pickerVisible) {
             Box(
@@ -230,28 +235,6 @@ private fun NameFormCard(
                 }
                 innerTextField()
             },
-        )
-    }
-}
-
-@Composable
-private fun SaveButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .background(PrimaryContainer, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "Save Category",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center,
         )
     }
 }

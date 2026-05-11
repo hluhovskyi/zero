@@ -366,10 +366,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: CategoryEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(
-            destination = Destinations.Category.Edit,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
-        ) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Edit) {
             componentBuilder
                 .categoryId(Id.Unknown)
                 .onCategorySavedHandler { navigator.back() }
@@ -384,10 +381,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: CategoryEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(
-            destination = Destinations.Category.Item.Edit,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
-        ) {
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Edit) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Category.Item.CategoryId))
                 .onCategorySavedHandler { navigator.back() }
