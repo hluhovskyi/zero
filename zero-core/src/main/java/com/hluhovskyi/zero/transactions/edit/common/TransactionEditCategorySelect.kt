@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
@@ -35,7 +37,7 @@ fun TransactionEditCategorySelect(
         modifier = modifier,
         items = categories,
         label = {
-            Text(text = "Category")
+            Text(text = stringResource(R.string.transaction_edit_category_label))
         },
         nameMapping = { it.name },
         menuItem = { category ->
@@ -98,7 +100,7 @@ fun TransactionEditCategorySelectWithEditButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Edit,
-                contentDescription = "Edit categories",
+                contentDescription = stringResource(R.string.transaction_edit_edit_categories_description),
                 tint = Color.White,
             )
         }

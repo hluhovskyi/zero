@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
@@ -73,14 +75,14 @@ private fun ShowAllItem(onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Filled.Apps,
-                contentDescription = "Show all categories",
+                contentDescription = stringResource(R.string.transaction_edit_show_all_categories_description),
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
                 tint = OnSurface,
             )
         }
         Text(
             modifier = Modifier.padding(top = 8.dp),
-            text = "All",
+            text = stringResource(R.string.transaction_edit_all_categories),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = OnSurface,

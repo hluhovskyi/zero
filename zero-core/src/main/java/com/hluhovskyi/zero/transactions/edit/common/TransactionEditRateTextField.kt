@@ -5,6 +5,8 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.R
 import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
@@ -16,7 +18,7 @@ fun TransactionEditRateTextField(
     OutlinedTextField(
         modifier = modifier,
         value = rate,
-        label = { Text(text = "Rate") },
+        label = { Text(text = stringResource(R.string.transaction_edit_rate_label)) },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
         ),
