@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -10,6 +11,7 @@ data class Account(
     val balance: Amount,
     val currencySymbol: String,
     val icon: Image,
+    val colorScheme: ColorScheme = ColorScheme.Grey,
     val category: AccountCategory,
     val details: String?,
 )

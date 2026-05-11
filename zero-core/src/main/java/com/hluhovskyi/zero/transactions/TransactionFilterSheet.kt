@@ -174,6 +174,7 @@ internal fun TransactionFilterSheet(
                                     account = wrapper.account,
                                     isActive = isActive,
                                     isDimmed = isDimmed,
+                                    imageLoader = imageLoader,
                                 )
                             },
                         )
@@ -431,6 +432,7 @@ private fun AccountGridItem(
     account: TransactionFilterSheetViewModel.FilterAccount,
     isActive: Boolean,
     isDimmed: Boolean,
+    imageLoader: ImageLoader,
 ) {
     Column(
         modifier = Modifier
@@ -439,18 +441,14 @@ private fun AccountGridItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(if (isActive) Color(0xFFD9E2FF) else SurfaceContainer),
-            contentAlignment = Alignment.Center,
+        CategoryIconView(
+            color = SurfaceContainer,
+            size = 32.dp,
+            contentPadding = 7.dp,
         ) {
-            Text(
-                text = account.name.take(1).uppercase(),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isActive) PrimaryContainer else Outline,
+            imageLoader.View(
+                image = account.icon,
+                modifier = Modifier.size(18.dp),
             )
         }
         Text(

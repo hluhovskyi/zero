@@ -93,6 +93,7 @@ internal class DefaultAccountEditViewModel(
                         name = state.name,
                         currencyId = selectedCurrency.id,
                         iconId = state.iconId,
+                        colorId = state.colorId,
                         initialBalance = Amount(state.balance.toDoubleOrNull() ?: 0.0),
                         category = state.category,
                         details = state.details.takeIf { it.isNotBlank() },

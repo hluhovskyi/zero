@@ -41,13 +41,14 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
@@ -226,15 +227,15 @@ private fun AccountRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
+            CategoryIconView(
+                colorScheme = account.colorScheme.toUi(),
+                size = 44.dp,
+                contentPadding = 10.dp,
+            ) { tint ->
                 imageLoader.View(
                     modifier = Modifier.size(24.dp),
                     image = account.icon,
+                    tint = tint,
                 )
             }
             Column(modifier = Modifier.weight(1f)) {

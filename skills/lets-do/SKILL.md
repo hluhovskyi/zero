@@ -114,6 +114,16 @@ run it anyway.
 
 ## Step 6 — Open PR
 
+**Before creating the PR, verify the working tree is clean:**
+
+```bash
+git status --short
+```
+
+If output is non-empty, surface the listed files to the user and confirm before proceeding —
+`gh pr create` only warns about uncommitted changes; unintended files can silently land in the
+squash commit.
+
 ```bash
 gh pr create \
   --title "<concise title, under 70 chars>" \

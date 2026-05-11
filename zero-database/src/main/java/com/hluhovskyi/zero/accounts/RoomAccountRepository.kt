@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.requireCurrentUserId
+import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
@@ -36,6 +37,7 @@ internal class RoomAccountRepository(
             name = account.name,
             currencyId = account.currencyId,
             iconId = account.iconId,
+            colorId = Id(account.colorId),
             initialBalance = Amount(account.initialBalance.value),
             category = runCatching {
                 AccountCategory.valueOf(account.category)
@@ -64,6 +66,7 @@ internal class RoomAccountRepository(
             currencyId = currencyId,
             name = name,
             iconId = iconId,
+            colorId = colorId.valueOrNull(),
             initialBalance = AmountEntity(initialBalance.value),
             category = category.name,
             details = details,

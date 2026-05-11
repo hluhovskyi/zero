@@ -57,7 +57,7 @@ class FullyQualifiedReferenceDetector :
                     "full package path to avoid adding a new import.",
                 category = Category.CORRECTNESS,
                 priority = 6,
-                severity = Severity.WARNING,
+                severity = Severity.ERROR,
                 implementation =
                 Implementation(
                     FullyQualifiedReferenceDetector::class.java,

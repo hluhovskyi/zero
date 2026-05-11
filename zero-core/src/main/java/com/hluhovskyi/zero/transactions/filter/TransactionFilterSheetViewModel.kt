@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.transactions.TransactionFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import java.io.Closeable
 
 interface TransactionFilterSheetViewModel : AttachableActionStateModel<TransactionFilterSheetViewModel.Action, TransactionFilterSheetViewModel.State> {
 
@@ -31,11 +32,12 @@ interface TransactionFilterSheetViewModel : AttachableActionStateModel<Transacti
     data class FilterAccount(
         val id: Id.Known,
         val name: String,
+        val icon: Image,
     )
 
     object Noop : TransactionFilterSheetViewModel {
         override val state: Flow<State> = emptyFlow()
         override fun perform(action: Action) = Unit
-        override fun attach(): java.io.Closeable = java.io.Closeable { }
+        override fun attach(): Closeable = Closeable { }
     }
 }
