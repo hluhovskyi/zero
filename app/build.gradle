@@ -7,6 +7,32 @@ plugins {
 def versionProps = new Properties()
 file('../version.properties').withInputStream { versionProps.load(it) }
 
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.gradle.properties")
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+
+def releaseOutputDir = System.getenv("RELEASE_OUTPUT_DIR") ?: localProps['releaseOutputDir']
+
+tasks.configureEach { task ->
+    if (task.name == "bundleRelease") {
+        task.doLast {
+            if (releaseOutputDir) {
+                def outputDir = new File("${buildDir}/outputs/bundle/release")
+                def destDir = new File(releaseOutputDir)
+                destDir.mkdirs()
+                outputDir.listFiles()?.find { it.name.endsWith(".aab") }?.with { aab ->
+                    def versionCode = versionProps['versionCode']
+                    copy {
+                        from aab
+                        into destDir
+                        rename { "zero-${versionCode}.aab" }
+                    }
+                }
+            }
+        }
+    }
+}
+
 android {
     compileSdk versions.compileSdk
 
