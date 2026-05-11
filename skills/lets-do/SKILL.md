@@ -38,6 +38,9 @@ git pull --ff-only
 Then invoke `superpowers:using-git-worktrees`. This skill detects existing isolation and creates a
 branch + worktree only when needed. The branch name should reflect the task (kebab-case, ≤40 chars).
 
+For Step 0 detection, use `./scripts/detect-worktree.sh` (allowlisted, no prompt) instead of the
+inline compound bash command the skill suggests.
+
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
 user declined), stop and explain that master must not be modified directly.
 
