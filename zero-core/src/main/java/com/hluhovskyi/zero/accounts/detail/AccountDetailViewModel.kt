@@ -11,6 +11,7 @@ interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewM
 
     sealed interface Action {
         object Back : Action
+        object Edit : Action
     }
 
     data class State(

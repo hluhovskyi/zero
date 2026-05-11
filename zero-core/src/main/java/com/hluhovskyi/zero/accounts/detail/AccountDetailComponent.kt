@@ -66,6 +66,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onBackHandler(OnBackHandler.Noop)
             .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
+            .onEditHandler(OnAccountDetailEditHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -77,6 +78,9 @@ abstract class AccountDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onBackHandler(handler: OnBackHandler): Builder
+
+        @BindsInstance
+        fun onEditHandler(handler: OnAccountDetailEditHandler): Builder
 
         @BindsInstance
         fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
@@ -134,6 +138,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             accountUseCase: AccountUseCase,
             accountDetailSpendingUseCase: AccountDetailSpendingUseCase,
             onBackHandler: OnBackHandler,
+            onEditHandler: OnAccountDetailEditHandler,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): AccountDetailViewModel = DefaultAccountDetailViewModel(
@@ -141,6 +146,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             accountUseCase = accountUseCase,
             accountDetailSpendingUseCase = accountDetailSpendingUseCase,
             onBackHandler = onBackHandler,
+            onEditHandler = onEditHandler,
             clock = clock,
             zoneProvider = zoneProvider,
         )

@@ -26,7 +26,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
@@ -38,6 +45,7 @@ class DefaultAccountDetailViewModelTest {
 
     @Mock private lateinit var spendingUseCase: AccountDetailSpendingUseCase
 
+    private val testDispatcher = UnconfinedTestDispatcher()
     private val accountId = Id.Known("acc1")
     private val fixedInstant = Instant.parse("2026-05-15T12:00:00Z")
     private val fakeClock = object : Clock {
@@ -45,6 +53,16 @@ class DefaultAccountDetailViewModelTest {
     }
     private val fakeZone = object : ZoneProvider {
         override fun timeZone() = TimeZone.UTC
+    }
+
+    @Before
+    fun setUpMain() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDownMain() {
+        Dispatchers.resetMain()
     }
 
     @Before
@@ -133,11 +151,27 @@ class DefaultAccountDetailViewModelTest {
         details = null,
     )
 
-    private fun createViewModel(coroutineScope: CoroutineScope) = DefaultAccountDetailViewModel(
+    @Test
+    fun `Edit action calls onEditHandler`() = runTest {
+        val editHandler = mock<OnAccountDetailEditHandler>()
+        val vm = createViewModel(backgroundScope, onEditHandler = editHandler)
+        vm.attach()
+        runCurrent()
+
+        vm.perform(AccountDetailViewModel.Action.Edit)
+
+        verify(editHandler).onEdit()
+    }
+
+    private fun createViewModel(
+        coroutineScope: CoroutineScope,
+        onEditHandler: OnAccountDetailEditHandler = OnAccountDetailEditHandler.Noop,
+    ) = DefaultAccountDetailViewModel(
         accountId = accountId,
         accountUseCase = accountUseCase,
         accountDetailSpendingUseCase = spendingUseCase,
         onBackHandler = OnBackHandler.Noop,
+        onEditHandler = onEditHandler,
         clock = fakeClock,
         zoneProvider = fakeZone,
         coroutineScope = coroutineScope,
