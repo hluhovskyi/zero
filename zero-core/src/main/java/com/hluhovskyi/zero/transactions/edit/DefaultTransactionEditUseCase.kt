@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
@@ -69,8 +70,8 @@ internal class DefaultTransactionEditUseCase(
                 TransactionEditType.EXPENSE -> TransactionEditUseCase.State.Expense(
                     accounts = state.accounts,
                     selectedAccount = state.selectedAccount,
-                    categories = state.categories,
-                    selectedCategory = state.selectedCategory,
+                    categories = state.allCategories.filter { it.type == CategoryType.EXPENSE },
+                    selectedCategory = state.selectedCategory?.takeIf { it.type == CategoryType.EXPENSE },
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
@@ -81,8 +82,8 @@ internal class DefaultTransactionEditUseCase(
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
                     accounts = state.accounts,
                     selectedAccount = state.selectedAccount,
-                    categories = state.categories,
-                    selectedCategory = state.selectedCategory,
+                    categories = state.allCategories.filter { it.type == CategoryType.INCOME },
+                    selectedCategory = state.selectedCategory?.takeIf { it.type == CategoryType.INCOME },
                     currencies = state.currencies,
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
@@ -177,7 +178,17 @@ internal class DefaultTransactionEditUseCase(
 
             is TransactionEditUseCase.Action.SwitchTransaction -> {
                 mutableState.update { state ->
-                    state.copy(transactionType = action.type)
+                    val targetType = when (action.type) {
+                        TransactionEditType.EXPENSE -> CategoryType.EXPENSE
+                        TransactionEditType.INCOME -> CategoryType.INCOME
+                        TransactionEditType.TRANSFER -> null
+                    }
+                    val newSelected = if (targetType != null && state.selectedCategory?.type != targetType) {
+                        state.allCategories.firstOrNull { it.type == targetType }
+                    } else {
+                        state.selectedCategory
+                    }
+                    state.copy(transactionType = action.type, selectedCategory = newSelected)
                 }
             }
 
@@ -248,7 +259,7 @@ internal class DefaultTransactionEditUseCase(
                         mutableState
                             .filter { state ->
                                 state.accounts.isNotEmpty() &&
-                                    state.categories.isNotEmpty() &&
+                                    state.allCategories.isNotEmpty() &&
                                     state.currencies.isNotEmpty()
                             }
                             .take(1)
@@ -270,11 +281,11 @@ internal class DefaultTransactionEditUseCase(
                             when (transaction) {
                                 is TransactionRepository.Transaction.Expense -> {
                                     val (categoryToSelect, reorderedCategories) =
-                                        resolveCategoryForEdit(state.categories, transaction.categoryId)
+                                        resolveCategoryForEdit(state.allCategories, transaction.categoryId)
 
                                     partialState.copy(
                                         transactionType = TransactionEditType.EXPENSE,
-                                        categories = reorderedCategories,
+                                        allCategories = reorderedCategories,
                                         selectedCategory = categoryToSelect
                                             ?: state.selectedCategory,
                                         rate = transaction.rate.value.toString(),
@@ -283,11 +294,11 @@ internal class DefaultTransactionEditUseCase(
 
                                 is TransactionRepository.Transaction.Income -> {
                                     val (categoryToSelect, reorderedCategories) =
-                                        resolveCategoryForEdit(state.categories, transaction.categoryId)
+                                        resolveCategoryForEdit(state.allCategories, transaction.categoryId)
 
                                     partialState.copy(
                                         transactionType = TransactionEditType.INCOME,
-                                        categories = reorderedCategories,
+                                        allCategories = reorderedCategories,
                                         selectedCategory = categoryToSelect
                                             ?: state.selectedCategory,
                                         rate = transaction.rate.value.toString(),
@@ -355,16 +366,17 @@ internal class DefaultTransactionEditUseCase(
                                 name = category.name,
                                 colorScheme = category.colorScheme,
                                 icon = category.icon,
+                                type = category.type,
                             )
                         }
                     }
                     .collectLatest { categories ->
-                        logger.d("attach, categories=${categories.joinIdsToString()}")
+                        logger.d("attach, categories=${categories.joinToString { it.id.value }}")
                         mutableState.update { state ->
                             if (state.selectedCategory != null) {
                                 val updated = categories.find { it.id == state.selectedCategory.id }
                                 state.copy(
-                                    categories = categories,
+                                    allCategories = categories,
                                     selectedCategory = if (updated != state.selectedCategory) updated else state.selectedCategory,
                                 )
                             } else {
@@ -376,8 +388,8 @@ internal class DefaultTransactionEditUseCase(
                                     categories
                                 }
                                 state.copy(
-                                    categories = reordered,
-                                    selectedCategory = preSelected ?: categories.firstOrNull(),
+                                    allCategories = reordered,
+                                    selectedCategory = preSelected ?: reordered.firstOrNull { it.type == CategoryType.EXPENSE },
                                 )
                             }
                         }
@@ -417,7 +429,7 @@ internal class DefaultTransactionEditUseCase(
                     .filterIsInstance<TransactionEditCategoryUseCase.State.Picked>()
                     .collectLatest { picked ->
                         mutableState.update { state ->
-                            val category = state.categories.firstOrNull { it.id == picked.categoryId }
+                            val category = state.allCategories.firstOrNull { it.id == picked.categoryId }
                             if (category != null) state.copy(selectedCategory = category) else state
                         }
                     }
@@ -639,7 +651,7 @@ internal class DefaultTransactionEditUseCase(
         val selectedAccount: TransactionEditAccount? = null,
         val targetAccounts: List<TransactionEditAccount> = emptyList(),
         val selectedTargetAccount: TransactionEditAccount? = null,
-        val categories: List<TransactionEditCategory> = emptyList(),
+        val allCategories: List<TransactionEditCategory> = emptyList(),
         val selectedCategory: TransactionEditCategory? = null,
         val currencies: List<TransactionEditCurrency> = emptyList(),
         val selectedCurrency: TransactionEditCurrency? = null,
