@@ -29,7 +29,10 @@ Check that all CI checks on the PR are passing:
 gh pr checks <pr_number>
 ```
 
-Parse the output for any checks in a `fail` or `pending` state. If any check is failing, stop and report which check failed — do not merge. If checks are still pending, report their status and ask the user whether to wait or abort.
+Parse the output:
+- **All passing** — continue to Step 3.
+- **Any failing** — stop and report which check failed. Do not merge.
+- **Any pending** — poll automatically every 15 seconds until all checks resolve, reporting progress each time. Once all checks finish, re-evaluate (pass → continue, fail → stop and report).
 
 ## Step 3 — Pre-merge checks (only if `is_current_branch`)
 
