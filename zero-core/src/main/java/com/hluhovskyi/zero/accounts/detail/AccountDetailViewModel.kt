@@ -3,10 +3,10 @@ package com.hluhovskyi.zero.accounts.detail
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Image
-import java.io.Closeable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
+import java.io.Closeable
 
 interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewModel.Action, AccountDetailViewModel.State> {
 
