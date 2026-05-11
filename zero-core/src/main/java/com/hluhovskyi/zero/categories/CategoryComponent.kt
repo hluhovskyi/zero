@@ -67,6 +67,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
+            .onAddCategoryHandler { _ -> }
     }
 
     @dagger.Component.Builder
@@ -76,6 +77,9 @@ abstract class CategoryComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCategorySelectedHandler(handler: OnCategorySelectedHandler): Builder
+
+        @BindsInstance
+        fun onAddCategoryHandler(handler: OnAddCategoryHandler): Builder
     }
 
     @dagger.Module
@@ -115,10 +119,12 @@ abstract class CategoryComponent : AttachableViewComponent {
             viewModel: CategoryViewModel,
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
+            onAddCategoryHandler: OnAddCategoryHandler,
         ): ViewProvider = CategoryViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
+            onAddCategory = onAddCategoryHandler,
         )
     }
 }
