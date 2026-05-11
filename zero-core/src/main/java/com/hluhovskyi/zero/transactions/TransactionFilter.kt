@@ -2,10 +2,10 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
-import kotlinx.datetime.DatePeriod as KotlinDatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.minus
+import kotlinx.datetime.DatePeriod as KotlinDatePeriod
 
 data class TransactionFilter(
     val period: DatePeriod? = null,

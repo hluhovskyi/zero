@@ -17,8 +17,7 @@ class FullyQualifiedReferenceDetector :
     Detector(),
     Detector.UastScanner {
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> =
-        listOf(UQualifiedReferenceExpression::class.java)
+    override fun getApplicableUastTypes(): List<Class<out UElement>> = listOf(UQualifiedReferenceExpression::class.java)
 
     override fun createUastHandler(context: JavaContext) = object : UElementHandler() {
 

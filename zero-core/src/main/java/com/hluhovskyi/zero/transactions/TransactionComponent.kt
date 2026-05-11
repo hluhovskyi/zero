@@ -87,8 +87,7 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @Provides
         @TransactionScope
-        fun transactionFilterApplicator(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterApplicator =
-            DefaultTransactionFilterApplicator(clock, zoneProvider)
+        fun transactionFilterApplicator(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterApplicator = DefaultTransactionFilterApplicator(clock, zoneProvider)
 
         @Provides
         @TransactionScope

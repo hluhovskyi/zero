@@ -12,7 +12,8 @@
   },
   "permissions": {
     "allow": [
-      "Bash(./scripts/fetch-design.sh *)"
+      "Bash(./scripts/fetch-design.sh *)",
+      "Bash(./scripts/detect-worktree.sh)"
     ]
   },
   "hooks": {

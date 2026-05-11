@@ -33,23 +33,18 @@ internal class DefaultCategoryEditViewModel(
 ) : CategoryEditViewModel {
 
     private val mutableState = MutableStateFlow(CompositeState())
-    override val state: Flow<CategoryEditViewModel.State> = mutableState
-        .map { state ->
-            CategoryEditViewModel.State(
-                name = state.name,
-                icon = state.icon,
-                colorScheme = state.colorScheme,
-            )
-        }
+    override val state: Flow<CategoryEditViewModel.State> = mutableState.map { state ->
+        CategoryEditViewModel.State(
+            name = state.name,
+            icon = state.icon,
+            colorScheme = state.colorScheme,
+        )
+    }
 
     override fun perform(action: CategoryEditViewModel.Action) {
         when (action) {
             is CategoryEditViewModel.Action.ChangeName ->
-                mutableState.update { state ->
-                    state.copy(
-                        name = action.name,
-                    )
-                }
+                mutableState.update { it.copy(name = action.name) }
             is CategoryEditViewModel.Action.SelectIcon ->
                 categoryEditIconUseCase.perform(
                     CategoryEditIconUseCase.Action.Request(
@@ -70,9 +65,7 @@ internal class DefaultCategoryEditViewModel(
                         colorId = state.colorId,
                     ),
                 )
-                launch(context = Dispatchers.Main) {
-                    onCategorySavedHandler.onSaved()
-                }
+                launch(context = Dispatchers.Main) { onCategorySavedHandler.onSaved() }
             }
         }
     }
@@ -82,11 +75,9 @@ internal class DefaultCategoryEditViewModel(
             if (categoryId is Id.Known) {
                 launch {
                     val category = categoryRepository.query(CategoryRepository.Criteria.ById(categoryId)).firstOrNull()
-                    // TODO: Handle incorrect state in case of null
                     if (category != null) {
                         val colorId = (category.colorId as? Id.Known) ?: ColorRepository.unknownCategoryColorId()
                         val iconId = (category.iconId as? Id.Known) ?: IconRepository.unknownCategoryIconId()
-
                         combine(
                             colorRepository.query(ColorRepository.Criteria.ById(colorId)),
                             iconRepository.query(IconRepository.Criteria.ById(iconId)),
@@ -108,24 +99,13 @@ internal class DefaultCategoryEditViewModel(
                 launch {
                     iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
                         .firstOrNull()?.let { icon ->
-                            mutableState.update { state ->
-                                state.copy(
-                                    iconId = icon.id,
-                                    icon = icon.image,
-                                )
-                            }
+                            mutableState.update { it.copy(iconId = icon.id, icon = icon.image) }
                         }
                 }
-
                 launch {
                     colorRepository.query(ColorRepository.Criteria.ById(ColorRepository.unknownCategoryColorId()))
                         .firstOrNull()?.let { color ->
-                            mutableState.update { state ->
-                                state.copy(
-                                    colorId = color.id,
-                                    colorScheme = colorRepository.schemeFor(color.id),
-                                )
-                            }
+                            mutableState.update { it.copy(colorId = color.id, colorScheme = colorRepository.schemeFor(color.id)) }
                         }
                 }
             }
@@ -134,12 +114,7 @@ internal class DefaultCategoryEditViewModel(
                 categoryEditIconUseCase.state
                     .filterIsInstance<CategoryEditIconUseCase.State.Picked>()
                     .collectLatest { iconState ->
-                        mutableState.update { state ->
-                            state.copy(
-                                iconId = iconState.icon.id,
-                                icon = iconState.icon.image,
-                            )
-                        }
+                        mutableState.update { it.copy(iconId = iconState.icon.id, icon = iconState.icon.image) }
                     }
             }
 
@@ -147,12 +122,7 @@ internal class DefaultCategoryEditViewModel(
                 categoryEditColorUseCase.state
                     .filterIsInstance<CategoryEditColorUseCase.State.Picked>()
                     .collectLatest { colorState ->
-                        mutableState.update { state ->
-                            state.copy(
-                                colorId = colorState.color.id,
-                                colorScheme = colorRepository.schemeFor(colorState.color.id),
-                            )
-                        }
+                        mutableState.update { it.copy(colorId = colorState.color.id, colorScheme = colorRepository.schemeFor(colorState.color.id)) }
                     }
             }
         }
