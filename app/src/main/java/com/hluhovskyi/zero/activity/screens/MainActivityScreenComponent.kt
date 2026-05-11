@@ -365,15 +365,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun categoryEditNavigationEntry(
             componentBuilder: CategoryEditComponent.Builder,
             navigatorScope: NavigatorScope,
-            categoryEditIconUseCase: CategoryEditIconUseCase,
-            categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Category.Edit,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .categoryId(Id.Unknown)
-                .categoryEditIconUseCase(categoryEditIconUseCase)
-                .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
@@ -383,15 +383,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun categoryEditItemNavigationEntry(
             componentBuilder: CategoryEditComponent.Builder,
             navigatorScope: NavigatorScope,
-            categoryEditIconUseCase: CategoryEditIconUseCase,
-            categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Edit) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Category.Item.Edit,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Category.Item.CategoryId))
-                .categoryEditIconUseCase(categoryEditIconUseCase)
-                .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
+                .onDiscardHandler { navigator.back() }
                 .logging(logger)
         }
 
