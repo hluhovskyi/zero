@@ -98,15 +98,15 @@ Run all of the following. Fix any failure before opening the PR.
 ./gradlew lintDebug 2>&1 | grep -E "error:|Error" | head -20
 ```
 
-### UI inspection (if the change touches any ViewProvider, Composable, or layout)
+### UI inspection
 
 Invoke `zero-project:android-ui-inspector` to empirically verify layout bounds on device.
 A feature is not done until the inspector confirms it renders correctly — compilation alone
 is not validation.
 
-**How to tell if UI is touched:** any change to a `*ViewProvider.kt`, any new `@Composable`
-function, any modification to existing Compose layout code, or any navigation entry change
-that affects how a screen is displayed.
+**Always run this unless the change is purely infrastructural** — tests, lint rules,
+documentation, CI config, or build scripts with no runtime behaviour change. When in doubt,
+run it anyway.
 
 ## Step 6 — Open PR
 
