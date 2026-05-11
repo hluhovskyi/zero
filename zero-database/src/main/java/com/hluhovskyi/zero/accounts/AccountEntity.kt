@@ -20,6 +20,7 @@ internal data class AccountEntity(
     @Embedded val initialBalance: AmountEntity,
     val category: String = "OTHER",
     val details: String? = null,
+    val colorId: String? = null,
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
     val deletedAt: LocalDateTime? = null,

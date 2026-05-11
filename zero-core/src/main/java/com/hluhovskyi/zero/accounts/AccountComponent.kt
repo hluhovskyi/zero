@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -46,6 +47,7 @@ abstract class AccountComponent : AttachableViewComponent {
         val transactionRepository: TransactionRepository
         val currencyRepository: CurrencyRepository
         val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -78,6 +80,7 @@ abstract class AccountComponent : AttachableViewComponent {
             transactionRepository: TransactionRepository,
             currencyRepository: CurrencyRepository,
             iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
         ): AccountUseCase = DefaultAccountUseCase(
@@ -85,6 +88,7 @@ abstract class AccountComponent : AttachableViewComponent {
             transactionRepository = transactionRepository,
             currencyRepository = currencyRepository,
             iconRepository = iconRepository,
+            colorRepository = colorRepository,
             currencyConvertUseCase = currencyConvertUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
         )
