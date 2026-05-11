@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
@@ -150,6 +151,20 @@ private fun TransactionEditView(
                     -> expenseIncomeComponent.AttachWithView()
                     TransactionEditType.TRANSFER -> transferComponent.AttachWithView()
                 }
+            }
+            item {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 16.dp),
+                    value = state.notes,
+                    label = { Text(text = "Notes") },
+                    onValueChange = { notes ->
+                        viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(notes))
+                    },
+                    minLines = 2,
+                )
             }
         }
 
