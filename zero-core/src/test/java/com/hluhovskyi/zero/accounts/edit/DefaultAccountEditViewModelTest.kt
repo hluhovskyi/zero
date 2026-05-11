@@ -6,10 +6,10 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
-import com.hluhovskyi.zero.icons.Icon
-import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.icons.Icon
+import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,10 +39,15 @@ import java.math.BigDecimal
 class DefaultAccountEditViewModelTest {
 
     @Mock private lateinit var accountRepository: AccountRepository
+
     @Mock private lateinit var currencyRepository: CurrencyRepository
+
     @Mock private lateinit var iconRepository: IconRepository
+
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
+
     @Mock private lateinit var accountEditIconUseCase: AccountEditIconUseCase
+
     @Mock private lateinit var accountEditCurrencyUseCase: AccountEditCurrencyUseCase
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -56,7 +61,7 @@ class DefaultAccountEditViewModelTest {
         whenever(accountRepository.query(any())).thenReturn(flowOf(emptyList()))
         whenever(currencyRepository.query<List<Currency>>(any())).thenReturn(flowOf(emptyList()))
         whenever(iconRepository.query<Icon>(any())).thenReturn(
-            flowOf(Icon(id = iconId, image = Image.empty(), category = IconCategory.unknown()))
+            flowOf(Icon(id = iconId, image = Image.empty(), category = IconCategory.unknown())),
         )
         whenever(accountEditIconUseCase.state).thenReturn(flowOf())
         whenever(accountEditCurrencyUseCase.state).thenReturn(flowOf())

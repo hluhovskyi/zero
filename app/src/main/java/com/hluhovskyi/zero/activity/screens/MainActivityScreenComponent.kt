@@ -5,9 +5,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
-import com.hluhovskyi.zero.accounts.OnEditAccountHandler
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
-import com.hluhovskyi.zero.accounts.detail.OnAccountDetailEditHandler
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase

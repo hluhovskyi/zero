@@ -39,9 +39,7 @@ internal class RoomAccountRepository(
             iconId = account.iconId,
             colorId = Id(account.colorId),
             initialBalance = Amount(account.initialBalance.value),
-            category = runCatching {
-                AccountCategory.valueOf(account.category)
-            }.getOrDefault(AccountCategory.OTHER),
+            category = AccountCategory.from(account.category),
             details = account.details,
         )
     }

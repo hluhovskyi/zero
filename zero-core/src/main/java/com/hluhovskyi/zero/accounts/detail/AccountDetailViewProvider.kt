@@ -33,7 +33,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
@@ -47,6 +46,7 @@ import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.ErrorContainer
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.Primary
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Secondary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import kotlinx.datetime.toJavaLocalDate
