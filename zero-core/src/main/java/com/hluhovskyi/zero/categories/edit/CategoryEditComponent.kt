@@ -38,18 +38,16 @@ abstract class CategoryEditComponent : AttachableViewComponent {
 
     interface Dependencies {
         val imageLoader: ImageLoader
-
         val categoryRepository: CategoryRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
     }
 
     companion object {
-
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryEditComponent.builder()
             .dependencies(dependencies)
-            .categoryEditIconUseCase(CategoryEditIconUseCase.Noop)
-            .categoryEditColorUseCase(CategoryEditColorUseCase.Noop)
+            .onCategorySavedHandler(OnCategorySavedHandler.Noop)
+            .onDiscardHandler(OnDiscardHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -61,13 +59,10 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         fun categoryId(@CategoryEditId categoryId: Id): Builder
 
         @BindsInstance
-        fun categoryEditIconUseCase(useCase: CategoryEditIconUseCase): Builder
-
-        @BindsInstance
-        fun categoryEditColorUseCase(useCase: CategoryEditColorUseCase): Builder
-
-        @BindsInstance
         fun onCategorySavedHandler(handler: OnCategorySavedHandler): Builder
+
+        @BindsInstance
+        fun onDiscardHandler(handler: OnDiscardHandler): Builder
     }
 
     @dagger.Module
@@ -80,16 +75,12 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
-            categoryEditIconUseCase: CategoryEditIconUseCase,
-            categoryEditColorUseCase: CategoryEditColorUseCase,
             onCategorySavedHandler: OnCategorySavedHandler,
         ): CategoryEditViewModel = DefaultCategoryEditViewModel(
             categoryId = categoryId,
             categoryRepository = categoryRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
-            categoryEditIconUseCase = categoryEditIconUseCase,
-            categoryEditColorUseCase = categoryEditColorUseCase,
             onCategorySavedHandler = onCategorySavedHandler,
         )
 
@@ -97,9 +88,11 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         @CategoryEditScope
         fun viewProvider(
             viewModel: CategoryEditViewModel,
+            onDiscardHandler: OnDiscardHandler,
             imageLoader: ImageLoader,
         ): ViewProvider = CategoriesEditViewProvider(
             viewModel = viewModel,
+            onDiscard = onDiscardHandler,
             imageLoader = imageLoader,
         )
     }
