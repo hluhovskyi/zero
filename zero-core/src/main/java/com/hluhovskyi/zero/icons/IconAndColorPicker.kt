@@ -224,7 +224,7 @@ private fun IconPickerCell(
         contentAlignment = Alignment.Center,
     ) {
         imageLoader.View(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(24.dp),
             image = icon.image,
             tint = if (isSelected) colorScheme.primary else OnSurfaceVariant,
         )
