@@ -13,7 +13,8 @@
   "permissions": {
     "allow": [
       "Bash(./scripts/fetch-design.sh *)",
-      "Bash(./scripts/detect-worktree.sh)"
+      "Bash(./scripts/detect-worktree.sh)",
+      "Bash(./scripts/github/wait-for-ci.sh *)"
     ]
   },
   "hooks": {
