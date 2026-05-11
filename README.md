@@ -15,11 +15,21 @@ Personal finance Android app (Kotlin, Jetpack Compose) for tracking expenses, in
 
 Each feature follows a structured agent session: brainstorm → UI design in Claude Design → written spec → implementation plan committed to `docs/superpowers/plans/` → Claude implements task-by-task with lint, tests, and UI verification at the end.
 
-Two custom skills support the loop:
-- `android-ui-inspector` — ADB + uiautomator screenshot so the agent verifies actual Compose layout bounds, not just a successful build
-- `retro` — post-feature retrospective that surfaces what caused extra iterations and updates `AGENTS.md` docs so the same mistake doesn't repeat
-
 Every module has an `AGENTS.md` with the non-obvious rules and invariants the agent needs across sessions.
+
+## Skills
+
+Custom Claude Code skills in `skills/`:
+
+| Skill | Trigger | Description |
+|---|---|---|
+| `lets-do` | "let's do X", "implement X" | Full development workflow — worktree isolation, brainstorm, plan, implement, verify (tests + lint + UI), open PR |
+| `android-ui-inspector` | debugging UI layouts or bounds | ADB + uiautomator screenshot so the agent verifies actual Compose layout bounds, not just a successful build |
+| `fetch-design` | Claude Design URL pasted | Downloads design assets and reads layout specs before writing any Compose code |
+| `scaffold-feature` | "add a new screen", "scaffold X" | Generates Component / ViewModel / ViewProvider / Handlers stubs so plans describe business logic, not boilerplate |
+| `pr-merge` | "merge the PR", "ship this" | Runs tests + lint + build, merges with squash, polls CI, cleans up branch |
+| `pr-address` | "address PR comments" | Pulls review comments and addresses them one by one; supports creating GitHub issues for deferred work |
+| `retro` | "what went well", "update the docs" | Post-feature retrospective that surfaces what caused extra iterations and updates `AGENTS.md` so the next session starts smarter |
 
 ## Tech
 
