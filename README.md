@@ -21,15 +21,15 @@ Every module has an `AGENTS.md` with the non-obvious rules and invariants the ag
 
 Custom Claude Code skills in `skills/`:
 
-| Skill | Trigger | Description |
-|---|---|---|
-| `lets-do` | "let's do X", "implement X" | Full development workflow — worktree isolation, brainstorm, plan, implement, verify (tests + lint + UI), open PR |
-| `android-ui-inspector` | debugging UI layouts or bounds | ADB + uiautomator screenshot so the agent verifies actual Compose layout bounds, not just a successful build |
-| `fetch-design` | Claude Design URL pasted | Downloads design assets and reads layout specs before writing any Compose code |
-| `scaffold-feature` | "add a new screen", "scaffold X" | Generates Component / ViewModel / ViewProvider / Handlers stubs so plans describe business logic, not boilerplate |
-| `pr-merge` | "merge the PR", "ship this" | Runs tests + lint + build, merges with squash, polls CI, cleans up branch |
-| `pr-address` | "address PR comments" | Pulls review comments and addresses them one by one; supports creating GitHub issues for deferred work |
-| `retro` | "what went well", "update the docs" | Post-feature retrospective that surfaces what caused extra iterations and updates `AGENTS.md` so the next session starts smarter |
+| Skill | Description |
+|---|---|
+| `lets-do` | Full development workflow — worktree isolation, brainstorm, plan, implement, verify (tests + lint + UI), open PR |
+| `android-ui-inspector` | ADB + uiautomator screenshot so the agent verifies actual Compose layout bounds, not just a successful build |
+| `fetch-design` | Downloads design assets and reads layout specs before writing any Compose code |
+| `scaffold-feature` | Generates Component / ViewModel / ViewProvider / Handlers stubs so plans describe business logic, not boilerplate |
+| `pr-merge` | Runs tests + lint + build, merges with squash, polls CI, cleans up branch |
+| `pr-address` | Pulls review comments and addresses them one by one; supports creating GitHub issues for deferred work |
+| `retro` | Post-feature retrospective that surfaces what caused extra iterations and updates `AGENTS.md` so the next session starts smarter |
 
 ## Tech
 
