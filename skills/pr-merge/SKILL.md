@@ -21,22 +21,32 @@ Record:
 - `pr_branch` — the head branch name (e.g. `feat/my-feature`)
 - `is_current_branch` — whether the local HEAD is on `pr_branch`
 
-## Step 2 — Pre-merge checks (only if `is_current_branch`)
+## Step 2 — GitHub Actions checks
+
+Check that all CI checks on the PR are passing:
+
+```bash
+gh pr checks <pr_number>
+```
+
+Parse the output for any checks in a `fail` or `pending` state. If any check is failing, stop and report which check failed — do not merge. If checks are still pending, report their status and ask the user whether to wait or abort.
+
+## Step 3 — Pre-merge checks (only if `is_current_branch`)
 
 If the local branch matches `pr_branch`, run the full quality gate in this order. **Stop and report failure after the first failing step — do not continue to merge.**
 
-### 2a. Unit tests
+### 3a. Unit tests
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-### 2b. Lint
+### 3b. Lint
 ```bash
 ./gradlew lint
 ```
 Parse output for errors (warnings are OK). Fail if any module reports lint errors.
 
-### 2c. Build
+### 3c. Build
 ```bash
 ./gradlew assembleDebug
 ```
@@ -45,7 +55,7 @@ If all three pass, report: `✓ Tests, lint, and build passed — proceeding wit
 
 If the branch is not current (user is merging someone else's PR or a different branch), skip this step entirely.
 
-## Step 3 — Merge the PR
+## Step 4 — Merge the PR
 
 ```bash
 gh pr merge <pr_number> --squash --delete-branch
@@ -55,9 +65,9 @@ Use `--squash` to keep the main branch history clean. `--delete-branch` removes 
 
 If the merge fails (e.g. merge conflicts, required checks not passing), report the error and stop — do not force-merge.
 
-## Step 4 — Clean up local branch (only if `is_current_branch`)
+## Step 5 — Clean up and update master (only if `is_current_branch`)
 
-Switch to the main branch and delete the local branch:
+Switch to master, delete the local branch, and pull the latest:
 
 ```bash
 git checkout master
@@ -67,7 +77,9 @@ git pull
 
 Use `-d` (safe delete) — if it fails because the branch is not fully merged locally, report it and do not force-delete.
 
-## Step 5 — Report
+Always run `git pull` after switching to master so the local copy reflects the merge commit.
+
+## Step 6 — Report
 
 ```
 Merged PR #<N> "<title>"
