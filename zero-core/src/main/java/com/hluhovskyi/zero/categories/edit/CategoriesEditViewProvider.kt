@@ -36,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
+import com.hluhovskyi.zero.ui.SegmentedToggle
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -80,6 +82,15 @@ private fun CategoryEditView(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                SegmentedToggle(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    items = listOf(CategoryType.EXPENSE, CategoryType.INCOME),
+                    selectedItem = state.type,
+                    onItemSelected = { viewModel.perform(CategoryEditViewModel.Action.SelectType(it)) },
+                    labelMapping = { if (it == CategoryType.EXPENSE) "Expense" else "Income" },
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
