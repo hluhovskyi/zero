@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -62,6 +63,7 @@ internal class RoomCategoryRepository(
         name = name,
         colorId = Id(colorId),
         iconId = Id(iconId),
+        type = runCatching { CategoryType.valueOf(type) }.getOrElse { CategoryType.EXPENSE },
     )
 
     private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity = CategoryEntity(
@@ -72,5 +74,6 @@ internal class RoomCategoryRepository(
         colorId = colorId.valueOrNull(),
         creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
         updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
+        type = type.name,
     )
 }
