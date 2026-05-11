@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.categories.edit
 
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
@@ -23,6 +24,7 @@ import java.io.Closeable
 
 internal class DefaultCategoryEditViewModel(
     private val categoryId: Id,
+    private val initialType: CategoryType = CategoryType.EXPENSE,
     private val categoryRepository: CategoryRepository,
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
@@ -38,6 +40,7 @@ internal class DefaultCategoryEditViewModel(
             name = state.name,
             icon = state.icon,
             colorScheme = state.colorScheme,
+            type = state.type,
         )
     }
 
@@ -54,6 +57,8 @@ internal class DefaultCategoryEditViewModel(
                 )
             is CategoryEditViewModel.Action.SelectColor ->
                 categoryEditColorUseCase.perform(CategoryEditColorUseCase.Action.Request)
+            is CategoryEditViewModel.Action.SelectType ->
+                mutableState.update { it.copy(type = action.type) }
             is CategoryEditViewModel.Action.Save -> ioCoroutineScope.launch {
                 val state = mutableState.value
                 categoryRepository.insert(
@@ -63,6 +68,7 @@ internal class DefaultCategoryEditViewModel(
                         name = state.name,
                         iconId = state.iconId,
                         colorId = state.colorId,
+                        type = state.type,
                     ),
                 )
                 launch(context = Dispatchers.Main) { onCategorySavedHandler.onSaved() }
@@ -90,12 +96,14 @@ internal class DefaultCategoryEditViewModel(
                                         icon = icon.image,
                                         colorId = color.id,
                                         colorScheme = colorRepository.schemeFor(color.id),
+                                        type = category.type,
                                     )
                                 }
                             }
                     }
                 }
             } else {
+                mutableState.update { it.copy(type = initialType) }
                 launch {
                     iconRepository.query(IconRepository.Criteria.ById(IconRepository.unknownCategoryIconId()))
                         .firstOrNull()?.let { icon ->
@@ -138,5 +146,6 @@ internal class DefaultCategoryEditViewModel(
             primary = Color.empty(),
             background = Color.empty(),
         ),
+        val type: CategoryType = CategoryType.EXPENSE,
     )
 }
