@@ -5,7 +5,9 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
+import com.hluhovskyi.zero.accounts.OnEditAccountHandler
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
+import com.hluhovskyi.zero.accounts.detail.OnAccountDetailEditHandler
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
 import com.hluhovskyi.zero.accounts.edit.AccountEditIconUseCase
@@ -446,6 +448,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Account.Item.AccountId.withValue(accountId),
                         )
                     }
+                    .onEditAccountHandler { accountId ->
+                        navigator.navigateTo(
+                            Destinations.Account.Item.Edit,
+                            Destinations.Account.Item.AccountId.withValue(accountId),
+                        )
+                    }
                     .logging(logger),
             )
         }
@@ -493,6 +501,25 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
+        fun accountItemEditNavigationEntry(
+            componentBuilder: AccountEditComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+            accountEditIconUseCase: AccountEditIconUseCase,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Edit) {
+            componentBuilder
+                .accountId(arguments.getValue(Destinations.Account.Item.AccountId))
+                .accountEditIconUseCase(accountEditIconUseCase)
+                .accountEditCurrencyUseCase(accountEditCurrencyUseCase)
+                .onAccountSavedHandler { navigator.back() }
+                .onCloseHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
             navigatorScope: NavigatorScope,
@@ -502,6 +529,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .accountId(accountId)
                 .onBackHandler { navigator.back() }
+                .onEditHandler {
+                    navigator.navigateTo(
+                        Destinations.Account.Item.Edit,
+                        Destinations.Account.Item.AccountId.withValue(accountId),
+                    )
+                }
                 .onTransactionSelectedHandler { transactionId ->
                     navigator.navigateTo(
                         Destinations.Transaction.Item.Edit,
