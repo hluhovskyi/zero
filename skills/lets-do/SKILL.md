@@ -28,7 +28,14 @@ End-to-end development workflow: worktree → brainstorm → plan → execute �
 
 **Always run this first**, even before asking any questions.
 
-Invoke `superpowers:using-git-worktrees`. This skill detects existing isolation and creates a
+If the current branch is master and the working tree is clean, pull latest before creating the
+worktree so the new branch starts from up-to-date code:
+
+```bash
+git pull --ff-only
+```
+
+Then invoke `superpowers:using-git-worktrees`. This skill detects existing isolation and creates a
 branch + worktree only when needed. The branch name should reflect the task (kebab-case, ≤40 chars).
 
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
@@ -57,10 +64,17 @@ For everything else, invoke `superpowers:writing-plans`.
 Read `docs/agents/superpowers-workflow.md` for plan length rules — plans over ~400 lines slow
 execution significantly. Replace boilerplate blocks with doc/skill references where possible.
 
-**Commit the plan to the repo before execution.** An untracked plan is a lost plan.
+**Commit the plan before execution** — this is mandatory, not optional:
+
+```bash
+git add docs/superpowers/plans/<plan-file>.md
+git commit -m "docs: add <feature> implementation plan"
+```
+
+An untracked plan is a lost plan; if the session is interrupted the plan must survive.
 
 If `--no-questions` was passed: write a concise plan inline based on the task description
-(no clarifying questions) and proceed to execution immediately after.
+(no clarifying questions), commit it, then proceed to execution.
 
 ## Step 4 — Execution
 
