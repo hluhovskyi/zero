@@ -1,11 +1,6 @@
 ---
 name: scaffold-feature
-description: >
-  Scaffold a new zero-core feature (Component + ViewModel + ViewProvider + Handlers).
-  Use this whenever a plan adds a new screen or feature to zero-core, or whenever the user says
-  "add a new screen", "create a new feature", "scaffold X", or starts implementing anything that
-  follows the Component/ViewModel/ViewProvider pattern. Generates compilable stubs so plans
-  describe only business logic — not structural boilerplate.
+description: Scaffold a new zero-core feature (Component + ViewModel + ViewProvider + Handlers). Use when adding a new screen or feature to zero-core.
 ---
 
 # Scaffold Feature

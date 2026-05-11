@@ -1,6 +1,6 @@
 ---
 name: fetch-design
-description: Use when the user pastes a Claude Design URL (https://api.anthropic.com/v1/design/h/...) or says "fetch this design file". Immediately fetch and read the design assets before writing any layout code or making any layout decisions. Use this skill whenever you see that URL pattern, even if the user's main request is about implementation rather than explicitly about fetching.
+description: Use when the user pastes a Claude Design URL (https://api.anthropic.com/v1/design/h/...). Fetch and parse design assets before writing any layout code.
 ---
 
 # Fetch Design
