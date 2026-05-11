@@ -27,8 +27,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
@@ -64,7 +67,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
 
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
-            title = "Review Categories",
+            title = stringResource(R.string.import_categories_review_title),
             step = CURRENT_STEP,
             totalSteps = TOTAL_STEPS,
             onBack = { viewModel.perform(CategoriesReviewViewModel.Action.Back) },
@@ -78,7 +81,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
         ) {
             item {
                 Text(
-                    text = "$selectedCount CATEGORIES",
+                    text = stringResource(R.string.import_categories_review_info, selectedCount),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceVariant,
@@ -110,7 +113,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Continue",
+                    text = stringResource(R.string.import_categories_review_continue),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -160,7 +163,7 @@ private fun CategoryRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "${category.transactionCount} transactions",
+                text = pluralStringResource(R.plurals.import_categories_review_tx_count, category.transactionCount, category.transactionCount),
                 fontSize = 12.sp,
                 color = OnSurfaceVariant,
             )

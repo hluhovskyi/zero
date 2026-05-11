@@ -30,8 +30,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -128,12 +130,12 @@ private fun UpToDateView(onDone: () -> Unit) {
             IconButton(onClick = onDone) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.import_back_description),
                     tint = PrimaryContainer,
                 )
             }
             Text(
-                text = "Nothing to Import",
+                text = stringResource(R.string.import_nothing_to_import_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryContainer,
@@ -150,13 +152,13 @@ private fun UpToDateView(onDone: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Your data is already up to date.",
+                text = stringResource(R.string.import_up_to_date_message),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OnSurface,
             )
             Text(
-                text = "All categories, accounts, and transactions from this backup are already in the app.",
+                text = stringResource(R.string.import_all_synced_message),
                 fontSize = 14.sp,
                 color = OnSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
@@ -173,7 +175,7 @@ private fun UpToDateView(onDone: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Done",
+                    text = stringResource(R.string.import_done),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

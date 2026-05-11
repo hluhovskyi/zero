@@ -23,8 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
@@ -57,7 +59,7 @@ private fun TransactionsPreviewView(
 
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
-            title = "Review Transactions",
+            title = stringResource(R.string.import_transactions_preview_title),
             step = 3,
             totalSteps = 4,
             onBack = { viewModel.perform(TransactionsPreviewViewModel.Action.Back) },
@@ -69,7 +71,7 @@ private fun TransactionsPreviewView(
         ) {
             item {
                 Text(
-                    text = "${state.totalCount} TRANSACTIONS",
+                    text = stringResource(R.string.import_transactions_preview_info, state.totalCount),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceVariant,
@@ -105,7 +107,7 @@ private fun TransactionsPreviewView(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Import ${state.totalCount} Transactions",
+                    text = stringResource(R.string.import_transactions_preview_import, state.totalCount),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

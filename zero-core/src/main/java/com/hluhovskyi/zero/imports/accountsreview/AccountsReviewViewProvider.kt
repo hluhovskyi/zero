@@ -25,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
@@ -57,7 +59,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
     val totalTransactions = state.accounts.sumOf { it.transactionCount }
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
-            title = "Review Accounts",
+            title = stringResource(R.string.import_accounts_review_title),
             step = 2,
             totalSteps = 4,
             onBack = { viewModel.perform(AccountsReviewViewModel.Action.Back) },
@@ -67,7 +69,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
         ) {
             item {
                 Text(
-                    text = "${state.accounts.size} ACCOUNTS · $totalTransactions TRANSACTIONS",
+                    text = stringResource(R.string.import_accounts_review_info, state.accounts.size, totalTransactions),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceVariant,
@@ -90,7 +92,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "Continue", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = stringResource(R.string.import_accounts_review_continue), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
@@ -141,7 +143,7 @@ private fun AccountRow(account: ImportAccount, imageLoader: ImageLoader) {
                 .padding(horizontal = 10.dp, vertical = 4.dp),
         ) {
             Text(
-                text = "${account.transactionCount} tx",
+                text = stringResource(R.string.import_accounts_review_tx_count, account.transactionCount),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OnSurfaceVariant,
