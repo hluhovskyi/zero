@@ -28,5 +28,6 @@ interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel
         val selectedCurrency: Currency? = null,
         val selectedIcon: Image = Image.empty(),
         val colorScheme: ColorScheme = ColorScheme.Grey,
+        val isEditMode: Boolean = false,
     )
 }

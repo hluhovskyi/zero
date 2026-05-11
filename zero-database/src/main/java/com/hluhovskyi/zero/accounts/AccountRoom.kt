@@ -16,6 +16,11 @@ internal interface AccountRoom {
 
     fun selectByUserId(userId: Id.Known): Flow<List<AccountEntity>> = selectByUserId(userId.value)
 
+    @Query("SELECT * FROM AccountEntity WHERE userId=:userId AND id=:id")
+    fun selectById(userId: String, id: String): Flow<List<AccountEntity>>
+
+    fun selectById(userId: Id.Known, id: Id.Known): Flow<List<AccountEntity>> = selectById(userId.value, id.value)
+
     @Query("SELECT DISTINCT currencyId FROM AccountEntity WHERE userId=:userId")
     fun selectInUseCurrencyIds(userId: String): Flow<List<Id.Known>>
 

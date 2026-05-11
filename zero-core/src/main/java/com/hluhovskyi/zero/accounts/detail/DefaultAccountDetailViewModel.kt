@@ -25,6 +25,7 @@ internal class DefaultAccountDetailViewModel(
     private val accountUseCase: AccountUseCase,
     private val accountDetailSpendingUseCase: AccountDetailSpendingUseCase,
     private val onBackHandler: OnBackHandler,
+    private val onEditHandler: OnAccountDetailEditHandler = OnAccountDetailEditHandler.Noop,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
@@ -37,6 +38,9 @@ internal class DefaultAccountDetailViewModel(
         when (action) {
             AccountDetailViewModel.Action.Back -> coroutineScope.launch(Dispatchers.Main) {
                 onBackHandler.onBack()
+            }
+            AccountDetailViewModel.Action.Edit -> coroutineScope.launch(Dispatchers.Main) {
+                onEditHandler.onEdit()
             }
         }
     }

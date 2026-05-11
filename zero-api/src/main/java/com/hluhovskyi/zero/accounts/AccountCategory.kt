@@ -7,4 +7,9 @@ enum class AccountCategory {
     DIGITAL_WALLETS,
     CRYPTO,
     OTHER,
+    ;
+
+    companion object {
+        fun from(value: String): AccountCategory = entries.find { it.name.equals(value, ignoreCase = true) } ?: OTHER
+    }
 }
