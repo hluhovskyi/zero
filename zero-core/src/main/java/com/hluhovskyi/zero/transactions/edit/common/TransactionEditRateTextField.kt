@@ -6,8 +6,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.hluhovskyi.zero.R
 import androidx.compose.ui.text.input.KeyboardType
+import com.hluhovskyi.zero.R
 
 @Composable
 fun TransactionEditRateTextField(
