@@ -50,7 +50,6 @@ import com.hluhovskyi.zero.ui.theme.Secondary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
-import java.math.BigDecimal
 
 internal class AccountViewProvider(
     private val viewModel: AccountViewModel,
@@ -267,7 +266,7 @@ private fun AccountRow(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (account.balance.value < BigDecimal.ZERO) Error else OnSurface,
+                    color = if (account.balance < 0L) Error else OnSurface,
                 ),
             )
         }

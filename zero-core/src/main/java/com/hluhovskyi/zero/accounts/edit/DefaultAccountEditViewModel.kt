@@ -108,9 +108,9 @@ internal class DefaultAccountEditViewModel(
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             if (accountId is Id.Known) {
-                val account = accountRepository.query(AccountRepository.Criteria.All())
+                val account = accountRepository.query(AccountRepository.Criteria.ById(accountId))
                     .firstOrNull()
-                    ?.find { it.id == accountId }
+                    ?.firstOrNull()
                 if (account != null) {
                     mutableState.update { state ->
                         state.copy(
