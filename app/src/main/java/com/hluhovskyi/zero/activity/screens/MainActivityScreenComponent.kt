@@ -25,6 +25,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditColorUseCase
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
@@ -353,8 +354,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Category.Item.CategoryId.withValue(categoryId),
                         )
                     }
-                    .onAddCategoryHandler {
-                        navigator.navigateTo(Destinations.Category.Edit)
+                    .onAddCategoryHandler { type ->
+                        navigator.navigateTo(
+                            Destinations.Category.Edit,
+                            Destinations.Category.Edit.InitialType.withValue(type.name),
+                        )
                     }
                     .logging(logger),
             )
@@ -370,8 +374,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             categoryEditColorUseCase: CategoryEditColorUseCase,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Edit) {
+            val initialType = CategoryType.from(arguments.getValue(Destinations.Category.Edit.InitialType))
             componentBuilder
                 .categoryId(Id.Unknown)
+                .initialType(initialType)
                 .categoryEditIconUseCase(categoryEditIconUseCase)
                 .categoryEditColorUseCase(categoryEditColorUseCase)
                 .onCategorySavedHandler { navigator.back() }
