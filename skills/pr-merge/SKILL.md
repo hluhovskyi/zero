@@ -21,35 +21,22 @@ Record:
 - `pr_branch` — the head branch name (e.g. `feat/my-feature`)
 - `is_current_branch` — whether the local HEAD is on `pr_branch`
 
-## Step 2 — GitHub Actions checks
-
-Check that all CI checks on the PR are passing:
-
-```bash
-gh pr checks <pr_number>
-```
-
-Parse the output:
-- **All passing** — continue to Step 3.
-- **Any failing** — stop and report which check failed. Do not merge.
-- **Any pending** — poll automatically every 15 seconds until all checks resolve, reporting progress each time. Once all checks finish, re-evaluate (pass → continue, fail → stop and report).
-
-## Step 3 — Pre-merge checks (only if `is_current_branch`)
+## Step 2 — Pre-merge checks (only if `is_current_branch`)
 
 If the local branch matches `pr_branch`, run the full quality gate in this order. **Stop and report failure after the first failing step — do not continue to merge.**
 
-### 3a. Unit tests
+### 2a. Unit tests
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-### 3b. Lint
+### 2b. Lint
 ```bash
 ./gradlew lint
 ```
 Parse output for errors (warnings are OK). Fail if any module reports lint errors.
 
-### 3c. Build
+### 2c. Build
 ```bash
 ./gradlew assembleDebug
 ```
@@ -58,7 +45,7 @@ If all three pass, report: `✓ Tests, lint, and build passed — proceeding wit
 
 If the branch is not current (user is merging someone else's PR or a different branch), skip this step entirely.
 
-## Step 4 — Check for conflicts
+## Step 3 — Check for conflicts
 
 Before merging, check if the PR has conflicts with master:
 
@@ -66,7 +53,7 @@ Before merging, check if the PR has conflicts with master:
 gh pr view <pr_number> --json mergeable,mergeStateStatus
 ```
 
-- **`mergeable: MERGEABLE`** — no conflicts, proceed to Step 5.
+- **`mergeable: MERGEABLE`** — no conflicts, proceed to Step 4.
 - **`mergeable: CONFLICTING`** — resolve conflicts:
   1. Checkout the PR branch and rebase onto master:
      ```bash
@@ -80,7 +67,7 @@ gh pr view <pr_number> --json mergeable,mergeStateStatus
   5. Re-check `gh pr view <pr_number> --json mergeable` until `MERGEABLE`, then proceed.
 - **`mergeable: UNKNOWN`** — wait 5 seconds and re-check; GitHub is still computing mergeability.
 
-## Step 5 — Merge the PR
+## Step 4 — Merge the PR
 
 ```bash
 gh pr merge <pr_number> --squash --delete-branch
@@ -90,6 +77,16 @@ Use `--squash` to keep the main branch history clean. `--delete-branch` removes 
 
 If the merge fails, report the error and stop — do not force-merge.
 
+## Step 5 — Wait for CI checks
+
+After merging, wait for any CI checks to complete using the polling script:
+
+```bash
+./scripts/github/wait-for-ci.sh <pr_number>
+```
+
+The script polls `gh pr checks` every 15 seconds until all checks resolve, then exits 0 (pass) or 1 (fail). If CI fails after merge, report the failure — the merge is already done, but master may need attention.
+
 ## Step 6 — Clean up and update master (only if `is_current_branch`)
 
 Switch to master, delete the local branch, and pull the latest:
@@ -97,12 +94,12 @@ Switch to master, delete the local branch, and pull the latest:
 ```bash
 git checkout master
 git branch -d <pr_branch>
-git pull
+git pull origin master
 ```
 
 Use `-d` (safe delete) — if it fails because the branch is not fully merged locally, report it and do not force-delete.
 
-Always run `git pull` after switching to master so the local copy reflects the merge commit.
+Always run `git pull origin master` after switching so the local copy reflects the merge commit.
 
 ## Step 7 — Report
 
