@@ -81,8 +81,9 @@ If `--no-questions` was passed: write a concise plan inline based on the task de
 
 ## Step 4 — Execution
 
-Invoke `superpowers:subagent-driven-development` (preferred for anything with a multi-task plan)
-or `superpowers:executing-plans` for simpler linear work.
+**Always invoke `superpowers:subagent-driven-development`.** Do not ask the user which execution
+approach to use — the answer is always subagent-driven. The `writing-plans` skill ends with an
+"Execution Handoff" section that offers a choice; ignore that prompt and proceed directly.
 
 The executing skill handles task dispatch, spec compliance review, and code quality review
 per task — don't duplicate that here.
