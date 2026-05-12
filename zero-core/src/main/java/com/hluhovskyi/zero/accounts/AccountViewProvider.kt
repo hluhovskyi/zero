@@ -1,5 +1,8 @@
 package com.hluhovskyi.zero.accounts
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -25,6 +29,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,9 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,9 +64,11 @@ import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.Secondary
+import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
@@ -85,13 +99,15 @@ private fun AccountView(
     onAddAccount: OnAddAccountHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
-    val grouped = remember(state.accounts) {
-        state.accounts
+    val grouped = remember(state.activeAccounts) {
+        state.activeAccounts
             .groupBy { it.category }
             .entries
             .sortedBy { it.key.ordinal }
     }
+    val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
+    var showArchived by remember { mutableStateOf(false) }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             NetWorthHeader(
@@ -137,6 +153,20 @@ private fun AccountView(
                         expandedItemId = null
                         viewModel.perform(AccountViewModel.Action.Unarchive(account.id))
                     },
+                )
+            }
+        }
+        if (archivedAccounts.isNotEmpty()) {
+            item(key = "archived_footer") {
+                ArchivedFooter(
+                    archivedAccounts = archivedAccounts,
+                    showArchived = showArchived,
+                    onToggle = { showArchived = !showArchived },
+                    onAccountClick = { account ->
+                        viewModel.perform(AccountViewModel.Action.Select(account.id))
+                    },
+                    imageLoader = imageLoader,
+                    amountFormatter = amountFormatter,
                 )
             }
         }
@@ -282,6 +312,189 @@ private fun CategoryHeader(category: AccountCategory) {
             letterSpacing = 0.8.sp,
         ),
     )
+}
+
+@Composable
+private fun ArchivedFooter(
+    archivedAccounts: List<Account>,
+    showArchived: Boolean,
+    onToggle: () -> Unit,
+    onAccountClick: (Account) -> Unit,
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
+) {
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (showArchived) 180f else 0f,
+        animationSpec = tween(200),
+        label = "chevron",
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp, bottom = 24.dp),
+    ) {
+        Divider(color = SurfaceContainer, thickness = 1.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onToggle)
+                .padding(top = 16.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Archive,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = Outline,
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = if (showArchived) {
+                    stringResource(R.string.account_archived_hide, archivedAccounts.size)
+                } else {
+                    stringResource(R.string.account_archived_show, archivedAccounts.size)
+                },
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Outline,
+                    letterSpacing = 0.4.sp,
+                ),
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(14.dp)
+                    .rotate(chevronRotation),
+                tint = Outline,
+            )
+        }
+        AnimatedVisibility(visible = showArchived) {
+            Column(modifier = Modifier.padding(top = 8.dp)) {
+                Text(
+                    text = stringResource(R.string.account_archived_hidden_notice).uppercase(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    style = TextStyle(
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Outline,
+                        letterSpacing = 1.2.sp,
+                    ),
+                    textAlign = TextAlign.Center,
+                )
+                archivedAccounts.forEach { account ->
+                    ArchivedAccountRow(
+                        account = account,
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                        onClick = { onAccountClick(account) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArchivedAccountRow(
+    account: Account,
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp)
+            .alpha(0.78f)
+            .drawBehind {
+                drawRoundRect(
+                    color = OutlineVariant,
+                    cornerRadius = CornerRadius(12.dp.toPx()),
+                    style = Stroke(
+                        width = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)),
+                    ),
+                )
+            }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(SurfaceContainer, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            imageLoader.View(
+                modifier = Modifier.size(20.dp),
+                image = account.icon,
+                tint = Outline,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = account.name,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnSurfaceVariant,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(SurfaceContainer, RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 1.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.account_archived_badge),
+                        style = TextStyle(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Outline,
+                            letterSpacing = 1.sp,
+                        ),
+                    )
+                }
+                if (account.details != null) {
+                    Text(
+                        text = account.details,
+                        style = TextStyle(
+                            fontSize = 11.sp,
+                            color = Outline,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+        Text(
+            text = amountFormatter.format(
+                amount = account.balance,
+                currencySymbol = account.currencySymbol,
+            ),
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Outline,
+            ),
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

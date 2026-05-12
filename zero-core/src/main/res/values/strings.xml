@@ -23,6 +23,12 @@
     <string name="account_header_crypto">CRYPTO</string>
     <string name="account_header_other">OTHER</string>
 
+    <!-- Archived accounts section -->
+    <string name="account_archived_show">Show archived · %1$d</string>
+    <string name="account_archived_hide">Hide archived · %1$d</string>
+    <string name="account_archived_hidden_notice">Hidden from totals &amp; lists</string>
+    <string name="account_archived_badge">ARCHIVED</string>
+
     <!-- Account Detail -->
     <string name="account_detail_more_options_description">More options</string>
     <string name="account_detail_edit">Edit account</string>
