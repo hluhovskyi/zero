@@ -12,6 +12,8 @@
 
     <!-- Accounts -->
     <string name="account_total_net_worth">TOTAL NET WORTH</string>
+    <string name="account_assets">ASSETS</string>
+    <string name="account_liabilities">LIABILITIES</string>
     <string name="account_my_accounts">My Accounts</string>
     <string name="account_add">Add Account</string>
     <string name="account_header_cash">CASH</string>
