@@ -20,3 +20,5 @@ interface ColorRepository {
         fun unknownCategoryColorId(): Id.Known = Id("unknown_category_color")
     }
 }
+
+fun ColorRepository.schemeForOrGrey(colorId: Id): ColorScheme = (colorId as? Id.Known)?.let { schemeFor(it) } ?: ColorScheme.Grey
