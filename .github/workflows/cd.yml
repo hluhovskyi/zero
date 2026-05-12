@@ -50,12 +50,15 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease
 
+      - name: Install Play Store upload dependencies
+        run: pip install google-auth google-api-python-client
+
       - name: Upload to Play Store
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           AAB_PATH=$(find app/build/outputs/bundle/release -name "*.aab" | head -1)
-          bash .github/scripts/upload-to-play.sh "$AAB_PATH" "com.hluhovskyi.zero"
+          python3 .github/scripts/upload_to_play.py "$AAB_PATH" "com.hluhovskyi.zero"
 
       - name: Cleanup keystore
         if: always()
