@@ -97,9 +97,26 @@ git push
 **Files:**
 - Modify: `zero-core/src/main/java/com/hluhovskyi/zero/imports/DefaultImportUseCase.kt`
 
-- [ ] **Step 1: Set existingId from name match in `buildCategories` and `buildAccounts`**
+- [ ] **Step 1: Set existingId from id OR name match in `buildCategories` and `buildAccounts`**
 
-In `buildCategories`, after locating `existingMatch`, set `existingId = existingMatch?.id as? Id.Known`. Same in `buildAccounts`. Existing-by-id should also count: if `existingCategoryByName` already accounts for any case-insensitive name overlap, that covers both the "user re-imports from same source" case and the "different source but same name" case. (Id-based detection is unnecessary because the delta only includes entities that the engine considers distinct from local versions.)
+`existingId` must be set whenever a local entity matches either way. Both branches lead to the Merge route (see Task 5 default-strategy logic).
+
+1. **Id match (primary)** — imported `id` is already present in the local DB. Build a `Map<Id.Known, …>` keyed by local id and look up `syncCategory.id` / `syncAccount.id` in it.
+2. **Name match (fallback)** — case-insensitive name overlap, using the existing `existingCategoryByName` / `existingAccountByName` maps. Only consult this when the id lookup misses.
+
+Pseudocode for `buildCategories`:
+
+```kotlin
+val existingById = existingCategories.associateBy { it.id as Id.Known }
+…
+val existingMatch = existingById[syncCategory.id]
+    ?: existingCategoryByName[syncCategory.name.lowercase()]
+val existingId = existingMatch?.id as? Id.Known
+```
+
+Same pattern in `buildAccounts`.
+
+Rationale: id-level match catches "previously-imported entity that the user later renamed locally" (delta carries the import's old name, local has a new one — id is the only signal). Name match catches the cross-source / first-import case where ids differ but the user already has a similarly-named entity. Either way, the merge target id is the **local** entity's id, which is what the strategy remap in Task 5 uses.
 
 - [ ] **Step 2: Failing test**
 
