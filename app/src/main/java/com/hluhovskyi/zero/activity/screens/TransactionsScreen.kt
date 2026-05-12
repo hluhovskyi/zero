@@ -11,6 +11,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,8 +36,8 @@ fun TransactionScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = { Icon(Icons.Filled.Add, "Add transaction") },
-            text = { Text("Add transaction") },
+            icon = { Icon(Icons.Filled.Add, stringResource(R.string.transactions_add)) },
+            text = { Text(stringResource(R.string.transactions_add)) },
             onClick = onTransactionEdit,
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )

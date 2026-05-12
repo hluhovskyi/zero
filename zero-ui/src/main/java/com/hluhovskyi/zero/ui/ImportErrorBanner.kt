@@ -15,6 +15,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,7 +60,7 @@ fun ImportErrorBanner(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "Couldn't import file",
+                text = stringResource(R.string.import_error_banner_title),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Error,
@@ -80,7 +82,7 @@ fun ImportErrorBanner(
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "Try Again",
+                        text = stringResource(R.string.import_error_banner_retry),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -93,7 +95,7 @@ fun ImportErrorBanner(
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "Dismiss",
+                        text = stringResource(R.string.import_error_banner_dismiss),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Error,

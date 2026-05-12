@@ -18,6 +18,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,7 +50,7 @@ fun AmountDisplay(
     focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
     onCurrencyClick: (() -> Unit)? = null,
-    label: String = "AMOUNT",
+    label: String,
 ) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
@@ -134,7 +136,7 @@ fun AmountDisplay(
                 decorationBox = { innerTextField ->
                     if (textFieldValue.text.isEmpty()) {
                         Text(
-                            text = "0.00",
+                            text = stringResource(R.string.amount_display_placeholder),
                             fontSize = 56.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colors.primary.copy(alpha = 0.3f),

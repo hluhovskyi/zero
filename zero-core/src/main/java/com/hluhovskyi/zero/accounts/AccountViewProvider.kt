@@ -296,7 +296,7 @@ private fun AccountRow(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Edit account")
+                Text(stringResource(R.string.account_detail_edit))
             }
             if (account.archivedAt == null) {
                 DropdownMenuItem(onClick = onArchiveClick) {
@@ -306,7 +306,7 @@ private fun AccountRow(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Archive account")
+                    Text(stringResource(R.string.account_detail_archive))
                 }
             } else {
                 DropdownMenuItem(onClick = onUnarchiveClick) {
@@ -316,7 +316,7 @@ private fun AccountRow(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Unarchive account")
+                    Text(stringResource(R.string.account_detail_unarchive))
                 }
             }
         }

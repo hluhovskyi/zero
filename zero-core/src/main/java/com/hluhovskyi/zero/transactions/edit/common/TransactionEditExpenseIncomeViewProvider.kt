@@ -56,6 +56,7 @@ private fun TransactionEditExpenseIncomeView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 32.dp, bottom = 40.dp),
+            label = stringResource(R.string.transaction_edit_amount_display_label),
             amount = state.amount,
             currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
             focusRequester = focusRequester,
