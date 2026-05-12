@@ -10,15 +10,22 @@ Surface what caused friction this session and decide what's worth documenting so
 ## Step 1 — Establish scope
 
 Determine what to review:
-- If on a feature branch: `git log master..HEAD --oneline` to see all commits.
-- If the user named specific files or a topic: focus there.
-- If ambiguous: ask one question — "What area should I focus on?"
+- If the user passed a PR number — use it.
+- If on a feature branch — infer PR: `gh pr list --head <branch> --state all --limit 1 --json number,title`
+- If on master (post-merge) — find the most recent merged PR: `gh pr list --state merged --limit 1 --json number,headRefName,title`
+- If the user named specific files or a topic — focus there.
+- If still ambiguous — ask: "What area should I focus on?"
 
 ## Step 2 — Investigate
 
 Run these in parallel:
 
-**History** — `git log --oneline` + `git diff master...HEAD --stat` to understand what changed and how many iterations it took (lots of small fixup commits = friction).
+**History** — use the PR (works after squash-merge cleanup):
+```bash
+gh pr view <pr_number> --json commits --jq '.commits[].messageHeadline'
+gh pr view <pr_number> --json files --jq '.files[].path'
+```
+Count commits; "fix"/"revert"/"again" patterns = friction. If still on the feature branch, also run `git diff master...HEAD --stat`.
 
 **Affected AGENTS.md files** — read the AGENTS.md nearest to each changed package. These are the ground truth for what's documented vs. not.
 
