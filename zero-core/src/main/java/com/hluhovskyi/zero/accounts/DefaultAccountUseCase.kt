@@ -53,15 +53,26 @@ internal class DefaultAccountUseCase(
                 archivedAt = account.archivedAt,
             )
         }
-        val balance = accounts.fold(Amount.zero()) { total, account ->
-            total + currencyConvertUseCase.convertToPrimary(
+        var balance = Amount.zero()
+        var assets = Amount.zero()
+        var liabilities = Amount.zero()
+        accounts.forEach { account ->
+            val converted = currencyConvertUseCase.convertToPrimary(
                 amount = account.initialBalance + (accountIdToBalance[account.id] ?: Amount.zero()),
                 currencyId = account.currencyId,
             )
+            balance += converted
+            if (converted >= 0L) {
+                assets += converted
+            } else {
+                liabilities -= converted
+            }
         }
 
         AccountUseCase.State(
             balance = balance,
+            assets = assets,
+            liabilities = liabilities,
             currency = currencyPrimaryUseCase.getPrimaryCurrency(),
             accounts = resultAccounts,
         )
