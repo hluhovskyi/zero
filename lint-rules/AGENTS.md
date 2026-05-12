@@ -1,58 +1,109 @@
 # lint-rules — Codebase Guide for AI Agents
 
-Custom Android Lint rules for the Zero project. `java-library` plugin (no Android dependency),
-so run tests with `./gradlew :lint-rules:test` — not `:testDebugUnitTest`.
+Custom Android Lint rules. `java-library` plugin (no Android dependency) — run tests with
+`./gradlew :lint-rules:test`, not `:testDebugUnitTest`.
 
-## Adding a New Rule
+## Adding a Rule
 
-1. Create `Detector` in `src/main/kotlin/…/lint/`
-2. Add its `ISSUE` to `ZeroIssueRegistry.issues`
-3. Wire the module under test: `lintChecks project(":lint-rules")` in that module's `build.gradle`
-4. Run `./gradlew :lint-rules:test` to verify
+1. Create detector in `src/main/kotlin/…/lint/`
+2. Add `ISSUE` to `ZeroIssueRegistry.issues`
+3. Wire target module: `lintChecks project(":lint-rules")` in its `build.gradle`
 
-## UAST — Kotlin vs Java
+## Detector Skeleton
 
-**Never use `ULiteralExpression` to detect Kotlin strings** — it matches Java literals only. Kotlin
-string literals are `KotlinStringTemplateUPolyadicExpression`. Use `ConstantEvaluator.evaluateString(context, expr, false)` for any string detection; it works for both languages and handles
-constant folding.
+Every detector follows the same three-part structure:
 
-**`ConstantEvaluator.evaluateString` traces parameter defaults** — if a parameter has a
-`String` default, evaluating a reference to that parameter returns the default value. A function
-with `label: String = "AMOUNT"` that passes `label` to `Text()` will be flagged as if the literal
-appeared at the call site. Fix: remove the default and require callers to pass `stringResource()`.
+```kotlin
+class MyDetector : Detector(), Detector.UastScanner {
+    override fun getApplicableUastTypes() = listOf(UCallExpression::class.java)
+    override fun createUastHandler(context: JavaContext) = object : UElementHandler() {
+        override fun visitCallExpression(node: UCallExpression) { … }
+    }
+    companion object {
+        val ISSUE: Issue = Issue.create(id = "MyIssue", …)
+    }
+}
+```
 
-**`getArgumentForParameter` takes an `Int` index, not a `PsiParameter`** — resolve the method,
-find the parameter index with `parameterList.parameters.indexOfFirst { it.name == name }`, then
-pass the index. This correctly handles both named and positional call sites.
+Pick the UAST type that matches what you're inspecting:
+
+| Goal | `getApplicableUastTypes()` | Handler override |
+|------|---------------------------|-----------------|
+| Inspect a class/interface | `UClass` | `visitClass` |
+| Inspect a method call | `UCallExpression` | `visitCallExpression` |
+| Inspect a qualified reference | `UQualifiedReferenceExpression` | `visitQualifiedReferenceExpression` |
+
+## Kotlin-Specific Checks (PSI)
+
+UAST is language-agnostic; Kotlin-only properties (modifiers, `fun` keyword, etc.) require a
+PSI cast:
+
+```kotlin
+// Check for `internal` modifier
+val sourcePsi = node.sourcePsi as? KtModifierListOwner ?: return
+if (!sourcePsi.hasModifier(KtTokens.INTERNAL_KEYWORD)) { … }
+
+// Check for `fun interface`
+val ktClass = node.sourcePsi as? KtClass ?: return
+if (!ktClass.hasModifier(KtTokens.FUN_KEYWORD)) { … }
+```
 
 ## Annotation Detection
 
-**Never use `hasAnnotation("full.qualified.Name")` for annotation detection** — full-name
-resolution requires the annotation class to be on the classpath, which it is not in the lint test
-sandbox. Use PSI short-name instead:
+**Use `findAnnotation(FQN)` only for library annotations that are on the compile classpath**
+(e.g. `kotlinx.serialization.Serializable`). For annotations that won't be resolved in the lint
+test sandbox, check by short name via PSI instead:
 
 ```kotlin
+// Works in tests — no classpath resolution required
 annotationEntries.any { it.shortName?.asString() == "Composable" }
 ```
 
-## Walking the Call Hierarchy
+## Type and Interface Checks
 
-**Walk PSI parents, not UAST parents, to find enclosing functions** — `uastParent` references are
-not always populated in the test sandbox. Walk `sourcePsi?.parent` instead, casting to
-`KtNamedFunction` when you find a function node.
+To check if a type implements an interface, use the evaluator (handles supertype chains):
+
+```kotlin
+val psiClass = (node.returnType as? PsiClassType)?.resolve() ?: return
+if (!context.evaluator.implementsInterface(psiClass, "java.io.Closeable", false)) return
+```
+
+## Walking the Tree
+
+UAST parent walking (`node.uastParent`) works in most detectors. Use it to walk up from a
+call expression toward the containing block or method.
+
+**Exception — detecting an enclosing named function by annotation:** `uastParent` is not reliably
+set inside lambda/composable contexts in the test sandbox. Walk `sourcePsi?.parent` instead,
+casting to `KtNamedFunction` when you reach a function node.
+
+## Reporting
+
+```kotlin
+context.report(ISSUE, node, context.getLocation(node), "Message text.")
+```
+
+Use `context.getLocation(node as UElement)` when the node type needs an explicit cast.
 
 ## Testing
 
 - Extend `LintDetectorTest`; override `getDetector()` and `getIssues()`
-- Add `.testModes(TestMode.DEFAULT)` — other modes enable alias/import rewriting that
-  can change how arguments resolve and produce confusing false negatives
-- Stub every annotation and library type used in test snippets; the sandbox has no classpath:
+- Add `.testModes(TestMode.DEFAULT)` — other modes rewrite imports/aliases and can cause
+  silent false negatives
+- The test sandbox has no classpath. Stub every external type used in snippets:
   ```kotlin
   private val composableStub = kotlin("""
       package androidx.compose.runtime
       annotation class Composable
   """).indented()
   ```
-- Prefer `expectContains("IssueId")` over `expect(...)` for positive cases — it is
-  severity-agnostic and survives severity bumps without test changes
+- `expectContains("IssueId")` for positive cases — severity-agnostic, survives severity bumps
 - `expectClean()` for negative cases
+
+## String Value Detection
+
+**Do not check `expr is ULiteralExpression` for Kotlin strings** — Kotlin string literals
+are `KotlinStringTemplateUPolyadicExpression`, not `ULiteralExpression`. Use
+`ConstantEvaluator.evaluateString(context, expr, false)` — it handles both languages and
+folds constants. It also traces `String` parameter references to their default values, so
+`foo: String = "literal"` evaluates to `"literal"` at every use site inside the function.
