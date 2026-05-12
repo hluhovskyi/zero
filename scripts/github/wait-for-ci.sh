@@ -25,12 +25,14 @@ while true; do
   fi
 
   if echo "$output" | grep -q "no checks reported"; then
-    echo "No CI checks on PR #$PR — waiting for merge..."
-  else
-    echo "$output"
-    echo ""
-    echo "All CI checks passed on PR #$PR — waiting for merge..."
+    echo "No checks yet — checking again in 15s..."
+    sleep 15
+    continue
   fi
+
+  echo "$output"
+  echo ""
+  echo "All CI checks passed on PR #$PR — waiting for merge..."
   break
 done
 
