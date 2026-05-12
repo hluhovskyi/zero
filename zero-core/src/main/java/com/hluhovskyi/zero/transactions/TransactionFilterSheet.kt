@@ -117,27 +117,6 @@ internal fun TransactionFilterSheet(
                 )
             }
 
-            if (availableCategories.isNotEmpty()) {
-                FilterSection(label = stringResource(R.string.filter_section_categories)) {
-                    CategoryItemGrid(
-                        allLabel = stringResource(R.string.filter_all_categories),
-                        items = availableCategories,
-                        selectedIds = draft.categoryIds,
-                        onToggleAll = { draft = draft.copy(categoryIds = null) },
-                        onToggle = { id ->
-                            draft = draft.copy(
-                                categoryIds = toggleCategoryId(
-                                    current = draft.categoryIds,
-                                    id = id,
-                                    total = availableCategories.size - 1,
-                                ),
-                            )
-                        },
-                        imageLoader = imageLoader,
-                    )
-                }
-            }
-
             if (availableAccounts.isNotEmpty()) {
                 FilterSection(label = stringResource(R.string.filter_section_accounts)) {
                     AccountItemGrid(
@@ -151,6 +130,27 @@ internal fun TransactionFilterSheet(
                                     current = draft.accountIds,
                                     id = id,
                                     total = availableAccounts.size - 1,
+                                ),
+                            )
+                        },
+                        imageLoader = imageLoader,
+                    )
+                }
+            }
+
+            if (availableCategories.isNotEmpty()) {
+                FilterSection(label = stringResource(R.string.filter_section_categories)) {
+                    CategoryItemGrid(
+                        allLabel = stringResource(R.string.filter_all_categories),
+                        items = availableCategories,
+                        selectedIds = draft.categoryIds,
+                        onToggleAll = { draft = draft.copy(categoryIds = null) },
+                        onToggle = { id ->
+                            draft = draft.copy(
+                                categoryIds = toggleCategoryId(
+                                    current = draft.categoryIds,
+                                    id = id,
+                                    total = availableCategories.size - 1,
                                 ),
                             )
                         },
@@ -260,7 +260,9 @@ private fun AllFilterTile(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 2.dp),
     ) {
         Box(
             modifier = Modifier
@@ -329,7 +331,7 @@ private fun CategoryItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterCategoryItem.Category -> CategoryTile(
                     category = item,
-                    isSelected = selectedIds == null || selectedIds.contains(item.id),
+                    isSelected = selectedIds != null && selectedIds.contains(item.id),
                     imageLoader = imageLoader,
                 )
             }
@@ -369,7 +371,7 @@ private fun AccountItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterAccountItem.Account -> AccountTile(
                     account = item,
-                    isSelected = selectedIds == null || selectedIds.contains(item.id),
+                    isSelected = selectedIds != null && selectedIds.contains(item.id),
                     imageLoader = imageLoader,
                 )
             }
@@ -403,7 +405,9 @@ private fun CategoryTile(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 2.dp),
     ) {
         Box(
             modifier = Modifier
@@ -447,7 +451,9 @@ private fun AccountTile(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 2.dp),
     ) {
         Box(
             modifier = Modifier
