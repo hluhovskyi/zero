@@ -7,6 +7,18 @@ if [ "$current_branch" = "$protected_branch" ]; then
     exit 1
 fi
 
+# Block commits on feature branches in the main workspace.
+# All feature work must happen in an isolated worktree.
+git_dir=$(git rev-parse --git-dir 2>/dev/null)
+git_dir=$(cd "$git_dir" && pwd -P)
+common_dir=$(git rev-parse --git-common-dir 2>/dev/null)
+common_dir=$(cd "$common_dir" && pwd -P)
+if [ "$git_dir" = "$common_dir" ]; then
+    echo "ERROR: Committing to a feature branch in the main workspace is not allowed."
+    echo "Create a worktree first: git worktree add .worktrees/<name> -b <branch>"
+    exit 1
+fi
+
 # Block committing build/ directories (generated artifacts)
 staged_build_files=$(git diff --cached --name-only | grep -E '(^|/)build/')
 if [ -n "$staged_build_files" ]; then

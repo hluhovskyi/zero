@@ -82,6 +82,12 @@ Keep it short. No padding. Then ask: **"Which of these would you like me to writ
 
 ## Step 5 — Write (if confirmed)
 
+**Before editing any file**, verify you are in a worktree:
+```bash
+./scripts/detect-worktree.sh
+```
+If `IS_WORKTREE=no`, create one first using `superpowers:using-git-worktrees` with a branch name like `docs/retro-YYYY-MM-DD`. Do not commit from the main workspace — the pre-commit hook will block it.
+
 For each doc update:
 - Prefer editing existing files over creating new ones.
 - Cast each rule in the format used throughout this codebase's AGENTS.md files: `**<imperative or trigger condition>** — <why or consequence>`. If the imperative part doesn't fit in a short bold phrase, it's two rules — split it.
