@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -52,7 +52,6 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 @Composable
@@ -67,9 +66,7 @@ internal fun TransactionFilterSheet(
     var draft by remember(activeFilter) { mutableStateOf(activeFilter) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.9f),
+        modifier = Modifier.fillMaxSize(),
     ) {
         ModalHeader(
             title = stringResource(R.string.filter_title),
@@ -118,7 +115,10 @@ internal fun TransactionFilterSheet(
             }
 
             if (availableAccounts.isNotEmpty()) {
-                FilterSection(label = stringResource(R.string.filter_section_accounts)) {
+                FilterSection(
+                    label = stringResource(R.string.filter_section_accounts),
+                    selectedLabel = draft.accountIds?.size?.let { "$it / ${availableAccounts.size - 1}" },
+                ) {
                     AccountItemGrid(
                         allLabel = stringResource(R.string.filter_all_accounts),
                         items = availableAccounts,
@@ -139,7 +139,10 @@ internal fun TransactionFilterSheet(
             }
 
             if (availableCategories.isNotEmpty()) {
-                FilterSection(label = stringResource(R.string.filter_section_categories)) {
+                FilterSection(
+                    label = stringResource(R.string.filter_section_categories),
+                    selectedLabel = draft.categoryIds?.size?.let { "$it / ${availableCategories.size - 1}" },
+                ) {
                     CategoryItemGrid(
                         allLabel = stringResource(R.string.filter_all_categories),
                         items = availableCategories,
@@ -172,17 +175,33 @@ internal fun TransactionFilterSheet(
 @Composable
 private fun FilterSection(
     label: String,
+    selectedLabel: String? = null,
     content: @Composable () -> Unit,
 ) {
     Column(modifier = Modifier.padding(bottom = 24.dp)) {
-        Text(
-            text = label.uppercase(),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
-            letterSpacing = 1.sp,
-            modifier = Modifier.padding(bottom = 10.dp, start = 2.dp),
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp, start = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label.uppercase(),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceVariant,
+                letterSpacing = 1.sp,
+            )
+            if (selectedLabel != null) {
+                Text(
+                    text = selectedLabel,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryContainer,
+                )
+            }
+        }
         content()
     }
 }
@@ -413,7 +432,7 @@ private fun CategoryTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isSelected) colorScheme.background else SurfaceContainerLow)
+                .background(colorScheme.background)
                 .then(
                     if (isSelected) {
                         Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
@@ -426,14 +445,14 @@ private fun CategoryTile(
             imageLoader.View(
                 image = category.icon,
                 modifier = Modifier.size(24.dp),
-                tint = if (isSelected) colorScheme.primary else Outline,
+                tint = colorScheme.primary,
             )
         }
         Text(
             text = category.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (isSelected) OnSurface else OnSurfaceVariant,
+            color = OnSurface,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -460,7 +479,7 @@ private fun AccountTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isSelected) colorScheme.background else SurfaceContainerLow)
+                .background(colorScheme.background)
                 .then(
                     if (isSelected) {
                         Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
@@ -473,14 +492,14 @@ private fun AccountTile(
             imageLoader.View(
                 image = account.icon,
                 modifier = Modifier.size(24.dp),
-                tint = if (isSelected) colorScheme.primary else Outline,
+                tint = colorScheme.primary,
             )
         }
         Text(
             text = account.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (isSelected) OnSurface else OnSurfaceVariant,
+            color = OnSurface,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
