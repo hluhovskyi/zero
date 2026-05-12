@@ -182,7 +182,7 @@ private fun NetWorthHeader(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.account_assets),
+                    text = stringResource(R.string.account_assets).uppercase(),
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -211,7 +211,7 @@ private fun NetWorthHeader(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.account_liabilities),
+                    text = stringResource(R.string.account_liabilities).uppercase(),
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
