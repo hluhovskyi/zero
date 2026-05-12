@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero.transactions.edit
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExtendedFloatingActionButton
@@ -33,7 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -41,7 +48,10 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
+import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -152,6 +162,47 @@ private fun TransactionEditView(
                     TransactionEditType.INCOME,
                     -> expenseIncomeComponent.AttachWithView()
                     TransactionEditType.TRANSFER -> transferComponent.AttachWithView()
+                }
+            }
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 16.dp)
+                        .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.transaction_notes_label),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.5.sp,
+                    )
+                    BasicTextField(
+                        value = state.notes,
+                        onValueChange = { notes ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(notes))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OnSurface,
+                        ),
+                        decorationBox = { innerTextField ->
+                            if (state.notes.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.transaction_notes_hint),
+                                    fontSize = 15.sp,
+                                    color = OnSurfaceVariant,
+                                )
+                            }
+                            innerTextField()
+                        },
+                    )
                 }
             }
         }

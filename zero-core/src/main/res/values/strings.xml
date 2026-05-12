@@ -179,4 +179,8 @@
     <string name="transfer_receives_amount">Receives %1$s</string>
     <string name="transfer_receives_with_symbol">Receives %1$s%2$s</string>
     <string name="transfer_receives_with_rate">Receives %1$s%2$s · 1 %3$s = %4$s %5$s</string>
+
+    <!-- Transaction Notes -->
+    <string name="transaction_notes_label">NOTES</string>
+    <string name="transaction_notes_hint">Add a note…</string>
 </resources>
