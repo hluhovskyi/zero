@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.transactions
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
@@ -45,6 +46,7 @@ internal class DefaultTransactionViewModel(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
@@ -317,6 +319,8 @@ internal class DefaultTransactionViewModel(
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
+                val accountColorScheme = (account.colorId as? Id.Known)
+                    ?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey
 
                 TransactionViewModel.Item.Transaction.Expense(
                     id = transaction.id,
@@ -336,6 +340,7 @@ internal class DefaultTransactionViewModel(
                     currencySymbol = currency.symbol,
                     accountName = account.name,
                     accountIcon = idToIcons[account.iconId]?.image ?: Image.empty(),
+                    accountColorScheme = accountColorScheme,
                     categoryName = category.name,
                     categoryColorScheme = category.colorScheme,
                     categoryIcon = category.icon,
@@ -346,6 +351,8 @@ internal class DefaultTransactionViewModel(
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
+                val accountColorScheme = (account.colorId as? Id.Known)
+                    ?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey
 
                 TransactionViewModel.Item.Transaction.Income(
                     id = transaction.id,
@@ -353,6 +360,7 @@ internal class DefaultTransactionViewModel(
                     amount = transaction.amount,
                     accountName = account.name,
                     accountIcon = idToIcons[account.iconId]?.image ?: Image.empty(),
+                    accountColorScheme = accountColorScheme,
                     currencySymbol = currency.symbol,
                     currencyId = transaction.currencyId,
                     categoryName = category.name,

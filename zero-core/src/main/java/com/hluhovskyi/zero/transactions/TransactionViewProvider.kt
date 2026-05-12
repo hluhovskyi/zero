@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
@@ -235,13 +236,21 @@ private fun TransactionView(
                                                 ),
                                                 accountName = transaction.accountName,
                                                 iconColorScheme = transaction.categoryColorScheme.toUi(),
-                                                accountIcon = transaction.accountIcon.toComposable(
-                                                    imageLoader = imageLoader,
-                                                    modifier = Modifier
-                                                        .alpha(ContentAlpha.medium)
-                                                        .padding(end = 6.dp)
-                                                        .size(20.dp),
-                                                ),
+                                                accountIcon = {
+                                                    val tint = if (transaction.accountColorScheme != ColorScheme.Grey) {
+                                                        transaction.accountColorScheme.primary.toUi()
+                                                    } else {
+                                                        transaction.categoryColorScheme.primary.toUi()
+                                                    }
+                                                    imageLoader.View(
+                                                        image = transaction.accountIcon,
+                                                        modifier = Modifier
+                                                            .alpha(ContentAlpha.medium)
+                                                            .padding(end = 6.dp)
+                                                            .size(20.dp),
+                                                        tint = tint,
+                                                    )
+                                                },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),
                                                 icon = transaction.categoryIcon.toTintedComposable(
                                                     imageLoader = imageLoader,
@@ -258,6 +267,21 @@ private fun TransactionView(
                                                 ),
                                                 accountName = transaction.accountName,
                                                 iconColorScheme = transaction.categoryColorScheme.toUi(),
+                                                accountIcon = {
+                                                    val tint = if (transaction.accountColorScheme != ColorScheme.Grey) {
+                                                        transaction.accountColorScheme.primary.toUi()
+                                                    } else {
+                                                        transaction.categoryColorScheme.primary.toUi()
+                                                    }
+                                                    imageLoader.View(
+                                                        image = transaction.accountIcon,
+                                                        modifier = Modifier
+                                                            .alpha(ContentAlpha.medium)
+                                                            .padding(end = 6.dp)
+                                                            .size(20.dp),
+                                                        tint = tint,
+                                                    )
+                                                },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),
                                                 icon = transaction.categoryIcon.toTintedComposable(
                                                     imageLoader = imageLoader,
@@ -469,16 +493,6 @@ private fun DateFormatter.format(
     monthConfig = DateFormatter.MonthConfig.Readable,
     yearConfig = DateFormatter.YearConfig.SkipCurrent,
 )
-
-private fun Image.toComposable(
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-): @Composable () -> Unit = {
-    imageLoader.View(
-        image = this,
-        modifier = modifier,
-    )
-}
 
 private fun Image.toTintedComposable(
     imageLoader: ImageLoader,
