@@ -10,3 +10,6 @@
 local.properties
 .worktrees
 .gradle-home
+*.jks
+*.keystore
+local.gradle.properties

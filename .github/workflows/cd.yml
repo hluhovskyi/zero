@@ -1,0 +1,65 @@
+name: CD
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Bump version
+        run: |
+          VERSION_CODE=$(grep 'versionCode' version.properties | cut -d'=' -f2)
+          NEW_VERSION_CODE=$((VERSION_CODE + 1))
+          printf "versionCode=%s\nversionName=1.0.%s\n" "$NEW_VERSION_CODE" "$NEW_VERSION_CODE" > version.properties
+          echo "NEW_VERSION_CODE=$NEW_VERSION_CODE" >> "$GITHUB_ENV"
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.properties
+          git commit -m "chore: bump version to $NEW_VERSION_CODE"
+          git push
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/zero-release.jks
+
+      - name: Build release AAB
+        env:
+          KEYSTORE_FILE: /tmp/zero-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew bundleRelease
+
+      - name: Install Play Store upload dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Upload to Play Store
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          AAB_PATH=$(find app/build/outputs/bundle/release -name "*.aab" | head -1)
+          python3 .github/scripts/upload_to_play.py "$AAB_PATH" "com.hluhovskyi.zero"
+
+      - name: Cleanup keystore
+        if: always()
+        run: rm -f /tmp/zero-release.jks

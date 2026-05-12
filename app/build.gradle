@@ -4,6 +4,35 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+def versionProps = new Properties()
+file('../version.properties').withInputStream { versionProps.load(it) }
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.gradle.properties")
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+
+def releaseOutputDir = System.getenv("RELEASE_OUTPUT_DIR") ?: localProps['releaseOutputDir']
+
+tasks.configureEach { task ->
+    if (task.name == "bundleRelease") {
+        task.doLast {
+            if (releaseOutputDir) {
+                def outputDir = new File("${buildDir}/outputs/bundle/release")
+                def destDir = new File(releaseOutputDir)
+                destDir.mkdirs()
+                outputDir.listFiles()?.find { it.name.endsWith(".aab") }?.with { aab ->
+                    def versionCode = versionProps['versionCode']
+                    copy {
+                        from aab
+                        into destDir
+                        rename { "zero-${versionCode}.aab" }
+                    }
+                }
+            }
+        }
+    }
+}
+
 android {
     compileSdk versions.compileSdk
 
@@ -11,8 +40,8 @@ android {
         applicationId "com.hluhovskyi.zero"
         minSdk versions.minSdk
         targetSdk versions.targetSdk
-        versionCode 1
-        versionName "1.0"
+        versionCode versionProps['versionCode'].toInteger()
+        versionName versionProps['versionName']
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -20,8 +49,19 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_FILE") ?: localProps['keystoreFile']
+            storeFile keystorePath ? file(keystorePath) : null
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: localProps['keystorePassword'] ?: ""
+            keyAlias System.getenv("KEY_ALIAS") ?: localProps['keyAlias'] ?: ""
+            keyPassword System.getenv("KEY_PASSWORD") ?: localProps['keyPassword'] ?: ""
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
