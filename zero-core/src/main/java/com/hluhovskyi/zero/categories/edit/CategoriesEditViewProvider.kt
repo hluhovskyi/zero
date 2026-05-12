@@ -178,7 +178,7 @@ private fun NameFormCard(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = stringResource(R.string.category_edit_name_label),
+            text = stringResource(R.string.category_edit_name_label).uppercase(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurfaceVariant,

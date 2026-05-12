@@ -175,7 +175,7 @@ private fun TransactionEditView(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.transaction_notes_label),
+                        text = stringResource(R.string.transaction_notes_label).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,

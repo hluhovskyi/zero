@@ -203,21 +203,21 @@ private fun HeroCard(
             Spacer(Modifier.size(16.dp))
             Row {
                 DetailStatColumn(
-                    label = stringResource(R.string.account_detail_in_this_month),
+                    label = stringResource(R.string.account_detail_in_this_month).uppercase(),
                     value = "+${amountFormatter.format(state.totalIn, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = inValueColor,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = stringResource(R.string.account_detail_out_this_month),
+                    label = stringResource(R.string.account_detail_out_this_month).uppercase(),
                     value = "–${amountFormatter.format(state.totalOut, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = OnSurface,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = stringResource(R.string.account_detail_transactions),
+                    label = stringResource(R.string.account_detail_transactions).uppercase(),
                     value = state.transactionCount.toString(),
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = OnSurface,

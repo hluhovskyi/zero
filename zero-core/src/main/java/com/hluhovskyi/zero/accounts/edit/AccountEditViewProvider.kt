@@ -100,7 +100,7 @@ private fun AccountEditView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 16.dp),
-                    label = stringResource(R.string.account_edit_opening_balance_label),
+                    label = stringResource(R.string.account_edit_opening_balance_label).uppercase(),
                     amount = state.balance,
                     currencySymbol = state.selectedCurrency?.symbol ?: "",
                     focusRequester = focusRequester,
