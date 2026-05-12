@@ -14,7 +14,9 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 
-class HardcodedComposableStringDetector : Detector(), Detector.UastScanner {
+class HardcodedComposableStringDetector :
+    Detector(),
+    Detector.UastScanner {
 
     override fun getApplicableUastTypes() = listOf(UCallExpression::class.java)
 
@@ -66,8 +68,7 @@ class HardcodedComposableStringDetector : Detector(), Detector.UastScanner {
         context.report(ISSUE, expr, context.getLocation(expr), MESSAGE)
     }
 
-    private fun isExcluded(value: String): Boolean =
-        value.isEmpty() || value.length == 1 || value.all { it.isDigit() }
+    private fun isExcluded(value: String): Boolean = value.isEmpty() || value.length == 1 || value.all { it.isDigit() }
 
     companion object {
         private const val MESSAGE =

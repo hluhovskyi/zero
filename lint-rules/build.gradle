@@ -19,4 +19,3 @@ dependencies {
     testImplementation "com.android.tools.lint:lint-tests:32.1.0"
     testImplementation "junit:junit:4.13.2"
 }
-
