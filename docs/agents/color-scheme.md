@@ -8,3 +8,4 @@
 - `ColorValue.isUnspecified()` — true for `ColorValue(0x00000000UL)`
 - `ColorValue.hex.toInt()` gives ARGB int; safe to pass to `ComposeColor(argb: Int)`
 - `colorRepository.schemeFor(id: Id.Known): ColorScheme` — synchronous lookup
+- **Always tint an icon with the color scheme of the entity it represents** — never a related entity's (e.g. account icon uses `account.colorScheme`; category icon uses `category.colorScheme`). Using a sibling entity's color leaks visual identity across domain boundaries.
