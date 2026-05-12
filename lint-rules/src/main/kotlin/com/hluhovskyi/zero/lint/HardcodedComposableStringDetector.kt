@@ -82,7 +82,7 @@ class HardcodedComposableStringDetector : Detector(), Detector.UastScanner {
                 "hardcoded literal.",
             category = Category.I18N,
             priority = 8,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 HardcodedComposableStringDetector::class.java,
                 Scope.JAVA_FILE_SCOPE,
