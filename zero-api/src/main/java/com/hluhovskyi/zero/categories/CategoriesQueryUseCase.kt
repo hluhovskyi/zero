@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories
 
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Identifiable
@@ -18,6 +19,7 @@ interface CategoriesQueryUseCase {
         val name: String,
         val icon: Image,
         val colorScheme: ColorScheme,
+        val type: CategoryType = CategoryType.EXPENSE,
     ) : Identifiable
 
     sealed class RankSignal {

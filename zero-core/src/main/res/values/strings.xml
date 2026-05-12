@@ -84,6 +84,8 @@
     <string name="category_edit_save">Save</string>
     <string name="category_edit_name_label">CATEGORY NAME</string>
     <string name="category_edit_name_placeholder">e.g. Groceries</string>
+    <string name="category_add">Add category</string>
+    <string name="category_add_description">Add category</string>
 
     <!-- Pickers -->
     <string name="category_picker_search_placeholder">Search categories…</string>

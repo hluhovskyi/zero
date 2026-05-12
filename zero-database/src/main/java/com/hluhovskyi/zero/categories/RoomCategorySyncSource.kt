@@ -19,6 +19,7 @@ internal class RoomCategorySyncSource(
         iconId = iconId,
         colorId = colorId,
         parentCategoryId = null,
+        type = type,
         creationDateTime = creationDateTime,
         updatedDateTime = updatedDateTime,
         deletedAt = deletedAt,

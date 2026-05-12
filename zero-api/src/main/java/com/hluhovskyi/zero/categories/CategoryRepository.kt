@@ -20,6 +20,7 @@ interface CategoryRepository {
         val name: String,
         val iconId: Id,
         val colorId: Id,
+        val type: CategoryType = CategoryType.EXPENSE,
     )
 
     suspend fun insert(category: CategoryInsert)
@@ -32,6 +33,7 @@ interface CategoryRepository {
         val name: String,
         val iconId: Id,
         val colorId: Id,
+        val type: CategoryType = CategoryType.EXPENSE,
     )
 
     object Noop : CategoryRepository {
