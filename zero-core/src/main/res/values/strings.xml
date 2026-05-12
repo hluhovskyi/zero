@@ -148,7 +148,7 @@
     <string name="import_resolve_strategy_merge_desc">Combine with existing</string>
     <string name="import_resolve_strategy_new_desc">Create separate entity</string>
     <string name="import_resolve_strategy_skip_desc">Don\'t import</string>
-    <string name="import_resolve_exists_badge">EXISTS</string>
+    <string name="import_resolve_exists_badge">Exists</string>
     <string name="import_resolve_wont_be_imported">Won\'t be imported</string>
     <string name="import_transactions_preview_title">Review Transactions</string>
     <string name="import_transactions_preview_info">%1$d TRANSACTIONS</string>

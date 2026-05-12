@@ -178,7 +178,7 @@ private fun CategoryRow(
                             .padding(horizontal = 5.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = stringResource(R.string.import_resolve_exists_badge),
+                            text = stringResource(R.string.import_resolve_exists_badge).uppercase(),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryContainer,
