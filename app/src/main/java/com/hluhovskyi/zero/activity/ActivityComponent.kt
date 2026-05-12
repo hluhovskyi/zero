@@ -110,7 +110,7 @@ abstract class ActivityComponent :
 
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
-        val presetsComponentBuilder: PresetsComponent.Builder
+        val presetsComponent: PresetsComponent
     }
 
     companion object {
@@ -225,10 +225,10 @@ abstract class ActivityComponent :
         @Provides
         @ActivityScope
         fun attachActivityComponent(
-            presetsComponentBuilder: PresetsComponent.Builder,
+            presetsComponent: PresetsComponent,
         ): AttachActivityComponent = AttachActivityComponent(
             coroutineScope = CoroutineScope(Dispatchers.IO),
-            presetsComponentBuilder = presetsComponentBuilder,
+            presetsComponent = presetsComponent,
         )
     }
 }

@@ -7,12 +7,8 @@ import java.io.Closeable
 
 class AttachActivityComponent(
     private val coroutineScope: CoroutineScope,
-    presetsComponentBuilder: PresetsComponent.Builder,
+    private val presetsComponent: PresetsComponent,
 ) : Attachable {
-
-    private val presetsComponent: PresetsComponent = presetsComponentBuilder
-        .coroutineScope(coroutineScope)
-        .build()
 
     override fun attach(): Closeable = presetsComponent.attachable.attach()
 }

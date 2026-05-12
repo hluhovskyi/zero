@@ -281,18 +281,16 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun presetsComponentBuilder(
+        fun presetsComponent(
             categoryRepository: CategoryRepository,
             accountRepository: AccountRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             configurationRepository: ConfigurationRepository,
-        ): PresetsComponent.Builder = PresetsComponent.builder(
-            object : PresetsComponent.Dependencies {
-                override val categoryRepository = categoryRepository
-                override val accountRepository = accountRepository
-                override val currencyPrimaryUseCase = currencyPrimaryUseCase
-                override val configurationRepository = configurationRepository
-            },
+        ): PresetsComponent = PresetsComponent.create(
+            categoryRepository = categoryRepository,
+            accountRepository = accountRepository,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
+            configurationRepository = configurationRepository,
         )
 
         @Provides

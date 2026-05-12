@@ -10,6 +10,7 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.Closeable
 import javax.inject.Scope
@@ -36,8 +37,23 @@ abstract class PresetsComponent {
 
     companion object {
 
+        fun create(
+            categoryRepository: CategoryRepository,
+            accountRepository: AccountRepository,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            configurationRepository: ConfigurationRepository,
+        ): PresetsComponent = builder(
+            object : Dependencies {
+                override val categoryRepository = categoryRepository
+                override val accountRepository = accountRepository
+                override val currencyPrimaryUseCase = currencyPrimaryUseCase
+                override val configurationRepository = configurationRepository
+            },
+        ).build()
+
         fun builder(dependencies: Dependencies): Builder = DaggerPresetsComponent.builder()
             .dependencies(dependencies)
+            .coroutineScope(CoroutineScope(Dispatchers.IO))
     }
 
     @dagger.Component.Builder
