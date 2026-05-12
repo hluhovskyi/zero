@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    lintChecks project(":lint-rules")
 
     implementation(project(":zero-api"))
 

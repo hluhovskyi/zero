@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
@@ -12,6 +13,7 @@ interface CategoryEditViewModel : AttachableActionStateModel<CategoryEditViewMod
         object SelectIcon : Action
         object SelectColor : Action
         object Save : Action
+        data class SelectType(val type: CategoryType) : Action
     }
 
     data class State(
@@ -22,5 +24,6 @@ interface CategoryEditViewModel : AttachableActionStateModel<CategoryEditViewMod
             primary = Color.empty(),
             background = Color.empty(),
         ),
+        val type: CategoryType = CategoryType.EXPENSE,
     )
 }

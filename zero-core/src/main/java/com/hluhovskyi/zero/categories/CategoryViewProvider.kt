@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,7 +15,12 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +40,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.SegmentedToggle
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
@@ -46,6 +53,7 @@ internal class CategoryViewProvider(
     private val viewModel: CategoryViewModel,
     private val imageLoader: ImageLoader,
     private val amountFormatter: AmountFormatter,
+    private val onAddCategory: OnAddCategoryHandler,
 ) : ViewProvider {
 
     @Composable
@@ -54,6 +62,7 @@ internal class CategoryViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
+            onAddCategory = onAddCategory,
         )
     }
 }
@@ -63,6 +72,7 @@ private fun CategoryView(
     viewModel: CategoryViewModel,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
+    onAddCategory: OnAddCategoryHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
 
@@ -75,70 +85,97 @@ private fun CategoryView(
         state.categories.filter { it.spending is CategoryViewModel.Spending.None }
     }
 
-    LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)) {
-        item {
-            Text(
-                text = stringResource(R.string.category_title),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-                style = TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Primary,
-                ),
-            )
-        }
-
-        items(active, key = { it.id.value }) { category ->
-            val spending = category.spending as CategoryViewModel.Spending.Active
-            val barFraction = if (grandTotal > 0L) {
-                (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-            val percentOfTotal = if (grandTotal > 0L) {
-                (spending.totalAmount / grandTotal * 100).toInt()
-            } else {
-                0
-            }
-
-            ActiveCategoryCard(
-                category = category,
-                spending = spending,
-                formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
-                barFraction = barFraction,
-                percentOfTotal = percentOfTotal,
-                barColor = category.colorScheme.toUi().primary,
-                onClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) },
-                imageLoader = imageLoader,
-            )
-        }
-
-        if (inactive.isNotEmpty()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)) {
             item {
                 Text(
-                    text = stringResource(R.string.category_unused_this_month),
-                    modifier = Modifier.padding(
-                        start = 20.dp,
-                        end = 20.dp,
-                        top = 10.dp,
-                        bottom = 6.dp,
-                    ),
+                    text = stringResource(R.string.category_title),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
                     style = TextStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Outline,
-                        letterSpacing = 0.7.sp,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Primary,
                     ),
                 )
             }
-            items(inactive, key = { it.id.value }) { category ->
-                InactiveCategoryCard(
+
+            item {
+                val expenseLabel = stringResource(R.string.transaction_type_expense)
+                val incomeLabel = stringResource(R.string.transaction_type_income)
+                SegmentedToggle(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 6.dp),
+                    items = listOf(CategoryType.EXPENSE, CategoryType.INCOME),
+                    selectedItem = state.selectedTab,
+                    onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
+                    labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
+                )
+            }
+
+            items(active, key = { it.id.value }) { category ->
+                val spending = category.spending as CategoryViewModel.Spending.Active
+                val barFraction = if (grandTotal > 0L) {
+                    (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+                val percentOfTotal = if (grandTotal > 0L) {
+                    (spending.totalAmount / grandTotal * 100).toInt()
+                } else {
+                    0
+                }
+
+                ActiveCategoryCard(
                     category = category,
+                    spending = spending,
+                    formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
+                    barFraction = barFraction,
+                    percentOfTotal = percentOfTotal,
+                    barColor = category.colorScheme.toUi().primary,
                     onClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) },
                     imageLoader = imageLoader,
                 )
             }
+
+            if (inactive.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.category_unused_this_month),
+                        modifier = Modifier.padding(
+                            start = 20.dp,
+                            end = 20.dp,
+                            top = 10.dp,
+                            bottom = 6.dp,
+                        ),
+                        style = TextStyle(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Outline,
+                            letterSpacing = 0.7.sp,
+                        ),
+                    )
+                }
+                items(inactive, key = { it.id.value }) { category ->
+                    InactiveCategoryCard(
+                        category = category,
+                        onClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) },
+                        imageLoader = imageLoader,
+                    )
+                }
+            }
         }
+
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
+            icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add_description)) },
+            text = { Text(stringResource(R.string.category_add)) },
+            onClick = { onAddCategory.onAdd(state.selectedTab) },
+            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+        )
     }
 }
 

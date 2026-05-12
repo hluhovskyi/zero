@@ -12,6 +12,8 @@
 
     <!-- Accounts -->
     <string name="account_total_net_worth">TOTAL NET WORTH</string>
+    <string name="account_assets">Assets</string>
+    <string name="account_liabilities">Liabilities</string>
     <string name="account_my_accounts">My Accounts</string>
     <string name="account_add">Add Account</string>
     <string name="account_header_cash">CASH</string>
@@ -28,6 +30,10 @@
     <string name="account_archived_badge">ARCHIVED</string>
 
     <!-- Account Detail -->
+    <string name="account_detail_more_options_description">More options</string>
+    <string name="account_detail_edit">Edit account</string>
+    <string name="account_detail_archive">Archive account</string>
+    <string name="account_detail_unarchive">Unarchive account</string>
     <string name="account_detail_in_this_month">IN THIS MONTH</string>
     <string name="account_detail_out_this_month">OUT THIS MONTH</string>
     <string name="account_detail_transactions">TRANSACTIONS</string>
@@ -86,6 +92,8 @@
     <string name="category_edit_save">Save</string>
     <string name="category_edit_name_label">CATEGORY NAME</string>
     <string name="category_edit_name_placeholder">e.g. Groceries</string>
+    <string name="category_add">Add category</string>
+    <string name="category_add_description">Add category</string>
 
     <!-- Pickers -->
     <string name="category_picker_search_placeholder">Search categories…</string>
@@ -156,6 +164,8 @@
     <string name="filter_apply">Apply filters</string>
 
     <!-- Transaction Edit -->
+    <string name="transaction_edit_amount_display_label">AMOUNT</string>
+    <string name="transaction_search_placeholder">Search…</string>
     <string name="transaction_edit_title">Edit Transaction</string>
     <string name="transaction_new_title">New Transaction</string>
     <string name="transaction_edit_more_options_description">More options</string>

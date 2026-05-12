@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -29,6 +30,9 @@ internal class DefaultCategoryViewModel(
             is CategoryViewModel.Action.SelectCategory -> coroutineScope.launch(Dispatchers.Main) {
                 onCategorySelectedHandler.onSelected(action.category.id)
             }
+            is CategoryViewModel.Action.SelectTab -> {
+                mutableState.update { it.copy(selectedTab = action.type) }
+            }
         }
     }
 
@@ -40,27 +44,28 @@ internal class DefaultCategoryViewModel(
             combine(
                 categoriesQueryUseCase.queryAll(),
                 categorySpendingUseCase.query(CategorySpendingUseCase.Period.CurrentMonth),
-            ) { categories, spendingList ->
+                mutableState.map { it.selectedTab },
+            ) { categories, spendingList, selectedTab ->
                 val spendingById = spendingList.associateBy { it.categoryId }
-
-                val items = categories.map { category ->
-                    val spending = spendingById[category.id]
-                    CategoryViewModel.CategoryItem(
-                        id = category.id,
-                        name = category.name,
-                        icon = category.icon,
-                        colorScheme = category.colorScheme,
-                        spending = if (spending != null && spending.totalAmount > 0L) {
-                            CategoryViewModel.Spending.Active(
-                                totalAmount = spending.totalAmount,
-                                transactionCount = spending.transactionCount,
-                            )
-                        } else {
-                            CategoryViewModel.Spending.None
-                        },
-                    )
-                }
-
+                val items = categories
+                    .filter { it.type == selectedTab }
+                    .map { category ->
+                        val spending = spendingById[category.id]
+                        CategoryViewModel.CategoryItem(
+                            id = category.id,
+                            name = category.name,
+                            icon = category.icon,
+                            colorScheme = category.colorScheme,
+                            spending = if (spending != null && spending.totalAmount > 0L) {
+                                CategoryViewModel.Spending.Active(
+                                    totalAmount = spending.totalAmount,
+                                    transactionCount = spending.transactionCount,
+                                )
+                            } else {
+                                CategoryViewModel.Spending.None
+                            },
+                        )
+                    }
                 val (active, inactive) = items.partition { it.spending is CategoryViewModel.Spending.Active }
                 val grandTotal = active.fold(Amount.zero()) { acc, item ->
                     acc + (item.spending as CategoryViewModel.Spending.Active).totalAmount

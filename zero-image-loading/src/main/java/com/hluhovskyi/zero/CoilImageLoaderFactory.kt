@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero
 
 import android.content.Context
+import coil.ImageLoader as CoilImageLoaderLib
 
 internal class CoilImageLoaderFactory(
     private val context: Context,
@@ -8,7 +9,7 @@ internal class CoilImageLoaderFactory(
 
     override fun create(): ImageLoader = CoilImageLoader(
         context = context,
-        imageLoader = coil.ImageLoader.Builder(context)
+        imageLoader = CoilImageLoaderLib.Builder(context)
             .build(),
     )
 }

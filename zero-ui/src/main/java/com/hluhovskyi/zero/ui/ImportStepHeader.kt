@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
@@ -57,7 +59,7 @@ fun ImportStepHeader(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.action_back_description),
                     tint = PrimaryContainer,
                 )
             }

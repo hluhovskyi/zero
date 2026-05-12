@@ -12,6 +12,7 @@ data class SyncCategory(
     @SerialName("iconId") val iconId: String?,
     @SerialName("colorId") val colorId: String?,
     @SerialName("parentCategoryId") val parentCategoryId: String?,
+    @SerialName("type") val type: String? = null,
     @SerialName("creationDateTime") val creationDateTime: LocalDateTime,
     @SerialName("updatedDateTime") override val updatedDateTime: LocalDateTime,
     @SerialName("deletedAt") override val deletedAt: LocalDateTime?,

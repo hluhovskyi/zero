@@ -57,6 +57,7 @@ internal class RoomCategoryRepository(
         name = name,
         colorId = Id(colorId),
         iconId = Id(iconId),
+        type = CategoryType.from(type),
     )
 
     private fun CategoryRepository.CategoryInsert.toEntity(userId: Id.Known): CategoryEntity = CategoryEntity(
@@ -67,5 +68,6 @@ internal class RoomCategoryRepository(
         colorId = colorId.valueOrNull(),
         creationDateTime = zonedClock.localDateTime(),
         updatedDateTime = zonedClock.localDateTime(),
+        type = type.name,
     )
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AmountDisplay -->
+    <string name="amount_display_placeholder">0.00</string>
+
+    <!-- Common navigation actions -->
+    <string name="action_back_description">Back</string>
+    <string name="action_close_description">Close</string>
+    <string name="action_clear_description">Clear</string>
+
+    <!-- ImportErrorBanner -->
+    <string name="import_error_banner_title">Couldn\'t import file</string>
+    <string name="import_error_banner_retry">Try Again</string>
+    <string name="import_error_banner_dismiss">Dismiss</string>
+</resources>
