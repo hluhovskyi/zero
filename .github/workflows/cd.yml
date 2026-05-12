@@ -5,17 +5,12 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT }}
 
       - uses: actions/setup-java@v4
         with:
@@ -24,20 +19,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v3
 
-      - name: Bump version
-        run: |
-          VERSION_CODE=$(grep 'versionCode' version.properties | cut -d'=' -f2)
-          NEW_VERSION_CODE=$((VERSION_CODE + 1))
-          printf "versionCode=%s\nversionName=1.0.%s\n" "$NEW_VERSION_CODE" "$NEW_VERSION_CODE" > version.properties
-          echo "NEW_VERSION_CODE=$NEW_VERSION_CODE" >> "$GITHUB_ENV"
-
-      - name: Commit and push version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add version.properties
-          git commit -m "chore: bump version to $NEW_VERSION_CODE"
-          git push
+      - name: Set version from run number
+        run: printf "versionCode=${{ github.run_number }}\nversionName=1.0.${{ github.run_number }}\n" > version.properties
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/zero-release.jks
