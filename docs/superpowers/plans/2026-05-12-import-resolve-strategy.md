@@ -242,19 +242,97 @@ private data class InternalState(
 )
 ```
 
-- [ ] **Step 2: Initialize default category strategies after building categories**
+- [ ] **Step 2: Extract three private helpers**
+
+These mirror the existing `buildCategories` / `buildAccounts` private helpers and keep the action handlers thin.
+
+```kotlin
+private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy =
+    if (existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
+
+private fun applyCategoryStrategies(
+    delta: SyncSnapshot,
+    categories: List<ImportCategory>,
+    strategies: Map<Id.Known, ResolveStrategy>,
+): SyncSnapshot {
+    val merges = categories
+        .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
+        .associate { it.id to it.existingId!! }
+    val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
+
+    val filteredCategories = delta.categories.filter {
+        it.id !in skipped && it.id !in merges.keys
+    }
+    val filteredTransactions = delta.transactions.mapNotNull { tx ->
+        val categoryId = tx.categoryId?.let { Id.Known(it) }
+        if (categoryId in skipped) return@mapNotNull null
+        val newCategoryId = categoryId?.let { merges[it]?.value ?: it.value }
+        tx.copy(categoryId = newCategoryId)
+    }
+    return delta.copy(
+        categories = filteredCategories,
+        transactions = filteredTransactions,
+    )
+}
+
+private fun applyAccountStrategies(
+    delta: SyncSnapshot,
+    accounts: List<ImportAccount>,
+    strategies: Map<Id.Known, ResolveStrategy>,
+): SyncSnapshot {
+    val merges = accounts
+        .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
+        .associate { it.id to it.existingId!! }
+    val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
+
+    val filteredAccounts = delta.accounts.filter {
+        it.id !in skipped && it.id !in merges.keys
+    }
+    val filteredTransactions = delta.transactions.mapNotNull { tx ->
+        if (tx.accountId in skipped) return@mapNotNull null
+        val targetId = tx.targetAccountId?.let { Id.Known(it) }
+        if (targetId in skipped) return@mapNotNull null
+        val newAccountId = merges[tx.accountId] ?: tx.accountId
+        val newTargetId = targetId?.let { merges[it]?.value ?: it.value }
+        tx.copy(accountId = newAccountId, targetAccountId = newTargetId)
+    }
+    return delta.copy(
+        accounts = filteredAccounts,
+        transactions = filteredTransactions,
+    )
+}
+```
+
+A small extra helper to map sync → import transactions also belongs here (currently inlined inside `ConfirmAccounts`):
+
+```kotlin
+private fun toImportTransactions(
+    delta: SyncSnapshot,
+    categories: List<ImportCategory>,
+): List<ImportTransaction> {
+    val categoryById = delta.categories.associateBy { it.id }
+    return delta.transactions.map { syncTx ->
+        val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
+        when (syncTx.type) {
+            SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(/* …existing fields… */)
+            SyncTransaction.Type.INCOME  -> ImportTransaction.Income(/* …existing fields… */)
+            SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(/* …existing fields… */)
+        }
+    }
+}
+```
+
+- [ ] **Step 3: Initialize default category strategies after building categories**
 
 In the `SelectFile` flow, after building `categories`:
 
 ```kotlin
-val defaultStrategies = categories.associate { cat ->
-    cat.id to if (cat.existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
-}
+val defaultStrategies = categories.associate { it.id to defaultStrategy(it.existingId) }
 ```
 
 Pass to the `CategoriesReview` state and store in `categoryStrategies`.
 
-- [ ] **Step 3: Replace `ToggleCategory` handler with `SetCategoryStrategy`/`SetAccountStrategy` handlers**
+- [ ] **Step 4: Replace `ToggleCategory` handler with `SetCategoryStrategy`/`SetAccountStrategy` handlers**
 
 ```kotlin
 is ImportUseCase.Action.SetCategoryStrategy -> mutableState.update { current ->
@@ -275,117 +353,66 @@ is ImportUseCase.Action.SetAccountStrategy -> mutableState.update { current ->
 }
 ```
 
-- [ ] **Step 4: Apply strategies in `ConfirmCategories`**
-
-Replace the existing exclusion logic with strategy application: build `categoryMerges` from `existingId` of categories whose strategy is `Merge`; collect `skippedCategoryIds`. Filter `delta.categories` to drop skipped + merged. Map `delta.transactions` to drop those with `categoryId in skippedCategoryIds` and remap `categoryId` via `categoryMerges`. Then build accounts from the resulting delta and seed default account strategies.
+- [ ] **Step 5: Thin `ConfirmCategories` action body**
 
 ```kotlin
 is ImportUseCase.Action.ConfirmCategories -> coroutineScope.launch {
     val current = mutableState.value
     val delta = current.storedDelta ?: return@launch
     val categories = current.storedCategories ?: return@launch
-    val strategies = current.categoryStrategies
 
-    val merges = categories
-        .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
-        .associate { it.id to it.existingId!! }
-    val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
-
-    val filteredCategories = delta.categories.filter {
-        it.id !in skipped && it.id !in merges.keys
-    }
-    val filteredTransactions = delta.transactions.mapNotNull { tx ->
-        val categoryId = tx.categoryId?.let { Id.Known(it) }
-        if (categoryId in skipped) return@mapNotNull null
-        val newCategoryId = categoryId?.let { merges[it]?.value ?: it.value }
-        tx.copy(categoryId = newCategoryId)
-    }
-    val filteredDelta = delta.copy(
-        categories = filteredCategories,
-        transactions = filteredTransactions,
-    )
-
+    val nextDelta = applyCategoryStrategies(delta, categories, current.categoryStrategies)
     val accounts = buildAccounts(
-        syncAccounts = filteredDelta.accounts,
-        transactions = filteredDelta.transactions,
+        syncAccounts = nextDelta.accounts,
+        transactions = nextDelta.transactions,
         existingAccountByName = current.existingAccountByName,
         allIconsById = current.allIconsById,
     )
-    val defaultAccountStrategies = accounts.associate { acc ->
-        acc.id to if (acc.existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
-    }
+    val defaults = accounts.associate { it.id to defaultStrategy(it.existingId) }
 
     mutableState.update { cur ->
         cur.copy(
-            storedDelta = filteredDelta,
+            storedDelta = nextDelta,
             storedAccounts = accounts,
-            accountStrategies = defaultAccountStrategies,
-            screen = ImportUseCase.State.AccountsReview(
-                accounts = accounts,
-                strategies = defaultAccountStrategies,
-            ),
+            accountStrategies = defaults,
+            screen = ImportUseCase.State.AccountsReview(accounts, defaults),
         )
     }
 }
 ```
 
-- [ ] **Step 5: Apply strategies in `ConfirmAccounts`**
-
-Before mapping transactions to `ImportTransaction`, drop transactions referencing skipped accounts (either `accountId` or `targetAccountId`) and remap `accountId`/`targetAccountId` via merged-account ids.
+- [ ] **Step 6: Thin `ConfirmAccounts` action body**
 
 ```kotlin
 is ImportUseCase.Action.ConfirmAccounts -> mutableState.update { current ->
     val delta = current.storedDelta ?: return@update current
     val accounts = current.storedAccounts ?: return@update current
-    val strategies = current.accountStrategies
+    val categories = current.storedCategories ?: emptyList()
 
-    val merges = accounts
-        .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
-        .associate { it.id to it.existingId!! }
-    val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
-
-    val filteredAccounts = delta.accounts.filter {
-        it.id !in skipped && it.id !in merges.keys
-    }
-    val filteredTransactions = delta.transactions.mapNotNull { tx ->
-        if (tx.accountId in skipped) return@mapNotNull null
-        val targetId = tx.targetAccountId?.let { Id.Known(it) }
-        if (targetId != null && targetId in skipped) return@mapNotNull null
-        val newAccountId = merges[tx.accountId] ?: tx.accountId
-        val newTargetId = targetId?.let { merges[it]?.value ?: it.value }
-        tx.copy(accountId = newAccountId, targetAccountId = newTargetId)
-    }
-    val filteredDelta = delta.copy(
-        accounts = filteredAccounts,
-        transactions = filteredTransactions,
-    )
-
-    val categoryById = filteredDelta.categories.associateBy { it.id }
-    val transactions = filteredDelta.transactions.map { syncTx ->
-        // …existing ImportTransaction mapping, unchanged…
-    }
+    val nextDelta = applyAccountStrategies(delta, accounts, current.accountStrategies)
+    val transactions = toImportTransactions(nextDelta, categories)
     current.copy(
-        storedDelta = filteredDelta,
+        storedDelta = nextDelta,
         screen = ImportUseCase.State.TransactionsPreview(
             transactions = transactions,
             totalCount = transactions.size,
-            accounts = current.storedAccounts ?: emptyList(),
-            categories = current.storedCategories ?: emptyList(),
+            accounts = accounts,
+            categories = categories,
         ),
     )
 }
 ```
 
-- [ ] **Step 6: Update `Back` handler**
+- [ ] **Step 7: Update `Back` handler**
 
 For `CategoriesReview`/`AccountsReview`, preserve `categoryStrategies` / `accountStrategies` when rebuilding the screen.
 
-- [ ] **Step 7: Build**
+- [ ] **Step 8: Build**
 
 Run: `./gradlew :zero-core:assembleDebug`
 Expected: BUILD SUCCESSFUL
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add zero-core/src/main/java/com/hluhovskyi/zero/imports/ImportUseCase.kt zero-core/src/main/java/com/hluhovskyi/zero/imports/DefaultImportUseCase.kt
