@@ -331,7 +331,7 @@ private fun CategoryItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterCategoryItem.Category -> CategoryTile(
                     category = item,
-                    isSelected = selectedIds != null && selectedIds.contains(item.id),
+                    isSelected = selectedIds == null || item.id in selectedIds,
                     imageLoader = imageLoader,
                 )
             }
@@ -371,7 +371,7 @@ private fun AccountItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterAccountItem.Account -> AccountTile(
                     account = item,
-                    isSelected = selectedIds != null && selectedIds.contains(item.id),
+                    isSelected = selectedIds == null || item.id in selectedIds,
                     imageLoader = imageLoader,
                 )
             }
@@ -540,7 +540,7 @@ private fun toggleCategoryId(
         mutableSetOf(id)
     } else {
         current.toMutableSet().also {
-            if (it.contains(id)) it.remove(id) else it.add(id)
+            if (id in it) it.remove(id) else it.add(id)
         }
     }
     return if (next.isEmpty() || next.size == total) null else next
@@ -555,7 +555,7 @@ private fun toggleAccountId(
         mutableSetOf(id)
     } else {
         current.toMutableSet().also {
-            if (it.contains(id)) it.remove(id) else it.add(id)
+            if (id in it) it.remove(id) else it.add(id)
         }
     }
     return if (next.isEmpty() || next.size == total) null else next
