@@ -78,7 +78,7 @@ internal class AccountDetailViewProvider(
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(R.string.account_detail_more_options_description),
                                 tint = PrimaryContainer,
                             )
                         }
@@ -98,7 +98,7 @@ internal class AccountDetailViewProvider(
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Edit account")
+                                Text(stringResource(R.string.account_detail_edit))
                             }
                             if (state.isArchived) {
                                 DropdownMenuItem(
@@ -113,7 +113,7 @@ internal class AccountDetailViewProvider(
                                         modifier = Modifier.size(18.dp),
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Unarchive account")
+                                    Text(stringResource(R.string.account_detail_unarchive))
                                 }
                             } else {
                                 DropdownMenuItem(
@@ -128,7 +128,7 @@ internal class AccountDetailViewProvider(
                                         modifier = Modifier.size(18.dp),
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Archive account")
+                                    Text(stringResource(R.string.account_detail_archive))
                                 }
                             }
                         }

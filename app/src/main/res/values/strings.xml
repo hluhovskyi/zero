@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Zero</string>
+
+    <!-- Screens -->
+    <string name="categories_edit">Edit categories</string>
+    <string name="transactions_add">Add transaction</string>
 </resources>

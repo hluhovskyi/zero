@@ -82,6 +82,7 @@ private fun TransactionEditTransferView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 32.dp, bottom = 24.dp),
+            label = stringResource(R.string.transaction_edit_amount_display_label),
             amount = state.amount,
             currencySymbol = state.sourceCurrencySymbol,
             focusRequester = focusRequester,
