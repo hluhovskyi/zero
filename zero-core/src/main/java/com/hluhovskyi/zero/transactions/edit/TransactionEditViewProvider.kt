@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.transactions.edit
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,7 +69,6 @@ internal class TransactionEditViewProvider(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
@@ -79,6 +77,9 @@ private fun TransactionEditView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
     var menuExpanded by remember { mutableStateOf(false) }
+    val labelExpense = stringResource(R.string.transaction_type_expense)
+    val labelIncome = stringResource(R.string.transaction_type_income)
+    val labelTransfer = stringResource(R.string.transaction_type_transfer)
 
     Box(
         modifier = Modifier
@@ -91,7 +92,7 @@ private fun TransactionEditView(
         ) {
             item {
                 ModalHeader(
-                    title = if (state.isEditMode) "Edit Transaction" else "New Transaction",
+                    title = if (state.isEditMode) stringResource(R.string.transaction_edit_title) else stringResource(R.string.transaction_new_title),
                     onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
                     trailingContent = if (state.isEditMode) {
                         {
@@ -99,7 +100,7 @@ private fun TransactionEditView(
                                 IconButton(onClick = { menuExpanded = true }) {
                                     Icon(
                                         imageVector = Icons.Filled.MoreVert,
-                                        contentDescription = "More options",
+                                        contentDescription = stringResource(R.string.transaction_edit_more_options_description),
                                         tint = PrimaryContainer,
                                     )
                                 }
@@ -122,7 +123,7 @@ private fun TransactionEditView(
                                             )
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                text = "Delete",
+                                                text = stringResource(R.string.transaction_edit_delete),
                                                 color = Color(0xFFBA1A1A),
                                             )
                                         }
@@ -148,9 +149,9 @@ private fun TransactionEditView(
                     },
                     labelMapping = { type ->
                         when (type) {
-                            TransactionEditType.EXPENSE -> "Expense"
-                            TransactionEditType.INCOME -> "Income"
-                            TransactionEditType.TRANSFER -> "Transfer"
+                            TransactionEditType.EXPENSE -> labelExpense
+                            TransactionEditType.INCOME -> labelIncome
+                            TransactionEditType.TRANSFER -> labelTransfer
                         }
                     },
                 )
@@ -217,7 +218,7 @@ private fun TransactionEditView(
                 )
             },
             text = {
-                Text(text = "Save Transaction")
+                Text(text = stringResource(R.string.transaction_edit_save))
             },
             onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),

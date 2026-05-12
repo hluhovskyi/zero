@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.activity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Surface
@@ -22,7 +21,6 @@ internal class MainActivityViewProvider(
     private val screenComponent: MainActivityScreenComponent.Builder,
 ) : ViewProvider {
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun View() {
         ZeroTheme {

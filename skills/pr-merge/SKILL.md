@@ -32,6 +32,7 @@ the Gradle checks entirely and note "non-runtime change, skipping build verifica
 Otherwise run in order — stop and report on first failure, do not continue to merge:
 
 ```bash
+./gradlew spotlessApply
 ./gradlew testDebugUnitTest
 ./gradlew lint          # warnings OK; fail on errors
 ./gradlew assembleDebug

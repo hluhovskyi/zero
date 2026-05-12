@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.activity.screens
 
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
@@ -126,7 +125,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun bottomSheetNavigator(bottomSheetNavigator: BottomSheetNavigator): Builder
 
         @BindsInstance
-        @OptIn(ExperimentalMaterialApi::class)
         fun modalBottomSheetState(modalBottomSheetState: ModalBottomSheetState): Builder
     }
 
@@ -176,7 +174,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @Provides
         @MainActivityScreenScope
-        @OptIn(ExperimentalMaterialApi::class)
         fun viewProvider(
             navHostController: NavHostController,
             bottomSheetNavigator: BottomSheetNavigator,

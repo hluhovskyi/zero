@@ -35,6 +35,11 @@ android {
     room {
         schemaDirectory "$projectDir/schemas"
     }
+    kotlin {
+        compilerOptions {
+            optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        }
+    }
 }
 
 dependencies {
