@@ -36,6 +36,7 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.presets.PresetsUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -44,6 +45,9 @@ import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.Closeable
 import javax.inject.Scope
 
@@ -78,7 +82,14 @@ abstract class ActivityComponent :
     TransactionFilterSheetComponent.Dependencies {
 
     override val tag: String = TAG
-    override fun attach(): Closeable = Closeables.empty()
+
+    protected abstract val presetsUseCase: PresetsUseCase
+
+    override fun attach(): Closeable = Closeables.of {
+        CoroutineScope(Dispatchers.IO).launch {
+            presetsUseCase.seed()
+        }
+    }
 
     interface Dependencies {
 
@@ -105,6 +116,7 @@ abstract class ActivityComponent :
 
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
+        val presetsUseCase: PresetsUseCase
     }
 
     companion object {

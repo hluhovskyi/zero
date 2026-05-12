@@ -47,6 +47,7 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.imports.SnapshotParser
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
+import com.hluhovskyi.zero.presets.PresetsUseCase
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -276,6 +277,20 @@ abstract class ApplicationComponent :
             transactionRepository = transactionRepository,
             clock = clock,
             zoneProvider = zoneProvider,
+        )
+
+        @Provides
+        @ApplicationScope
+        fun presetsUseCase(
+            categoryRepository: CategoryRepository,
+            accountRepository: AccountRepository,
+            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            configurationRepository: ConfigurationRepository,
+        ): PresetsUseCase = PresetsUseCase.create(
+            categoryRepository = categoryRepository,
+            accountRepository = accountRepository,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
+            configurationRepository = configurationRepository,
         )
 
         @Provides
