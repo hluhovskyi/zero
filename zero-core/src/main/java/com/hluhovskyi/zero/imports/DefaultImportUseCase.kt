@@ -41,7 +41,9 @@ internal class DefaultImportUseCase(
         val storedCategories: List<ImportCategory>? = null,
         val storedAccounts: List<ImportAccount>? = null,
         val excludedCategoryIds: Set<Id.Known> = emptySet(),
+        val existingCategoryById: Map<Id.Known, CategoryRepository.Category> = emptyMap(),
         val existingCategoryByName: Map<String, CategoryRepository.Category> = emptyMap(),
+        val existingAccountById: Map<Id.Known, AccountRepository.Account> = emptyMap(),
         val existingAccountByName: Map<String, AccountRepository.Account> = emptyMap(),
         val allIconsById: Map<Id.Known, Icon> = emptyMap(),
         val screen: ImportUseCase.State,
@@ -73,12 +75,14 @@ internal class DefaultImportUseCase(
                     val allIconsById = allIcons.associateBy { it.id }
 
                     val existingCategories = categoryRepository.query(CategoryRepository.Criteria.All()).first()
+                    val existingCategoryById = existingCategories.associateBy { it.id }
                     val existingCategoryByName = existingCategories.associateBy { it.name.lowercase() }
 
                     val existingAccounts = accountRepository.query(AccountRepository.Criteria.All()).first()
+                    val existingAccountById = existingAccounts.associateBy { it.id }
                     val existingAccountByName = existingAccounts.associateBy { it.name.lowercase() }
 
-                    val categories = buildCategories(delta, existingCategoryByName, allIconsById)
+                    val categories = buildCategories(delta, existingCategoryById, existingCategoryByName, allIconsById)
                     if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
                         mutableState.update { current ->
                             current.copy(screen = ImportUseCase.State.UpToDate)
@@ -90,7 +94,9 @@ internal class DefaultImportUseCase(
                             storedDelta = delta,
                             storedCategories = categories,
                             excludedCategoryIds = emptySet(),
+                            existingCategoryById = existingCategoryById,
                             existingCategoryByName = existingCategoryByName,
+                            existingAccountById = existingAccountById,
                             existingAccountByName = existingAccountByName,
                             allIconsById = allIconsById,
                             screen = ImportUseCase.State.CategoriesReview(categories = categories),
@@ -141,6 +147,7 @@ internal class DefaultImportUseCase(
                 val accounts = buildAccounts(
                     syncAccounts = filteredDelta.accounts,
                     transactions = filteredDelta.transactions,
+                    existingAccountById = current.existingAccountById,
                     existingAccountByName = current.existingAccountByName,
                     allIconsById = current.allIconsById,
                 )
@@ -248,6 +255,7 @@ internal class DefaultImportUseCase(
 
     private fun buildCategories(
         delta: SyncSnapshot,
+        existingCategoryById: Map<Id.Known, CategoryRepository.Category>,
         existingCategoryByName: Map<String, CategoryRepository.Category>,
         allIconsById: Map<Id.Known, Icon>,
     ): List<ImportCategory> {
@@ -256,7 +264,8 @@ internal class DefaultImportUseCase(
             .groupBy { it }
             .mapValues { it.value.size }
         return delta.categories.map { syncCategory ->
-            val existingMatch = existingCategoryByName[syncCategory.name.lowercase()]
+            val existingMatch = existingCategoryById[syncCategory.id]
+                ?: existingCategoryByName[syncCategory.name.lowercase()]
             val colorId = (existingMatch?.colorId as? Id.Known)
                 ?: syncCategory.colorId?.let { Id.Known(it) }
                 ?: ColorRepository.unknownCategoryColorId()
@@ -270,6 +279,7 @@ internal class DefaultImportUseCase(
                 colorScheme = colorRepository.schemeFor(colorId),
                 icon = icon.image,
                 transactionCount = txCountByCategoryId[syncCategory.id] ?: 0,
+                existingId = existingMatch?.id,
             )
         }
     }
@@ -277,12 +287,14 @@ internal class DefaultImportUseCase(
     private fun buildAccounts(
         syncAccounts: List<SyncAccount>,
         transactions: List<SyncTransaction>,
+        existingAccountById: Map<Id.Known, AccountRepository.Account>,
         existingAccountByName: Map<String, AccountRepository.Account>,
         allIconsById: Map<Id.Known, Icon>,
     ): List<ImportAccount> {
         val txByAccountId = transactions.groupBy { it.accountId }
         return syncAccounts.map { syncAccount ->
-            val existingMatch = existingAccountByName[syncAccount.name.lowercase()]
+            val existingMatch = existingAccountById[syncAccount.id]
+                ?: existingAccountByName[syncAccount.name.lowercase()]
             val icon = existingMatch?.iconId?.let { allIconsById[it]?.image }
             ImportAccount(
                 id = syncAccount.id,
@@ -290,6 +302,7 @@ internal class DefaultImportUseCase(
                 currencyId = syncAccount.currencyId,
                 transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
                 icon = icon,
+                existingId = existingMatch?.id,
             )
         }
     }

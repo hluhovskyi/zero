@@ -179,6 +179,49 @@ class DefaultImportUseCaseTest {
     }
 
     @Test
+    fun `buildCategories sets existingId when name matches existing category`() = runTest {
+        val existing = CategoryRepository.Category(
+            id = Id.Known("existing-1"),
+            parentCategoryId = Id.Unknown,
+            name = "Food",
+            iconId = Id.Known("icon-1"),
+            colorId = Id.Known("color-1"),
+        )
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existing)))
+        whenever(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
+
+        val syncCategory = SyncCategory(
+            id = Id.Known("import-1"),
+            name = "food",
+            iconId = null,
+            colorId = null,
+            parentCategoryId = null,
+            creationDateTime = LocalDateTime(2024, 1, 1, 0, 0),
+            updatedDateTime = LocalDateTime(2024, 1, 1, 0, 0),
+            deletedAt = null,
+        )
+        val snapshot = SyncSnapshot(
+            version = 1,
+            userId = userId,
+            exportedAt = LocalDateTime(2024, 1, 1, 0, 0),
+            categories = listOf(syncCategory),
+            accounts = emptyList(),
+            transactions = emptyList(),
+        )
+        whenever(parser.parse(testUri)).thenReturn(snapshot)
+        whenever(syncEngine.delta(snapshot, userId)).thenReturn(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.CategoriesReview
+        assert(state.categories.single().existingId == Id.Known("existing-1"))
+    }
+
+    @Test
     fun `SelectFile transitions to UpToDate when delta is completely empty`() = runTest {
         val emptySnapshot = SyncSnapshot(
             version = 1,
