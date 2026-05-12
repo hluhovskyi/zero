@@ -24,4 +24,5 @@ internal data class AccountEntity(
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
     val deletedAt: LocalDateTime? = null,
+    val archivedAt: LocalDateTime? = null,
 )

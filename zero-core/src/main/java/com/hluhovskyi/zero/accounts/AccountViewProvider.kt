@@ -22,7 +22,9 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -116,6 +118,14 @@ private fun AccountView(
                     onEditClick = {
                         expandedItemId = null
                         viewModel.perform(AccountViewModel.Action.Edit(account.id))
+                    },
+                    onArchiveClick = {
+                        expandedItemId = null
+                        viewModel.perform(AccountViewModel.Action.Archive(account.id))
+                    },
+                    onUnarchiveClick = {
+                        expandedItemId = null
+                        viewModel.perform(AccountViewModel.Action.Unarchive(account.id))
                     },
                 )
             }
@@ -217,6 +227,8 @@ private fun AccountRow(
     menuExpanded: Boolean,
     onMenuDismiss: () -> Unit,
     onEditClick: () -> Unit,
+    onArchiveClick: () -> Unit,
+    onUnarchiveClick: () -> Unit,
 ) {
     Box {
         Row(
@@ -285,6 +297,27 @@ private fun AccountRow(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text("Edit account")
+            }
+            if (account.archivedAt == null) {
+                DropdownMenuItem(onClick = onArchiveClick) {
+                    Icon(
+                        imageVector = Icons.Filled.Archive,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Archive account")
+                }
+            } else {
+                DropdownMenuItem(onClick = onUnarchiveClick) {
+                    Icon(
+                        imageVector = Icons.Filled.Unarchive,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Unarchive account")
+                }
             }
         }
     }

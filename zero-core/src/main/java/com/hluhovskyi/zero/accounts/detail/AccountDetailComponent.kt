@@ -143,6 +143,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             accountDetailSpendingUseCase: AccountDetailSpendingUseCase,
             onBackHandler: OnBackHandler,
             onEditHandler: OnAccountDetailEditHandler,
+            accountRepository: AccountRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): AccountDetailViewModel = DefaultAccountDetailViewModel(
@@ -151,6 +152,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             accountDetailSpendingUseCase = accountDetailSpendingUseCase,
             onBackHandler = onBackHandler,
             onEditHandler = onEditHandler,
+            accountRepository = accountRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )

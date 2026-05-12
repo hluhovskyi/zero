@@ -4,8 +4,7 @@ import com.hluhovskyi.zero.common.AmountEntity
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.RateEntity
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -30,9 +29,7 @@ class RoomTransactionRepositoryPaginationTest {
 
     @Mock private lateinit var transactionRoom: TransactionRoom
 
-    @Mock private lateinit var clock: Clock
-
-    @Mock private lateinit var zoneProvider: ZoneProvider
+    @Mock private lateinit var zonedClock: ZonedClock
 
     private lateinit var repo: RoomTransactionRepository
 
@@ -47,8 +44,7 @@ class RoomTransactionRepositoryPaginationTest {
             transactionRoom = { transactionRoom },
             currentUserId = flowOf(userId),
             incorrectStateDetector = IncorrectStateDetector.ignoreIncorrect(),
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
     }
 
@@ -159,8 +155,7 @@ class RoomTransactionRepositoryPaginationTest {
     @Test
     fun `delete soft-deletes the transaction`() = runTest {
         val now = LocalDateTime(2024, 1, 16, 9, 0)
-        whenever(clock.now()).thenReturn(kotlinx.datetime.Instant.parse("2024-01-16T09:00:00Z"))
-        whenever(zoneProvider.timeZone()).thenReturn(kotlinx.datetime.TimeZone.UTC)
+        whenever(zonedClock.localDateTime()).thenReturn(now)
 
         repo.delete(Id.Known("t1"))
         advanceUntilIdle()

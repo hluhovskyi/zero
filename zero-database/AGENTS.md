@@ -47,3 +47,16 @@ data class FeatureEntity(
 4. Create `RoomFeatureRepository` implementing the interface from `zero-api`
 5. Wire in `DatabaseComponent.Module` and expose via `DatabaseComponent.Dependencies`
 6. If schema changes: Room auto-migration handles additive changes; destructive changes need a `Migration`
+
+## Schema Change Workflow (Feature Development)
+
+**Finalise entity changes before bumping the version or writing the migration** — if you modify an `@Entity` after the version is already bumped, Room's identity hash on any installed device will diverge from the compiled hash, causing a crash that requires clearing app data.
+
+Correct order:
+1. Iterate on entity fields until the shape is final
+2. Bump `MAIN_DATABASE_VERSION` once
+3. Write the `Migration` (SQL `ALTER TABLE` / `CREATE TABLE`)
+4. Build and install — verify the migration runs without crash
+5. Commit entity + migration + version bump together
+
+If you do get a hash mismatch during development (crash on launch), `adb shell pm clear com.hluhovskyi.zero` resets the local DB. This is acceptable locally — it is not a fix for production, which is why the order above matters.

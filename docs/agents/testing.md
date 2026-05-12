@@ -23,7 +23,23 @@ whenever(repo.query(any())).thenReturn(flowOf(emptyList()))
 whenever(repo.query(any<Repository.Criteria<List<Item>>>())).thenReturn(flowOf(emptyList()))
 ```
 
-### 2. Verified Stubbing
+### 2. Default Interface Methods Return Null When Mocked
+
+Mockito does **not** call the real implementation of default interface methods — it returns null like any other unstubbed method. This differs from Kotlin extension functions, which always execute real code regardless of mocking.
+
+**Stub the method directly:**
+```kotlin
+whenever(zonedClock.localDateTime()).thenReturn(LocalDateTime(2024, 1, 16, 9, 0))
+```
+
+**Do not** rely on the default implementation running because you stubbed its dependencies:
+```kotlin
+// WRONG — localDateTime() returns null, not now().toLocalDateTime(timeZone())
+whenever(zonedClock.now()).thenReturn(someInstant)
+whenever(zonedClock.timeZone()).thenReturn(TimeZone.UTC)
+```
+
+### 3. Verified Stubbing
 Use `whenever(...).thenReturn(...)` for stubbing and `verify(...)` for interaction testing. For complex matchers, use `isA<T>()` or `argumentCaptor<T>()`.
 
 ## DRY Subjects (SUT)
