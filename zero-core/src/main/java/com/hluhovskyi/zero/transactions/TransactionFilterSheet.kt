@@ -331,7 +331,7 @@ private fun CategoryItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterCategoryItem.Category -> CategoryTile(
                     category = item,
-                    isSelected = selectedIds == null || item.id in selectedIds,
+                    isSelected = selectedIds != null && item.id in selectedIds,
                     imageLoader = imageLoader,
                 )
             }
@@ -371,7 +371,7 @@ private fun AccountItemGrid(
                 )
                 is TransactionFilterSheetViewModel.FilterAccountItem.Account -> AccountTile(
                     account = item,
-                    isSelected = selectedIds == null || item.id in selectedIds,
+                    isSelected = selectedIds != null && item.id in selectedIds,
                     imageLoader = imageLoader,
                 )
             }
@@ -448,6 +448,7 @@ private fun AccountTile(
     isSelected: Boolean,
     imageLoader: ImageLoader,
 ) {
+    val colorScheme = account.colorScheme.toUi()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -459,10 +460,10 @@ private fun AccountTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (isSelected) SurfaceContainer else SurfaceContainerLow)
+                .background(if (isSelected) colorScheme.background else SurfaceContainerLow)
                 .then(
                     if (isSelected) {
-                        Modifier.border(2.dp, PrimaryContainer, RoundedCornerShape(14.dp))
+                        Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
                     } else {
                         Modifier
                     },
@@ -472,7 +473,7 @@ private fun AccountTile(
             imageLoader.View(
                 image = account.icon,
                 modifier = Modifier.size(24.dp),
-                tint = if (isSelected) PrimaryContainer else Outline,
+                tint = if (isSelected) colorScheme.primary else Outline,
             )
         }
         Text(

@@ -37,6 +37,7 @@ interface TransactionFilterSheetViewModel : AttachableActionStateModel<Transacti
         data class Account(
             val id: Id.Known,
             val name: String,
+            val colorScheme: ColorScheme,
             val icon: Image,
         ) : FilterAccountItem
     }

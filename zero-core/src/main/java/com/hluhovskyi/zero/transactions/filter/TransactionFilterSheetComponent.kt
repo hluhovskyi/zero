@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.transactions.filter
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
@@ -35,6 +36,7 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val accountRepository: AccountRepository
         val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -61,11 +63,13 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
             categoriesQueryUseCase: CategoriesQueryUseCase,
             accountRepository: AccountRepository,
             iconRepository: IconRepository,
+            colorRepository: ColorRepository,
         ): TransactionFilterSheetViewModel = DefaultTransactionFilterSheetViewModel(
             transactionFilterUseCase = transactionFilterUseCase,
             categoriesQueryUseCase = categoriesQueryUseCase,
             accountRepository = accountRepository,
             iconRepository = iconRepository,
+            colorRepository = colorRepository,
         )
 
         @Provides

@@ -2,7 +2,10 @@ package com.hluhovskyi.zero.transactions.filter
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorRepository
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.icons.IconRepository
@@ -21,6 +24,7 @@ internal class DefaultTransactionFilterSheetViewModel(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val accountRepository: AccountRepository,
     private val iconRepository: IconRepository,
+    private val colorRepository: ColorRepository,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : TransactionFilterSheetViewModel {
 
@@ -69,6 +73,7 @@ internal class DefaultTransactionFilterSheetViewModel(
                                 TransactionFilterSheetViewModel.FilterAccountItem.Account(
                                     id = a.id,
                                     name = a.name,
+                                    colorScheme = (a.colorId as? Id.Known)?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey,
                                     icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
                                 ),
                             )
