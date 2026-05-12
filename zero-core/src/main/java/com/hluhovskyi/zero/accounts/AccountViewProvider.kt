@@ -188,7 +188,7 @@ private fun NetWorthHeader(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = stringResource(R.string.account_total_net_worth),
+            text = stringResource(R.string.account_total_net_worth).uppercase(),
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
@@ -303,7 +303,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
 @Composable
 private fun CategoryHeader(category: AccountCategory) {
     Text(
-        text = category.displayName(),
+        text = category.displayName().uppercase(),
         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
         style = TextStyle(
             fontSize = 11.sp,
@@ -461,7 +461,7 @@ private fun ArchivedAccountRow(
                         .padding(horizontal = 6.dp, vertical = 1.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.account_archived_badge),
+                        text = stringResource(R.string.account_archived_badge).uppercase(),
                         style = TextStyle(
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
