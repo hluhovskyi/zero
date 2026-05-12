@@ -13,7 +13,8 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
     sealed interface Action {
         data class SelectSource(val source: Source) : Action
         data class SelectFile(val uri: Uri.NonEmpty) : Action
-        data class ToggleCategory(val id: Id.Known) : Action
+        data class SetCategoryStrategy(val id: Id.Known, val strategy: ResolveStrategy) : Action
+        data class SetAccountStrategy(val id: Id.Known, val strategy: ResolveStrategy) : Action
         object ConfirmCategories : Action
         object ConfirmAccounts : Action
         object Confirm : Action
@@ -31,9 +32,12 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         object Loading : State
         data class CategoriesReview(
             val categories: List<ImportCategory>,
-            val excludedIds: Set<Id.Known> = emptySet(),
+            val strategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
         ) : State
-        data class AccountsReview(val accounts: List<ImportAccount>) : State
+        data class AccountsReview(
+            val accounts: List<ImportAccount>,
+            val strategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
+        ) : State
         data class TransactionsPreview(
             val transactions: List<ImportTransaction>,
             val totalCount: Int,

@@ -40,7 +40,8 @@ internal class DefaultImportUseCase(
         val storedDelta: SyncSnapshot? = null,
         val storedCategories: List<ImportCategory>? = null,
         val storedAccounts: List<ImportAccount>? = null,
-        val excludedCategoryIds: Set<Id.Known> = emptySet(),
+        val categoryStrategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
+        val accountStrategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
         val existingCategoryById: Map<Id.Known, CategoryRepository.Category> = emptyMap(),
         val existingCategoryByName: Map<String, CategoryRepository.Category> = emptyMap(),
         val existingAccountById: Map<Id.Known, AccountRepository.Account> = emptyMap(),
@@ -89,17 +90,19 @@ internal class DefaultImportUseCase(
                         }
                         return@launch
                     }
+                    val defaults = categories.associate { it.id to defaultStrategy(it.existingId) }
                     mutableState.update { current ->
                         current.copy(
                             storedDelta = delta,
                             storedCategories = categories,
-                            excludedCategoryIds = emptySet(),
+                            categoryStrategies = defaults,
+                            accountStrategies = emptyMap(),
                             existingCategoryById = existingCategoryById,
                             existingCategoryByName = existingCategoryByName,
                             existingAccountById = existingAccountById,
                             existingAccountByName = existingAccountByName,
                             allIconsById = allIconsById,
-                            screen = ImportUseCase.State.CategoriesReview(categories = categories),
+                            screen = ImportUseCase.State.CategoriesReview(categories, defaults),
                         )
                     }
                 } catch (e: Exception) {
@@ -114,94 +117,57 @@ internal class DefaultImportUseCase(
                     }
                 }
             }
-            is ImportUseCase.Action.ToggleCategory -> mutableState.update { current ->
-                val id = action.id
-                val newExcluded = if (id in current.excludedCategoryIds) {
-                    current.excludedCategoryIds - id
-                } else {
-                    current.excludedCategoryIds + id
-                }
+            is ImportUseCase.Action.SetCategoryStrategy -> mutableState.update { current ->
                 val categories = current.storedCategories ?: return@update current
+                val newStrategies = current.categoryStrategies + (action.id to action.strategy)
                 current.copy(
-                    excludedCategoryIds = newExcluded,
-                    screen = ImportUseCase.State.CategoriesReview(
-                        categories = categories,
-                        excludedIds = newExcluded,
-                    ),
+                    categoryStrategies = newStrategies,
+                    screen = ImportUseCase.State.CategoriesReview(categories, newStrategies),
+                )
+            }
+            is ImportUseCase.Action.SetAccountStrategy -> mutableState.update { current ->
+                val accounts = current.storedAccounts ?: return@update current
+                val newStrategies = current.accountStrategies + (action.id to action.strategy)
+                current.copy(
+                    accountStrategies = newStrategies,
+                    screen = ImportUseCase.State.AccountsReview(accounts, newStrategies),
                 )
             }
             is ImportUseCase.Action.ConfirmCategories -> coroutineScope.launch {
                 val current = mutableState.value
                 val delta = current.storedDelta ?: return@launch
-                val excluded = current.excludedCategoryIds
-                val filteredDelta = if (excluded.isEmpty()) {
-                    delta
-                } else {
-                    delta.copy(
-                        categories = delta.categories.filter { it.id !in excluded },
-                        transactions = delta.transactions.filter { transaction ->
-                            Id(transaction.categoryId) !in excluded
-                        },
-                    )
-                }
+                val categories = current.storedCategories ?: return@launch
+                val nextDelta = applyCategoryStrategies(delta, categories, current.categoryStrategies)
                 val accounts = buildAccounts(
-                    syncAccounts = filteredDelta.accounts,
-                    transactions = filteredDelta.transactions,
+                    syncAccounts = nextDelta.accounts,
+                    transactions = nextDelta.transactions,
                     existingAccountById = current.existingAccountById,
                     existingAccountByName = current.existingAccountByName,
                     allIconsById = current.allIconsById,
                 )
+                val defaults = accounts.associate { it.id to defaultStrategy(it.existingId) }
                 mutableState.update { cur ->
                     cur.copy(
-                        storedDelta = filteredDelta,
+                        storedDelta = nextDelta,
                         storedAccounts = accounts,
-                        screen = ImportUseCase.State.AccountsReview(accounts = accounts),
+                        accountStrategies = defaults,
+                        screen = ImportUseCase.State.AccountsReview(accounts, defaults),
                     )
                 }
             }
             is ImportUseCase.Action.ConfirmAccounts -> mutableState.update { current ->
                 val delta = current.storedDelta ?: return@update current
                 val accounts = current.storedAccounts ?: return@update current
-                val categoryById = delta.categories.associateBy { it.id }
-                val transactions = delta.transactions.map { syncTx ->
-                    val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
-                    when (syncTx.type) {
-                        SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
-                            id = syncTx.id,
-                            accountId = syncTx.accountId,
-                            currencyId = syncTx.currencyId,
-                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                            dateTime = syncTx.enteredDateTime,
-                            categoryId = syncTx.categoryId?.let { Id.Known(it) },
-                            categoryName = categoryName,
-                        )
-                        SyncTransaction.Type.INCOME -> ImportTransaction.Income(
-                            id = syncTx.id,
-                            accountId = syncTx.accountId,
-                            currencyId = syncTx.currencyId,
-                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                            dateTime = syncTx.enteredDateTime,
-                            categoryId = syncTx.categoryId?.let { Id.Known(it) },
-                            categoryName = categoryName,
-                        )
-                        SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(
-                            id = syncTx.id,
-                            accountId = syncTx.accountId,
-                            currencyId = syncTx.currencyId,
-                            amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                            dateTime = syncTx.enteredDateTime,
-                            targetAccountId = Id.Known(syncTx.targetAccountId ?: syncTx.accountId.value),
-                            targetAmount = Amount(syncTx.targetAmount?.toBigDecimalOrNull()),
-                            targetCurrencyId = syncTx.currencyId,
-                        )
-                    }
-                }
+                val categories = current.storedCategories ?: emptyList()
+                val nextDelta = applyAccountStrategies(delta, accounts, current.accountStrategies)
+                val transactions = toImportTransactions(nextDelta)
                 current.copy(
+                    storedDelta = nextDelta,
                     screen = ImportUseCase.State.TransactionsPreview(
                         transactions = transactions,
                         totalCount = transactions.size,
                         accounts = accounts,
-                        categories = current.storedCategories ?: emptyList(),
+                        categories = categories,
                     ),
                 )
             }
@@ -236,14 +202,17 @@ internal class DefaultImportUseCase(
                         current.copy(
                             screen = ImportUseCase.State.CategoriesReview(
                                 categories = categories,
-                                excludedIds = current.excludedCategoryIds,
+                                strategies = current.categoryStrategies,
                             ),
                         )
                     }
                     is ImportUseCase.State.TransactionsPreview -> {
                         val accounts = current.storedAccounts ?: return@update current
                         current.copy(
-                            screen = ImportUseCase.State.AccountsReview(accounts = accounts),
+                            screen = ImportUseCase.State.AccountsReview(
+                                accounts = accounts,
+                                strategies = current.accountStrategies,
+                            ),
                         )
                     }
                 }
@@ -304,6 +273,90 @@ internal class DefaultImportUseCase(
                 icon = icon,
                 existingId = existingMatch?.id,
             )
+        }
+    }
+
+    private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy =
+        if (existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
+
+    private fun applyCategoryStrategies(
+        delta: SyncSnapshot,
+        categories: List<ImportCategory>,
+        strategies: Map<Id.Known, ResolveStrategy>,
+    ): SyncSnapshot {
+        val merges = categories
+            .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
+            .associate { it.id to it.existingId!! }
+        val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
+        val filteredCategories = delta.categories.filter {
+            it.id !in skipped && it.id !in merges.keys
+        }
+        val filteredTransactions = delta.transactions.mapNotNull { tx ->
+            val categoryId = tx.categoryId?.let { Id.Known(it) }
+            if (categoryId in skipped) return@mapNotNull null
+            val newCategoryId = categoryId?.let { merges[it]?.value ?: it.value }
+            tx.copy(categoryId = newCategoryId)
+        }
+        return delta.copy(categories = filteredCategories, transactions = filteredTransactions)
+    }
+
+    private fun applyAccountStrategies(
+        delta: SyncSnapshot,
+        accounts: List<ImportAccount>,
+        strategies: Map<Id.Known, ResolveStrategy>,
+    ): SyncSnapshot {
+        val merges = accounts
+            .filter { strategies[it.id] == ResolveStrategy.Merge && it.existingId != null }
+            .associate { it.id to it.existingId!! }
+        val skipped = strategies.filterValues { it == ResolveStrategy.Skip }.keys
+        val filteredAccounts = delta.accounts.filter {
+            it.id !in skipped && it.id !in merges.keys
+        }
+        val filteredTransactions = delta.transactions.mapNotNull { tx ->
+            if (tx.accountId in skipped) return@mapNotNull null
+            val targetId = tx.targetAccountId?.let { Id.Known(it) }
+            if (targetId in skipped) return@mapNotNull null
+            val newAccountId = merges[tx.accountId] ?: tx.accountId
+            val newTargetId = targetId?.let { merges[it]?.value ?: it.value }
+            tx.copy(accountId = newAccountId, targetAccountId = newTargetId)
+        }
+        return delta.copy(accounts = filteredAccounts, transactions = filteredTransactions)
+    }
+
+    private fun toImportTransactions(delta: SyncSnapshot): List<ImportTransaction> {
+        val categoryById = delta.categories.associateBy { it.id }
+        return delta.transactions.map { syncTx ->
+            val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
+            when (syncTx.type) {
+                SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
+                    id = syncTx.id,
+                    accountId = syncTx.accountId,
+                    currencyId = syncTx.currencyId,
+                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                    dateTime = syncTx.enteredDateTime,
+                    categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                    categoryName = categoryName,
+                )
+                SyncTransaction.Type.INCOME -> ImportTransaction.Income(
+                    id = syncTx.id,
+                    accountId = syncTx.accountId,
+                    currencyId = syncTx.currencyId,
+                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                    dateTime = syncTx.enteredDateTime,
+                    categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                    categoryName = categoryName,
+                )
+                SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(
+                    id = syncTx.id,
+                    accountId = syncTx.accountId,
+                    currencyId = syncTx.currencyId,
+                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                    dateTime = syncTx.enteredDateTime,
+                    targetAccountId = Id.Known(syncTx.targetAccountId ?: syncTx.accountId.value),
+                    targetAmount = Amount(syncTx.targetAmount?.toBigDecimalOrNull()),
+                    targetCurrencyId = syncTx.currencyId,
+                )
+            }
         }
     }
 }
