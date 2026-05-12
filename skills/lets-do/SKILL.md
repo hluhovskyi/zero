@@ -41,6 +41,16 @@ branch + worktree only when needed. The branch name should reflect the task (keb
 For Step 0 detection, use `./scripts/detect-worktree.sh` (allowlisted, no prompt) instead of the
 inline compound bash command the skill suggests.
 
+After the worktree is created, acquire a dedicated emulator for this session:
+
+```bash
+./scripts/acquire-emulator.sh
+```
+
+This pins the session to one emulator so parallel sessions don't interfere. If it fails because all
+emulators are claimed, start another AVD before continuing. The `.emulator-serial` file it writes is
+read automatically by all `./scripts/` adb helpers.
+
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
 user declined), stop and explain that master must not be modified directly.
 

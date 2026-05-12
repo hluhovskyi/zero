@@ -5,6 +5,10 @@
 # Refreshes the UI dump and exits 0 if the landmark is found, 1 if not.
 # Use after any navigation action to confirm the expected screen is active.
 
+if [ -f ".emulator-serial" ]; then
+    export ANDROID_SERIAL=$(cat .emulator-serial)
+fi
+
 LANDMARK="${1:-}"
 if [ -z "$LANDMARK" ]; then
     echo "Usage: $0 <expected-text>"
