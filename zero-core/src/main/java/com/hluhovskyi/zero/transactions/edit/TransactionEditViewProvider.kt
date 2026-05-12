@@ -2,7 +2,9 @@ package com.hluhovskyi.zero.transactions.edit
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,15 +14,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
@@ -153,18 +162,45 @@ private fun TransactionEditView(
                 }
             }
             item {
-                OutlinedTextField(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 16.dp),
-                    value = state.notes,
-                    label = { Text(text = "Notes") },
-                    onValueChange = { notes ->
-                        viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(notes))
-                    },
-                    minLines = 2,
-                )
+                        .padding(top = 16.dp)
+                        .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = "NOTES",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.5.sp,
+                    )
+                    BasicTextField(
+                        value = state.notes,
+                        onValueChange = { notes ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(notes))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OnSurface,
+                        ),
+                        decorationBox = { innerTextField ->
+                            if (state.notes.isEmpty()) {
+                                Text(
+                                    text = "Add a note...",
+                                    fontSize = 15.sp,
+                                    color = OnSurfaceVariant,
+                                )
+                            }
+                            innerTextField()
+                        },
+                    )
+                }
             }
         }
 
