@@ -27,6 +27,7 @@ internal class DefaultAccountDetailViewModel(
     private val accountDetailSpendingUseCase: AccountDetailSpendingUseCase,
     private val onBackHandler: OnBackHandler,
     private val onEditHandler: OnAccountDetailEditHandler = OnAccountDetailEditHandler.Noop,
+    private val onCreateTransactionHandler: OnAccountDetailCreateTransactionHandler = OnAccountDetailCreateTransactionHandler.Noop,
     private val accountRepository: AccountRepository = AccountRepository.Noop,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
@@ -49,6 +50,9 @@ internal class DefaultAccountDetailViewModel(
             }
             AccountDetailViewModel.Action.Unarchive -> coroutineScope.launch(Dispatchers.Main) {
                 accountRepository.unarchive(accountId)
+            }
+            AccountDetailViewModel.Action.CreateTransaction -> coroutineScope.launch(Dispatchers.Main) {
+                onCreateTransactionHandler.onCreate()
             }
         }
     }

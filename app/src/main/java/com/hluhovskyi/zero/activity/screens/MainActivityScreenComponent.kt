@@ -307,6 +307,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .transactionId(Id.Unknown)
                 .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
+                .preSelectedAccountId(arguments.getValue(Destinations.Transaction.Edit.SelectedAccountId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
@@ -542,6 +543,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     navigator.navigateTo(
                         Destinations.Transaction.Item.Edit,
                         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
+                .onCreateTransactionHandler {
+                    navigator.navigateTo(
+                        Destinations.Transaction.Edit,
+                        Destinations.Transaction.Edit.SelectedAccountId.withValue(accountId),
                     )
                 }
                 .logging(logger)

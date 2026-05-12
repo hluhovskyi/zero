@@ -18,8 +18,9 @@ internal object Destinations {
     sealed interface Transaction : Destination {
         object All : Transaction, Destination by destinationOf("transactions")
         object Filter : Transaction, Destination by destinationOf("transactions/filter")
-        object Edit : Transaction, Destination by destinationOf("transactions/edit", SelectedCategoryId) {
+        object Edit : Transaction, Destination by destinationOf("transactions/edit", SelectedCategoryId, SelectedAccountId) {
             object SelectedCategoryId : Argument<Id> by idOptionalValueOf("selectedCategoryId")
+            object SelectedAccountId : Argument<Id> by idOptionalValueOf("selectedAccountId")
         }
 
         sealed interface Item : Transaction {

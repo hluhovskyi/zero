@@ -43,6 +43,7 @@ private const val TAG = "DefaultTransactionEditUseCase"
 internal class DefaultTransactionEditUseCase(
     private val transactionId: Id,
     private val preSelectedCategoryId: Id = Id.Unknown,
+    private val preSelectedAccountId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
@@ -349,7 +350,9 @@ internal class DefaultTransactionEditUseCase(
                     }
                     .collectLatest { accounts ->
                         mutableState.update { state ->
-                            val accountToSelect = accounts.firstOrNull()
+                            val preSelected = (preSelectedAccountId as? Id.Known)
+                                ?.let { id -> accounts.find { it.id == id } }
+                            val accountToSelect = preSelected ?: accounts.firstOrNull()
                             logger.d("attach, accounts=${accounts.joinIdsToString()}")
                             state.copy(
                                 accounts = accounts,
