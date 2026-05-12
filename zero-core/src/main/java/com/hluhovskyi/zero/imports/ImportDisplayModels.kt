@@ -12,6 +12,7 @@ data class ImportCategory(
     val colorScheme: ColorScheme,
     val icon: Image,
     val transactionCount: Int,
+    val existingId: Id.Known? = null,
 )
 
 data class ImportAccount(
@@ -20,6 +21,7 @@ data class ImportAccount(
     val currencyId: Id.Known,
     val transactionCount: Int,
     val icon: Image? = null,
+    val existingId: Id.Known? = null,
 )
 
 sealed interface ImportTransaction {
