@@ -45,7 +45,8 @@ internal class DefaultAccountViewModel(
                         state.copy(
                             balance = useCaseState.balance,
                             currency = useCaseState.currency,
-                            accounts = useCaseState.accounts,
+                            activeAccounts = useCaseState.accounts.filter { it.archivedAt == null },
+                            archivedAccounts = useCaseState.accounts.filter { it.archivedAt != null },
                         )
                     }
                 }

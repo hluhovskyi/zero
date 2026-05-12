@@ -98,16 +98,13 @@ private fun AccountView(
     onAddAccount: OnAddAccountHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
-    val grouped = remember(state.accounts) {
-        state.accounts
-            .filter { it.archivedAt == null }
+    val grouped = remember(state.activeAccounts) {
+        state.activeAccounts
             .groupBy { it.category }
             .entries
             .sortedBy { it.key.ordinal }
     }
-    val archivedAccounts = remember(state.accounts) {
-        state.accounts.filter { it.archivedAt != null }
-    }
+    val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     var showArchived by remember { mutableStateOf(false) }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -312,7 +309,7 @@ private fun ArchivedFooter(
         AnimatedVisibility(visible = showArchived) {
             Column(modifier = Modifier.padding(top = 8.dp)) {
                 Text(
-                    text = stringResource(R.string.account_archived_hidden_notice),
+                    text = stringResource(R.string.account_archived_hidden_notice).uppercase(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp),
