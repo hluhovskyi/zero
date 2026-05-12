@@ -4,8 +4,8 @@ buildscript {
 
         versions = [
                 minSdk    : 23,
-                compileSdk: 34,
-                targetSdk : 34,
+                compileSdk: 35,
+                targetSdk : 35,
                 compose   : '1.7.8'
         ]
 
