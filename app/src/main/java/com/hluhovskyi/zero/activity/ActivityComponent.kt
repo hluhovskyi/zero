@@ -44,8 +44,6 @@ import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
 import dagger.BindsInstance
 import dagger.Provides
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import java.io.Closeable
 import javax.inject.Scope
 
@@ -226,10 +224,7 @@ abstract class ActivityComponent :
         @ActivityScope
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
-        ): AttachActivityComponent = AttachActivityComponent(
-            coroutineScope = CoroutineScope(Dispatchers.IO),
-            presetsComponent = presetsComponent,
-        )
+        ): AttachActivityComponent = AttachActivityComponent(presetsComponent)
     }
 }
 

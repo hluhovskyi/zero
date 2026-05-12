@@ -7,7 +7,6 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import dagger.BindsInstance
 import dagger.Provides
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,16 +52,12 @@ abstract class PresetsComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerPresetsComponent.builder()
             .dependencies(dependencies)
-            .coroutineScope(CoroutineScope(Dispatchers.IO))
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<PresetsComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun coroutineScope(scope: CoroutineScope): Builder
     }
 
     @dagger.Module
@@ -84,14 +79,13 @@ abstract class PresetsComponent {
 
         @Provides
         @PresetsScope
-        fun attachable(presetsUseCase: PresetsUseCase, coroutineScope: CoroutineScope): Attachable =
-            PresetsAttachable(presetsUseCase, coroutineScope)
+        fun attachable(presetsUseCase: PresetsUseCase): Attachable = PresetsAttachable(presetsUseCase)
     }
 }
 
 private class PresetsAttachable(
     private val presetsUseCase: PresetsUseCase,
-    private val coroutineScope: CoroutineScope,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Attachable {
 
     override fun attach(): Closeable = Closeables.of {
