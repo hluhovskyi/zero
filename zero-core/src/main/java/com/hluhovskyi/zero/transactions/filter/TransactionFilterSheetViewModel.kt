@@ -18,22 +18,28 @@ interface TransactionFilterSheetViewModel : AttachableActionStateModel<Transacti
 
     data class State(
         val activeFilter: TransactionFilter = TransactionFilter(),
-        val availableCategories: List<FilterCategory> = emptyList(),
-        val availableAccounts: List<FilterAccount> = emptyList(),
+        val availableCategories: List<FilterCategoryItem> = emptyList(),
+        val availableAccounts: List<FilterAccountItem> = emptyList(),
     )
 
-    data class FilterCategory(
-        val id: Id.Known,
-        val name: String,
-        val colorScheme: ColorScheme,
-        val icon: Image,
-    )
+    sealed interface FilterCategoryItem {
+        data class All(val count: Int) : FilterCategoryItem
+        data class Category(
+            val id: Id.Known,
+            val name: String,
+            val colorScheme: ColorScheme,
+            val icon: Image,
+        ) : FilterCategoryItem
+    }
 
-    data class FilterAccount(
-        val id: Id.Known,
-        val name: String,
-        val icon: Image,
-    )
+    sealed interface FilterAccountItem {
+        data class All(val count: Int) : FilterAccountItem
+        data class Account(
+            val id: Id.Known,
+            val name: String,
+            val icon: Image,
+        ) : FilterAccountItem
+    }
 
     object Noop : TransactionFilterSheetViewModel {
         override val state: Flow<State> = emptyFlow()

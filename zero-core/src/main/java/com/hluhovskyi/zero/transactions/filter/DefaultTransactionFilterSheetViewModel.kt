@@ -49,21 +49,31 @@ internal class DefaultTransactionFilterSheetViewModel(
                 iconRepository.query(IconRepository.Criteria.All()).onEmptyReturnEmptyList().associateById(),
             ) { categories, accounts, idToIcon ->
                 mutableState.value.copy(
-                    availableCategories = categories.map { c ->
-                        TransactionFilterSheetViewModel.FilterCategory(
-                            id = c.id,
-                            name = c.name,
-                            colorScheme = c.colorScheme,
-                            icon = c.icon,
-                        )
-                    }.sortedBy { it.name },
-                    availableAccounts = accounts.map { a ->
-                        TransactionFilterSheetViewModel.FilterAccount(
-                            id = a.id,
-                            name = a.name,
-                            icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
-                        )
-                    }.sortedBy { it.name },
+                    availableCategories = buildList {
+                        add(TransactionFilterSheetViewModel.FilterCategoryItem.All(count = categories.size))
+                        categories.sortedBy { it.name }.forEach { c ->
+                            add(
+                                TransactionFilterSheetViewModel.FilterCategoryItem.Category(
+                                    id = c.id,
+                                    name = c.name,
+                                    colorScheme = c.colorScheme,
+                                    icon = c.icon,
+                                ),
+                            )
+                        }
+                    },
+                    availableAccounts = buildList {
+                        add(TransactionFilterSheetViewModel.FilterAccountItem.All(count = accounts.size))
+                        accounts.sortedBy { it.name }.forEach { a ->
+                            add(
+                                TransactionFilterSheetViewModel.FilterAccountItem.Account(
+                                    id = a.id,
+                                    name = a.name,
+                                    icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
+                                ),
+                            )
+                        }
+                    },
                 )
             }.collect { mutableState.update { _ -> it } }
         }

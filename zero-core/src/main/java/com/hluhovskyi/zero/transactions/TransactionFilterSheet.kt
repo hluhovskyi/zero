@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -44,7 +44,6 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
-import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.Error
@@ -59,8 +58,8 @@ import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 @Composable
 internal fun TransactionFilterSheet(
     activeFilter: TransactionFilter,
-    availableCategories: List<TransactionFilterSheetViewModel.FilterCategory>,
-    availableAccounts: List<TransactionFilterSheetViewModel.FilterAccount>,
+    availableCategories: List<TransactionFilterSheetViewModel.FilterCategoryItem>,
+    availableAccounts: List<TransactionFilterSheetViewModel.FilterAccountItem>,
     imageLoader: ImageLoader,
     onApply: (TransactionFilter) -> Unit,
     onClose: () -> Unit,
@@ -120,67 +119,43 @@ internal fun TransactionFilterSheet(
 
             if (availableCategories.isNotEmpty()) {
                 FilterSection(label = stringResource(R.string.filter_section_categories)) {
-                    SelectionGridSection(
+                    CategoryItemGrid(
                         allLabel = stringResource(R.string.filter_all_categories),
-                        totalCount = availableCategories.size,
+                        items = availableCategories,
                         selectedIds = draft.categoryIds,
                         onToggleAll = { draft = draft.copy(categoryIds = null) },
-                    ) {
-                        ItemGrid(
-                            items = availableCategories.map { CategoryGridWrapper(it) },
-                            selectedIds = draft.categoryIds,
-                            onToggle = { id ->
-                                draft = draft.copy(
-                                    categoryIds = toggleCategoryId(
-                                        current = draft.categoryIds,
-                                        id = id,
-                                        total = availableCategories.size,
-                                    ),
-                                )
-                            },
-                            itemContent = { wrapper, isActive, isDimmed ->
-                                CategoryGridItem(
-                                    category = wrapper.category,
-                                    isActive = isActive,
-                                    isDimmed = isDimmed,
-                                    imageLoader = imageLoader,
-                                )
-                            },
-                        )
-                    }
+                        onToggle = { id ->
+                            draft = draft.copy(
+                                categoryIds = toggleCategoryId(
+                                    current = draft.categoryIds,
+                                    id = id,
+                                    total = availableCategories.size - 1,
+                                ),
+                            )
+                        },
+                        imageLoader = imageLoader,
+                    )
                 }
             }
 
             if (availableAccounts.isNotEmpty()) {
                 FilterSection(label = stringResource(R.string.filter_section_accounts)) {
-                    SelectionGridSection(
+                    AccountItemGrid(
                         allLabel = stringResource(R.string.filter_all_accounts),
-                        totalCount = availableAccounts.size,
+                        items = availableAccounts,
                         selectedIds = draft.accountIds,
                         onToggleAll = { draft = draft.copy(accountIds = null) },
-                    ) {
-                        ItemGrid(
-                            items = availableAccounts.map { AccountGridWrapper(it) },
-                            selectedIds = draft.accountIds,
-                            onToggle = { id ->
-                                draft = draft.copy(
-                                    accountIds = toggleAccountId(
-                                        current = draft.accountIds,
-                                        id = id,
-                                        total = availableAccounts.size,
-                                    ),
-                                )
-                            },
-                            itemContent = { wrapper, isActive, isDimmed ->
-                                AccountGridItem(
-                                    account = wrapper.account,
-                                    isActive = isActive,
-                                    isDimmed = isDimmed,
-                                    imageLoader = imageLoader,
-                                )
-                            },
-                        )
-                    }
+                        onToggle = { id ->
+                            draft = draft.copy(
+                                accountIds = toggleAccountId(
+                                    current = draft.accountIds,
+                                    id = id,
+                                    total = availableAccounts.size - 1,
+                                ),
+                            )
+                        },
+                        imageLoader = imageLoader,
+                    )
                 }
             }
 
@@ -277,107 +252,141 @@ private fun PillChip(
 }
 
 @Composable
-private fun SelectionGridSection(
-    allLabel: String,
-    totalCount: Int,
-    selectedIds: Set<Id.Known>?,
-    onToggleAll: () -> Unit,
-    content: @Composable () -> Unit,
+private fun AllFilterTile(
+    label: String,
+    allOn: Boolean,
+    count: Int,
 ) {
-    val allActive = selectedIds == null
-    val selectedCount = selectedIds?.size ?: totalCount
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
     ) {
         Box(
             modifier = Modifier
-                .clip(CircleShape)
-                .background(if (allActive) PrimaryContainer else SurfaceContainerLow)
-                .border(
-                    width = 1.5.dp,
-                    color = if (allActive) PrimaryContainer else OutlineVariant,
-                    shape = CircleShape,
-                )
-                .clickable(onClick = onToggleAll)
-                .padding(start = if (allActive) 10.dp else 14.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (allOn) PrimaryContainer else SurfaceContainerLow),
+            contentAlignment = Alignment.Center,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                if (allActive) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(13.dp),
-                    )
-                }
+            if (allOn) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else {
                 Text(
-                    text = allLabel,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (allActive) Color.White else OnSurfaceVariant,
+                    text = count.toString(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Outline,
                 )
             }
         }
-
         Text(
-            text = if (allActive) "All $totalCount" else "$selectedCount of $totalCount",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = OnSurfaceVariant,
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (allOn) PrimaryContainer else OnSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
-
-    content()
-}
-
-private interface GridItem {
-    val gridId: Id.Known
-}
-
-private data class CategoryGridWrapper(val category: TransactionFilterSheetViewModel.FilterCategory) : GridItem {
-    override val gridId = category.id
-}
-
-private data class AccountGridWrapper(val account: TransactionFilterSheetViewModel.FilterAccount) : GridItem {
-    override val gridId = account.id
 }
 
 @Composable
-private fun <T : GridItem> ItemGrid(
-    items: List<T>,
+private fun CategoryItemGrid(
+    allLabel: String,
+    items: List<TransactionFilterSheetViewModel.FilterCategoryItem>,
     selectedIds: Set<Id.Known>?,
+    onToggleAll: () -> Unit,
     onToggle: (Id.Known) -> Unit,
-    itemContent: @Composable (item: T, isActive: Boolean, isDimmed: Boolean) -> Unit,
+    imageLoader: ImageLoader,
 ) {
-    val allActive = selectedIds == null
-    val rows = items.chunked(3)
-    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-        rows.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                row.forEach { item ->
-                    val isActive = allActive || selectedIds!!.contains(item.gridId)
-                    val isDimmed = !allActive && !selectedIds!!.contains(item.gridId)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(if (isActive) SurfaceContainer else SurfaceContainerLow)
-                            .clickable { onToggle(item.gridId) }
-                            .alpha(if (isDimmed) 0.3f else 1f),
-                    ) {
-                        itemContent(item, isActive, isDimmed)
-                    }
-                }
-                repeat(3 - row.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+    FilterTileGrid(rowCount = (items.size + 4) / 5) { idx ->
+        val item = items.getOrNull(idx)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    when (item) {
+                        null -> Modifier
+                        is TransactionFilterSheetViewModel.FilterCategoryItem.All -> Modifier.clickable(onClick = onToggleAll)
+                        is TransactionFilterSheetViewModel.FilterCategoryItem.Category -> Modifier.clickable { onToggle(item.id) }
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            when (item) {
+                null -> Unit
+                is TransactionFilterSheetViewModel.FilterCategoryItem.All -> AllFilterTile(
+                    label = allLabel,
+                    allOn = selectedIds == null,
+                    count = item.count,
+                )
+                is TransactionFilterSheetViewModel.FilterCategoryItem.Category -> CategoryTile(
+                    category = item,
+                    isSelected = selectedIds == null || selectedIds.contains(item.id),
+                    imageLoader = imageLoader,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountItemGrid(
+    allLabel: String,
+    items: List<TransactionFilterSheetViewModel.FilterAccountItem>,
+    selectedIds: Set<Id.Known>?,
+    onToggleAll: () -> Unit,
+    onToggle: (Id.Known) -> Unit,
+    imageLoader: ImageLoader,
+) {
+    FilterTileGrid(rowCount = (items.size + 4) / 5) { idx ->
+        val item = items.getOrNull(idx)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    when (item) {
+                        null -> Modifier
+                        is TransactionFilterSheetViewModel.FilterAccountItem.All -> Modifier.clickable(onClick = onToggleAll)
+                        is TransactionFilterSheetViewModel.FilterAccountItem.Account -> Modifier.clickable { onToggle(item.id) }
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            when (item) {
+                null -> Unit
+                is TransactionFilterSheetViewModel.FilterAccountItem.All -> AllFilterTile(
+                    label = allLabel,
+                    allOn = selectedIds == null,
+                    count = item.count,
+                )
+                is TransactionFilterSheetViewModel.FilterAccountItem.Account -> AccountTile(
+                    account = item,
+                    isSelected = selectedIds == null || selectedIds.contains(item.id),
+                    imageLoader = imageLoader,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterTileGrid(
+    rowCount: Int,
+    cellContent: @Composable RowScope.(idx: Int) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        for (rowIdx in 0 until rowCount) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for (colIdx in 0 until 5) {
+                    cellContent(rowIdx * 5 + colIdx)
                 }
             }
         }
@@ -385,42 +394,42 @@ private fun <T : GridItem> ItemGrid(
 }
 
 @Composable
-private fun CategoryGridItem(
-    category: TransactionFilterSheetViewModel.FilterCategory,
-    isActive: Boolean,
-    isDimmed: Boolean,
+private fun CategoryTile(
+    category: TransactionFilterSheetViewModel.FilterCategoryItem.Category,
+    isSelected: Boolean,
     imageLoader: ImageLoader,
 ) {
+    val colorScheme = category.colorScheme.toUi()
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
     ) {
-        CategoryIconView(
-            colorScheme = if (isActive) {
-                category.colorScheme.toUi()
-            } else {
-                category.colorScheme.toUi().copy(
-                    primary = Outline,
-                    background = SurfaceContainer,
-                )
-            },
-            size = 32.dp,
-            contentPadding = 7.dp,
-        ) { iconTint ->
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (isSelected) colorScheme.background else SurfaceContainerLow)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
             imageLoader.View(
                 image = category.icon,
-                modifier = Modifier.size(18.dp),
-                tint = iconTint,
+                modifier = Modifier.size(24.dp),
+                tint = if (isSelected) colorScheme.primary else Outline,
             )
         }
         Text(
             text = category.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = if (isSelected) OnSurface else OnSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -430,34 +439,41 @@ private fun CategoryGridItem(
 }
 
 @Composable
-private fun AccountGridItem(
-    account: TransactionFilterSheetViewModel.FilterAccount,
-    isActive: Boolean,
-    isDimmed: Boolean,
+private fun AccountTile(
+    account: TransactionFilterSheetViewModel.FilterAccountItem.Account,
+    isSelected: Boolean,
     imageLoader: ImageLoader,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
     ) {
-        CategoryIconView(
-            color = SurfaceContainer,
-            size = 32.dp,
-            contentPadding = 7.dp,
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (isSelected) SurfaceContainer else SurfaceContainerLow)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.dp, PrimaryContainer, RoundedCornerShape(14.dp))
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
         ) {
             imageLoader.View(
                 image = account.icon,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(24.dp),
+                tint = if (isSelected) PrimaryContainer else Outline,
             )
         }
         Text(
             text = account.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = if (isSelected) OnSurface else OnSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
