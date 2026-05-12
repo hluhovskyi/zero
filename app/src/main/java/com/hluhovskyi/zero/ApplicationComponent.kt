@@ -47,7 +47,7 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.imports.SnapshotParser
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
-import com.hluhovskyi.zero.presets.PresetsUseCase
+import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -281,16 +281,18 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun presetsUseCase(
+        fun presetsComponentBuilder(
             categoryRepository: CategoryRepository,
             accountRepository: AccountRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             configurationRepository: ConfigurationRepository,
-        ): PresetsUseCase = PresetsUseCase.create(
-            categoryRepository = categoryRepository,
-            accountRepository = accountRepository,
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            configurationRepository = configurationRepository,
+        ): PresetsComponent.Builder = PresetsComponent.builder(
+            object : PresetsComponent.Dependencies {
+                override val categoryRepository = categoryRepository
+                override val accountRepository = accountRepository
+                override val currencyPrimaryUseCase = currencyPrimaryUseCase
+                override val configurationRepository = configurationRepository
+            },
         )
 
         @Provides

@@ -20,7 +20,6 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -36,7 +35,7 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.presets.PresetsUseCase
+import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -47,7 +46,6 @@ import dagger.BindsInstance
 import dagger.Provides
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.Closeable
 import javax.inject.Scope
 
@@ -83,13 +81,9 @@ abstract class ActivityComponent :
 
     override val tag: String = TAG
 
-    protected abstract val presetsUseCase: PresetsUseCase
+    protected abstract val attachActivityComponent: AttachActivityComponent
 
-    override fun attach(): Closeable = Closeables.of {
-        CoroutineScope(Dispatchers.IO).launch {
-            presetsUseCase.seed()
-        }
-    }
+    override fun attach(): Closeable = attachActivityComponent.attach()
 
     interface Dependencies {
 
@@ -116,7 +110,7 @@ abstract class ActivityComponent :
 
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
-        val presetsUseCase: PresetsUseCase
+        val presetsComponentBuilder: PresetsComponent.Builder
     }
 
     companion object {
@@ -227,6 +221,15 @@ abstract class ActivityComponent :
         fun transactionPreviewBuilder(
             component: ActivityComponent,
         ): TransactionPreviewComponent.Builder = TransactionPreviewComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun attachActivityComponent(
+            presetsComponentBuilder: PresetsComponent.Builder,
+        ): AttachActivityComponent = AttachActivityComponent(
+            coroutineScope = CoroutineScope(Dispatchers.IO),
+            presetsComponentBuilder = presetsComponentBuilder,
+        )
     }
 }
 
