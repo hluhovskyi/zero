@@ -107,6 +107,7 @@ internal class DefaultCategoriesQueryUseCase(
             name = category.name,
             icon = icon.image,
             colorScheme = colorScheme,
+            type = category.type,
         )
     }
 

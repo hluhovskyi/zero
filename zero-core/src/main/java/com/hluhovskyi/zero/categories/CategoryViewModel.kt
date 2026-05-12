@@ -10,12 +10,14 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
 
     sealed interface Action {
         data class SelectCategory(val category: CategoryItem) : Action
+        data class SelectTab(val type: CategoryType) : Action
     }
 
     data class State(
         val categories: List<CategoryItem> = emptyList(),
         val grandTotal: Amount = Amount.zero(),
         val currencySymbol: String = "",
+        val selectedTab: CategoryType = CategoryType.EXPENSE,
     )
 
     data class CategoryItem(
