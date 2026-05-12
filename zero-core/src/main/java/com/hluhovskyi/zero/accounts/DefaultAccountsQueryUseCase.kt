@@ -19,7 +19,7 @@ internal class DefaultAccountsQueryUseCase(
         accountRepository.query(AccountRepository.Criteria.All()).onEmptyReturnEmptyList(),
         iconRepository.query(IconRepository.Criteria.All()).onEmptyReturnEmptyList().associateById(),
     ) { accounts, idToIcon ->
-        accounts.map { a ->
+        accounts.filter { it.archivedAt == null }.map { a ->
             AccountsQueryUseCase.Account(
                 id = a.id,
                 name = a.name,
