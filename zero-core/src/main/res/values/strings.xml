@@ -8,4 +8,6 @@
         <item quantity="one">%d account</item>
         <item quantity="other">%d accounts</item>
     </plurals>
+    <string name="transaction_notes_label">NOTES</string>
+    <string name="transaction_notes_hint">Add a note…</string>
 </resources>

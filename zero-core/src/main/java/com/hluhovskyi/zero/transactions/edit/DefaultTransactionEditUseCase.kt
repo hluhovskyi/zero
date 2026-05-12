@@ -269,17 +269,12 @@ internal class DefaultTransactionEditUseCase(
                                 state.accounts.firstOrNull { it.id == transaction.accountId }
                             val currencyToSelect =
                                 state.currencies.firstOrNull { it.id == transaction.currencyId }
-                            val transactionNotes = when (transaction) {
-                                is TransactionRepository.Transaction.Expense -> transaction.notes
-                                is TransactionRepository.Transaction.Income -> transaction.notes
-                                is TransactionRepository.Transaction.Transfer -> transaction.notes
-                            }
                             val partialState = state.copy(
                                 amount = transaction.amount.value.toString(),
                                 selectedCurrency = currencyToSelect ?: state.selectedCurrency,
                                 selectedAccount = accountToSelect ?: state.selectedAccount,
                                 localDateTime = transaction.dateTime,
-                                notes = transactionNotes ?: "",
+                                notes = transaction.notes.orEmpty(),
                             )
 
                             when (transaction) {

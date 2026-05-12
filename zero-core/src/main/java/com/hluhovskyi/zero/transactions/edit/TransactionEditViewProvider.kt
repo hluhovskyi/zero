@@ -37,10 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -172,7 +174,7 @@ private fun TransactionEditView(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        text = "NOTES",
+                        text = stringResource(R.string.transaction_notes_label),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
@@ -192,7 +194,7 @@ private fun TransactionEditView(
                         decorationBox = { innerTextField ->
                             if (state.notes.isEmpty()) {
                                 Text(
-                                    text = "Add a note...",
+                                    text = stringResource(R.string.transaction_notes_hint),
                                     fontSize = 15.sp,
                                     color = OnSurfaceVariant,
                                 )
