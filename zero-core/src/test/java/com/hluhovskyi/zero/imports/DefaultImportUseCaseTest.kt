@@ -10,9 +10,13 @@ import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.accounts.AccountCategory
+import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.sync.SyncAccount
 import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
+import com.hluhovskyi.zero.sync.SyncTransaction
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
 import kotlinx.coroutines.CoroutineScope
@@ -60,6 +64,7 @@ class DefaultImportUseCaseTest {
         lenient().`when`(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>())).thenReturn(flowOf(emptyList()))
         lenient().`when`(accountRepository.query(any<AccountRepository.Criteria>())).thenReturn(flowOf(emptyList()))
         lenient().`when`(iconRepository.query(any<IconRepository.Criteria<List<Icon>>>())).thenReturn(flowOf(emptyList()))
+        lenient().`when`(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
     }
 
     private fun createUseCase(scope: CoroutineScope) = DefaultImportUseCase(
@@ -244,6 +249,193 @@ class DefaultImportUseCaseTest {
     }
 
     @Test
+    fun `ConfirmCategories with Merge remaps categoryId in transactions to existingId`() = runTest {
+        val existing = CategoryRepository.Category(
+            id = Id.Known("existing-cat"),
+            parentCategoryId = Id.Unknown,
+            name = "Food",
+            iconId = Id.Known("icon"),
+            colorId = Id.Known("color"),
+        )
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existing)))
+        whenever(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
+
+        val snapshot = snapshotWith(
+            categories = listOf(syncCategory("import-cat", "food")),
+            transactions = listOf(syncTransaction("t1", accountId = "a1", categoryId = "import-cat")),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        val expense = state.transactions.single() as ImportTransaction.Expense
+        assert(expense.categoryId == Id.Known("existing-cat")) {
+            "Expected categoryId existing-cat but got ${expense.categoryId}"
+        }
+    }
+
+    @Test
+    fun `ConfirmCategories with Skip drops category and its transactions`() = runTest {
+        val snapshot = snapshotWith(
+            categories = listOf(syncCategory("c-skip", "Food")),
+            transactions = listOf(syncTransaction("t1", accountId = "a1", categoryId = "c-skip")),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.SetCategoryStrategy(Id.Known("c-skip"), ResolveStrategy.Skip))
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        assert(state.transactions.isEmpty()) { "Expected no transactions, got ${state.transactions.size}" }
+    }
+
+    @Test
+    fun `ConfirmAccounts with Merge remaps accountId and targetAccountId`() = runTest {
+        val existingAccount = AccountRepository.Account(
+            id = Id.Known("existing-acc"),
+            name = "Wallet",
+            currencyId = Id.Known("usd"),
+            iconId = Id.Known("icon"),
+            initialBalance = Amount(java.math.BigDecimal.ZERO),
+            category = AccountCategory.CASH,
+            details = null,
+        )
+        whenever(accountRepository.query(any<AccountRepository.Criteria>()))
+            .thenReturn(flowOf(listOf(existingAccount)))
+
+        val snapshot = snapshotWith(
+            accounts = listOf(syncAccount("import-acc", "wallet")),
+            transactions = listOf(
+                syncTransaction("t1", accountId = "import-acc", categoryId = null),
+                syncTransaction(
+                    "t2",
+                    accountId = "import-acc",
+                    categoryId = null,
+                    type = SyncTransaction.Type.TRANSFER,
+                    targetAccountId = "import-acc",
+                ),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        val expense = state.transactions.first { it is ImportTransaction.Expense } as ImportTransaction.Expense
+        assert(expense.accountId == Id.Known("existing-acc")) {
+            "Expected accountId existing-acc but got ${expense.accountId}"
+        }
+        val transfer = state.transactions.first { it is ImportTransaction.Transfer } as ImportTransaction.Transfer
+        assert(transfer.accountId == Id.Known("existing-acc")) {
+            "Expected transfer.accountId existing-acc but got ${transfer.accountId}"
+        }
+        assert(transfer.targetAccountId == Id.Known("existing-acc")) {
+            "Expected transfer.targetAccountId existing-acc but got ${transfer.targetAccountId}"
+        }
+    }
+
+    @Test
+    fun `ConfirmAccounts with Skip drops account and transactions referencing it`() = runTest {
+        val snapshot = snapshotWith(
+            accounts = listOf(syncAccount("a-skip", "Wallet")),
+            transactions = listOf(
+                syncTransaction("t1", accountId = "a-skip", categoryId = null),
+                syncTransaction(
+                    "t2",
+                    accountId = "a-keep",
+                    categoryId = null,
+                    type = SyncTransaction.Type.TRANSFER,
+                    targetAccountId = "a-skip",
+                ),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.SetAccountStrategy(Id.Known("a-skip"), ResolveStrategy.Skip))
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        assert(state.transactions.isEmpty()) { "Expected no transactions, got ${state.transactions.size}" }
+    }
+
+    @Test
+    fun `SetCategoryStrategy updates state without leaving CategoriesReview`() = runTest {
+        val snapshot = snapshotWith(categories = listOf(syncCategory("c1", "Food")))
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.SetCategoryStrategy(Id.Known("c1"), ResolveStrategy.Skip))
+
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.CategoriesReview)
+        assert((state as ImportUseCase.State.CategoriesReview).strategies[Id.Known("c1")] == ResolveStrategy.Skip)
+    }
+
+    @Test
+    fun `default category strategy is Merge for existing and New otherwise`() = runTest {
+        val existing = CategoryRepository.Category(
+            id = Id.Known("e1"),
+            parentCategoryId = Id.Unknown,
+            name = "Food",
+            iconId = Id.Known("i"),
+            colorId = Id.Known("c"),
+        )
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existing)))
+        whenever(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
+
+        val snapshot = snapshotWith(
+            categories = listOf(
+                syncCategory("c-match", "food"),
+                syncCategory("c-fresh", "Travel"),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        val state = useCase.state.first() as ImportUseCase.State.CategoriesReview
+        assert(state.strategies[Id.Known("c-match")] == ResolveStrategy.Merge)
+        assert(state.strategies[Id.Known("c-fresh")] == ResolveStrategy.New)
+    }
+
+    @Test
     fun `Back from UpToDate returns to SourceSelection`() = runTest {
         val emptySnapshot = SyncSnapshot(
             version = 1,
@@ -265,5 +457,71 @@ class DefaultImportUseCaseTest {
 
         val state = useCase.state.first()
         assert(state is ImportUseCase.State.SourceSelection) { "Expected SourceSelection but got $state" }
+    }
+
+    private val testDateTime = LocalDateTime(2024, 1, 1, 0, 0)
+
+    private fun snapshotWith(
+        categories: List<SyncCategory> = emptyList(),
+        accounts: List<SyncAccount> = emptyList(),
+        transactions: List<SyncTransaction> = emptyList(),
+    ) = SyncSnapshot(
+        version = 1,
+        userId = userId,
+        exportedAt = testDateTime,
+        categories = categories,
+        accounts = accounts,
+        transactions = transactions,
+    )
+
+    private fun syncCategory(id: String, name: String) = SyncCategory(
+        id = Id.Known(id),
+        name = name,
+        iconId = null,
+        colorId = null,
+        parentCategoryId = null,
+        creationDateTime = testDateTime,
+        updatedDateTime = testDateTime,
+        deletedAt = null,
+    )
+
+    private fun syncAccount(id: String, name: String) = SyncAccount(
+        id = Id.Known(id),
+        currencyId = Id.Known("usd"),
+        name = name,
+        iconId = Id.Known("icon"),
+        initialBalance = "0",
+        category = "CASH",
+        details = null,
+        creationDateTime = testDateTime,
+        updatedDateTime = testDateTime,
+        deletedAt = null,
+    )
+
+    private fun syncTransaction(
+        id: String,
+        accountId: String,
+        categoryId: String?,
+        type: SyncTransaction.Type = SyncTransaction.Type.EXPENSE,
+        targetAccountId: String? = null,
+    ) = SyncTransaction(
+        id = Id.Known(id),
+        type = type,
+        accountId = Id.Known(accountId),
+        currencyId = Id.Known("usd"),
+        categoryId = categoryId,
+        amount = "10",
+        rate = "1",
+        targetAccountId = targetAccountId,
+        targetAmount = null,
+        enteredDateTime = testDateTime,
+        creationDateTime = testDateTime,
+        updatedDateTime = testDateTime,
+        deletedAt = null,
+    )
+
+    private suspend fun stubParseAndDelta(snapshot: SyncSnapshot) {
+        whenever(parser.parse(testUri)).thenReturn(snapshot)
+        whenever(syncEngine.delta(snapshot, userId)).thenReturn(snapshot)
     }
 }
