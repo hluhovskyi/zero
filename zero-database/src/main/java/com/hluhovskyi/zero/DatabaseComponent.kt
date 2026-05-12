@@ -27,6 +27,7 @@ import com.hluhovskyi.zero.sync.EntitySyncSource
 import com.hluhovskyi.zero.sync.SyncAccount
 import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncTransaction
+import com.hluhovskyi.zero.transactions.MIGRATION_4_5
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
 import com.hluhovskyi.zero.transactions.RoomTransactionSyncSink
 import com.hluhovskyi.zero.transactions.RoomTransactionSyncSource
@@ -123,7 +124,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
         @Provides

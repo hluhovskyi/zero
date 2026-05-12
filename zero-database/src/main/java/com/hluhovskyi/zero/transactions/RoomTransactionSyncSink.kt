@@ -38,5 +38,6 @@ internal class RoomTransactionSyncSink(
         creationDateTime = creationDateTime,
         updatedDateTime = updatedDateTime,
         deletedAt = deletedAt,
+        notes = notes,
     )
 }

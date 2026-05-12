@@ -31,5 +31,6 @@ internal class RoomTransactionSyncSource(
         creationDateTime = creationDateTime,
         updatedDateTime = updatedDateTime,
         deletedAt = deletedAt,
+        notes = notes,
     )
 }

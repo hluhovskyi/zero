@@ -214,6 +214,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert(),
+                    notes = notes,
                 )
             }
 
@@ -229,6 +230,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert(),
+                    notes = notes,
                 )
             }
 
@@ -243,6 +245,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     targetAccount = Id.Known(targetAccount),
                     targetAmount = targetAmount.convert(),
+                    notes = notes,
                 )
             }
         }
@@ -264,6 +267,7 @@ internal class RoomTransactionRepository(
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
 
         is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -281,6 +285,7 @@ internal class RoomTransactionRepository(
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
 
         is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -298,6 +303,7 @@ internal class RoomTransactionRepository(
             creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
     }
 
