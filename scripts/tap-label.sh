@@ -12,6 +12,10 @@
 # Always dumps a fresh UI hierarchy before searching.
 # Exits 1 if the label is not found.
 
+if [ -f ".emulator-serial" ]; then
+    export ANDROID_SERIAL=$(cat .emulator-serial)
+fi
+
 LABEL="${1:-}"
 SCREENSHOT=false
 VERIFY=""

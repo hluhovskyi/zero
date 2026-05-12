@@ -13,7 +13,11 @@ Use this skill **before committing any UI change** — not only when something l
 
 ## Workflow
 
-1. **Prerequisites:** Ensure an emulator or device is connected (using your shell/bash tool to run `adb devices`) and the app is installed/running.
+1. **Prerequisites:** Ensure `.emulator-serial` exists in the worktree root — it pins this session to a specific emulator so parallel sessions don't interfere. If it's missing, run:
+   ```bash
+   ./scripts/acquire-emulator.sh
+   ```
+   This scans all active worktrees, finds an unclaimed running emulator, and writes its serial to `.emulator-serial`. If it fails (all emulators claimed or none running), start another AVD before continuing. Once acquired, confirm the app is installed and running on that emulator.
 
 2. **Dump the Screen:** Run the UI dump script to get the current hierarchy:
    ```bash
