@@ -44,8 +44,11 @@ internal class DefaultAccountViewModel(
                     mutableState.update { state ->
                         state.copy(
                             balance = useCaseState.balance,
+                            assets = useCaseState.assets,
+                            liabilities = useCaseState.liabilities,
                             currency = useCaseState.currency,
-                            accounts = useCaseState.accounts,
+                            activeAccounts = useCaseState.accounts.filter { it.archivedAt == null },
+                            archivedAccounts = useCaseState.accounts.filter { it.archivedAt != null },
                         )
                     }
                 }

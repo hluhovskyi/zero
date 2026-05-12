@@ -174,21 +174,21 @@ private fun HeroCard(
             Spacer(Modifier.size(16.dp))
             Row {
                 DetailStatColumn(
-                    label = stringResource(R.string.category_detail_stat_transactions),
+                    label = stringResource(R.string.category_detail_stat_transactions).uppercase(),
                     value = state.transactionCount.toString(),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = stringResource(R.string.category_detail_stat_avg_per_tx),
+                    label = stringResource(R.string.category_detail_stat_avg_per_tx).uppercase(),
                     value = amountFormatter.format(state.averageAmount, state.currencySymbol),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = stringResource(R.string.category_detail_stat_largest),
+                    label = stringResource(R.string.category_detail_stat_largest).uppercase(),
                     value = amountFormatter.format(state.largestAmount, state.currencySymbol),
                     labelColor = colorScheme.primary.copy(alpha = 0.7f),
                     valueColor = colorScheme.primary,

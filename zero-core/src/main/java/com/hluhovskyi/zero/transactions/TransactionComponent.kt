@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.transactions
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -49,6 +50,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
         val iconRepository: IconRepository
+        val colorRepository: ColorRepository
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
@@ -96,6 +98,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
             iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
@@ -110,6 +113,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             iconRepository = iconRepository,
+            colorRepository = colorRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,

@@ -11,25 +11,38 @@
     </plurals>
 
     <!-- Accounts -->
-    <string name="account_total_net_worth">TOTAL NET WORTH</string>
+    <string name="account_total_net_worth">Total net worth</string>
+    <string name="account_assets">Assets</string>
+    <string name="account_liabilities">Liabilities</string>
     <string name="account_my_accounts">My Accounts</string>
     <string name="account_add">Add Account</string>
-    <string name="account_header_cash">CASH</string>
-    <string name="account_header_bank">BANK</string>
-    <string name="account_header_credit_cards">CREDIT CARDS</string>
-    <string name="account_header_digital_wallets">DIGITAL WALLETS</string>
-    <string name="account_header_crypto">CRYPTO</string>
-    <string name="account_header_other">OTHER</string>
+    <string name="account_header_cash">Cash</string>
+    <string name="account_header_bank">Bank</string>
+    <string name="account_header_credit_cards">Credit cards</string>
+    <string name="account_header_digital_wallets">Digital wallets</string>
+    <string name="account_header_crypto">Crypto</string>
+    <string name="account_header_other">Other</string>
+
+    <!-- Archived accounts section -->
+    <string name="account_archived_show">Show archived · %1$d</string>
+    <string name="account_archived_hide">Hide archived · %1$d</string>
+    <string name="account_archived_hidden_notice">Hidden from totals &amp; lists</string>
+    <string name="account_archived_badge">Archived</string>
 
     <!-- Account Detail -->
-    <string name="account_detail_in_this_month">IN THIS MONTH</string>
-    <string name="account_detail_out_this_month">OUT THIS MONTH</string>
-    <string name="account_detail_transactions">TRANSACTIONS</string>
+    <string name="account_detail_more_options_description">More options</string>
+    <string name="account_detail_edit">Edit account</string>
+    <string name="account_detail_archive">Archive account</string>
+    <string name="account_detail_unarchive">Unarchive account</string>
+    <string name="account_detail_in_this_month">In this month</string>
+    <string name="account_detail_out_this_month">Out this month</string>
+    <string name="account_detail_transactions">Transactions</string>
+    <string name="account_detail_add_transaction">Add transaction</string>
 
     <!-- Account Edit -->
     <string name="account_edit_title_new">New Account</string>
     <string name="account_edit_title_edit">Edit Account</string>
-    <string name="account_edit_opening_balance_label">OPENING BALANCE</string>
+    <string name="account_edit_opening_balance_label">Opening balance</string>
     <string name="account_edit_name_label">Account Name</string>
     <string name="account_edit_type_label">Type</string>
     <string name="account_edit_save_description">Save account</string>
@@ -70,15 +83,15 @@
     <string name="category_detail_more_options_description">More options</string>
     <string name="category_detail_edit">Edit category</string>
     <string name="category_detail_add_transaction">Add transaction</string>
-    <string name="category_detail_stat_transactions">TRANSACTIONS</string>
-    <string name="category_detail_stat_avg_per_tx">AVG PER TX</string>
-    <string name="category_detail_stat_largest">LARGEST</string>
+    <string name="category_detail_stat_transactions">Transactions</string>
+    <string name="category_detail_stat_avg_per_tx">Avg per tx</string>
+    <string name="category_detail_stat_largest">Largest</string>
 
     <!-- Category Edit -->
     <string name="category_edit_title">Add Category</string>
     <string name="category_edit_save_description">Save category</string>
     <string name="category_edit_save">Save</string>
-    <string name="category_edit_name_label">CATEGORY NAME</string>
+    <string name="category_edit_name_label">Category name</string>
     <string name="category_edit_name_placeholder">e.g. Groceries</string>
     <string name="category_add">Add category</string>
     <string name="category_add_description">Add category</string>
@@ -91,15 +104,15 @@
 
     <!-- Settings -->
     <string name="settings_title">More</string>
-    <string name="settings_section_preferences">PREFERENCES</string>
+    <string name="settings_section_preferences">Preferences</string>
     <string name="settings_primary_currency">Primary Currency</string>
     <string name="settings_currency_loading">Loading…</string>
-    <string name="settings_section_data">DATA</string>
+    <string name="settings_section_data">Data</string>
     <string name="settings_import_data">Import Data</string>
     <string name="settings_import_data_description">Migrate history from other apps</string>
     <string name="settings_export_data">Export Data</string>
     <string name="settings_export_data_description">Save a backup of your data</string>
-    <string name="settings_section_security">SECURITY</string>
+    <string name="settings_section_security">Security</string>
     <string name="settings_biometric_lock">Biometric Lock</string>
     <string name="settings_biometric_lock_description">Face ID or Fingerprint required on open</string>
     <string name="settings_backup_saved">Backup saved</string>
@@ -152,6 +165,8 @@
     <string name="filter_apply">Apply filters</string>
 
     <!-- Transaction Edit -->
+    <string name="transaction_edit_amount_display_label">Amount</string>
+    <string name="transaction_search_placeholder">Search…</string>
     <string name="transaction_edit_title">Edit Transaction</string>
     <string name="transaction_new_title">New Transaction</string>
     <string name="transaction_edit_more_options_description">More options</string>
@@ -171,10 +186,10 @@
     <string name="transaction_edit_all_categories">All</string>
 
     <!-- Transaction Edit Transfer -->
-    <string name="transfer_edit_rate_label">RATE</string>
-    <string name="transfer_edit_change">CHANGE</string>
+    <string name="transfer_edit_rate_label">Rate</string>
+    <string name="transfer_edit_change">Change</string>
     <string name="transfer_edit_enter_rate">Enter rate</string>
-    <string name="transfer_edit_destination_amount">DESTINATION AMOUNT</string>
+    <string name="transfer_edit_destination_amount">Destination amount</string>
     <string name="transfer_edit_from_label">From</string>
     <string name="transfer_edit_to_label">To</string>
     <string name="transfer_edit_swap_description">Swap accounts</string>
@@ -183,6 +198,6 @@
     <string name="transfer_receives_with_rate">Receives %1$s%2$s · 1 %3$s = %4$s %5$s</string>
 
     <!-- Transaction Notes -->
-    <string name="transaction_notes_label">NOTES</string>
+    <string name="transaction_notes_label">Notes</string>
     <string name="transaction_notes_hint">Add a note…</string>
 </resources>

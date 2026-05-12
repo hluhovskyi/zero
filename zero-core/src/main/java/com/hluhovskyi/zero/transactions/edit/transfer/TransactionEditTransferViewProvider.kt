@@ -82,6 +82,7 @@ private fun TransactionEditTransferView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 32.dp, bottom = 24.dp),
+            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
             amount = state.amount,
             currencySymbol = state.sourceCurrencySymbol,
             focusRequester = focusRequester,
@@ -178,14 +179,14 @@ private fun RateModePill(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(R.string.transfer_edit_rate_label),
+                        text = stringResource(R.string.transfer_edit_rate_label).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
-                        text = stringResource(R.string.transfer_edit_change),
+                        text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,
@@ -237,14 +238,14 @@ private fun RateModePill(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(R.string.transfer_edit_destination_amount),
+                        text = stringResource(R.string.transfer_edit_destination_amount).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
-                        text = stringResource(R.string.transfer_edit_change),
+                        text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.primary,

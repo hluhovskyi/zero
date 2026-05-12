@@ -3,6 +3,10 @@
 # Default: readable summary (text + bounds per node).
 # Pass --raw to get the full XML instead.
 
+if [ -f ".emulator-serial" ]; then
+    export ANDROID_SERIAL=$(cat .emulator-serial)
+fi
+
 RAW=false
 for arg in "$@"; do
   [[ "$arg" == "--raw" ]] && RAW=true

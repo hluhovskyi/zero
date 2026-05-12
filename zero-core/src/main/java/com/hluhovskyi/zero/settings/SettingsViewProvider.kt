@@ -97,7 +97,7 @@ private fun MoreView(viewModel: SettingsViewModel) {
         ) {
             item { MoreHeader() }
             item {
-                MoreSection(title = stringResource(R.string.settings_section_preferences)) {
+                MoreSection(title = stringResource(R.string.settings_section_preferences).uppercase()) {
                     MoreRow(
                         icon = Icons.Outlined.Payments,
                         primaryText = stringResource(R.string.settings_primary_currency),
@@ -107,7 +107,7 @@ private fun MoreView(viewModel: SettingsViewModel) {
                 }
             }
             item {
-                MoreSection(title = stringResource(R.string.settings_section_data)) {
+                MoreSection(title = stringResource(R.string.settings_section_data).uppercase()) {
                     MoreRow(
                         icon = Icons.Outlined.MoveToInbox,
                         primaryText = stringResource(R.string.settings_import_data),
@@ -126,7 +126,7 @@ private fun MoreView(viewModel: SettingsViewModel) {
                 }
             }
             item {
-                MoreSection(title = stringResource(R.string.settings_section_security)) {
+                MoreSection(title = stringResource(R.string.settings_section_security).uppercase()) {
                     MoreRow(
                         icon = Icons.Outlined.Fingerprint,
                         primaryText = stringResource(R.string.settings_biometric_lock),

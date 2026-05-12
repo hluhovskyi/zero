@@ -19,6 +19,8 @@ class ZeroIssueRegistry : IssueRegistry() {
         UnhandledJobDetector.ISSUE,
         FullyQualifiedReferenceDetector.ISSUE,
         SealedSubtypeDuplicatePropertyDetector.ISSUE,
+        HardcodedComposableStringDetector.ISSUE,
+        UppercaseStringResourceDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
