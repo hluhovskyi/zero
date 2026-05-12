@@ -33,7 +33,7 @@ edits.tracks().update(
     packageName=PACKAGE_NAME,
     editId=edit_id,
     track="internal",
-    body={"releases": [{"versionCodes": [version_code], "status": "completed"}]},
+    body={"releases": [{"versionCodes": [version_code], "status": "draft"}]},
 ).execute()
 print("Track assigned: internal")
 
