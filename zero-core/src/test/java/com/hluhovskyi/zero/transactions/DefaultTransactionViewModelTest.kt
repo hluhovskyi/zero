@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.transactions
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
@@ -56,6 +57,8 @@ class DefaultTransactionViewModelTest {
     @Mock private lateinit var currencyRepository: CurrencyRepository
 
     @Mock private lateinit var iconRepository: IconRepository
+
+    @Mock private lateinit var colorRepository: ColorRepository
 
     @Mock private lateinit var categoriesQueryUseCase: CategoriesQueryUseCase
 
@@ -364,6 +367,7 @@ class DefaultTransactionViewModelTest {
         accountRepository = accountRepository,
         currencyRepository = currencyRepository,
         iconRepository = iconRepository,
+        colorRepository = colorRepository,
         categoriesQueryUseCase = categoriesQueryUseCase,
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         currencyConvertUseCase = currencyConvertUseCase,
