@@ -15,6 +15,7 @@ interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewM
         object Edit : Action
         object Archive : Action
         object Unarchive : Action
+        object CreateTransaction : Action
     }
 
     data class State(

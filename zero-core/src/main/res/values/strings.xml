@@ -25,6 +25,7 @@
     <string name="account_detail_in_this_month">IN THIS MONTH</string>
     <string name="account_detail_out_this_month">OUT THIS MONTH</string>
     <string name="account_detail_transactions">TRANSACTIONS</string>
+    <string name="account_detail_add_transaction">Add transaction</string>
 
     <!-- Account Edit -->
     <string name="account_edit_title_new">New Account</string>

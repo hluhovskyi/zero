@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
@@ -29,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -68,76 +72,87 @@ internal class AccountDetailViewProvider(
     override fun View() {
         val state by viewModel.state.collectAsState(initial = AccountDetailViewModel.State())
 
-        CollapsibleHeroLayout(
-            topBar = {
-                DetailTopBar(
-                    title = state.accountName,
-                    onBack = { viewModel.perform(AccountDetailViewModel.Action.Back) },
-                    trailing = {
-                        var menuExpanded by remember { mutableStateOf(false) }
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "More options",
-                                tint = PrimaryContainer,
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    menuExpanded = false
-                                    viewModel.perform(AccountDetailViewModel.Action.Edit)
-                                },
-                            ) {
+        Box(Modifier.fillMaxSize()) {
+            CollapsibleHeroLayout(
+                topBar = {
+                    DetailTopBar(
+                        title = state.accountName,
+                        onBack = { viewModel.perform(AccountDetailViewModel.Action.Back) },
+                        trailing = {
+                            var menuExpanded by remember { mutableStateOf(false) }
+                            IconButton(onClick = { menuExpanded = true }) {
                                 Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "More options",
+                                    tint = PrimaryContainer,
                                 )
-                                Spacer(Modifier.width(8.dp))
-                                Text("Edit account")
                             }
-                            if (state.isArchived) {
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false },
+                            ) {
                                 DropdownMenuItem(
                                     onClick = {
                                         menuExpanded = false
-                                        viewModel.perform(AccountDetailViewModel.Action.Unarchive)
+                                        viewModel.perform(AccountDetailViewModel.Action.Edit)
                                     },
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Unarchive,
+                                        imageVector = Icons.Filled.Edit,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp),
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Unarchive account")
+                                    Text("Edit account")
                                 }
-                            } else {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        menuExpanded = false
-                                        viewModel.perform(AccountDetailViewModel.Action.Archive)
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Archive,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Archive account")
+                                if (state.isArchived) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            menuExpanded = false
+                                            viewModel.perform(AccountDetailViewModel.Action.Unarchive)
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Unarchive,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Unarchive account")
+                                    }
+                                } else {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            menuExpanded = false
+                                            viewModel.perform(AccountDetailViewModel.Action.Archive)
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Archive,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Archive account")
+                                    }
                                 }
                             }
-                        }
-                    },
-                )
-            },
-            hero = { HeroCard(state, amountFormatter, imageLoader) },
-            content = { transactionComponent.AttachWithView() },
-        )
+                        },
+                    )
+                },
+                hero = { HeroCard(state, amountFormatter, imageLoader) },
+                content = { transactionComponent.AttachWithView() },
+            )
+            ExtendedFloatingActionButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 32.dp),
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                text = { Text(stringResource(R.string.account_detail_add_transaction)) },
+                onClick = { viewModel.perform(AccountDetailViewModel.Action.CreateTransaction) },
+                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+            )
+        }
     }
 }
 
