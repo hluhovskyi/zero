@@ -28,29 +28,15 @@ Resolve dependencies that require runtime state (e.g. looking up a scheme by ID)
 
 ## Attach-Only Components
 
-**For background work with no UI, create a Dagger component that exposes `abstract val attachable: Attachable` — not a standalone factory function.** A companion `create(...)` factory builds the component; the Module provides the use case and an `Attachable` impl with a default `CoroutineScope`. See `PresetsComponent` as the canonical example:
+**For background work with no UI, create a Dagger component that exposes `abstract val attachable: Attachable` — not a standalone factory function.** A companion `create(...)` factory builds the component; the Module provides the use case and an `Attachable` impl. See `PresetsComponent` as the canonical example.
+
+The private `Attachable` impl owns a default `CoroutineScope` as a constructor default — **never inject `CoroutineScope` via `@BindsInstance`**:
 
 ```kotlin
-@dagger.Component(modules = [PresetsComponent.Module::class], dependencies = [...])
-abstract class PresetsComponent {
-    abstract val attachable: Attachable
-    companion object {
-        fun create(...): PresetsComponent = builder(...).build()
-        fun builder(dependencies: Dependencies): Builder = DaggerPresetsComponent.builder()
-            .dependencies(dependencies)
-    }
-    @dagger.Module
-    object Module {
-        @Provides fun attachable(useCase: PresetsUseCase): Attachable = PresetsAttachable(useCase)
-    }
-}
-
 private class PresetsAttachable(
     private val useCase: PresetsUseCase,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Attachable {
-    override fun attach(): Closeable = Closeables.of { scope.launch { useCase.work() } }
+    override fun attach(): Closeable = Closeables.of { scope.launch { useCase.seed() } }
 }
 ```
-
-**Never use `@BindsInstance` to inject a `CoroutineScope`** — the private attachable impl owns a default scope. Callers that need a custom scope pass it into the private class, not the Dagger builder.
