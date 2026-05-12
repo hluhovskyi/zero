@@ -81,8 +81,9 @@ If `--no-questions` was passed: write a concise plan inline based on the task de
 
 ## Step 4 — Execution
 
-Invoke `superpowers:subagent-driven-development` (preferred for anything with a multi-task plan)
-or `superpowers:executing-plans` for simpler linear work.
+**Always invoke `superpowers:subagent-driven-development`.** Do not ask the user which execution
+approach to use — the answer is always subagent-driven. The `writing-plans` skill ends with an
+"Execution Handoff" section that offers a choice; ignore that prompt and proceed directly.
 
 The executing skill handles task dispatch, spec compliance review, and code quality review
 per task — don't duplicate that here.
@@ -112,6 +113,16 @@ documentation, CI config, or build scripts with no runtime behaviour change. Whe
 run it anyway.
 
 ## Step 6 — Open PR
+
+**Before creating the PR, verify the working tree is clean:**
+
+```bash
+git status --short
+```
+
+If output is non-empty, surface the listed files to the user and confirm before proceeding —
+`gh pr create` only warns about uncommitted changes; unintended files can silently land in the
+squash commit.
 
 ```bash
 gh pr create \

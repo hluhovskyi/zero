@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -50,12 +51,16 @@ abstract class AccountEditComponent : AttachableViewComponent {
             .onCloseHandler(OnCloseHandler.Noop)
             .accountEditIconUseCase(AccountEditIconUseCase.Noop)
             .accountEditCurrencyUseCase(AccountEditCurrencyUseCase.Noop)
+            .accountId(Id.Unknown)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<AccountEditComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun accountId(id: Id): Builder
 
         @BindsInstance
         fun onAccountSavedHandler(handler: OnAccountSavedHandler): Builder
@@ -76,6 +81,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
         @Provides
         @AccountEditScope
         fun viewModel(
+            accountId: Id,
             accountRepository: AccountRepository,
             currencyRepository: CurrencyRepository,
             iconRepository: IconRepository,
@@ -84,6 +90,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
             accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
+            accountId = accountId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             iconRepository = iconRepository,

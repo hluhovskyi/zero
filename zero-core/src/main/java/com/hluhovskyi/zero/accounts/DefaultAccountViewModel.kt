@@ -12,6 +12,7 @@ internal class DefaultAccountViewModel(
     private val useCase: AccountUseCase,
     private val dispatchers: DispatcherProvider,
     private val onAccountSelectedHandler: OnAccountSelectedHandler = OnAccountSelectedHandler.Noop,
+    private val onEditAccountHandler: OnEditAccountHandler = OnEditAccountHandler.Noop,
 ) : BaseViewModel(dispatchers),
     AccountViewModel {
 
@@ -22,6 +23,9 @@ internal class DefaultAccountViewModel(
         when (action) {
             is AccountViewModel.Action.Select -> scope.launch(dispatchers.main()) {
                 onAccountSelectedHandler.onSelected(action.accountId)
+            }
+            is AccountViewModel.Action.Edit -> scope.launch(dispatchers.main()) {
+                onEditAccountHandler.onEdit(action.accountId)
             }
         }
     }

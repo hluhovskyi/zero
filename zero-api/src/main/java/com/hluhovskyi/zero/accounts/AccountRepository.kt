@@ -13,6 +13,8 @@ interface AccountRepository {
     sealed interface Criteria {
 
         class All : Criteria
+
+        class ById(val id: Id.Known) : Criteria
     }
 
     data class Account(
@@ -20,6 +22,7 @@ interface AccountRepository {
         val name: String,
         val currencyId: Id.Known,
         val iconId: Id.Known,
+        val colorId: Id = Id.Unknown,
         val initialBalance: Amount,
         val category: AccountCategory,
         val details: String?,
@@ -34,6 +37,7 @@ interface AccountRepository {
         val name: String,
         val currencyId: Id.Known,
         val iconId: Id.Known,
+        val colorId: Id = Id.Unknown,
         val initialBalance: Amount,
         val category: AccountCategory = AccountCategory.OTHER,
         val details: String? = null,

@@ -34,6 +34,11 @@ android {
     testOptions {
         targetSdk versions.targetSdk
     }
+    kotlin {
+        compilerOptions {
+            optIn.add("androidx.compose.material.ExperimentalMaterialApi")
+        }
+    }
 }
 
 dependencies {

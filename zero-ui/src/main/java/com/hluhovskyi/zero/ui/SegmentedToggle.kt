@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -20,7 +19,6 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> SegmentedToggle(
     modifier: Modifier = Modifier,

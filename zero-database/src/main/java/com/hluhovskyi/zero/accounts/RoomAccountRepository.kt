@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.requireCurrentUserId
+import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
@@ -22,23 +23,25 @@ internal class RoomAccountRepository(
     override fun query(criteria: AccountRepository.Criteria): Flow<List<AccountRepository.Account>> = when (criteria) {
         is AccountRepository.Criteria.All -> currentUserId.take(1)
             .flatMapConcat { userId ->
-                accountRoom().selectByUserId(userId)
-                    .map { accounts ->
-                        accounts.map { account ->
-                            AccountRepository.Account(
-                                id = account.id,
-                                name = account.name,
-                                currencyId = account.currencyId,
-                                iconId = account.iconId,
-                                initialBalance = Amount(account.initialBalance.value),
-                                category = runCatching {
-                                    AccountCategory.valueOf(account.category)
-                                }.getOrDefault(AccountCategory.OTHER),
-                                details = account.details,
-                            )
-                        }
-                    }
+                accountRoom().selectByUserId(userId).map { it.toDomain() }
             }
+        is AccountRepository.Criteria.ById -> currentUserId.take(1)
+            .flatMapConcat { userId ->
+                accountRoom().selectById(userId, criteria.id).map { it.toDomain() }
+            }
+    }
+
+    private fun List<AccountEntity>.toDomain(): List<AccountRepository.Account> = map { account ->
+        AccountRepository.Account(
+            id = account.id,
+            name = account.name,
+            currencyId = account.currencyId,
+            iconId = account.iconId,
+            colorId = Id(account.colorId),
+            initialBalance = Amount(account.initialBalance.value),
+            category = AccountCategory.from(account.category),
+            details = account.details,
+        )
     }
 
     override suspend fun insert(account: AccountRepository.AccountInsert) {
@@ -61,6 +64,7 @@ internal class RoomAccountRepository(
             currencyId = currencyId,
             name = name,
             iconId = iconId,
+            colorId = colorId.valueOrNull(),
             initialBalance = AmountEntity(initialBalance.value),
             category = category.name,
             details = details,

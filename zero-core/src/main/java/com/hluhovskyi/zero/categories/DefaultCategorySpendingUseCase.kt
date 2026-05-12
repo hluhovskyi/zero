@@ -21,7 +21,6 @@ internal class DefaultCategorySpendingUseCase(
     private val zoneProvider: ZoneProvider,
 ) : CategorySpendingUseCase {
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
         val (from, to) = period.resolve()
         return transactionRepository
@@ -29,7 +28,6 @@ internal class DefaultCategorySpendingUseCase(
             .flatMapLatest { rows -> flow { emit(aggregate(rows)) } }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun queryForCategory(id: Id.Known, period: CategorySpendingUseCase.Period): Flow<CategorySpendingUseCase.CategorySpending?> {
         val (from, to) = period.resolve()
         return transactionRepository

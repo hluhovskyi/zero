@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.imports.sourceselection
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.imports.ImportUseCase
 import com.hluhovskyi.zero.imports.OnImportFinishedHandler
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -13,7 +12,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.Closeable
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSourceSelectionViewModelTest {
 
     private val mutableUseCaseState = MutableStateFlow<ImportUseCase.State>(

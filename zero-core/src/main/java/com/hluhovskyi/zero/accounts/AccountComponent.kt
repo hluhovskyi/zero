@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -46,6 +47,7 @@ abstract class AccountComponent : AttachableViewComponent {
         val transactionRepository: TransactionRepository
         val currencyRepository: CurrencyRepository
         val iconRepository: IconRepository
+        val colorRepository: ColorRepository
     }
 
     companion object {
@@ -54,6 +56,7 @@ abstract class AccountComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onAddAccountHandler(OnAddAccountHandler.Noop)
             .onAccountSelectedHandler(OnAccountSelectedHandler.Noop)
+            .onEditAccountHandler(OnEditAccountHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -66,6 +69,9 @@ abstract class AccountComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAccountSelectedHandler(handler: OnAccountSelectedHandler): Builder
+
+        @BindsInstance
+        fun onEditAccountHandler(handler: OnEditAccountHandler): Builder
     }
 
     @dagger.Module
@@ -78,6 +84,7 @@ abstract class AccountComponent : AttachableViewComponent {
             transactionRepository: TransactionRepository,
             currencyRepository: CurrencyRepository,
             iconRepository: IconRepository,
+            colorRepository: ColorRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
         ): AccountUseCase = DefaultAccountUseCase(
@@ -85,6 +92,7 @@ abstract class AccountComponent : AttachableViewComponent {
             transactionRepository = transactionRepository,
             currencyRepository = currencyRepository,
             iconRepository = iconRepository,
+            colorRepository = colorRepository,
             currencyConvertUseCase = currencyConvertUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
         )
@@ -95,10 +103,12 @@ abstract class AccountComponent : AttachableViewComponent {
             useCase: AccountUseCase,
             dispatcherProvider: DispatcherProvider,
             onAccountSelectedHandler: OnAccountSelectedHandler,
+            onEditAccountHandler: OnEditAccountHandler,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
             dispatchers = dispatcherProvider,
             onAccountSelectedHandler = onAccountSelectedHandler,
+            onEditAccountHandler = onEditAccountHandler,
         )
 
         @Provides

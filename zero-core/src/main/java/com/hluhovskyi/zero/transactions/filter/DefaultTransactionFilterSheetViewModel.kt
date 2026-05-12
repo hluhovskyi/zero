@@ -3,7 +3,9 @@ package com.hluhovskyi.zero.transactions.filter
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
+import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,7 @@ internal class DefaultTransactionFilterSheetViewModel(
     private val transactionFilterUseCase: TransactionFilterUseCase,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val accountRepository: AccountRepository,
+    private val iconRepository: IconRepository,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : TransactionFilterSheetViewModel {
 
@@ -43,7 +46,8 @@ internal class DefaultTransactionFilterSheetViewModel(
             combine(
                 categoriesQueryUseCase.queryAll().onEmptyReturnEmptyList(),
                 accountRepository.query(AccountRepository.Criteria.All()).onEmptyReturnEmptyList(),
-            ) { categories, accounts ->
+                iconRepository.query(IconRepository.Criteria.All()).onEmptyReturnEmptyList().associateById(),
+            ) { categories, accounts, idToIcon ->
                 mutableState.value.copy(
                     availableCategories = categories.map { c ->
                         TransactionFilterSheetViewModel.FilterCategory(
@@ -54,7 +58,11 @@ internal class DefaultTransactionFilterSheetViewModel(
                         )
                     }.sortedBy { it.name },
                     availableAccounts = accounts.map { a ->
-                        TransactionFilterSheetViewModel.FilterAccount(id = a.id, name = a.name)
+                        TransactionFilterSheetViewModel.FilterAccount(
+                            id = a.id,
+                            name = a.name,
+                            icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
+                        )
                     }.sortedBy { it.name },
                 )
             }.collect { mutableState.update { _ -> it } }

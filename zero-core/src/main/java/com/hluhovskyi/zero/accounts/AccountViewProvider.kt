@@ -1,44 +1,58 @@
 package com.hluhovskyi.zero.accounts
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
-import java.math.BigDecimal
 
 internal class AccountViewProvider(
     private val viewModel: AccountViewModel,
@@ -58,6 +72,7 @@ internal class AccountViewProvider(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AccountView(
     viewModel: AccountViewModel,
@@ -72,6 +87,7 @@ private fun AccountView(
             .entries
             .sortedBy { it.key.ordinal }
     }
+    var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             NetWorthHeader(
@@ -94,6 +110,13 @@ private fun AccountView(
                     imageLoader = imageLoader,
                     amountFormatter = amountFormatter,
                     onClick = { viewModel.perform(AccountViewModel.Action.Select(account.id)) },
+                    onLongClick = { expandedItemId = account.id },
+                    menuExpanded = expandedItemId == account.id,
+                    onMenuDismiss = { expandedItemId = null },
+                    onEditClick = {
+                        expandedItemId = null
+                        viewModel.perform(AccountViewModel.Action.Edit(account.id))
+                    },
                 )
             }
         }
@@ -111,7 +134,7 @@ private fun NetWorthHeader(balance: String) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = "TOTAL NET WORTH",
+            text = stringResource(R.string.account_total_net_worth),
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
@@ -141,7 +164,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "My Accounts",
+            text = stringResource(R.string.account_my_accounts),
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -158,7 +181,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
-                text = "Add Account",
+                text = stringResource(R.string.account_add),
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
@@ -172,7 +195,7 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
 @Composable
 private fun CategoryHeader(category: AccountCategory) {
     Text(
-        text = category.displayName,
+        text = category.displayName(),
         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
         style = TextStyle(
             fontSize = 11.sp,
@@ -183,75 +206,96 @@ private fun CategoryHeader(category: AccountCategory) {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AccountRow(
     account: Account,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    menuExpanded: Boolean,
+    onMenuDismiss: () -> Unit,
+    onEditClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(SurfaceContainerLowest, shape = RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Box(
+    Box {
+        Row(
             modifier = Modifier
-                .size(44.dp)
-                .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center,
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .background(SurfaceContainerLowest, shape = RoundedCornerShape(12.dp))
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            imageLoader.View(
-                modifier = Modifier.size(24.dp),
-                image = account.icon,
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
+            CategoryIconView(
+                colorScheme = account.colorScheme.toUi(),
+                size = 44.dp,
+                contentPadding = 10.dp,
+            ) { tint ->
+                imageLoader.View(
+                    modifier = Modifier.size(24.dp),
+                    image = account.icon,
+                    tint = tint,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = account.name,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurface,
+                    ),
+                )
+                if (account.details != null) {
+                    Text(
+                        text = account.details,
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = OnSurfaceVariant,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
             Text(
-                text = account.name,
+                text = amountFormatter.format(
+                    amount = account.balance,
+                    currencySymbol = account.currencySymbol,
+                ),
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurface,
+                    color = if (account.balance < 0L) Error else OnSurface,
                 ),
             )
-            if (account.details != null) {
-                Text(
-                    text = account.details,
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = OnSurfaceVariant,
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        }
+        DropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = onMenuDismiss,
+        ) {
+            DropdownMenuItem(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
                 )
+                Spacer(Modifier.width(8.dp))
+                Text("Edit account")
             }
         }
-        Text(
-            text = amountFormatter.format(
-                amount = account.balance,
-                currencySymbol = account.currencySymbol,
-            ),
-            style = TextStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (account.balance.value < BigDecimal.ZERO) Error else OnSurface,
-            ),
-        )
     }
 }
 
-private val AccountCategory.displayName: String
-    get() = when (this) {
-        AccountCategory.CASH -> "CASH"
-        AccountCategory.BANK -> "BANK"
-        AccountCategory.CREDIT_CARDS -> "CREDIT CARDS"
-        AccountCategory.DIGITAL_WALLETS -> "DIGITAL WALLETS"
-        AccountCategory.CRYPTO -> "CRYPTO"
-        AccountCategory.OTHER -> "OTHER"
-    }
+@Composable
+private fun AccountCategory.displayName(): String = when (this) {
+    AccountCategory.CASH -> stringResource(R.string.account_header_cash)
+    AccountCategory.BANK -> stringResource(R.string.account_header_bank)
+    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_header_credit_cards)
+    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_header_digital_wallets)
+    AccountCategory.CRYPTO -> stringResource(R.string.account_header_crypto)
+    AccountCategory.OTHER -> stringResource(R.string.account_header_other)
+}

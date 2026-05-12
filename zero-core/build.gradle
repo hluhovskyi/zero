@@ -36,6 +36,13 @@ android {
     testOptions {
         targetSdk versions.targetSdk
     }
+    kotlin {
+        compilerOptions {
+            optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            optIn.add("androidx.compose.foundation.ExperimentalFoundationApi")
+            optIn.add("androidx.compose.animation.ExperimentalAnimationApi")
+        }
+    }
 }
 
 dependencies {
