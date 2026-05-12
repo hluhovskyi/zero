@@ -56,7 +56,21 @@ gh pr view <pr_number> --json mergeable,mergeStateStatus
 gh pr merge <pr_number> --squash --delete-branch
 ```
 
-Stop on failure — do not force-merge.
+If the merge fails because branch protection requirements haven't been met yet (e.g. CI still running, required review pending), use `--auto` so GitHub merges automatically once all requirements pass:
+
+```bash
+gh pr merge <pr_number> --squash --delete-branch --auto
+```
+
+Then use the wait-for-ci script to block until CI finishes and the PR is merged:
+
+```bash
+./scripts/github/wait-for-ci.sh <pr_number>
+```
+
+Once it exits 0, continue to Step 5 (which is now just the post-merge cleanup check).
+
+Stop on all other failures — do not force-merge.
 
 ## Step 5 — Wait for CI
 
@@ -102,6 +116,7 @@ Now on: master (<hash> <message>)
 
 ## Guardrails
 
+- **Never use `--admin`** — this bypasses branch protection and is strictly forbidden.
 - Never force-merge.
 - Skip pre-merge checks if not on `pr_branch`.
 - Always pull master after cleanup.
