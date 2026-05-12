@@ -15,6 +15,7 @@ private object Categories {
     val shopping = IconCategory("shopping", "Shopping")
     val entertainment = IconCategory("entertainment", "Entertainment")
     val education = IconCategory("education", "Education")
+    val health = IconCategory("health", "Health")
 }
 
 internal class PredefinedIconRepository(
@@ -57,6 +58,10 @@ internal class PredefinedIconRepository(
         iconOf(id = KnownIconIds.movie, resourceName = "ic_movie_24", description = "Movie", category = Categories.entertainment),
 
         iconOf(id = KnownIconIds.book, resourceName = "ic_book_24", description = "Book", category = Categories.education),
+
+        iconOf(id = KnownIconIds.shoppingCart, resourceName = "ic_shopping_cart_24", description = "Shopping cart", category = Categories.shopping),
+        iconOf(id = KnownIconIds.health, resourceName = "ic_health_24", description = "Health", category = Categories.health),
+        iconOf(id = KnownIconIds.salary, resourceName = "ic_salary_24", description = "Salary", category = Categories.moneyBanking),
     )
 
     override fun <T> query(criteria: IconRepository.Criteria<T>): Flow<T> = when (criteria) {
