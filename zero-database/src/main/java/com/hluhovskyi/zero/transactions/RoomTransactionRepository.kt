@@ -8,9 +8,7 @@ import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZonedClock
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,8 +22,7 @@ internal class RoomTransactionRepository(
     private val transactionRoom: () -> TransactionRoom,
     private val currentUserId: Flow<Id.Known>,
     private val incorrectStateDetector: IncorrectStateDetector,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
 ) : TransactionRepository {
 
     private val deletionEvents = MutableSharedFlow<Id.Known>(
@@ -189,7 +186,7 @@ internal class RoomTransactionRepository(
 
     override suspend fun delete(id: Id.Known) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
-            val now = clock.localDateTime(zoneProvider.timeZone()).toString()
+            val now = zonedClock.localDateTime().toString()
             transactionRoom().softDelete(
                 id = id.value,
                 userId = userId.value,
@@ -264,7 +261,7 @@ internal class RoomTransactionRepository(
             targetAccount = null,
             targetAmount = AmountEntity.empty(),
             enteredDateTime = dateTime,
-            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
             notes = notes,
@@ -282,7 +279,7 @@ internal class RoomTransactionRepository(
             targetAccount = null,
             targetAmount = AmountEntity.empty(),
             enteredDateTime = dateTime,
-            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
             notes = notes,
@@ -300,7 +297,7 @@ internal class RoomTransactionRepository(
             targetAccount = targetAccount.value,
             targetAmount = targetAmount.convert(),
             enteredDateTime = dateTime,
-            creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
+            creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
             notes = notes,

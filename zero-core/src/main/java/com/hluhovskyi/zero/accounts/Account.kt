@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.datetime.LocalDateTime
 
 data class Account(
     val id: Id.Known,
@@ -14,4 +15,5 @@ data class Account(
     val colorScheme: ColorScheme = ColorScheme.Grey,
     val category: AccountCategory,
     val details: String?,
+    val archivedAt: LocalDateTime? = null,
 )

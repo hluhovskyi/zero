@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.MIGRATION_1_2
 import com.hluhovskyi.zero.accounts.MIGRATION_3_4
+import com.hluhovskyi.zero.accounts.MIGRATION_5_6
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
@@ -16,8 +17,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.RoomConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -78,8 +78,7 @@ interface DatabaseComponent {
     interface Dependencies {
 
         val context: Context
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
     }
 
     companion object {
@@ -124,7 +123,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
 
         @Provides
@@ -133,14 +132,12 @@ interface DatabaseComponent {
             database: Provider<MainDatabase>,
             @CurrentUserId currentUserId: Flow<Id.Known>,
             incorrectStateDetector: IncorrectStateDetector,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): TransactionRepository = RoomTransactionRepository(
             transactionRoom = { database.get().transaction() },
             currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides
@@ -162,11 +159,13 @@ interface DatabaseComponent {
             @CurrentUserId currentUserId: Flow<Id.Known>,
             incorrectStateDetector: IncorrectStateDetector,
             idGenerator: IdGenerator,
+            zonedClock: ZonedClock,
         ): AccountRepository = RoomAccountRepository(
             accountRoom = { database.get().account() },
             currentUserId = currentUserId,
             incorrectStateDetector = incorrectStateDetector,
             idGenerator = idGenerator,
+            zonedClock = zonedClock,
         )
 
         @Provides
@@ -176,14 +175,12 @@ interface DatabaseComponent {
             @CurrentUserId currentUserId: Flow<Id.Known>,
             idGenerator: IdGenerator,
             incorrectStateDetector: IncorrectStateDetector,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategoryRepository = RoomCategoryRepository(
             categoryRoom = { database.get().category() },
             currentUserId = currentUserId,
             idGenerator = idGenerator,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
             incorrectStateDetector = incorrectStateDetector,
         )
 
@@ -206,16 +203,14 @@ interface DatabaseComponent {
         internal fun currencyRepositoryTransformer(
             database: Provider<MainDatabase>,
             @CurrentUserId currentUserId: Flow<Id.Known>,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CurrencyRepository.Transformer = CurrencyRepository.Transformer { baseRepository ->
             InUseCurrencyRepository(
                 accountRoom = { database.get().account() },
                 transactionRoom = { database.get().transaction() },
                 baseRepository = baseRepository,
                 currentUserId = currentUserId,
-                clock = clock,
-                zoneProvider = zoneProvider,
+                zonedClock = zonedClock,
             )
         }
 

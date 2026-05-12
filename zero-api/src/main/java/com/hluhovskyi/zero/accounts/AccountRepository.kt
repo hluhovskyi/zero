@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Identifiable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.LocalDateTime
 
 interface AccountRepository {
 
@@ -26,11 +27,16 @@ interface AccountRepository {
         val initialBalance: Amount,
         val category: AccountCategory,
         val details: String?,
+        val archivedAt: LocalDateTime? = null,
     ) : Identifiable
 
     suspend fun insert(account: AccountInsert)
 
     suspend fun insert(accounts: List<AccountInsert>)
+
+    suspend fun archive(id: Id.Known)
+
+    suspend fun unarchive(id: Id.Known)
 
     data class AccountInsert(
         val id: Id = Id.Unknown,
@@ -47,5 +53,7 @@ interface AccountRepository {
         override fun query(criteria: Criteria): Flow<List<Account>> = flowOf(emptyList())
         override suspend fun insert(account: AccountInsert) = Unit
         override suspend fun insert(accounts: List<AccountInsert>) = Unit
+        override suspend fun archive(id: Id.Known) = Unit
+        override suspend fun unarchive(id: Id.Known) = Unit
     }
 }

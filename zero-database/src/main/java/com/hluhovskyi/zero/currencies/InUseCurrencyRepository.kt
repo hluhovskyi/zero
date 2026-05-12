@@ -4,9 +4,7 @@ import com.hluhovskyi.zero.accounts.AccountRoom
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.transactions.TransactionRoom
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,8 +20,7 @@ internal class InUseCurrencyRepository(
     private val transactionRoom: () -> TransactionRoom,
     private val baseRepository: CurrencyRepository,
     private val currentUserId: Flow<Id.Known>,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
 ) : CurrencyRepository {
 
     override fun <T> query(criteria: CurrencyRepository.Criteria<T>): Flow<T> = when (criteria) {
@@ -32,8 +29,8 @@ internal class InUseCurrencyRepository(
     }.uncheckedCast()
 
     private fun queryInUse(): Flow<List<Currency>> = currentUserId.flatMapLatest { userId ->
-        val timeZone = zoneProvider.timeZone()
-        val thirtyDaysAgo = clock.localDateTime(timeZone)
+        val timeZone = zonedClock.timeZone()
+        val thirtyDaysAgo = zonedClock.localDateTime()
             .toInstant(timeZone)
             .minus(30, DateTimeUnit.DAY, timeZone)
             .toLocalDateTime(timeZone)

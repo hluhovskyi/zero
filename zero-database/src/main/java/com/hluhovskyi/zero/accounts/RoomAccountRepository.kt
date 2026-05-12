@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.requireCurrentUserId
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -19,6 +20,7 @@ internal class RoomAccountRepository(
     private val currentUserId: Flow<Id.Known>,
     private val idGenerator: IdGenerator,
     private val incorrectStateDetector: IncorrectStateDetector,
+    private val zonedClock: ZonedClock,
 ) : AccountRepository {
     override fun query(criteria: AccountRepository.Criteria): Flow<List<AccountRepository.Account>> = when (criteria) {
         is AccountRepository.Criteria.All -> currentUserId.take(1)
@@ -41,6 +43,7 @@ internal class RoomAccountRepository(
             initialBalance = Amount(account.initialBalance.value),
             category = AccountCategory.from(account.category),
             details = account.details,
+            archivedAt = account.archivedAt,
         )
     }
 
@@ -53,6 +56,22 @@ internal class RoomAccountRepository(
     override suspend fun insert(accounts: List<AccountRepository.AccountInsert>) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
             accountRoom().insert(accounts.map { it.toEntity(userId) })
+        }
+    }
+
+    override suspend fun archive(id: Id.Known) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            val entity = accountRoom().selectByIdOnce(userId.value, id.value) ?: return@requireCurrentUserId
+            val now = zonedClock.localDateTime()
+            accountRoom().insert(entity.copy(archivedAt = now, updatedDateTime = now))
+        }
+    }
+
+    override suspend fun unarchive(id: Id.Known) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            val entity = accountRoom().selectByIdOnce(userId.value, id.value) ?: return@requireCurrentUserId
+            val now = zonedClock.localDateTime()
+            accountRoom().insert(entity.copy(archivedAt = null, updatedDateTime = now))
         }
     }
 
