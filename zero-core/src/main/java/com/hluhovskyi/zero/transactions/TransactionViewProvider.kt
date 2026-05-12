@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
@@ -237,18 +236,13 @@ private fun TransactionView(
                                                 accountName = transaction.accountName,
                                                 iconColorScheme = transaction.categoryColorScheme.toUi(),
                                                 accountIcon = {
-                                                    val tint = if (transaction.accountColorScheme != ColorScheme.Grey) {
-                                                        transaction.accountColorScheme.primary.toUi()
-                                                    } else {
-                                                        transaction.categoryColorScheme.primary.toUi()
-                                                    }
                                                     imageLoader.View(
                                                         image = transaction.accountIcon,
                                                         modifier = Modifier
                                                             .alpha(ContentAlpha.medium)
                                                             .padding(end = 6.dp)
                                                             .size(20.dp),
-                                                        tint = tint,
+                                                        tint = transaction.accountColorScheme.primary.toUi(),
                                                     )
                                                 },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),
@@ -268,18 +262,13 @@ private fun TransactionView(
                                                 accountName = transaction.accountName,
                                                 iconColorScheme = transaction.categoryColorScheme.toUi(),
                                                 accountIcon = {
-                                                    val tint = if (transaction.accountColorScheme != ColorScheme.Grey) {
-                                                        transaction.accountColorScheme.primary.toUi()
-                                                    } else {
-                                                        transaction.categoryColorScheme.primary.toUi()
-                                                    }
                                                     imageLoader.View(
                                                         image = transaction.accountIcon,
                                                         modifier = Modifier
                                                             .alpha(ContentAlpha.medium)
                                                             .padding(end = 6.dp)
                                                             .size(20.dp),
-                                                        tint = tint,
+                                                        tint = transaction.accountColorScheme.primary.toUi(),
                                                     )
                                                 },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),

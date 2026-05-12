@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
+import com.hluhovskyi.zero.colors.schemeForOrGrey
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
@@ -319,8 +320,7 @@ internal class DefaultTransactionViewModel(
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
-                val accountColorScheme = (account.colorId as? Id.Known)
-                    ?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey
+                val accountColorScheme = colorRepository.schemeForOrGrey(account.colorId)
 
                 TransactionViewModel.Item.Transaction.Expense(
                     id = transaction.id,
@@ -351,8 +351,7 @@ internal class DefaultTransactionViewModel(
                 val category = idToCategories[transaction.categoryId] ?: return null
                 val account = idToAccounts[transaction.accountId] ?: return null
                 val currency = idToCurrencies[transaction.currencyId] ?: return null
-                val accountColorScheme = (account.colorId as? Id.Known)
-                    ?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey
+                val accountColorScheme = colorRepository.schemeForOrGrey(account.colorId)
 
                 TransactionViewModel.Item.Transaction.Income(
                     id = transaction.id,
