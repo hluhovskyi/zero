@@ -66,6 +66,7 @@ abstract class TransactionEditComponent :
             .dependencies(dependencies)
             .transactionId(Id.Unknown)
             .preSelectedCategoryId(Id.Unknown)
+            .preSelectedAccountId(Id.Unknown)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
@@ -83,6 +84,9 @@ abstract class TransactionEditComponent :
 
         @BindsInstance
         fun preSelectedCategoryId(@PreSelectedCategoryId id: Id): Builder
+
+        @BindsInstance
+        fun preSelectedAccountId(@PreSelectedAccountId id: Id): Builder
 
         @BindsInstance
         fun onTransactionSavedHandler(handler: OnTransactionSavedHandler): Builder
@@ -108,6 +112,7 @@ abstract class TransactionEditComponent :
         fun useCase(
             transactionId: Id,
             @PreSelectedCategoryId preSelectedCategoryId: Id,
+            @PreSelectedAccountId preSelectedAccountId: Id,
             accountRepository: AccountRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyRepository: CurrencyRepository,
@@ -126,6 +131,7 @@ abstract class TransactionEditComponent :
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             transactionId = transactionId,
             preSelectedCategoryId = preSelectedCategoryId,
+            preSelectedAccountId = preSelectedAccountId,
             accountRepository = accountRepository,
             currencyRepository = currencyRepository,
             currencyConvertUseCase = currencyConvertUseCase,
