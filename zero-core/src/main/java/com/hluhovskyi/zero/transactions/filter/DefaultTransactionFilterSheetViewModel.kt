@@ -1,14 +1,9 @@
 package com.hluhovskyi.zero.transactions.filter
 
-import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
-import com.hluhovskyi.zero.colors.ColorRepository
-import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
-import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,9 +17,7 @@ import java.io.Closeable
 internal class DefaultTransactionFilterSheetViewModel(
     private val transactionFilterUseCase: TransactionFilterUseCase,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
-    private val accountRepository: AccountRepository,
-    private val iconRepository: IconRepository,
-    private val colorRepository: ColorRepository,
+    private val accountsQueryUseCase: AccountsQueryUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : TransactionFilterSheetViewModel {
 
@@ -49,9 +42,8 @@ internal class DefaultTransactionFilterSheetViewModel(
             }
             combine(
                 categoriesQueryUseCase.queryAll().onEmptyReturnEmptyList(),
-                accountRepository.query(AccountRepository.Criteria.All()).onEmptyReturnEmptyList(),
-                iconRepository.query(IconRepository.Criteria.All()).onEmptyReturnEmptyList().associateById(),
-            ) { categories, accounts, idToIcon ->
+                accountsQueryUseCase.queryAll().onEmptyReturnEmptyList(),
+            ) { categories, accounts ->
                 mutableState.value.copy(
                     availableCategories = buildList {
                         add(TransactionFilterSheetViewModel.FilterCategoryItem.All(count = categories.size))
@@ -73,8 +65,8 @@ internal class DefaultTransactionFilterSheetViewModel(
                                 TransactionFilterSheetViewModel.FilterAccountItem.Account(
                                     id = a.id,
                                     name = a.name,
-                                    colorScheme = (a.colorId as? Id.Known)?.let { colorRepository.schemeFor(it) } ?: ColorScheme.Grey,
-                                    icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
+                                    colorScheme = a.colorScheme,
+                                    icon = a.icon,
                                 ),
                             )
                         }

@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero
 
 import android.content.Context
+import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -240,6 +242,18 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun colorsRepository(): ColorRepository = PredefinedMaterialColorRepository()
+
+        @Provides
+        @ApplicationScope
+        fun accountsQueryUseCase(
+            accountRepository: AccountRepository,
+            iconRepository: IconRepository,
+            colorRepository: ColorRepository,
+        ): AccountsQueryUseCase = AccountComponent.queryUseCase(
+            accountRepository = accountRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
+        )
 
         @Provides
         @ApplicationScope
