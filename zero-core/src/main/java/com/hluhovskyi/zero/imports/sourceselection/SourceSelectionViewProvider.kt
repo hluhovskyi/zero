@@ -29,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.KnownSource
 import com.hluhovskyi.zero.imports.Source
@@ -67,7 +69,7 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
             .background(Surface),
     ) {
         ModalHeader(
-            title = "Import Data",
+            title = stringResource(R.string.import_source_selection_title),
             onClose = { viewModel.perform(SourceSelectionViewModel.Action.Close) },
         )
         LazyColumn(
@@ -87,7 +89,7 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
             }
             item(key = "subtitle") {
                 Text(
-                    text = "Choose a data source. Zero will preview what will be imported before anything is saved.",
+                    text = stringResource(R.string.import_source_selection_subtitle),
                     fontSize = 14.sp,
                     color = OnSurfaceVariant,
                     lineHeight = 20.sp,
@@ -115,20 +117,21 @@ private data class SourceCardConfig(
     val description: String,
 )
 
+@Composable
 private fun sourceCardConfig(source: Source): SourceCardConfig? = when (source.key) {
     KnownSource.ZeroBackup.key -> SourceCardConfig(
         icon = Icons.Filled.Backup,
         iconBg = Color(0xFFE8EEFF),
         iconTint = PrimaryContainer,
-        title = "Zero Backup",
-        description = "Restore from a .zero backup file",
+        title = stringResource(R.string.import_source_zero_backup_title),
+        description = stringResource(R.string.import_source_zero_backup_description),
     )
     KnownSource.ZenMoney.key -> SourceCardConfig(
         icon = Icons.Filled.Description,
         iconBg = Color(0xFFE8F5E9),
         iconTint = Color(0xFF1B5E20),
-        title = "ZenMoney CSV",
-        description = "Import transactions from a ZenMoney export",
+        title = stringResource(R.string.import_source_zenmoney_title),
+        description = stringResource(R.string.import_source_zenmoney_description),
     )
     else -> null
 }
@@ -209,7 +212,7 @@ private fun MoreSourcesHint() {
             )
         }
         Text(
-            text = "More sources coming soon",
+            text = stringResource(R.string.import_source_more_coming_soon),
             fontSize = 13.sp,
             color = OnSurfaceVariant,
         )

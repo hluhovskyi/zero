@@ -20,9 +20,19 @@ Record:
 
 ## Step 2 — Pre-merge checks (only if `is_current_branch`)
 
-Run in order — stop and report on first failure, do not continue to merge.
+First, check if the PR is purely non-runtime (no Android source changes):
 
 ```bash
+gh pr diff <pr_number> --name-only
+```
+
+If every changed file falls under `skills/`, `docs/`, `.claude/`, or matches `*.md` — skip
+the Gradle checks entirely and note "non-runtime change, skipping build verification."
+
+Otherwise run in order — stop and report on first failure, do not continue to merge:
+
+```bash
+./gradlew spotlessApply
 ./gradlew testDebugUnitTest
 ./gradlew lint          # warnings OK; fail on errors
 ./gradlew assembleDebug
@@ -38,7 +48,7 @@ gh pr view <pr_number> --json mergeable,mergeStateStatus
 
 - **`MERGEABLE`** — proceed.
 - **`UNKNOWN`** — wait 5 s, re-check.
-- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git rebase origin/master`, resolve conflicts, `git rebase --continue`, `git push --force-with-lease`, re-check until `MERGEABLE`.
+- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git merge origin/master`, resolve conflicts (see [Conflict Resolution](docs/agents/branch-management.md#conflict-resolution)), `git push`, re-check until `MERGEABLE`.
 
 ## Step 4 — Merge
 

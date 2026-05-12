@@ -18,12 +18,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultAccountEditViewModel(
+    private val accountId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val iconRepository: IconRepository,
@@ -46,6 +48,7 @@ internal class DefaultAccountEditViewModel(
                 selectedCurrency = state.selectedCurrency,
                 selectedIcon = state.icon,
                 colorScheme = state.colorScheme,
+                isEditMode = accountId is Id.Known,
             )
         }
 
@@ -86,6 +89,7 @@ internal class DefaultAccountEditViewModel(
                 val selectedCurrency = state.selectedCurrency ?: return@launch
                 accountRepository.insert(
                     AccountRepository.AccountInsert(
+                        id = accountId,
                         name = state.name,
                         currencyId = selectedCurrency.id,
                         iconId = state.iconId,
@@ -104,6 +108,24 @@ internal class DefaultAccountEditViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
+            if (accountId is Id.Known) {
+                val account = accountRepository.query(AccountRepository.Criteria.ById(accountId))
+                    .firstOrNull()
+                    ?.firstOrNull()
+                if (account != null) {
+                    mutableState.update { state ->
+                        state.copy(
+                            name = account.name,
+                            balance = account.initialBalance.value.toPlainString(),
+                            details = account.details.orEmpty(),
+                            category = account.category,
+                            iconId = account.iconId,
+                            targetCurrencyId = account.currencyId,
+                        )
+                    }
+                }
+            }
+
             val primaryCurrency = runCatching { currencyPrimaryUseCase.getPrimaryCurrency() }.getOrNull()
             launch {
                 iconRepository.query(IconRepository.Criteria.ById(mutableState.value.iconId))
@@ -120,6 +142,7 @@ internal class DefaultAccountEditViewModel(
                             state.copy(
                                 currencies = currencies,
                                 selectedCurrency = state.selectedCurrency
+                                    ?: currencies.firstOrNull { it.id == state.targetCurrencyId }
                                     ?: currencies.firstOrNull { it.id == primaryCurrency?.id }
                                     ?: primaryCurrency
                                     ?: currencies.firstOrNull(),
@@ -169,5 +192,6 @@ internal class DefaultAccountEditViewModel(
         val icon: Image = Image.empty(),
         val colorId: Id = Id.Unknown,
         val colorScheme: ColorScheme = ColorScheme.Grey,
+        val targetCurrencyId: Id = Id.Unknown,
     )
 }

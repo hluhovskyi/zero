@@ -16,7 +16,6 @@ import com.hluhovskyi.zero.sync.SyncSnapshot
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -33,7 +32,6 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class DefaultImportUseCaseTest {
 

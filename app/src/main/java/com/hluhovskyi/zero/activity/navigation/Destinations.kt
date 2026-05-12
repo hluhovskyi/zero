@@ -11,6 +11,7 @@ internal object Destinations {
         sealed interface Item : Account {
             object AccountId : Argument<Id.Known> by idKnownValueOf("accountId")
             object Detail : Item, Destination by destinationOf("accounts/{accountId}", AccountId)
+            object Edit : Item, Destination by destinationOf("accounts/{accountId}/edit", AccountId)
         }
     }
 

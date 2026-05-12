@@ -13,6 +13,8 @@ interface AccountRepository {
     sealed interface Criteria {
 
         class All : Criteria
+
+        class ById(val id: Id.Known) : Criteria
     }
 
     data class Account(

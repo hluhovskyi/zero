@@ -30,11 +30,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.ViewProvider
@@ -73,7 +75,7 @@ private fun CategoryEditView(
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
             ModalHeader(
-                title = "Add Category",
+                title = stringResource(R.string.category_edit_title),
                 onClose = { onDiscard.onDiscard() },
             )
             Column(
@@ -119,8 +121,8 @@ private fun CategoryEditView(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = { Icon(Icons.Filled.Check, contentDescription = "Save category") },
-            text = { Text("Save") },
+            icon = { Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.category_edit_save_description)) },
+            text = { Text(stringResource(R.string.category_edit_save)) },
             onClick = { viewModel.perform(CategoryEditViewModel.Action.Save) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
@@ -174,7 +176,7 @@ private fun NameFormCard(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = "CATEGORY NAME",
+            text = stringResource(R.string.category_edit_name_label),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurfaceVariant,
@@ -193,7 +195,7 @@ private fun NameFormCard(
             decorationBox = { innerTextField ->
                 if (value.isEmpty()) {
                     Text(
-                        text = "e.g. Groceries",
+                        text = stringResource(R.string.category_edit_name_placeholder),
                         fontSize = 16.sp,
                         color = OnSurfaceVariant,
                     )

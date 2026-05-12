@@ -9,6 +9,7 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
 
     sealed interface Action {
         data class Select(val accountId: Id.Known) : Action
+        data class Edit(val accountId: Id.Known) : Action
     }
 
     data class State(

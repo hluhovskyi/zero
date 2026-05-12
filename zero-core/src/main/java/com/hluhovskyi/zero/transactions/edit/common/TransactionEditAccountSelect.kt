@@ -3,6 +3,8 @@ package com.hluhovskyi.zero.transactions.edit.common
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
 
@@ -17,7 +19,7 @@ fun TransactionEditAccountSelect(
         modifier = modifier,
         items = accounts,
         label = {
-            Text(text = "Account")
+            Text(text = stringResource(R.string.transaction_edit_account_label))
         },
         nameMapping = { it.name },
         selectedItem = selectedAccount,

@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'skills/**'
+      - 'docs/**'
+      - '.claude/**'
 
 concurrency:
   group: ci-${{ github.head_ref }}
@@ -27,6 +32,9 @@ jobs:
 
       - name: Run unit tests
         run: ./gradlew test
+
+      - name: Run lint
+        run: ./gradlew lintDebug
 
       - name: Upload test reports
         if: failure()

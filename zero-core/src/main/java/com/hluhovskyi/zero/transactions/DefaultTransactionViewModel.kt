@@ -125,7 +125,6 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
             launch {

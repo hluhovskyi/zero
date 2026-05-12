@@ -6,7 +6,6 @@ enum class CategoryType {
     ;
 
     companion object {
-        fun from(value: String?): CategoryType =
-            entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: EXPENSE
+        fun from(value: String?): CategoryType = entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: EXPENSE
     }
 }

@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.activity.screens
 
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
@@ -127,7 +126,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun bottomSheetNavigator(bottomSheetNavigator: BottomSheetNavigator): Builder
 
         @BindsInstance
-        @OptIn(ExperimentalMaterialApi::class)
         fun modalBottomSheetState(modalBottomSheetState: ModalBottomSheetState): Builder
     }
 
@@ -177,7 +175,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         @Provides
         @MainActivityScreenScope
-        @OptIn(ExperimentalMaterialApi::class)
         fun viewProvider(
             navHostController: NavHostController,
             bottomSheetNavigator: BottomSheetNavigator,
@@ -454,6 +451,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Account.Item.AccountId.withValue(accountId),
                         )
                     }
+                    .onEditAccountHandler { accountId ->
+                        navigator.navigateTo(
+                            Destinations.Account.Item.Edit,
+                            Destinations.Account.Item.AccountId.withValue(accountId),
+                        )
+                    }
                     .logging(logger),
             )
         }
@@ -501,6 +504,25 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
+        fun accountItemEditNavigationEntry(
+            componentBuilder: AccountEditComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+            accountEditIconUseCase: AccountEditIconUseCase,
+            accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Edit) {
+            componentBuilder
+                .accountId(arguments.getValue(Destinations.Account.Item.AccountId))
+                .accountEditIconUseCase(accountEditIconUseCase)
+                .accountEditCurrencyUseCase(accountEditCurrencyUseCase)
+                .onAccountSavedHandler { navigator.back() }
+                .onCloseHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
             navigatorScope: NavigatorScope,
@@ -510,6 +532,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .accountId(accountId)
                 .onBackHandler { navigator.back() }
+                .onEditHandler {
+                    navigator.navigateTo(
+                        Destinations.Account.Item.Edit,
+                        Destinations.Account.Item.AccountId.withValue(accountId),
+                    )
+                }
                 .onTransactionSelectedHandler { transactionId ->
                     navigator.navigateTo(
                         Destinations.Transaction.Item.Edit,
