@@ -21,5 +21,4 @@ interface ColorRepository {
     }
 }
 
-fun ColorRepository.schemeForOrGrey(colorId: Id): ColorScheme =
-    (colorId as? Id.Known)?.let { schemeFor(it) } ?: ColorScheme.Grey
+fun ColorRepository.schemeForOrGrey(colorId: Id): ColorScheme = (colorId as? Id.Known)?.let { schemeFor(it) } ?: ColorScheme.Grey
