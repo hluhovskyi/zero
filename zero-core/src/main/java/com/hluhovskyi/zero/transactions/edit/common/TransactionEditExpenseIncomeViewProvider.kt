@@ -13,8 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
@@ -87,7 +89,7 @@ private fun TransactionEditExpenseIncomeView(
             state.date?.let { date ->
                 DatePickerCard(
                     modifier = Modifier.weight(1f),
-                    label = "Date",
+                    label = stringResource(R.string.transaction_edit_date_label),
                     date = date,
                     onDateSelected = {
                         viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeDate(it))
@@ -96,7 +98,7 @@ private fun TransactionEditExpenseIncomeView(
             }
             SelectorCard(
                 modifier = Modifier.weight(1f),
-                label = "Account",
+                label = stringResource(R.string.transaction_edit_account_label),
                 value = state.selectedAccount?.name ?: "",
                 items = state.accounts,
                 nameMapping = { it.name },

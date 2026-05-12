@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 5,
-    "identityHash": "4a5d1793024bbe78266f59b6a54aa4c5",
+    "version": 6,
+    "identityHash": "386be252a7b78c899b4bf5261b123a6b",
     "entities": [
       {
         "tableName": "CurrentUserEntity",
@@ -30,7 +30,7 @@
       },
       {
         "tableName": "AccountEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `userId` TEXT NOT NULL, `currencyId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconId` TEXT NOT NULL, `category` TEXT NOT NULL, `details` TEXT, `colorId` TEXT, `creationDateTime` TEXT NOT NULL, `updatedDateTime` TEXT NOT NULL, `deletedAt` TEXT, `value` REAL NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `userId` TEXT NOT NULL, `currencyId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconId` TEXT NOT NULL, `category` TEXT NOT NULL, `details` TEXT, `colorId` TEXT, `creationDateTime` TEXT NOT NULL, `updatedDateTime` TEXT NOT NULL, `deletedAt` TEXT, `archivedAt` TEXT, `value` REAL NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -93,6 +93,11 @@
           {
             "fieldPath": "deletedAt",
             "columnName": "deletedAt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
             "affinity": "TEXT"
           },
           {
@@ -337,7 +342,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4a5d1793024bbe78266f59b6a54aa4c5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '386be252a7b78c899b4bf5261b123a6b')"
     ]
   }
 }

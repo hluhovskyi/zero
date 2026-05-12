@@ -27,6 +27,11 @@ internal class DefaultTransactionEditViewModel(
                 date = state.date,
                 selectedCategory = selectedCategory,
                 isEditMode = isEditMode,
+                notes = when (state) {
+                    is TransactionEditUseCase.State.Expense -> state.notes
+                    is TransactionEditUseCase.State.Income -> state.notes
+                    is TransactionEditUseCase.State.Transfer -> state.notes
+                },
             )
         }
 
@@ -37,6 +42,9 @@ internal class DefaultTransactionEditViewModel(
 
             is TransactionEditViewModel.Action.ChangeDate ->
                 TransactionEditUseCase.Action.ChangeDate(action.date)
+
+            is TransactionEditViewModel.Action.ChangeNotes ->
+                TransactionEditUseCase.Action.ChangeNotes(action.notes)
 
             is TransactionEditViewModel.Action.Save ->
                 TransactionEditUseCase.Action.Save

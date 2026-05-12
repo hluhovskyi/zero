@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.transactions.TransactionRoom
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -16,7 +15,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class InUseCurrencyRepository(
     private val accountRoom: () -> AccountRoom,
     private val transactionRoom: () -> TransactionRoom,

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Existing filter chip plurals (from PR #99) -->
     <plurals name="filter_chip_categories">
         <item quantity="one">%d category</item>
         <item quantity="other">%d categories</item>
@@ -8,4 +9,178 @@
         <item quantity="one">%d account</item>
         <item quantity="other">%d accounts</item>
     </plurals>
+
+    <!-- Accounts -->
+    <string name="account_total_net_worth">TOTAL NET WORTH</string>
+    <string name="account_my_accounts">My Accounts</string>
+    <string name="account_add">Add Account</string>
+    <string name="account_header_cash">CASH</string>
+    <string name="account_header_bank">BANK</string>
+    <string name="account_header_credit_cards">CREDIT CARDS</string>
+    <string name="account_header_digital_wallets">DIGITAL WALLETS</string>
+    <string name="account_header_crypto">CRYPTO</string>
+    <string name="account_header_other">OTHER</string>
+
+    <!-- Account Detail -->
+    <string name="account_detail_in_this_month">IN THIS MONTH</string>
+    <string name="account_detail_out_this_month">OUT THIS MONTH</string>
+    <string name="account_detail_transactions">TRANSACTIONS</string>
+
+    <!-- Account Edit -->
+    <string name="account_edit_title_new">New Account</string>
+    <string name="account_edit_title_edit">Edit Account</string>
+    <string name="account_edit_opening_balance_label">OPENING BALANCE</string>
+    <string name="account_edit_name_label">Account Name</string>
+    <string name="account_edit_type_label">Type</string>
+    <string name="account_edit_save_description">Save account</string>
+    <string name="account_edit_save">Save</string>
+    <string name="account_type_cash">Cash</string>
+    <string name="account_type_bank">Bank</string>
+    <string name="account_type_credit_cards">Credit Cards</string>
+    <string name="account_type_digital_wallets">Digital Wallets</string>
+    <string name="account_type_crypto">Crypto</string>
+    <string name="account_type_other">Other</string>
+    <string name="account_name_placeholder_cash">e.g. Wallet</string>
+    <string name="account_name_placeholder_bank">e.g. Chase Sapphire</string>
+    <string name="account_name_placeholder_credit_cards">e.g. Amex Gold</string>
+    <string name="account_name_placeholder_digital_wallets">e.g. PayPal</string>
+    <string name="account_name_placeholder_crypto">e.g. Bitcoin</string>
+    <string name="account_name_placeholder_other">e.g. Savings</string>
+    <string name="account_detail_label_credit_cards">Last 4 / Nickname</string>
+    <string name="account_detail_label_bank">Account Number / Type</string>
+    <string name="account_detail_label_digital_wallets">Account Details</string>
+    <string name="account_detail_label_crypto">Wallet Address</string>
+    <string name="account_detail_label_other">Details</string>
+    <string name="account_detail_placeholder_credit_cards">••• 1209</string>
+    <string name="account_detail_placeholder_bank">Checking</string>
+    <string name="account_detail_placeholder_digital_wallets">user@example.com</string>
+    <string name="account_detail_placeholder_crypto">bc1q…</string>
+
+    <!-- Categories -->
+    <string name="category_title">Categories</string>
+    <string name="category_unused_this_month">Unused this month</string>
+    <string name="category_no_activity">No activity</string>
+    <string name="category_percent_of_total">%1$d%% of total</string>
+    <plurals name="category_transaction_count">
+        <item quantity="one">%d transaction</item>
+        <item quantity="other">%d transactions</item>
+    </plurals>
+
+    <!-- Category Detail -->
+    <string name="category_detail_more_options_description">More options</string>
+    <string name="category_detail_edit">Edit category</string>
+    <string name="category_detail_add_transaction">Add transaction</string>
+    <string name="category_detail_stat_transactions">TRANSACTIONS</string>
+    <string name="category_detail_stat_avg_per_tx">AVG PER TX</string>
+    <string name="category_detail_stat_largest">LARGEST</string>
+
+    <!-- Category Edit -->
+    <string name="category_edit_title">Add Category</string>
+    <string name="category_edit_save_description">Save category</string>
+    <string name="category_edit_save">Save</string>
+    <string name="category_edit_name_label">CATEGORY NAME</string>
+    <string name="category_edit_name_placeholder">e.g. Groceries</string>
+
+    <!-- Pickers -->
+    <string name="category_picker_search_placeholder">Search categories…</string>
+    <string name="currency_picker_search_placeholder">Search currencies…</string>
+    <string name="icon_picker_search_placeholder">Search icons…</string>
+    <string name="icon_picker_no_results">No icons match \"%1$s\"</string>
+
+    <!-- Settings -->
+    <string name="settings_title">More</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
+    <string name="settings_primary_currency">Primary Currency</string>
+    <string name="settings_currency_loading">Loading…</string>
+    <string name="settings_section_data">DATA</string>
+    <string name="settings_import_data">Import Data</string>
+    <string name="settings_import_data_description">Migrate history from other apps</string>
+    <string name="settings_export_data">Export Data</string>
+    <string name="settings_export_data_description">Save a backup of your data</string>
+    <string name="settings_section_security">SECURITY</string>
+    <string name="settings_biometric_lock">Biometric Lock</string>
+    <string name="settings_biometric_lock_description">Face ID or Fingerprint required on open</string>
+    <string name="settings_backup_saved">Backup saved</string>
+    <string name="settings_export_failed">Export failed: %1$s</string>
+
+    <!-- Import -->
+    <string name="import_back_description">Back</string>
+    <string name="import_nothing_to_import_title">Nothing to Import</string>
+    <string name="import_up_to_date_message">Your data is already up to date.</string>
+    <string name="import_all_synced_message">All categories, accounts, and transactions from this backup are already in the app.</string>
+    <string name="import_done">Done</string>
+    <string name="import_source_selection_title">Import Data</string>
+    <string name="import_source_selection_subtitle">Choose a data source. Zero will preview what will be imported before anything is saved.</string>
+    <string name="import_source_zero_backup_title">Zero Backup</string>
+    <string name="import_source_zero_backup_description">Restore from a .zero backup file</string>
+    <string name="import_source_zenmoney_title">ZenMoney CSV</string>
+    <string name="import_source_zenmoney_description">Import transactions from a ZenMoney export</string>
+    <string name="import_source_more_coming_soon">More sources coming soon</string>
+    <string name="import_accounts_review_title">Review Accounts</string>
+    <string name="import_accounts_review_info">%1$d ACCOUNTS · %2$d TRANSACTIONS</string>
+    <string name="import_accounts_review_continue">Continue</string>
+    <string name="import_accounts_review_tx_count">%d tx</string>
+    <string name="import_categories_review_title">Review Categories</string>
+    <string name="import_categories_review_info">%1$d CATEGORIES</string>
+    <string name="import_categories_review_continue">Continue</string>
+    <plurals name="import_categories_review_tx_count">
+        <item quantity="one">%d transaction</item>
+        <item quantity="other">%d transactions</item>
+    </plurals>
+    <string name="import_transactions_preview_title">Review Transactions</string>
+    <string name="import_transactions_preview_info">%1$d TRANSACTIONS</string>
+    <string name="import_transactions_preview_import">Import %1$d Transactions</string>
+
+    <!-- Transaction List -->
+    <string name="transaction_empty_state">No transactions found</string>
+    <string name="transaction_delete">Delete</string>
+    <string name="transaction_filter_icon_description">Filter</string>
+    <string name="transaction_clear_all">Clear all</string>
+    <string name="transaction_remove_filter_description">Remove filter</string>
+
+    <!-- Transaction Filter Sheet -->
+    <string name="filter_title">Filter</string>
+    <string name="filter_reset">Reset</string>
+    <string name="filter_section_period">Period</string>
+    <string name="filter_section_type">Type</string>
+    <string name="filter_section_categories">Categories</string>
+    <string name="filter_all_categories">All categories</string>
+    <string name="filter_section_accounts">Accounts</string>
+    <string name="filter_all_accounts">All accounts</string>
+    <string name="filter_apply">Apply filters</string>
+
+    <!-- Transaction Edit -->
+    <string name="transaction_edit_title">Edit Transaction</string>
+    <string name="transaction_new_title">New Transaction</string>
+    <string name="transaction_edit_more_options_description">More options</string>
+    <string name="transaction_edit_delete">Delete</string>
+    <string name="transaction_type_expense">Expense</string>
+    <string name="transaction_type_income">Income</string>
+    <string name="transaction_type_transfer">Transfer</string>
+    <string name="transaction_edit_save">Save Transaction</string>
+    <string name="transaction_edit_date_label">Date</string>
+    <string name="transaction_edit_account_label">Account</string>
+    <string name="transaction_edit_amount_label">Amount</string>
+    <string name="transaction_edit_category_label">Category</string>
+    <string name="transaction_edit_edit_categories_description">Edit categories</string>
+    <string name="transaction_edit_currency_label">Currency</string>
+    <string name="transaction_edit_rate_label">Rate</string>
+    <string name="transaction_edit_show_all_categories_description">Show all categories</string>
+    <string name="transaction_edit_all_categories">All</string>
+
+    <!-- Transaction Edit Transfer -->
+    <string name="transfer_edit_rate_label">RATE</string>
+    <string name="transfer_edit_change">CHANGE</string>
+    <string name="transfer_edit_enter_rate">Enter rate</string>
+    <string name="transfer_edit_destination_amount">DESTINATION AMOUNT</string>
+    <string name="transfer_edit_from_label">From</string>
+    <string name="transfer_edit_to_label">To</string>
+    <string name="transfer_edit_swap_description">Swap accounts</string>
+    <string name="transfer_receives_amount">Receives %1$s</string>
+    <string name="transfer_receives_with_symbol">Receives %1$s%2$s</string>
+    <string name="transfer_receives_with_rate">Receives %1$s%2$s · 1 %3$s = %4$s %5$s</string>
+
+    <!-- Transaction Notes -->
+    <string name="transaction_notes_label">NOTES</string>
+    <string name="transaction_notes_hint">Add a note…</string>
 </resources>

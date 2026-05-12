@@ -5,7 +5,7 @@ import androidx.room.Room
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.MIGRATION_1_2
 import com.hluhovskyi.zero.accounts.MIGRATION_3_4
-import com.hluhovskyi.zero.accounts.MIGRATION_4_5
+import com.hluhovskyi.zero.accounts.MIGRATION_5_6
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
@@ -27,6 +27,7 @@ import com.hluhovskyi.zero.sync.EntitySyncSource
 import com.hluhovskyi.zero.sync.SyncAccount
 import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncTransaction
+import com.hluhovskyi.zero.transactions.MIGRATION_4_5
 import com.hluhovskyi.zero.transactions.RoomTransactionRepository
 import com.hluhovskyi.zero.transactions.RoomTransactionSyncSink
 import com.hluhovskyi.zero.transactions.RoomTransactionSyncSource
@@ -122,7 +123,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
 
         @Provides

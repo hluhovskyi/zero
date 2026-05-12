@@ -29,6 +29,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         object SwapAccounts : Action
         object ShowAllCategories : Action
         object ShowAllCurrencies : Action
+        data class ChangeNotes(val notes: String) : Action
     }
 
     sealed interface State {
@@ -44,6 +45,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            val notes: String = "",
             override val date: LocalDateTime,
         ) : State
 
@@ -56,6 +58,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            val notes: String = "",
             override val date: LocalDateTime,
         ) : State
 
@@ -69,6 +72,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
             val sourceCurrencySymbol: String = "",
             val targetCurrencySymbol: String = "",
+            val notes: String = "",
             override val date: LocalDateTime,
         ) : State
     }

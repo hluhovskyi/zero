@@ -31,11 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachWithView
@@ -201,21 +203,21 @@ private fun HeroCard(
             Spacer(Modifier.size(16.dp))
             Row {
                 DetailStatColumn(
-                    label = "IN THIS MONTH",
+                    label = stringResource(R.string.account_detail_in_this_month),
                     value = "+${amountFormatter.format(state.totalIn, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = inValueColor,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = "OUT THIS MONTH",
+                    label = stringResource(R.string.account_detail_out_this_month),
                     value = "–${amountFormatter.format(state.totalOut, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = OnSurface,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
-                    label = "TRANSACTIONS",
+                    label = stringResource(R.string.account_detail_transactions),
                     value = state.transactionCount.toString(),
                     labelColor = accentColor.copy(alpha = 0.7f),
                     valueColor = OnSurface,

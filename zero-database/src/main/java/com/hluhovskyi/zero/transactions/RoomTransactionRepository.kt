@@ -31,7 +31,6 @@ internal class RoomTransactionRepository(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun <T> query(
         criteria: TransactionRepository.Criteria<T>,
         trigger: Flow<*>,
@@ -213,6 +212,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert(),
+                    notes = notes,
                 )
             }
 
@@ -228,6 +228,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     categoryId = categoryId,
                     rate = rate.convert(),
+                    notes = notes,
                 )
             }
 
@@ -242,6 +243,7 @@ internal class RoomTransactionRepository(
                     updatedDateTime = updatedDateTime,
                     targetAccount = Id.Known(targetAccount),
                     targetAmount = targetAmount.convert(),
+                    notes = notes,
                 )
             }
         }
@@ -263,6 +265,7 @@ internal class RoomTransactionRepository(
             creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
 
         is TransactionRepository.Transaction.Income -> TransactionEntity(
@@ -280,6 +283,7 @@ internal class RoomTransactionRepository(
             creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
 
         is TransactionRepository.Transaction.Transfer -> TransactionEntity(
@@ -297,6 +301,7 @@ internal class RoomTransactionRepository(
             creationDateTime = zonedClock.localDateTime(),
             updatedDateTime = updatedDateTime,
             deletedAt = null,
+            notes = notes,
         )
     }
 

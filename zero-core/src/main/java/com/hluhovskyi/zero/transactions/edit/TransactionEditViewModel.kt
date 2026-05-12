@@ -8,6 +8,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action
         data class ChangeDate(val date: LocalDateTime) : Action
+        data class ChangeNotes(val notes: String) : Action
         object Save : Action
         object Discard : Action
         object Delete : Action
@@ -19,5 +20,6 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         val date: LocalDateTime? = null,
         val selectedCategory: TransactionEditCategory? = null,
         val isEditMode: Boolean = false,
+        val notes: String = "",
     )
 }
