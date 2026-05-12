@@ -34,6 +34,7 @@ internal class DefaultPresetsUseCase(
         categoryInsert(name = "Shopping", iconId = "shopping_cart", colorId = "pink", type = CategoryType.EXPENSE),
         categoryInsert(name = "Entertainment", iconId = "game_controller", colorId = "purple", type = CategoryType.EXPENSE),
         categoryInsert(name = "Health", iconId = "health", colorId = "red", type = CategoryType.EXPENSE),
+        categoryInsert(name = "Restaurants", iconId = "fastfood", colorId = "orange", type = CategoryType.EXPENSE),
         categoryInsert(name = "Salary", iconId = "salary", colorId = "blue", type = CategoryType.INCOME),
         categoryInsert(name = "Other Income", iconId = null, colorId = "grey", type = CategoryType.INCOME),
     )

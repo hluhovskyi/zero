@@ -28,8 +28,11 @@ import org.mockito.kotlin.whenever
 class DefaultPresetsUseCaseTest {
 
     @Mock private lateinit var categoryRepository: CategoryRepository
+
     @Mock private lateinit var accountRepository: AccountRepository
+
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
+
     @Mock private lateinit var configurationRepository: ConfigurationRepository
 
     private val currencyId = Id.Known("usd")
@@ -59,11 +62,11 @@ class DefaultPresetsUseCaseTest {
         verify(categoryRepository).insert(categoriesCaptor.capture())
         val categories = categoriesCaptor.firstValue
 
-        assertEquals(7, categories.size)
+        assertEquals(8, categories.size)
 
         val expenseCategories = categories.filter { it.type == CategoryType.EXPENSE }
         val incomeCategories = categories.filter { it.type == CategoryType.INCOME }
-        assertEquals(5, expenseCategories.size)
+        assertEquals(6, expenseCategories.size)
         assertEquals(2, incomeCategories.size)
 
         assertTrue(expenseCategories.any { it.name == "Food & Drink" && it.iconId == Id("grocery") && it.colorId == Id("orange") })
@@ -71,6 +74,7 @@ class DefaultPresetsUseCaseTest {
         assertTrue(expenseCategories.any { it.name == "Shopping" && it.iconId == Id("shopping_cart") && it.colorId == Id("pink") })
         assertTrue(expenseCategories.any { it.name == "Entertainment" && it.iconId == Id("game_controller") && it.colorId == Id("purple") })
         assertTrue(expenseCategories.any { it.name == "Health" && it.iconId == Id("health") && it.colorId == Id("red") })
+        assertTrue(expenseCategories.any { it.name == "Restaurants" && it.iconId == Id("fastfood") && it.colorId == Id("orange") })
 
         assertTrue(incomeCategories.any { it.name == "Salary" && it.iconId == Id("salary") && it.colorId == Id("blue") })
         assertTrue(incomeCategories.any { it.name == "Other Income" })
