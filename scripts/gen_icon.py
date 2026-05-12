@@ -7,10 +7,7 @@ mint-green circle replacing the 'o'.
 Antialiased via 4x supersampling + LANCZOS downscale.
 
 Usage:
-    python3 scripts/gen_icon.py <inter-black-ttf> <out.png>
-
-Example:
-    python3 scripts/gen_icon.py /tmp/inter/extras/ttf/Inter-Black.ttf ~/Projects/zero-releases/zero-icon-512.png
+    python3 scripts/gen_icon.py <inter-black.ttf> <out.png>
 """
 import sys
 from PIL import Image, ImageDraw, ImageFont

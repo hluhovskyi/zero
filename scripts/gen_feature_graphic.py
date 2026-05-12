@@ -7,10 +7,7 @@ mint-green circle replacing the 'o', bottom-aligned.
 Antialiased via 4x supersampling + LANCZOS downscale.
 
 Usage:
-    python3 scripts/gen_feature_graphic.py <inter-black-ttf> <out.png>
-
-Example:
-    python3 scripts/gen_feature_graphic.py /tmp/inter/extras/ttf/Inter-Black.ttf ~/Projects/zero-releases/feature_graphic.png
+    python3 scripts/gen_feature_graphic.py <inter-black.ttf> <out.png>
 """
 import sys
 from PIL import Image, ImageDraw, ImageFont
