@@ -25,3 +25,18 @@ Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
 ## Lifecycle Timing
 
 Resolve dependencies that require runtime state (e.g. looking up a scheme by ID) in `attach()`, not in the constructor or `@Provides` methods. This ensures the component is fully wired before resolution occurs.
+
+## Attach-Only Components
+
+**For background work with no UI, create a Dagger component that exposes `abstract val attachable: Attachable` — not a standalone factory function.** A companion `create(...)` factory builds the component; the Module provides the use case and an `Attachable` impl. See `PresetsComponent` as the canonical example.
+
+The private `Attachable` impl owns a default `CoroutineScope` as a constructor default — **never inject `CoroutineScope` via `@BindsInstance`**:
+
+```kotlin
+private class PresetsAttachable(
+    private val useCase: PresetsUseCase,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+) : Attachable {
+    override fun attach(): Closeable = Closeables.of { scope.launch { useCase.seed() } }
+}
+```
