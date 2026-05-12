@@ -19,4 +19,8 @@ internal object KnownIconIds {
     val book: Id.Known = Id("book")
     val movie: Id.Known = Id("movie")
     val beach: Id.Known = Id("beach")
+
+    val shoppingCart: Id.Known = Id("shopping_cart")
+    val health: Id.Known = Id("health")
+    val salary: Id.Known = Id("salary")
 }
