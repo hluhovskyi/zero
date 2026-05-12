@@ -255,7 +255,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Transaction.Filter,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             transactionFilterSheetComponentBuilder
                 .transactionFilterUseCase(transactionFilterUseCase)

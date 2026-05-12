@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.accounts.detail
 import com.hluhovskyi.zero.accounts.Account
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.accounts.AccountDetailSpendingUseCase
+import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountUseCase
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
@@ -22,8 +23,10 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -42,6 +45,8 @@ class DefaultAccountDetailViewModelTest {
     @Mock private lateinit var accountUseCase: AccountUseCase
 
     @Mock private lateinit var spendingUseCase: AccountDetailSpendingUseCase
+
+    @Mock private lateinit var accountRepository: AccountRepository
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val accountId = Id.Known("acc1")
@@ -139,6 +144,7 @@ class DefaultAccountDetailViewModelTest {
         name: String = "Test Account",
         balance: Amount = Amount.zero(),
         currencySymbol: String = "$",
+        archivedAt: kotlinx.datetime.LocalDateTime? = null,
     ) = Account(
         id = accountId,
         name = name,
@@ -147,6 +153,7 @@ class DefaultAccountDetailViewModelTest {
         icon = Image.empty(),
         category = AccountCategory.BANK,
         details = null,
+        archivedAt = archivedAt,
     )
 
     @Test
@@ -161,6 +168,53 @@ class DefaultAccountDetailViewModelTest {
         verify(editHandler).onEdit()
     }
 
+    @Test
+    fun `Archive action calls repository archive with account id`() = runTest {
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        vm.perform(AccountDetailViewModel.Action.Archive)
+
+        verify(accountRepository).archive(accountId)
+    }
+
+    @Test
+    fun `Unarchive action calls repository unarchive with account id`() = runTest {
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        vm.perform(AccountDetailViewModel.Action.Unarchive)
+
+        verify(accountRepository).unarchive(accountId)
+    }
+
+    @Test
+    fun `isArchived is true when account has archivedAt`() = runTest {
+        val archivedAt = fixedInstant.toLocalDateTime(TimeZone.UTC)
+        val account = makeAccount(archivedAt = archivedAt)
+        whenever(accountUseCase.state).thenReturn(flowOf(AccountUseCase.State(accounts = listOf(account))))
+
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        assertTrue(vm.state.first().isArchived)
+    }
+
+    @Test
+    fun `isArchived is false when account has no archivedAt`() = runTest {
+        val account = makeAccount(archivedAt = null)
+        whenever(accountUseCase.state).thenReturn(flowOf(AccountUseCase.State(accounts = listOf(account))))
+
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        assertFalse(vm.state.first().isArchived)
+    }
+
     private fun createViewModel(
         coroutineScope: CoroutineScope,
         onEditHandler: OnAccountDetailEditHandler = OnAccountDetailEditHandler.Noop,
@@ -170,6 +224,7 @@ class DefaultAccountDetailViewModelTest {
         accountDetailSpendingUseCase = spendingUseCase,
         onBackHandler = OnBackHandler.Noop,
         onEditHandler = onEditHandler,
+        accountRepository = accountRepository,
         clock = fakeClock,
         zoneProvider = fakeZone,
         coroutineScope = coroutineScope,

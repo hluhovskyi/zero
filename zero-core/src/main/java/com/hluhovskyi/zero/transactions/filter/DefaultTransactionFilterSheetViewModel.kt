@@ -1,11 +1,9 @@
 package com.hluhovskyi.zero.transactions.filter
 
-import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
-import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -19,8 +17,7 @@ import java.io.Closeable
 internal class DefaultTransactionFilterSheetViewModel(
     private val transactionFilterUseCase: TransactionFilterUseCase,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
-    private val accountRepository: AccountRepository,
-    private val iconRepository: IconRepository,
+    private val accountsQueryUseCase: AccountsQueryUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : TransactionFilterSheetViewModel {
 
@@ -45,25 +42,35 @@ internal class DefaultTransactionFilterSheetViewModel(
             }
             combine(
                 categoriesQueryUseCase.queryAll().onEmptyReturnEmptyList(),
-                accountRepository.query(AccountRepository.Criteria.All()).onEmptyReturnEmptyList(),
-                iconRepository.query(IconRepository.Criteria.All()).onEmptyReturnEmptyList().associateById(),
-            ) { categories, accounts, idToIcon ->
+                accountsQueryUseCase.queryAll().onEmptyReturnEmptyList(),
+            ) { categories, accounts ->
                 mutableState.value.copy(
-                    availableCategories = categories.map { c ->
-                        TransactionFilterSheetViewModel.FilterCategory(
-                            id = c.id,
-                            name = c.name,
-                            colorScheme = c.colorScheme,
-                            icon = c.icon,
-                        )
-                    }.sortedBy { it.name },
-                    availableAccounts = accounts.map { a ->
-                        TransactionFilterSheetViewModel.FilterAccount(
-                            id = a.id,
-                            name = a.name,
-                            icon = (idToIcon[a.iconId] ?: iconRepository.iconFor(a.category)).image,
-                        )
-                    }.sortedBy { it.name },
+                    availableCategories = buildList {
+                        add(TransactionFilterSheetViewModel.FilterCategoryItem.All(count = categories.size))
+                        categories.sortedBy { it.name }.forEach { c ->
+                            add(
+                                TransactionFilterSheetViewModel.FilterCategoryItem.Category(
+                                    id = c.id,
+                                    name = c.name,
+                                    colorScheme = c.colorScheme,
+                                    icon = c.icon,
+                                ),
+                            )
+                        }
+                    },
+                    availableAccounts = buildList {
+                        add(TransactionFilterSheetViewModel.FilterAccountItem.All(count = accounts.size))
+                        accounts.sortedBy { it.name }.forEach { a ->
+                            add(
+                                TransactionFilterSheetViewModel.FilterAccountItem.Account(
+                                    id = a.id,
+                                    name = a.name,
+                                    colorScheme = a.colorScheme,
+                                    icon = a.icon,
+                                ),
+                            )
+                        }
+                    },
                 )
             }.collect { mutableState.update { _ -> it } }
         }

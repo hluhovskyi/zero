@@ -1,14 +1,11 @@
 package com.hluhovskyi.zero.categories
 
-import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.common.valueOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -19,8 +16,7 @@ internal class RoomCategoryRepository(
     private val categoryRoom: () -> CategoryRoom,
     private val currentUserId: Flow<Id.Known>,
     private val idGenerator: IdGenerator,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : CategoryRepository {
 
@@ -70,8 +66,8 @@ internal class RoomCategoryRepository(
         name = name,
         iconId = iconId.valueOrNull(),
         colorId = colorId.valueOrNull(),
-        creationDateTime = clock.localDateTime(zoneProvider.timeZone()),
-        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
+        creationDateTime = zonedClock.localDateTime(),
+        updatedDateTime = zonedClock.localDateTime(),
         type = type.name,
     )
 }

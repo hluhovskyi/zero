@@ -13,6 +13,8 @@ interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewM
     sealed interface Action {
         object Back : Action
         object Edit : Action
+        object Archive : Action
+        object Unarchive : Action
     }
 
     data class State(
@@ -22,6 +24,7 @@ interface AccountDetailViewModel : AttachableActionStateModel<AccountDetailViewM
         val balance: Amount = Amount.zero(),
         val currencySymbol: String = "",
         val isNegativeBalance: Boolean = false,
+        val isArchived: Boolean = false,
         val periodDate: LocalDate? = null,
         val totalIn: Amount = Amount.zero(),
         val totalOut: Amount = Amount.zero(),

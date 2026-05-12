@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.accounts.detail
 
 import com.hluhovskyi.zero.accounts.AccountDetailSpendingUseCase
+import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountUseCase
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
@@ -26,6 +27,7 @@ internal class DefaultAccountDetailViewModel(
     private val accountDetailSpendingUseCase: AccountDetailSpendingUseCase,
     private val onBackHandler: OnBackHandler,
     private val onEditHandler: OnAccountDetailEditHandler = OnAccountDetailEditHandler.Noop,
+    private val accountRepository: AccountRepository = AccountRepository.Noop,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
@@ -41,6 +43,12 @@ internal class DefaultAccountDetailViewModel(
             }
             AccountDetailViewModel.Action.Edit -> coroutineScope.launch(Dispatchers.Main) {
                 onEditHandler.onEdit()
+            }
+            AccountDetailViewModel.Action.Archive -> coroutineScope.launch(Dispatchers.Main) {
+                accountRepository.archive(accountId)
+            }
+            AccountDetailViewModel.Action.Unarchive -> coroutineScope.launch(Dispatchers.Main) {
+                accountRepository.unarchive(accountId)
             }
         }
     }
@@ -63,6 +71,7 @@ internal class DefaultAccountDetailViewModel(
                             balance = account.balance,
                             currencySymbol = account.currencySymbol,
                             isNegativeBalance = account.balance.value < BigDecimal.ZERO,
+                            isArchived = account.archivedAt != null,
                         )
                     }
                 }

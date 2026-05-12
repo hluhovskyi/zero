@@ -15,3 +15,9 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE AccountEntity ADD COLUMN colorId TEXT")
     }
 }
+
+internal val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE AccountEntity ADD COLUMN archivedAt TEXT")
+    }
+}

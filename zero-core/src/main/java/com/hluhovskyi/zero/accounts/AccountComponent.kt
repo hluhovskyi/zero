@@ -52,6 +52,16 @@ abstract class AccountComponent : AttachableViewComponent {
 
     companion object {
 
+        fun queryUseCase(
+            accountRepository: AccountRepository,
+            iconRepository: IconRepository,
+            colorRepository: ColorRepository,
+        ): AccountsQueryUseCase = DefaultAccountsQueryUseCase(
+            accountRepository = accountRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
+        )
+
         fun builder(dependencies: Dependencies): Builder = DaggerAccountComponent.builder()
             .dependencies(dependencies)
             .onAddAccountHandler(OnAddAccountHandler.Noop)
@@ -104,11 +114,13 @@ abstract class AccountComponent : AttachableViewComponent {
             dispatcherProvider: DispatcherProvider,
             onAccountSelectedHandler: OnAccountSelectedHandler,
             onEditAccountHandler: OnEditAccountHandler,
+            accountRepository: AccountRepository,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
             dispatchers = dispatcherProvider,
             onAccountSelectedHandler = onAccountSelectedHandler,
             onEditAccountHandler = onEditAccountHandler,
+            accountRepository = accountRepository,
         )
 
         @Provides
