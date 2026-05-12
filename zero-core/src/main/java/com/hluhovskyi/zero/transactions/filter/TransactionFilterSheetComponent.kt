@@ -1,12 +1,11 @@
 package com.hluhovskyi.zero.transactions.filter
 
 import com.hluhovskyi.zero.ImageLoader
-import com.hluhovskyi.zero.accounts.AccountRepository
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.icons.IconRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -33,8 +32,7 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
     interface Dependencies {
         val imageLoader: ImageLoader
         val categoriesQueryUseCase: CategoriesQueryUseCase
-        val accountRepository: AccountRepository
-        val iconRepository: IconRepository
+        val accountsQueryUseCase: AccountsQueryUseCase
     }
 
     companion object {
@@ -59,13 +57,11 @@ abstract class TransactionFilterSheetComponent : AttachableViewComponent {
         fun viewModel(
             transactionFilterUseCase: TransactionFilterUseCase,
             categoriesQueryUseCase: CategoriesQueryUseCase,
-            accountRepository: AccountRepository,
-            iconRepository: IconRepository,
+            accountsQueryUseCase: AccountsQueryUseCase,
         ): TransactionFilterSheetViewModel = DefaultTransactionFilterSheetViewModel(
             transactionFilterUseCase = transactionFilterUseCase,
             categoriesQueryUseCase = categoriesQueryUseCase,
-            accountRepository = accountRepository,
-            iconRepository = iconRepository,
+            accountsQueryUseCase = accountsQueryUseCase,
         )
 
         @Provides
