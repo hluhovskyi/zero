@@ -6,18 +6,14 @@ description: Use when regenerating Play Store assets — the 512×512 icon or th
 # Generate Release Assets
 
 Regenerates Play Store graphics (icon + feature graphic) from PIL scripts using Inter Black.
-Output goes to `~/Projects/zero-releases/`.
 
 ## Prerequisites
 
 ```bash
 pip install pillow
-# Inter font (if not already present)
-curl -L https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip -o /tmp/inter.zip
-unzip -q /tmp/inter.zip -d /tmp/inter
 ```
 
-Font path used by both scripts: `/tmp/inter/extras/ttf/Inter-Black.ttf`
+Download Inter from https://rsms.me/inter/ and extract it. Both scripts take the font path as the first argument.
 
 ## Design tokens
 
@@ -30,7 +26,7 @@ Font path used by both scripts: `/tmp/inter/extras/ttf/Inter-Black.ttf`
 ## Generating the icon (512×512)
 
 ```bash
-python3 scripts/gen_icon.py /tmp/inter/extras/ttf/Inter-Black.ttf ~/Projects/zero-releases/zero-icon-512.png
+python3 scripts/gen_icon.py <inter-black.ttf> <out.png>
 ```
 
 Layout: "zer" in Inter Black (~96px) + mint-green circle to the right, centered on the canvas.
@@ -40,7 +36,7 @@ with the circle bottom sitting 6px above the text baseline.
 ## Generating the feature graphic (1024×500)
 
 ```bash
-python3 scripts/gen_feature_graphic.py /tmp/inter/extras/ttf/Inter-Black.ttf ~/Projects/zero-releases/feature_graphic.png
+python3 scripts/gen_feature_graphic.py <inter-black.ttf> <out.png>
 ```
 
 Layout: same "zer●" composition scaled up (~220px text), centered on a wider canvas.
@@ -56,5 +52,3 @@ jagged glyph edges that PIL produces at native resolution. Do not remove the SCA
 Upload the new files manually in Play Console:
 - Icon → Store listing → App icon
 - Feature graphic → Store listing → Feature graphic
-
-The files are gitignored (they live in `~/Projects/zero-releases/`, outside the repo).
