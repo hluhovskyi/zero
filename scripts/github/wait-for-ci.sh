@@ -25,6 +25,9 @@ while true; do
   fi
 
   if echo "$output" | grep -q "no checks reported"; then
+    state=$(gh pr view "$PR" $REPO_FLAG --json state --jq '.state')
+    if [ "$state" = "MERGED" ]; then echo "PR #$PR merged (no CI checks)!"; exit 0; fi
+    if [ "$state" = "CLOSED" ]; then echo "PR #$PR was closed without merging."; exit 1; fi
     echo "No checks yet — checking again in 15s..."
     sleep 15
     continue
