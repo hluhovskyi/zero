@@ -71,6 +71,8 @@ private fun CategoryEditView(
     imageLoader: ImageLoader,
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryEditViewModel.State())
+    val expenseLabel = stringResource(R.string.transaction_type_expense)
+    val incomeLabel = stringResource(R.string.transaction_type_income)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
@@ -91,7 +93,7 @@ private fun CategoryEditView(
                     items = listOf(CategoryType.EXPENSE, CategoryType.INCOME),
                     selectedItem = state.type,
                     onItemSelected = { viewModel.perform(CategoryEditViewModel.Action.SelectType(it)) },
-                    labelMapping = { if (it == CategoryType.EXPENSE) "Expense" else "Income" },
+                    labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
                 )
                 Row(
                     modifier = Modifier

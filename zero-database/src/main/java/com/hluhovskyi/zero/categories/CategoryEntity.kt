@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.categories
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Id
 import kotlinx.datetime.LocalDateTime
 
@@ -15,7 +16,7 @@ data class CategoryEntity(
     val name: String,
     val iconId: String?,
     val colorId: String?,
-    val type: String = "EXPENSE",
+    val type: String = CategoryType.EXPENSE.name,
     val creationDateTime: LocalDateTime,
     val updatedDateTime: LocalDateTime,
     val deletedAt: LocalDateTime? = null,

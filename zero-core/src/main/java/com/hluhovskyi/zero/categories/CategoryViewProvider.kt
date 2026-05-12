@@ -100,6 +100,8 @@ private fun CategoryView(
             }
 
             item {
+                val expenseLabel = stringResource(R.string.transaction_type_expense)
+                val incomeLabel = stringResource(R.string.transaction_type_income)
                 SegmentedToggle(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +110,7 @@ private fun CategoryView(
                     items = listOf(CategoryType.EXPENSE, CategoryType.INCOME),
                     selectedItem = state.selectedTab,
                     onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
-                    labelMapping = { if (it == CategoryType.EXPENSE) "Expense" else "Income" },
+                    labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
                 )
             }
 
@@ -169,8 +171,8 @@ private fun CategoryView(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = { Icon(Icons.Filled.Add, contentDescription = "Add category") },
-            text = { Text("Add category") },
+            icon = { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add_description)) },
+            text = { Text(stringResource(R.string.category_add)) },
             onClick = { onAddCategory.onAdd(state.selectedTab) },
             elevation = FloatingActionButtonDefaults.elevation(8.dp),
         )
