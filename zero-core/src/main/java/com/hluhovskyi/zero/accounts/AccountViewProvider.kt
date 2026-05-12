@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -51,6 +52,7 @@ import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.Secondary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
@@ -97,6 +99,14 @@ private fun AccountView(
                     amount = state.balance,
                     currencySymbol = state.currency?.symbol.orEmpty(),
                 ),
+                assets = amountFormatter.format(
+                    amount = state.assets,
+                    currencySymbol = state.currency?.symbol.orEmpty(),
+                ),
+                liabilities = amountFormatter.format(
+                    amount = state.liabilities,
+                    currencySymbol = state.currency?.symbol.orEmpty(),
+                ),
             )
         }
         item {
@@ -134,7 +144,11 @@ private fun AccountView(
 }
 
 @Composable
-private fun NetWorthHeader(balance: String) {
+private fun NetWorthHeader(
+    balance: String,
+    assets: String,
+    liabilities: String,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,6 +175,60 @@ private fun NetWorthHeader(balance: String) {
                 letterSpacing = (-0.5).sp,
             ),
         )
+        Spacer(Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.account_assets).uppercase(),
+                    style = TextStyle(
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.sp,
+                    ),
+                )
+                Text(
+                    text = assets,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Secondary,
+                    ),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(32.dp)
+                    .background(OutlineVariant)
+                    .align(Alignment.CenterVertically),
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.account_liabilities).uppercase(),
+                    style = TextStyle(
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceVariant,
+                        letterSpacing = 1.sp,
+                    ),
+                )
+                Text(
+                    text = liabilities,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Error,
+                    ),
+                )
+            }
+        }
     }
 }
 
@@ -296,7 +364,7 @@ private fun AccountRow(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Edit account")
+                Text(stringResource(R.string.account_detail_edit))
             }
             if (account.archivedAt == null) {
                 DropdownMenuItem(onClick = onArchiveClick) {
@@ -306,7 +374,7 @@ private fun AccountRow(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Archive account")
+                    Text(stringResource(R.string.account_detail_archive))
                 }
             } else {
                 DropdownMenuItem(onClick = onUnarchiveClick) {
@@ -316,7 +384,7 @@ private fun AccountRow(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Unarchive account")
+                    Text(stringResource(R.string.account_detail_unarchive))
                 }
             }
         }

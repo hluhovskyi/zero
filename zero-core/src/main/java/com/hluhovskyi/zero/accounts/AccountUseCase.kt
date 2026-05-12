@@ -10,6 +10,8 @@ interface AccountUseCase : ActionStateModel<AccountUseCase.Action, AccountUseCas
 
     data class State(
         val balance: Amount = Amount.zero(),
+        val assets: Amount = Amount.zero(),
+        val liabilities: Amount = Amount.zero(),
         val currency: Currency? = null,
         val accounts: List<Account> = emptyList(),
     )

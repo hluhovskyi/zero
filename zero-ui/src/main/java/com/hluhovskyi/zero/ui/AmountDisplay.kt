@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
@@ -48,7 +50,7 @@ fun AmountDisplay(
     focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
     onCurrencyClick: (() -> Unit)? = null,
-    label: String = "AMOUNT",
+    label: String,
 ) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
@@ -134,7 +136,7 @@ fun AmountDisplay(
                 decorationBox = { innerTextField ->
                     if (textFieldValue.text.isEmpty()) {
                         Text(
-                            text = "0.00",
+                            text = stringResource(R.string.amount_display_placeholder),
                             fontSize = 56.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colors.primary.copy(alpha = 0.3f),

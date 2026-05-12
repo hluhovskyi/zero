@@ -125,6 +125,7 @@ private fun TransactionView(
                 ) {
                     if (displayConfig.showSearchBar) {
                         SearchBar(
+                            placeholder = stringResource(R.string.transaction_search_placeholder),
                             query = state.searchQuery,
                             onQueryChange = { viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery(it)) },
                             modifier = Modifier.weight(1f),
