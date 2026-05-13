@@ -40,15 +40,21 @@ Otherwise run in order — stop and report on first failure, do not continue to 
 
 If all pass: `✓ Tests, lint, and build passed — proceeding with merge.`
 
-## Step 3 — Check for conflicts
+## Step 3 — Check mergeability
 
 ```bash
 gh pr view <pr_number> --json mergeable,mergeStateStatus
 ```
 
-- **`MERGEABLE`** — proceed.
+`mergeable` reports conflicts only; `mergeStateStatus` is the actual merge gate. Check both.
+
+- **`CLEAN` / `HAS_HOOKS`** — proceed.
 - **`UNKNOWN`** — wait 5 s, re-check.
-- **`CONFLICTING`** — checkout `pr_branch`, `git fetch origin`, `git merge origin/master`, resolve conflicts (see [Conflict Resolution](docs/agents/branch-management.md#conflict-resolution)), `git push`, re-check until `MERGEABLE`.
+- **`BEHIND`** — `git fetch origin && git merge origin/<base>` into `pr_branch`, push, re-check.
+- **`DIRTY`** (or `mergeable: CONFLICTING`) — merge `origin/<base>` and resolve (see [Conflict Resolution](docs/agents/branch-management.md#conflict-resolution)), push, re-check.
+- **`BLOCKED`** — required reviews/checks unsatisfied. Stop and report.
+
+**Don't `--auto` while `BEHIND` / `DIRTY` / `BLOCKED`** — auto-merge waits for `CLEAN` and won't update the branch for you.
 
 ## Step 4 — Merge
 
