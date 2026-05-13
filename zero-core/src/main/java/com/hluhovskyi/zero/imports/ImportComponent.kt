@@ -15,6 +15,7 @@ import com.hluhovskyi.zero.imports.categoriesreview.CategoriesReviewComponent
 import com.hluhovskyi.zero.imports.sourceselection.SourceSelectionComponent
 import com.hluhovskyi.zero.imports.transactionspreview.TransactionsPreviewComponent
 import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -51,6 +52,7 @@ abstract class ImportComponent :
         val colorRepository: ColorRepository
         val categoryRepository: CategoryRepository
         val accountRepository: AccountRepository
+        val transactionRepository: TransactionRepository
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
@@ -87,6 +89,7 @@ abstract class ImportComponent :
             colorRepository: ColorRepository,
             categoryRepository: CategoryRepository,
             accountRepository: AccountRepository,
+            transactionRepository: TransactionRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
         ): ImportUseCase = DefaultImportUseCase(
             parsers = parsers,
@@ -96,6 +99,7 @@ abstract class ImportComponent :
             colorRepository = colorRepository,
             categoryRepository = categoryRepository,
             accountRepository = accountRepository,
+            transactionRepository = transactionRepository,
             onImportFinishedHandler = onImportFinishedHandler,
         )
 
