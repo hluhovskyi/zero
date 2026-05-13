@@ -124,6 +124,7 @@ private fun CategoryView(
                 selectedItem = state.selectedTab,
                 onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
                 labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
+                selectedFraction = pagerState.currentPage + pagerState.currentPageOffsetFraction,
             )
 
             HorizontalPager(
