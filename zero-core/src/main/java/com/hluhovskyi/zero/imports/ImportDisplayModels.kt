@@ -12,6 +12,7 @@ data class ImportCategory(
     val colorScheme: ColorScheme,
     val icon: Image,
     val transactionCount: Int,
+    val newTransactionCount: Int = transactionCount,
     val existingId: Id.Known? = null,
 )
 
@@ -20,6 +21,7 @@ data class ImportAccount(
     val name: String,
     val currencyId: Id.Known,
     val transactionCount: Int,
+    val newTransactionCount: Int = transactionCount,
     val icon: Image? = null,
     val existingId: Id.Known? = null,
 )

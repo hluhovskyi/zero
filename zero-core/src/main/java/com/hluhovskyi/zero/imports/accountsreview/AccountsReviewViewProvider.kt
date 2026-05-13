@@ -194,11 +194,16 @@ private fun AccountRow(
                     }
                 }
             }
+            val displayedCount = when (strategy) {
+                ResolveStrategy.Merge -> account.newTransactionCount
+                ResolveStrategy.New -> account.transactionCount
+                ResolveStrategy.Skip -> 0
+            }
             Text(
                 text = if (isSkipped) {
                     stringResource(R.string.import_resolve_wont_be_imported)
                 } else {
-                    stringResource(R.string.import_accounts_review_tx_count, account.transactionCount)
+                    stringResource(R.string.import_accounts_review_tx_count, displayedCount)
                 },
                 fontSize = 11.sp,
                 color = if (isSkipped) Outline else OnSurfaceVariant,

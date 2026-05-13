@@ -92,7 +92,19 @@ internal class DefaultImportUseCase(
                         .map { it.toSignature() }
                         .toSet()
 
-                    val categories = buildCategories(delta, existingCategoryById, existingCategoryByName, allIconsById)
+                    val duplicateTxIds = computeDuplicateTxIds(
+                        transactions = delta.transactions,
+                        categoryRemap = defaultCategoryRemap(delta.categories, existingCategoryById, existingCategoryByName),
+                        accountRemap = defaultAccountRemap(delta.accounts, existingAccountById, existingAccountByName),
+                        existingSignatures = existingTransactionSignatures,
+                    )
+                    val categories = buildCategories(
+                        delta = delta,
+                        existingCategoryById = existingCategoryById,
+                        existingCategoryByName = existingCategoryByName,
+                        duplicateTxIds = duplicateTxIds,
+                        allIconsById = allIconsById,
+                    )
                     if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
                         mutableState.update { current ->
                             current.copy(screen = ImportUseCase.State.UpToDate)
@@ -148,11 +160,22 @@ internal class DefaultImportUseCase(
                 val delta = current.storedDelta ?: return@launch
                 val categories = current.storedCategories ?: return@launch
                 val nextDelta = applyCategoryStrategies(delta, categories, current.categoryStrategies)
+                val accountDuplicateTxIds = computeDuplicateTxIds(
+                    transactions = nextDelta.transactions,
+                    categoryRemap = emptyMap(), // categoryIds already remapped by applyCategoryStrategies
+                    accountRemap = defaultAccountRemap(
+                        nextDelta.accounts,
+                        current.existingAccountById,
+                        current.existingAccountByName,
+                    ),
+                    existingSignatures = current.existingTransactionSignatures,
+                )
                 val accounts = buildAccounts(
                     syncAccounts = nextDelta.accounts,
                     transactions = nextDelta.transactions,
                     existingAccountById = current.existingAccountById,
                     existingAccountByName = current.existingAccountByName,
+                    duplicateTxIds = accountDuplicateTxIds,
                     allIconsById = current.allIconsById,
                 )
                 val defaults = accounts.associate { it.id to defaultStrategy(it.existingId) }
@@ -240,12 +263,12 @@ internal class DefaultImportUseCase(
         delta: SyncSnapshot,
         existingCategoryById: Map<Id.Known, CategoryRepository.Category>,
         existingCategoryByName: Map<String, CategoryRepository.Category>,
+        duplicateTxIds: Set<Id.Known>,
         allIconsById: Map<Id.Known, Icon>,
     ): List<ImportCategory> {
-        val txCountByCategoryId = delta.transactions
-            .mapNotNull { transaction -> transaction.categoryId?.let { Id.Known(it) } }
-            .groupBy { it }
-            .mapValues { it.value.size }
+        val txsByCategoryId = delta.transactions
+            .filter { it.categoryId != null }
+            .groupBy { Id.Known(it.categoryId!!) }
         return delta.categories.map { syncCategory ->
             val existingMatch = existingCategoryById[syncCategory.id]
                 ?: existingCategoryByName[syncCategory.name.lowercase()]
@@ -256,12 +279,15 @@ internal class DefaultImportUseCase(
                 ?: syncCategory.iconId?.let { Id.Known(it) }
                 ?: IconRepository.unknownCategoryIconId()
             val icon = allIconsById[iconId] ?: Icon.empty()
+            val txs = txsByCategoryId[syncCategory.id].orEmpty()
+            val newCount = txs.count { it.id !in duplicateTxIds }
             ImportCategory(
                 id = syncCategory.id,
                 name = syncCategory.name,
                 colorScheme = colorRepository.schemeFor(colorId),
                 icon = icon.image,
-                transactionCount = txCountByCategoryId[syncCategory.id] ?: 0,
+                transactionCount = txs.size,
+                newTransactionCount = newCount,
                 existingId = existingMatch?.id,
             )
         }
@@ -272,6 +298,7 @@ internal class DefaultImportUseCase(
         transactions: List<SyncTransaction>,
         existingAccountById: Map<Id.Known, AccountRepository.Account>,
         existingAccountByName: Map<String, AccountRepository.Account>,
+        duplicateTxIds: Set<Id.Known>,
         allIconsById: Map<Id.Known, Icon>,
     ): List<ImportAccount> {
         val txByAccountId = transactions.groupBy { it.accountId }
@@ -279,15 +306,51 @@ internal class DefaultImportUseCase(
             val existingMatch = existingAccountById[syncAccount.id]
                 ?: existingAccountByName[syncAccount.name.lowercase()]
             val icon = existingMatch?.iconId?.let { allIconsById[it]?.image }
+            val txs = txByAccountId[syncAccount.id].orEmpty()
+            val newCount = txs.count { it.id !in duplicateTxIds }
             ImportAccount(
                 id = syncAccount.id,
                 name = syncAccount.name,
                 currencyId = syncAccount.currencyId,
-                transactionCount = txByAccountId[syncAccount.id]?.size ?: 0,
+                transactionCount = txs.size,
+                newTransactionCount = newCount,
                 icon = icon,
                 existingId = existingMatch?.id,
             )
         }
+    }
+
+    private fun defaultCategoryRemap(
+        syncCategories: List<com.hluhovskyi.zero.sync.SyncCategory>,
+        existingCategoryById: Map<Id.Known, CategoryRepository.Category>,
+        existingCategoryByName: Map<String, CategoryRepository.Category>,
+    ): Map<Id.Known, Id.Known> = syncCategories.mapNotNull { syncCat ->
+        val match = existingCategoryById[syncCat.id]
+            ?: existingCategoryByName[syncCat.name.lowercase()]
+        match?.id?.let { syncCat.id to it }
+    }.toMap()
+
+    private fun defaultAccountRemap(
+        syncAccounts: List<SyncAccount>,
+        existingAccountById: Map<Id.Known, AccountRepository.Account>,
+        existingAccountByName: Map<String, AccountRepository.Account>,
+    ): Map<Id.Known, Id.Known> = syncAccounts.mapNotNull { syncAcc ->
+        val match = existingAccountById[syncAcc.id]
+            ?: existingAccountByName[syncAcc.name.lowercase()]
+        match?.id?.let { syncAcc.id to it }
+    }.toMap()
+
+    private fun computeDuplicateTxIds(
+        transactions: List<SyncTransaction>,
+        categoryRemap: Map<Id.Known, Id.Known>,
+        accountRemap: Map<Id.Known, Id.Known>,
+        existingSignatures: Set<TransactionSignature>,
+    ): Set<Id.Known> {
+        if (existingSignatures.isEmpty()) return emptySet()
+        return transactions
+            .filter { tx -> tx.predictedSignature(categoryRemap, accountRemap) in existingSignatures }
+            .map { it.id }
+            .toSet()
     }
 
     private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy =
@@ -404,6 +467,25 @@ private data class TransactionSignature(
     val targetAccountId: String?,
     val targetAmount: String?,
 )
+
+private fun SyncTransaction.predictedSignature(
+    categoryRemap: Map<Id.Known, Id.Known>,
+    accountRemap: Map<Id.Known, Id.Known>,
+): TransactionSignature {
+    val account = accountRemap[accountId]?.value ?: accountId.value
+    val category = categoryId?.let { catId -> categoryRemap[Id.Known(catId)]?.value ?: catId }
+    val target = targetAccountId?.let { tid -> accountRemap[Id.Known(tid)]?.value ?: tid }
+    return TransactionSignature(
+        type = type,
+        accountId = account,
+        currencyId = currencyId.value,
+        amount = amount.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString().orEmpty(),
+        dateTime = enteredDateTime.toString(),
+        categoryId = category,
+        targetAccountId = target,
+        targetAmount = targetAmount?.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString(),
+    )
+}
 
 private fun SyncTransaction.toSignature() = TransactionSignature(
     type = type,

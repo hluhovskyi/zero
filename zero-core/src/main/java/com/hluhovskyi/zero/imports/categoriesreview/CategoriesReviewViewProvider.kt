@@ -188,14 +188,19 @@ private fun CategoryRow(
                     }
                 }
             }
+            val displayedCount = when (strategy) {
+                ResolveStrategy.Merge -> category.newTransactionCount
+                ResolveStrategy.New -> category.transactionCount
+                ResolveStrategy.Skip -> 0
+            }
             Text(
                 text = if (isSkipped) {
                     stringResource(R.string.import_resolve_wont_be_imported)
                 } else {
                     pluralStringResource(
                         R.plurals.import_categories_review_tx_count,
-                        category.transactionCount,
-                        category.transactionCount,
+                        displayedCount,
+                        displayedCount,
                     )
                 },
                 fontSize = 11.sp,
