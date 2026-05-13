@@ -188,9 +188,10 @@ internal class DefaultImportUseCase(
                     )
                 }
             }
-            is ImportUseCase.Action.ConfirmAccounts -> mutableState.update { current ->
-                val delta = current.storedDelta ?: return@update current
-                val accounts = current.storedAccounts ?: return@update current
+            is ImportUseCase.Action.ConfirmAccounts -> coroutineScope.launch {
+                val current = mutableState.value
+                val delta = current.storedDelta ?: return@launch
+                val accounts = current.storedAccounts ?: return@launch
                 val categories = current.storedCategories ?: emptyList()
                 val afterAccounts = applyAccountStrategies(delta, accounts, current.accountStrategies)
                 val nextDelta = dedupeAgainstExisting(afterAccounts, current.existingTransactionSignatures)
@@ -198,15 +199,17 @@ internal class DefaultImportUseCase(
                     nextDelta,
                     buildCategoryNameLookup(categories, current.existingCategoryById),
                 )
-                current.copy(
-                    storedDelta = nextDelta,
-                    screen = ImportUseCase.State.TransactionsPreview(
-                        transactions = transactions,
-                        totalCount = transactions.size,
-                        accounts = accounts,
-                        categories = categories,
-                    ),
-                )
+                mutableState.update { cur ->
+                    cur.copy(
+                        storedDelta = nextDelta,
+                        screen = ImportUseCase.State.TransactionsPreview(
+                            transactions = transactions,
+                            totalCount = transactions.size,
+                            accounts = accounts,
+                            categories = categories,
+                        ),
+                    )
+                }
             }
             is ImportUseCase.Action.Confirm -> {
                 val delta = mutableState.value.storedDelta ?: return
