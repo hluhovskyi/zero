@@ -49,6 +49,7 @@ import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.TransactionComponent
+import com.hluhovskyi.zero.transactions.edit.OnDuplicateHandler
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
@@ -327,11 +328,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .transactionId(Id.Unknown)
+                .duplicateFromTransactionId(Id.Unknown)
                 .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
                 .preSelectedAccountId(arguments.getValue(Destinations.Transaction.Edit.SelectedAccountId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
+                .onDuplicateHandler(OnDuplicateHandler.Noop)
                 .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
                 .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
                 .logging(logger)
@@ -349,6 +352,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
             componentBuilder
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
+                .duplicateFromTransactionId(Id.Unknown)
+                .preSelectedCategoryId(Id.Unknown)
+                .preSelectedAccountId(Id.Unknown)
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
@@ -377,9 +383,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .transactionId(Id.Unknown)
                 .duplicateFromTransactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
+                .preSelectedCategoryId(Id.Unknown)
+                .preSelectedAccountId(Id.Unknown)
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
+                .onDuplicateHandler(OnDuplicateHandler.Noop)
                 .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
                 .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
                 .logging(logger)
