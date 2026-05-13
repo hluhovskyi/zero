@@ -87,3 +87,4 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Execution Workflow](docs/agents/execution-workflow.md) — Design-first, UI verification loop, complexity circuit breaker
 - [Superpowers Workflow](docs/agents/superpowers-workflow.md) — Project-specific rules for keeping plans lean and design docs focused
 - [Skills](docs/agents/skills.md) — Adding skills, plugin loader setup, troubleshooting
+- [Feedback Infra](docs/agents/feedback-infra.md) — Play Integrity-gated feedback pipe (zero-remote module, cloud function, secrets matrix)
