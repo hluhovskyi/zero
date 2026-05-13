@@ -208,7 +208,7 @@ Device strings (`Build.MANUFACTURER`, `Build.MODEL`) are technically attacker-co
 
 ## 5. PII Discipline
 
-- `Breadcrumbs.log(message)` has no tag/level — every call site is an explicit decision about what's safe to attach to a public GitHub issue. Reviewers must reject `log()` calls that include user-typed strings, IDs, currency amounts, account names, or anything else that could identify a person or leak financial detail.
+- `Breadcrumbs.log(message)` has no tag/level — every call site is an explicit decision about what's safe to attach to a public GitHub issue. The `BreadcrumbsLiteralOnly` lint rule (§6) backs this up by rejecting any non-literal argument at build time, so PII can't accidentally enter the ring via string interpolation or concatenation.
 - Navigation entries store the **templated route**, not the resolved URL — IDs never appear.
 - Device-info strings are ASCII-sanitised before submission.
 - The user's free-text description is the only path for PII to leave the device, and it's explicit (the user typed it).
@@ -216,7 +216,45 @@ Device strings (`Build.MANUFACTURER`, `Build.MODEL`) are technically attacker-co
 
 ---
 
-## 6. Verification
+## 6. Lint Rule: `BreadcrumbsLiteralOnly`
+
+New detector in `lint-rules/src/main/kotlin/com/hluhovskyi/zero/lint/BreadcrumbsLiteralOnlyDetector.kt`, registered in `ZeroIssueRegistry`. Mirrors the structure of `HardcodedComposableStringDetector`.
+
+**What it flags:** any call to `com.hluhovskyi.zero.feedback.Breadcrumbs#log(String)` whose argument is not an inline string literal.
+
+| Call site | Verdict |
+|---|---|
+| `breadcrumbs.log("tapped fab")` | OK — pure literal. |
+| `breadcrumbs.log("saved " + "transaction")` | OK — polyadic of literals; `ConstantEvaluator` collapses to a literal. |
+| `breadcrumbs.log("saved " + name)` | **Error** — concatenation with non-literal operand. |
+| `breadcrumbs.log("saved $name")` | **Error** — Kotlin string template with embedded expression. |
+| `breadcrumbs.log(buildMessage())` | **Error** — method call result. |
+| `val msg = "tapped fab"; breadcrumbs.log(msg)` | **Error** — variable reference. Forces every call site to keep the literal inline so a code reviewer can see the exact string being logged without hopping through definitions. |
+
+**Why:** PII leakage is almost always introduced via interpolation (`"$amount $accountName"`). Forbidding non-literals at compile time turns the PII-safe convention into an enforced rule. The strictness around variable references is deliberate — a `val` can be reassigned (or come from user input) and shifts the safety check off-screen.
+
+**Severity:** `ERROR`. Category: `Security`.
+
+**Detector outline:**
+
+```kotlin
+override fun getApplicableMethodNames(): List<String> = listOf("log")
+
+override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+    if (method.containingClass?.qualifiedName != "com.hluhovskyi.zero.feedback.Breadcrumbs") return
+    val arg = node.valueArguments.firstOrNull() ?: return
+    if (arg is ULiteralExpression && arg.value is String) return
+    // Allow polyadic of literals: ConstantEvaluator collapses "a" + "b" to "ab".
+    if (arg is UPolyadicExpression && arg.operands.all { it is ULiteralExpression && it.value is String }) return
+    context.report(ISSUE, arg, context.getLocation(arg), MESSAGE)
+}
+```
+
+`BreadcrumbsLiteralOnlyDetectorTest` (`lint-rules/src/test`): positive case (literal accepted, polyadic-of-literals accepted) and negative cases (template, variable, method call, concat-with-variable all rejected).
+
+---
+
+## 7. Verification
 
 ### Unit tests
 
@@ -248,11 +286,11 @@ No unit test for `ShakeDetector` (hardware integration, low marginal value).
 
 ### Lint
 
-`./gradlew :app:lintDebug` clean. No new lint rule needed in this phase — `RemoteComponentEncapsulationDetector` from Phase 1 still guards the module boundary.
+`./gradlew :app:lintDebug` clean. `BreadcrumbsLiteralOnlyDetector` (§6) covered by its own JUnit tests in `lint-rules/src/test`; `RemoteComponentEncapsulationDetector` from Phase 1 still guards the module boundary.
 
 ---
 
-## 7. Out of Scope
+## 8. Out of Scope
 
 - Server-side rate limiting.
 - Promotion to Play Production track.
