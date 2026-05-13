@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.icons.IconRepository
@@ -44,6 +45,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val clock: Clock
         val zoneProvider: ZoneProvider
+        val configurationRepository: ConfigurationRepository
     }
 
     companion object {
@@ -106,11 +108,13 @@ abstract class CategoryComponent : AttachableViewComponent {
             categorySpendingUseCase: CategorySpendingUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onCategorySelectedHandler: OnCategorySelectedHandler,
+            configurationRepository: ConfigurationRepository,
         ): CategoryViewModel = DefaultCategoryViewModel(
             categoriesQueryUseCase = categoriesQueryUseCase,
             categorySpendingUseCase = categorySpendingUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onCategorySelectedHandler = onCategorySelectedHandler,
+            configurationRepository = configurationRepository,
         )
 
         @Provides

@@ -21,5 +21,6 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
         val currency: Currency? = null,
         val activeAccounts: List<Account> = emptyList(),
         val archivedAccounts: List<Account> = emptyList(),
+        val hasAddedAccount: Boolean = false,
     )
 }

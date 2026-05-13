@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -46,6 +47,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
         val categoryRepository: CategoryRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+        val configurationRepository: ConfigurationRepository
     }
 
     companion object {
@@ -96,6 +98,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             categoryEditIconUseCase: CategoryEditIconUseCase,
             categoryEditColorUseCase: CategoryEditColorUseCase,
             onCategorySavedHandler: OnCategorySavedHandler,
+            configurationRepository: ConfigurationRepository,
         ): CategoryEditViewModel = DefaultCategoryEditViewModel(
             categoryId = categoryId,
             initialType = initialType,
@@ -105,6 +108,7 @@ abstract class CategoryEditComponent : AttachableViewComponent {
             categoryEditIconUseCase = categoryEditIconUseCase,
             categoryEditColorUseCase = categoryEditColorUseCase,
             onCategorySavedHandler = onCategorySavedHandler,
+            configurationRepository = configurationRepository,
         )
 
         @Provides

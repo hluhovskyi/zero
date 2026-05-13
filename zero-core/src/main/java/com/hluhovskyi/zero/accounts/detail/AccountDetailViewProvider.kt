@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExtendedFloatingActionButton
-import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -49,6 +47,7 @@ import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.ui.CollapsibleHeroLayout
 import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.ErrorContainer
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -142,14 +141,15 @@ internal class AccountDetailViewProvider(
                 hero = { HeroCard(state, amountFormatter, imageLoader) },
                 content = { transactionComponent.AttachWithView() },
             )
-            ExtendedFloatingActionButton(
+            ZeroFab(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 32.dp),
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.account_detail_add_transaction)) },
                 onClick = { viewModel.perform(AccountDetailViewModel.Action.CreateTransaction) },
-                elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.account_detail_add_transaction),
+                expanded = true,
+                text = stringResource(R.string.account_detail_add_transaction),
             )
         }
     }

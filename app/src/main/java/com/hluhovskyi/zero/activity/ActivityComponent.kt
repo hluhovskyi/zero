@@ -28,6 +28,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -109,6 +110,7 @@ abstract class ActivityComponent :
         val transactionRepository: TransactionRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+        val configurationRepository: ConfigurationRepository
 
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
