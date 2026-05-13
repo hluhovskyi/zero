@@ -7,8 +7,8 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.icons.IconRepository
