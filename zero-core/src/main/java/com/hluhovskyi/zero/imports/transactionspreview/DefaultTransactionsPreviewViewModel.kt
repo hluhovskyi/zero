@@ -21,8 +21,18 @@ internal class DefaultTransactionsPreviewViewModel(
     override val state: Flow<TransactionsPreviewViewModel.State> = importUseCase.state
         .filterIsInstance<ImportUseCase.State.TransactionsPreview>()
         .map { previewState ->
-            val accountById = previewState.accounts.associateBy { it.id }
-            val categoryById = previewState.categories.associateBy { it.id }
+            val accountById = buildMap<Id.Known, ImportAccount> {
+                previewState.accounts.forEach {
+                    put(it.id, it)
+                    it.existingId?.let { existing -> put(existing, it) }
+                }
+            }
+            val categoryById = buildMap<Id.Known, ImportCategory> {
+                previewState.categories.forEach {
+                    put(it.id, it)
+                    it.existingId?.let { existing -> put(existing, it) }
+                }
+            }
 
             val groups = LinkedHashMap<String, MutableList<TransactionsPreviewViewModel.DisplayTransaction>>()
             for (transaction in previewState.transactions) {

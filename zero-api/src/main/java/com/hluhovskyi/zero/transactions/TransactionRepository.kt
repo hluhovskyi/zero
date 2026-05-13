@@ -10,7 +10,16 @@ import kotlinx.datetime.LocalDateTime
 
 interface TransactionRepository {
 
-    fun <T> query(criteria: Criteria<T>, trigger: Flow<*> = emptyFlow<Any>()): Flow<T>
+    fun <T> query(criteria: Criteria<T>, trigger: Flow<*> = NO_TRIGGER): Flow<T>
+
+    /**
+     * Identity-comparable sentinel used as the default `trigger` of [query]. Implementations
+     * may compare `trigger === NO_TRIGGER` to detect "caller did not supply a trigger" and pick a
+     * different code path (e.g. fetch all rows in one batch instead of paginating).
+     */
+    companion object {
+        val NO_TRIGGER: Flow<*> = emptyFlow<Any>()
+    }
 
     sealed interface Criteria<T> {
 
