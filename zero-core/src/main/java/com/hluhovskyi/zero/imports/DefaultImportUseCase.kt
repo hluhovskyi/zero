@@ -369,8 +369,7 @@ internal class DefaultImportUseCase(
     }
 
     /** Default per-row resolution: Merge when an existing match was found, otherwise New. */
-    private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy =
-        if (existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
+    private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy = if (existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
 
     /** Applies the user's per-category choices to a snapshot: drops Skip + Merge categories,
      *  remaps transaction `categoryId`s of merged categories to their local id, drops transactions
@@ -435,39 +434,37 @@ internal class DefaultImportUseCase(
     private fun toImportTransactions(
         delta: SyncSnapshot,
         categoryNameById: Map<Id.Known, String>,
-    ): List<ImportTransaction> {
-        return delta.transactions.map { syncTx ->
-            val categoryName = syncTx.categoryId?.let { categoryNameById[Id.Known(it)] }
-            when (syncTx.type) {
-                SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
-                    id = syncTx.id,
-                    accountId = syncTx.accountId,
-                    currencyId = syncTx.currencyId,
-                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                    dateTime = syncTx.enteredDateTime,
-                    categoryId = syncTx.categoryId?.let { Id.Known(it) },
-                    categoryName = categoryName,
-                )
-                SyncTransaction.Type.INCOME -> ImportTransaction.Income(
-                    id = syncTx.id,
-                    accountId = syncTx.accountId,
-                    currencyId = syncTx.currencyId,
-                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                    dateTime = syncTx.enteredDateTime,
-                    categoryId = syncTx.categoryId?.let { Id.Known(it) },
-                    categoryName = categoryName,
-                )
-                SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(
-                    id = syncTx.id,
-                    accountId = syncTx.accountId,
-                    currencyId = syncTx.currencyId,
-                    amount = Amount(syncTx.amount.toBigDecimalOrNull()),
-                    dateTime = syncTx.enteredDateTime,
-                    targetAccountId = Id.Known(syncTx.targetAccountId ?: syncTx.accountId.value),
-                    targetAmount = Amount(syncTx.targetAmount?.toBigDecimalOrNull()),
-                    targetCurrencyId = syncTx.currencyId,
-                )
-            }
+    ): List<ImportTransaction> = delta.transactions.map { syncTx ->
+        val categoryName = syncTx.categoryId?.let { categoryNameById[Id.Known(it)] }
+        when (syncTx.type) {
+            SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
+                id = syncTx.id,
+                accountId = syncTx.accountId,
+                currencyId = syncTx.currencyId,
+                amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                dateTime = syncTx.enteredDateTime,
+                categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                categoryName = categoryName,
+            )
+            SyncTransaction.Type.INCOME -> ImportTransaction.Income(
+                id = syncTx.id,
+                accountId = syncTx.accountId,
+                currencyId = syncTx.currencyId,
+                amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                dateTime = syncTx.enteredDateTime,
+                categoryId = syncTx.categoryId?.let { Id.Known(it) },
+                categoryName = categoryName,
+            )
+            SyncTransaction.Type.TRANSFER -> ImportTransaction.Transfer(
+                id = syncTx.id,
+                accountId = syncTx.accountId,
+                currencyId = syncTx.currencyId,
+                amount = Amount(syncTx.amount.toBigDecimalOrNull()),
+                dateTime = syncTx.enteredDateTime,
+                targetAccountId = Id.Known(syncTx.targetAccountId ?: syncTx.accountId.value),
+                targetAmount = Amount(syncTx.targetAmount?.toBigDecimalOrNull()),
+                targetCurrencyId = syncTx.currencyId,
+            )
         }
     }
 

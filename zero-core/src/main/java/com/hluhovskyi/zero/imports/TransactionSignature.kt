@@ -89,5 +89,4 @@ internal fun TransactionRepository.Transaction.toSignature(): TransactionSignatu
     }
 }
 
-private fun String.normalizedDecimal(): String =
-    toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString().orEmpty()
+private fun String.normalizedDecimal(): String = toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString().orEmpty()
