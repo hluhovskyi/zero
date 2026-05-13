@@ -20,6 +20,7 @@ Design everything async-first. No blocking code, no `runBlocking`, no `Thread.sl
 - **`Dispatchers.IO`** — default for all CoroutineScopes in ViewModels/UseCases. All data loading, repository calls, and business logic run here.
 - **`Dispatchers.Main`** — only for handler callbacks that trigger navigation. Always wrap with `launch(context = Dispatchers.Main) { handler.onSaved() }`.
 - **Never use `Dispatchers.Default`** in this codebase.
+- **`BaseViewModel.scope` is Main-dispatched** — collecting a Room-backed flow whose `.onStart { dao.get() }` touches the DB (e.g. `ConfigurationRepository.observe`) crashes with `IllegalStateException("Cannot access database on the main thread")`. Apply `.flowOn(dispatchers.io())` to such flows before they reach the collector.
 
 ## Lifecycle: attach() → Closeable
 
