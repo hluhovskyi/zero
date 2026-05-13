@@ -32,3 +32,6 @@ val OnError = Color(0xFFFFFFFF)
 val InverseSurface = Color(0xFF303034)
 val InverseOnSurface = Color(0xFFF2F0F5)
 val InversePrimary = Color(0xFFB1C6FD)
+
+val SelectedPill = Color(0xFFD9E2FF)
+val PrimaryContainerLight = Color(0xFFC8D8FE)

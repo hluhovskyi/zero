@@ -17,6 +17,17 @@ internal interface TransactionRoom {
 
     @Query(
         """
+        SELECT EXISTS(
+            SELECT 1 FROM TransactionEntity
+            WHERE userId = :userId AND deletedAt IS NULL
+            LIMIT 1
+        )
+    """,
+    )
+    fun selectHasAny(userId: String): Flow<Boolean>
+
+    @Query(
+        """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId AND deletedAt IS NULL
         ORDER BY datetime(enteredDateTime) DESC

@@ -208,4 +208,11 @@
     <!-- Transaction Notes -->
     <string name="transaction_notes_label">Notes</string>
     <string name="transaction_notes_hint">Add a note…</string>
+
+    <!-- Home / Welcome -->
+    <string name="home_title">Zero</string>
+    <string name="welcome_heading">Your finances,\none place.</string>
+    <string name="welcome_subtitle">Add your first transaction or bring in data from another app to get started.</string>
+    <string name="welcome_import_action">Import from another app</string>
+    <string name="welcome_illustration_amount_placeholder" translatable="false">$0.00</string>
 </resources>
