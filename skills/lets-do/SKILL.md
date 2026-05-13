@@ -78,39 +78,20 @@ For everything else, invoke `superpowers:writing-plans`.
 Read `docs/agents/superpowers-workflow.md` for plan length rules — plans over ~400 lines slow
 execution significantly. Replace boilerplate blocks with doc/skill references where possible.
 
-**Commit, push, and open a draft PR for the plan before execution** — this is mandatory, not
-optional. An untracked plan is a lost plan; an un-pushed plan only exists on this machine; an
-un-PR'd plan can't be reviewed or commented on while you're executing it.
+**Commit, push, and open a draft PR for the plan.** Mandatory. Step 6 flips this same PR to
+ready — never open a second one.
 
 ```bash
 git add docs/superpowers/plans/<plan-file>.md
 git commit -m "docs: add <feature> implementation plan"
 git push -u origin HEAD
-gh pr create --draft \
-  --title "<feature>: implementation plan" \
-  --body "$(cat <<'EOF'
-## Plan
-
-See `docs/superpowers/plans/<plan-file>.md`.
-
-Opened as a **draft** while execution is in progress. Step 6 of the `lets-do` workflow flips it
-to ready-for-review once tests, lint, and the UI inspector pass on the merged changes.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+gh pr create --draft --title "<feature>: plan" --body "Plan: docs/superpowers/plans/<plan-file>.md"
 ```
 
-Report the PR URL back to the user before moving on — they can review the plan asynchronously
-while execution proceeds.
+Report the PR URL. For `--no-questions`, do the same after writing the plan inline.
 
-If `--no-questions` was passed: write a concise plan inline based on the task description
-(no clarifying questions), commit it, push, open the draft PR, then proceed to execution.
-
-**Planning-only sessions** — when the project workflow doc (`docs/agents/superpowers-workflow.md`)
-or the user's instructions split planning and execution into two sessions (e.g. design-to-PR
-flows that bundle a design archive), this step is the session's final deliverable. Open a
-**non-draft** PR titled `docs: <feature> plan` instead, skip Steps 4–6, and stop.
+**Planning-only sessions** (design-to-PR flows split per `docs/agents/superpowers-workflow.md`):
+open a **non-draft** `docs: <feature> plan` PR, skip Steps 4–6, stop.
 
 ## Step 4 — Execution
 
@@ -147,24 +128,12 @@ run it anyway.
 
 ## Step 6 — Mark PR ready
 
-The PR already exists as a draft from Step 3. This step flips it to ready-for-review and
-rewrites the title + body to reflect the shipped implementation (not just the plan).
-
-**Before marking ready, verify the working tree is clean:**
+The draft PR from Step 3 already exists. Verify the tree is clean, update title + body to
+reflect the implementation, then flip it.
 
 ```bash
-git status --short
-```
-
-If output is non-empty, surface the listed files to the user and confirm before proceeding —
-loose files don't block `gh pr ready` but will silently land in the squash commit if staged.
-
-Update the PR metadata, then mark it ready:
-
-```bash
-gh pr edit \
-  --title "<concise title, under 70 chars>" \
-  --body "$(cat <<'EOF'
+git status --short   # confirm clean before proceeding
+gh pr edit --title "<concise title, under 70 chars>" --body "$(cat <<'EOF'
 ## Summary
 - <bullet per meaningful change>
 
@@ -177,5 +146,4 @@ EOF
 gh pr ready
 ```
 
-The PR is the deliverable. Don't report the task as done until you've confirmed it's
-ready-for-review.
+Don't report the task as done until the PR is ready-for-review.
