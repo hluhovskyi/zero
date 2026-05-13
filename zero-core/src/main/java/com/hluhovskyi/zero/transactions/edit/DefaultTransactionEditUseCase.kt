@@ -42,6 +42,7 @@ private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
     private val transactionId: Id,
+    private val duplicateFromTransactionId: Id = Id.Unknown,
     private val preSelectedCategoryId: Id = Id.Unknown,
     private val preSelectedAccountId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
@@ -53,6 +54,7 @@ internal class DefaultTransactionEditUseCase(
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
+    private val onDuplicateHandler: OnDuplicateHandler,
     private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
     private val transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
     private val clock: Clock,
@@ -248,21 +250,28 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.Save -> save()
             is TransactionEditUseCase.Action.CycleTransferRateMode -> cycleTransferRateMode()
             is TransactionEditUseCase.Action.SwapAccounts -> swapAccounts()
+            is TransactionEditUseCase.Action.Duplicate -> {
+                coroutineScope.launch(context = Dispatchers.Main) {
+                    (transactionId as? Id.Known)?.let { id -> onDuplicateHandler.onDuplicate(id) }
+                }
+            }
         }
     }
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            if (transactionId is Id.Known) {
+            val loadFromId = (duplicateFromTransactionId as? Id.Known)
+                ?: (transactionId as? Id.Known)
+            if (loadFromId != null) {
                 launch {
                     incorrectStateDetector.asyncRequireNonNull(
                         value = transactionRepository.query(
                             TransactionRepository.Criteria.ById(
-                                transactionId,
+                                loadFromId,
                             ),
                         )
                             .firstOrNull(),
-                        message = "Transaction is not resolved with transactionId=$transactionId",
+                        message = "Transaction is not resolved with id=$loadFromId",
                     ) { transaction ->
                         logger.d("attach, transaction loading is finished, transactionId=${transaction.id}")
 

@@ -23,6 +23,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         object Save : Action
         object Discard : Action
         object Delete : Action
+        object Duplicate : Action
         data class ChangeTargetAmount(val amount: String) : Action
         data class ChangeTransferRate(val rate: String) : Action
         object CycleTransferRateMode : Action
