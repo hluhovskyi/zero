@@ -39,7 +39,16 @@ while true; do
   break
 done
 
-# Phase 2: wait for the PR to be merged (handles --auto and manual merges)
+# Phase 2: if --auto was scheduled, wait for the merge to fire.
+# If no auto-merge is pending, nothing on the GitHub side is going to merge the PR —
+# our job is done and the caller can do the merge directly. Avoids hanging forever
+# when the repo has auto-merge disabled or the caller skipped `gh pr merge --auto`.
+auto_merge=$(gh pr view "$PR" $REPO_FLAG --json autoMergeRequest --jq '.autoMergeRequest')
+if [ -z "$auto_merge" ] || [ "$auto_merge" = "null" ]; then
+  echo "All CI checks passed on PR #$PR (no auto-merge scheduled — caller can merge directly)."
+  exit 0
+fi
+
 while true; do
   state=$(gh pr view "$PR" $REPO_FLAG --json state --jq '.state')
   if [ "$state" = "MERGED" ]; then
@@ -50,6 +59,6 @@ while true; do
     echo "PR #$PR was closed without merging."
     exit 1
   fi
-  echo "PR state: $state — checking again in 15s..."
+  echo "PR state: $state — auto-merge pending, checking again in 15s..."
   sleep 15
 done
