@@ -3,6 +3,8 @@ package com.hluhovskyi.zero.settings
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.export.ExportUseCase
+import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,8 @@ internal class DefaultSettingsViewModel(
     private val settingsCurrencyUseCase: SettingsCurrencyUseCase,
     private val onImportSelected: OnImportSelectedHandler,
     private val exportUseCase: ExportUseCase,
+    private val biometricLockUseCase: BiometricLockUseCase,
+    private val biometricAuthenticator: BiometricAuthenticator,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : SettingsViewModel {
 
@@ -40,6 +44,25 @@ internal class DefaultSettingsViewModel(
             is SettingsViewModel.Action.OpenCurrencyPicker -> {
                 settingsCurrencyUseCase.perform(SettingsCurrencyUseCase.Action.Request)
             }
+            is SettingsViewModel.Action.ToggleBiometricLock -> coroutineScope.launch {
+                val currentlyEnabled = mutableState.value.biometricLockEnabled
+                val reason = if (currentlyEnabled) {
+                    BiometricAuthenticator.AuthReason.DisableLock
+                } else {
+                    BiometricAuthenticator.AuthReason.EnableLock
+                }
+                when (biometricAuthenticator.authenticate(reason)) {
+                    BiometricAuthenticator.Result.Success ->
+                        biometricLockUseCase.setEnabled(!currentlyEnabled)
+                    BiometricAuthenticator.Result.Failure ->
+                        mutableState.update { it.copy(biometricFeedback = SettingsViewModel.BiometricFeedback.AuthFailed) }
+                    BiometricAuthenticator.Result.Unavailable ->
+                        mutableState.update { it.copy(biometricFeedback = SettingsViewModel.BiometricFeedback.Unavailable) }
+                }
+            }
+            is SettingsViewModel.Action.BiometricFeedbackShown -> {
+                mutableState.update { it.copy(biometricFeedback = null) }
+            }
         }
     }
 
@@ -61,6 +84,11 @@ internal class DefaultSettingsViewModel(
                             }
                         }
                     }
+            }
+            launch {
+                biometricLockUseCase.enabled.collect { enabled ->
+                    mutableState.update { it.copy(biometricLockEnabled = enabled) }
+                }
             }
         }
     }

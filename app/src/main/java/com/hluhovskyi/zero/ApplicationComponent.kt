@@ -51,6 +51,9 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.security.AndroidBiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
@@ -353,6 +356,22 @@ abstract class ApplicationComponent :
         fun settingsComponentBuilder(
             component: ApplicationComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
+
+        @Provides
+        @ApplicationScope
+        fun biometricLockUseCase(
+            configurationRepository: ConfigurationRepository,
+        ): BiometricLockUseCase = BiometricLockUseCase(
+            configurationRepository = configurationRepository,
+        )
+
+        @Provides
+        @ApplicationScope
+        fun biometricAuthenticator(
+            context: Context,
+        ): BiometricAuthenticator = AndroidBiometricAuthenticator(
+            context = context,
+        )
 
         @Provides
         @ApplicationScope

@@ -130,6 +130,8 @@ dependencies {
     implementation deps.android.compose.material
     implementation deps.android.compose.activity
     implementation deps.android.core.lifecycle
+    implementation deps.biometric
+    implementation deps.fragment
     implementation deps.android.compose.uiPreview
     debugImplementation deps.android.compose.uiTooling
 }
