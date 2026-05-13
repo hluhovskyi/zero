@@ -9,27 +9,36 @@ When the user has no transactions, the Home tab shows a Welcome screen with an i
 
 ## Architecture
 
-Two new features composed by a higher-level coordinator:
+Two new features composed by a higher-level coordinator, with a dedicated `user/` package for the new-user signal:
 
 | Component | Module | Responsibility |
 |-----------|--------|----------------|
 | `WelcomeComponent` | zero-core/welcome | Pure UI: illustration + heading + "Import from another app" link. Emits `OnImportSelectedHandler`. |
-| `HomeComponent` | zero-core/home | Owns `NewUserUseCase`; builds and renders `WelcomeComponent` or `TransactionComponent` based on `hasTransactions`. Adds the "Zero" title at the top. |
-| `NewUserUseCase` | zero-api (interface) + zero-core (default) | Flow<Boolean> for `hasTransactions`. Backed by `TransactionRepository.Criteria.All` — emit `true` once the list is non-empty. |
+| `HomeComponent` | zero-core/home | Builds and renders `WelcomeComponent` or `TransactionComponent` based on the `NewUserUseCase` signal. Adds the "Zero" title at the top. |
+| `NewUserUseCase` | zero-api `user/` + zero-core `user/` | Flow<Boolean> for `isNewUser`. Lives in a standalone `user/` package — it is a cross-feature signal, not part of Home. Backed by a new near-instant `TransactionRepository.Criteria.HasAny` (Room `SELECT EXISTS(SELECT 1 ... LIMIT 1)`), not by listing all transactions. |
 
-`HomeComponent` is the new entry for `Destinations.Transaction.All`. The current `TransactionScreen` wrapper (which holds the ExtendedFloatingActionButton) keeps the FAB; only its inner content swaps from `TransactionComponent.AttachWithView()` to `HomeComponent.AttachWithView()`.
+`HomeComponent` is wired to a **new** `Destinations.Home` route. The bottom bar's "Home" tab points to `Destinations.Home`; `Destinations.Transaction.All` is removed (it only existed to back the same tab). The `TransactionsScreen` wrapper (which holds the ExtendedFloatingActionButton) keeps the FAB; only its inner content swaps from `TransactionComponent.AttachWithView()` to `HomeComponent.AttachWithView()`.
 
 Composition pattern follows `AccountDetailComponent` — sub-components are provided in the parent's Module and attached via `AttachWithView()` in the parent's ViewProvider.
 
 ## Decision speed
 
-`NewUserUseCase` returns a `Flow<Boolean>` with `hasTransactions` (true when ≥1 alive transaction exists). The Home `ViewModel.State` defaults to `hasTransactions = true` (assume returning user) so first-frame is the Transaction list — repeat users see no flash. New users see the Welcome screen as soon as the flow's first emission (empty list → false) arrives. No loading state is rendered.
+`NewUserUseCase` returns a `Flow<Boolean>` with `isNewUser` (true when zero alive transactions exist). The query is backed by a Room `SELECT EXISTS(SELECT 1 FROM TransactionEntity WHERE userId = ? AND deletedAt IS NULL LIMIT 1)` — near-instant for both empty and non-empty databases. The Home `ViewModel.State` defaults to `isNewUser = false` (assume returning user) so first-frame is the Transaction list — repeat users see no flash. New users see the Welcome screen as soon as the flow's first emission arrives. No loading state is rendered.
 
 ## Files
 
 ### New — zero-api
-- `zero-api/src/main/java/com/hluhovskyi/zero/transactions/NewUserUseCase.kt`
-  - `fun query(): Flow<Boolean>` + `Noop` impl
+- `zero-api/src/main/java/com/hluhovskyi/zero/user/NewUserUseCase.kt`
+  - `fun isNewUser(): Flow<Boolean>` + `Noop` impl (emits `false`)
+- `zero-api/src/main/java/com/hluhovskyi/zero/transactions/TransactionRepository.kt`
+  - Add `class HasAny : Criteria<Boolean>` and stub `false` in `Noop`
+
+### New — zero-database
+- `TransactionRoom.kt` — `@Query("SELECT EXISTS(SELECT 1 FROM TransactionEntity WHERE userId = :userId AND deletedAt IS NULL LIMIT 1)") fun selectHasAny(userId: String): Flow<Boolean>`
+- `RoomTransactionRepository.kt` — add `Criteria.HasAny` branch returning `transactionRoom().selectHasAny(userId.value)`
+
+### New — zero-core/user
+- `DefaultNewUserUseCase.kt` — maps `Criteria.HasAny` to `!hasAny`, `.distinctUntilChanged()`
 
 ### New — zero-core/welcome (canonical scaffold)
 - `WelcomeComponent.kt`
@@ -42,14 +51,19 @@ Composition pattern follows `AccountDetailComponent` — sub-components are prov
 ### New — zero-core/home
 - `HomeComponent.kt` — composes `WelcomeComponent.Builder` + `TransactionComponent.Builder`; depends on `NewUserUseCase`
 - `HomeViewModel.kt` (interface + `Noop`)
-- `DefaultHomeViewModel.kt` — collects `NewUserUseCase` into `State(hasTransactions: Boolean)`
+- `DefaultHomeViewModel.kt` — collects `NewUserUseCase.isNewUser()` into `State(isNewUser: Boolean)`
 - `HomeViewProvider.kt` — top "Zero" label + switcher
 
-- `DefaultNewUserUseCase.kt` — implementation in zero-core (private to home or transactions package; place in `zero-core/.../transactions/` next to existing transaction code, or `zero-core/.../home/` — choose `home/` since it is a home-screen-specific aggregation)
-
 ### Modified — app/
+- `Destinations.kt`
+  - Add `object Home : Destination by destinationOf("home")`
+  - Remove `object All : Transaction, Destination by destinationOf("transactions")` (no longer referenced)
+- `DefaultBottomBarViewModel.kt`
+  - Rename `transactionsId` → `homeId` (id value stays "transactions" to avoid migrating any persisted state; just the local field renames)
+  - `homeId -> Destinations.Home` in `perform`; `Destinations.Home.route -> homeId` in `toBottomBarId`
 - `MainActivityScreenComponent.kt`
-  - Replace `transactionNavigationEntry` body: build `HomeComponent` instead of `TransactionComponent` directly; HomeComponent receives the same `OnTransactionSelectedHandler`, `TransactionFilterUseCase`, and a new `OnImportSelectedHandler` that calls `navigator.navigateTo(Destinations.Import)`
+  - Replace `transactionNavigationEntry` with `homeNavigationEntry`: build `HomeComponent` for `Destinations.Home`; HomeComponent receives the same `OnTransactionSelectedHandler`, `TransactionFilterUseCase`, and a new `OnImportSelectedHandler` that calls `navigator.navigateTo(Destinations.Import)`
+  - `startDestination = Destinations.Home`
   - Add `homeComponentBuilder` + `welcomeComponentBuilder` to `Dependencies`
 - `ActivityComponent.kt`
   - Add `HomeComponent.Dependencies` + `WelcomeComponent.Dependencies` to the parent class list
@@ -91,35 +105,35 @@ Box (fillMaxSize, contentAlignment = Center)
 Column (fillMaxSize)
   Text "Zero"                                 // 22sp ExtraBold Primary, padding 20dp/12dp
   Box (weight 1f)
-    if (state.hasTransactions) transactionComponent.AttachWithView()
-    else                       welcomeComponent.AttachWithView()
+    if (state.isNewUser) welcomeComponent.AttachWithView()
+    else                 transactionComponent.AttachWithView()
 ```
 
 The "Zero" title sits above both branches. TransactionComponent remains responsible for its own search bar + filter row below the title.
 
 ## NewUserUseCase
 
-`zero-api` interface:
+`zero-api`:
 ```kotlin
 interface NewUserUseCase {
-    fun hasTransactions(): Flow<Boolean>
-    object Noop : NewUserUseCase { override fun hasTransactions() = flowOf(true) }
+    fun isNewUser(): Flow<Boolean>
+    object Noop : NewUserUseCase { override fun isNewUser() = flowOf(false) }
 }
 ```
 
-`DefaultNewUserUseCase`:
+`zero-core/user/DefaultNewUserUseCase`:
 ```kotlin
 internal class DefaultNewUserUseCase(
     private val transactionRepository: TransactionRepository,
 ) : NewUserUseCase {
-    override fun hasTransactions(): Flow<Boolean> =
-        transactionRepository.query(TransactionRepository.Criteria.All())
-            .map { it.isNotEmpty() }
+    override fun isNewUser(): Flow<Boolean> =
+        transactionRepository.query(TransactionRepository.Criteria.HasAny())
+            .map { hasAny -> !hasAny }
             .distinctUntilChanged()
 }
 ```
 
-Per [Data Layer](docs/agents/data-layer.md) `Criteria.All` already exists and uses the same Room flow Transaction list uses, so we add no new DAO query.
+Per [Data Layer](docs/agents/data-layer.md), the near-instant signal is implemented as a new repository criterion. `Criteria.HasAny : Criteria<Boolean>` is added to `TransactionRepository`; `RoomTransactionRepository` routes it to a new `selectHasAny` Room query using `SELECT EXISTS(SELECT 1 ... LIMIT 1)`. The result is a `Flow<Boolean>` that Room re-emits on relevant table changes.
 
 ## HomeComponent wiring
 
@@ -138,8 +152,8 @@ Defaults wired in `companion object builder()` to `Noop`.
 
 ## Tests
 
-- `DefaultNewUserUseCaseTest` — emits `false` when repo is empty, `true` once a transaction exists, distinctUntilChanged collapses duplicate emissions.
-- `DefaultHomeViewModelTest` — `hasTransactions = false` after collection starts with empty stream.
+- `DefaultNewUserUseCaseTest` — emits `true` when repo is empty, `false` once a transaction exists, `distinctUntilChanged` collapses duplicate emissions.
+- `DefaultHomeViewModelTest` — `isNewUser` reflects the `NewUserUseCase` emissions; default state is `false`.
 
 (Welcome and Home ViewProviders are visual — covered by manual UI inspection, not unit tests.)
 
