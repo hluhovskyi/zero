@@ -46,6 +46,7 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
+import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
@@ -240,9 +241,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                         )
                     }
+                    .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
                     .transactionFilterUseCase(transactionFilterUseCase)
+                    .displayConfig(DisplayConfig(showFab = true))
                     .logging(logger),
-                onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) },
             )
         }
 

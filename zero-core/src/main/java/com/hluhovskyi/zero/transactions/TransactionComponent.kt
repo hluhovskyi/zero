@@ -61,6 +61,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionComponent.builder()
             .dependencies(dependencies)
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
+            .onAddTransactionHandler(OnAddTransactionHandler.Noop)
             .transactionFilter(TransactionFilter.All)
             .transactionFilterUseCase(TransactionFilterUseCase.Noop)
             .displayConfig(DisplayConfig())
@@ -73,6 +74,9 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onTransactionSelectHandler(handler: OnTransactionSelectedHandler): Builder
+
+        @BindsInstance
+        fun onAddTransactionHandler(handler: OnAddTransactionHandler): Builder
 
         @BindsInstance
         fun transactionFilter(filter: TransactionFilter): Builder
@@ -133,12 +137,14 @@ abstract class TransactionComponent : AttachableViewComponent {
             amountFormatter: AmountFormatter,
             dateFormatter: DateFormatter,
             displayConfig: DisplayConfig,
+            onAddTransactionHandler: OnAddTransactionHandler,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
+            onAddTransaction = onAddTransactionHandler,
         )
     }
 }
