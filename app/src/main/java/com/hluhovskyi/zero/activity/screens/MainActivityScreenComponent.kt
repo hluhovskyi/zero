@@ -43,6 +43,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
+import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
@@ -86,6 +87,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val bottomBarComponentBuilder: BottomBarComponent.Builder
 
+        val homeComponentBuilder: HomeComponent.Builder
         val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
@@ -155,7 +157,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigationArgumentSerializer: NavigationArgumentSerializer,
             navigationRouteResolver: NavigationRouteResolver,
         ): Navigator = NavControllerNavigator(
-            startDestination = Destinations.Transaction.All,
+            startDestination = Destinations.Home,
             navController = navHostController,
             logger = logger,
             incorrectStateDetector = incorrectStateDetector,
@@ -185,7 +187,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             bottomBarComponent: BottomBarComponent.Builder,
         ): ViewProvider = MainActivityScreenViewProvider(
             navController = navHostController,
-            startDestination = Destinations.Transaction.All,
+            startDestination = Destinations.Home,
             navigationEntries = navigationEntries,
             bottomBar = {
                 bottomBarComponent.navigator(navigator)
@@ -223,23 +225,24 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
-        fun transactionNavigationEntry(
-            component: TransactionComponent.Builder,
+        fun homeNavigationEntry(
+            component: HomeComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(
-            destination = Destinations.Transaction.All,
+            destination = Destinations.Home,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             TransactionScreen(
                 component = component
-                    .onTransactionSelectHandler { transactionId ->
+                    .onTransactionSelectedHandler { transactionId ->
                         navigator.navigateTo(
                             Destinations.Transaction.Item.Edit,
                             Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                         )
                     }
+                    .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                     .transactionFilterUseCase(transactionFilterUseCase)
                     .logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) },

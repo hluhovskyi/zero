@@ -22,7 +22,7 @@ internal class DefaultBottomBarViewModel(
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : BottomBarViewModel {
 
-    private val transactionsId = Id.Known("transactions")
+    private val homeId = Id.Known("home")
     private val categoriesId = Id.Known("categories")
     private val budgetId = Id.Known("budget")
     private val accountsId = Id.Known("accounts")
@@ -30,7 +30,7 @@ internal class DefaultBottomBarViewModel(
 
     private val bottomNavigationItems = listOf(
         BottomBarViewModel.Item(
-            id = transactionsId,
+            id = homeId,
             name = "Home",
             icon = Image(
                 uri = androidUriResourceFactory.drawable("ic_home_24"),
@@ -85,7 +85,7 @@ internal class DefaultBottomBarViewModel(
         when (action) {
             is BottomBarViewModel.Action.SelectItem -> {
                 val destination = when (action.item.id) {
-                    transactionsId -> Destinations.Transaction.All
+                    homeId -> Destinations.Home
                     categoriesId -> Destinations.Category.All
                     accountsId -> Destinations.Account.All
                     settingsId -> Destinations.Settings
@@ -127,7 +127,7 @@ internal class DefaultBottomBarViewModel(
     }
 
     private fun Destination.toBottomBarId(): Id = when (this.route) {
-        Destinations.Transaction.All.route -> transactionsId
+        Destinations.Home.route -> homeId
         Destinations.Category.All.route -> categoriesId
         Destinations.Account.All.route -> accountsId
         Destinations.Settings.route -> settingsId

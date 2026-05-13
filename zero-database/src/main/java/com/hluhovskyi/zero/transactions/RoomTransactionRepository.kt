@@ -42,6 +42,9 @@ internal class RoomTransactionRepository(
                 } else {
                     paginatedFlow(userId, trigger)
                 }
+
+                is TransactionRepository.Criteria.HasAny -> transactionRoom()
+                    .selectHasAny(userId.value)
                 is TransactionRepository.Criteria.After -> transactionRoom()
                     .selectAfter(userId.value, criteria.dateTime.toString())
                     .map { entities -> entities.mapNotNull { it.toRepository() } }

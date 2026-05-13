@@ -1,0 +1,205 @@
+package com.hluhovskyi.zero.welcome
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.R
+import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.Primary
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.PrimaryContainerLight
+import com.hluhovskyi.zero.ui.theme.Secondary
+import com.hluhovskyi.zero.ui.theme.SecondaryContainer
+import com.hluhovskyi.zero.ui.theme.SelectedPill
+import com.hluhovskyi.zero.ui.theme.Surface
+
+internal class WelcomeViewProvider(
+    private val viewModel: WelcomeViewModel,
+) : ViewProvider {
+
+    @Composable
+    override fun View() {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                WelcomeIllustration()
+                Spacer(Modifier.height(32.dp))
+                Text(
+                    text = stringResource(R.string.welcome_heading),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Primary,
+                        letterSpacing = (-0.48).sp,
+                        lineHeight = 28.8.sp,
+                    ),
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    modifier = Modifier.widthIn(max = 260.dp),
+                    text = stringResource(R.string.welcome_subtitle),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = OnSurfaceVariant,
+                        lineHeight = 23.sp,
+                    ),
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(28.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable {
+                            viewModel.perform(WelcomeViewModel.Action.ImportSelected)
+                        }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.FileDownload,
+                        contentDescription = null,
+                        tint = PrimaryContainer,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.welcome_import_action),
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryContainer,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeIllustration() {
+    Box(modifier = Modifier.size(width = 200.dp, height = 160.dp)) {
+        // Back card
+        Box(
+            modifier = Modifier
+                .padding(start = 20.dp, top = 24.dp)
+                .rotate(-6f)
+                .size(width = 152.dp, height = 96.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(SelectedPill),
+        )
+        // Mid card
+        Box(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 16.dp)
+                .rotate(-2f)
+                .size(width = 152.dp, height = 96.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(PrimaryContainerLight),
+        ) {
+            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = Primary.copy(alpha = 0.10f))
+            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 60.dp, color = Primary.copy(alpha = 0.08f))
+            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 40.dp, color = Primary.copy(alpha = 0.08f))
+        }
+        // Front card
+        Box(
+            modifier = Modifier
+                .padding(start = 24.dp, top = 8.dp)
+                .size(width = 152.dp, height = 96.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(PrimaryContainer),
+        ) {
+            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = Color.White.copy(alpha = 0.20f))
+            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 80.dp, color = Color.White.copy(alpha = 0.15f))
+            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 48.dp, color = Color.White.copy(alpha = 0.15f))
+            Text(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 14.dp),
+                text = stringResource(R.string.welcome_illustration_amount_placeholder),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White.copy(alpha = 0.9f),
+                    letterSpacing = (-0.36).sp,
+                ),
+            )
+        }
+        // Plus badge
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 10.dp, bottom = 12.dp)
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Surface)
+                .padding(3.dp)
+                .clip(CircleShape)
+                .background(SecondaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = null,
+                tint = Secondary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CardLine(
+    offsetY: Dp,
+    offsetX: Dp,
+    width: Dp,
+    color: Color,
+) {
+    Box(
+        modifier = Modifier
+            .padding(top = offsetY, start = offsetX)
+            .size(width = width, height = 6.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(color),
+    )
+}
