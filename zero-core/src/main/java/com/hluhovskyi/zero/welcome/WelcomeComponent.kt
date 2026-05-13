@@ -56,7 +56,6 @@ abstract class WelcomeComponent : AttachableViewComponent {
 
         @Provides
         @WelcomeScope
-        fun viewProvider(viewModel: WelcomeViewModel): ViewProvider =
-            WelcomeViewProvider(viewModel = viewModel)
+        fun viewProvider(viewModel: WelcomeViewModel): ViewProvider = WelcomeViewProvider(viewModel = viewModel)
     }
 }

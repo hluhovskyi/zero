@@ -42,8 +42,8 @@ import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
-import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.home.HomeComponent
+import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase

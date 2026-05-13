@@ -9,8 +9,7 @@ internal class DefaultNewUserUseCase(
     private val transactionRepository: TransactionRepository,
 ) : NewUserUseCase {
 
-    override fun isNewUser(): Flow<Boolean> =
-        transactionRepository.query(TransactionRepository.Criteria.HasAny())
-            .map { hasAny -> !hasAny }
-            .distinctUntilChanged()
+    override fun isNewUser(): Flow<Boolean> = transactionRepository.query(TransactionRepository.Criteria.HasAny())
+        .map { hasAny -> !hasAny }
+        .distinctUntilChanged()
 }
