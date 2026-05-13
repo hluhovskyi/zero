@@ -254,6 +254,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                                 )
                             }
                             .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
+                            .onDuplicateTransactionHandler { transactionId ->
+                                navigator.navigateTo(
+                                    Destinations.Transaction.Item.Duplicate,
+                                    Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                                )
+                            }
                             .transactionFilterUseCase(transactionFilterUseCase)
                             .displayConfig(DisplayConfig(showFab = true)),
                     )
@@ -343,6 +349,34 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
             componentBuilder
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
+                .onTransactionSavedHandler { navigator.back() }
+                .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+                .onDiscardHandler { navigator.back() }
+                .onDuplicateHandler { transactionId ->
+                    navigator.back()
+                    navigator.navigateTo(
+                        Destinations.Transaction.Item.Duplicate,
+                        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
+                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
+                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun transactionItemDuplicateNavigationEntry(
+            componentBuilder: TransactionEditComponent.Builder,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Duplicate) {
+            componentBuilder
+                .transactionId(Id.Unknown)
+                .duplicateFromTransactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .onTransactionSavedHandler { navigator.back() }
                 .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
                 .onDiscardHandler { navigator.back() }
@@ -438,6 +472,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onTransactionSelectedHandler { transactionId ->
                     navigator.navigateTo(
                         Destinations.Transaction.Item.Edit,
+                        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
+                .onDuplicateTransactionHandler { transactionId ->
+                    navigator.navigateTo(
+                        Destinations.Transaction.Item.Duplicate,
                         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                     )
                 }
@@ -557,6 +597,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onTransactionSelectedHandler { transactionId ->
                     navigator.navigateTo(
                         Destinations.Transaction.Item.Edit,
+                        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                    )
+                }
+                .onDuplicateTransactionHandler { transactionId ->
+                    navigator.navigateTo(
+                        Destinations.Transaction.Item.Duplicate,
                         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                     )
                 }

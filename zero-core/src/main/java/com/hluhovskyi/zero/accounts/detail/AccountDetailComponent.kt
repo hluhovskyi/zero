@@ -19,6 +19,7 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.DisplayConfig
+import com.hluhovskyi.zero.transactions.OnDuplicateTransactionHandler
 import com.hluhovskyi.zero.transactions.OnTransactionSelectedHandler
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionFilter
@@ -68,6 +69,7 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onBackHandler(OnBackHandler.Noop)
             .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
+            .onDuplicateTransactionHandler(OnDuplicateTransactionHandler.Noop)
             .onEditHandler(OnAccountDetailEditHandler.Noop)
             .onCreateTransactionHandler(OnAccountDetailCreateTransactionHandler.Noop)
     }
@@ -87,6 +89,9 @@ abstract class AccountDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
+
+        @BindsInstance
+        fun onDuplicateTransactionHandler(handler: OnDuplicateTransactionHandler): Builder
 
         @BindsInstance
         fun onCreateTransactionHandler(handler: OnAccountDetailCreateTransactionHandler): Builder
@@ -133,10 +138,12 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             builder: TransactionComponent.Builder,
             accountId: Id.Known,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
+            onDuplicateTransactionHandler: OnDuplicateTransactionHandler,
         ): TransactionComponent = builder
             .transactionFilter(TransactionFilter.forAccount(accountId))
             .displayConfig(DisplayConfig(showSearchBar = false, showFilterButton = false))
             .onTransactionSelectHandler(onTransactionSelectedHandler)
+            .onDuplicateTransactionHandler(onDuplicateTransactionHandler)
             .build()
 
         @Provides

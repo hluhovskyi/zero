@@ -27,6 +27,7 @@ internal object Destinations {
 
             object Preview : Item, Destination by destinationOf("transactions/{transactionId}", TransactionId)
             object Edit : Item, Destination by destinationOf("transactions/{transactionId}/edit", TransactionId)
+            object Duplicate : Item, Destination by destinationOf("transactions/{transactionId}/duplicate", TransactionId)
         }
     }
 
