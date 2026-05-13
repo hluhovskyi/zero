@@ -41,6 +41,7 @@ import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
+import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -75,12 +76,14 @@ private annotation class ApplicationScope
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     DatabaseComponent.Dependencies,
+    RemoteComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
     SettingsComponent.Dependencies,
     ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val logger: Logger
+    abstract val feedbackService: FeedbackService
 
     interface Dependencies {
 
@@ -102,6 +105,7 @@ abstract class ApplicationComponent :
     @dagger.Module(
         includes = [
             DatabaseModule::class,
+            RemoteModule::class,
         ],
     )
     object Module {
@@ -413,4 +417,23 @@ internal object DatabaseModule {
     fun configurationRepository(
         databaseComponent: DatabaseComponent,
     ): ConfigurationRepository = databaseComponent.configurationRepository
+}
+
+@dagger.Module
+internal object RemoteModule {
+
+    @Provides
+    @ApplicationScope
+    fun remoteComponent(
+        component: ApplicationComponent,
+    ): RemoteComponent = RemoteComponent.builder(component)
+        .feedbackEndpoint(BuildConfig.FEEDBACK_ENDPOINT)
+        .integrityCloudProject(BuildConfig.FEEDBACK_INTEGRITY_PROJECT.toLongOrNull() ?: 0L)
+        .build()
+
+    @Provides
+    @ApplicationScope
+    fun feedbackService(
+        remoteComponent: RemoteComponent,
+    ): FeedbackService = remoteComponent.feedbackService
 }
