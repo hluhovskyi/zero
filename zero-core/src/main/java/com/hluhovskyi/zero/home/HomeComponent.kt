@@ -3,12 +3,8 @@ package com.hluhovskyi.zero.home
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.settings.OnImportSelectedHandler
-import com.hluhovskyi.zero.transactions.DisplayConfig
-import com.hluhovskyi.zero.transactions.OnTransactionSelectedHandler
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.user.DefaultNewUserUseCase
 import com.hluhovskyi.zero.user.NewUserUseCase
 import com.hluhovskyi.zero.welcome.WelcomeComponent
@@ -37,16 +33,11 @@ abstract class HomeComponent : AttachableViewComponent {
 
     interface Dependencies {
         val transactionRepository: TransactionRepository
-        val welcomeComponentBuilder: WelcomeComponent.Builder
-        val transactionComponentBuilder: TransactionComponent.Builder
     }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerHomeComponent.builder()
             .dependencies(dependencies)
-            .onImportSelectedHandler(OnImportSelectedHandler.Noop)
-            .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
-            .transactionFilterUseCase(TransactionFilterUseCase.Noop)
     }
 
     @dagger.Component.Builder
@@ -54,13 +45,10 @@ abstract class HomeComponent : AttachableViewComponent {
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun onImportSelectedHandler(handler: OnImportSelectedHandler): Builder
+        fun welcomeComponentBuilder(builder: WelcomeComponent.Builder): Builder
 
         @BindsInstance
-        fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
-
-        @BindsInstance
-        fun transactionFilterUseCase(useCase: TransactionFilterUseCase): Builder
+        fun transactionComponentBuilder(builder: TransactionComponent.Builder): Builder
     }
 
     @dagger.Module
@@ -78,22 +66,13 @@ abstract class HomeComponent : AttachableViewComponent {
         @HomeScope
         fun welcomeComponent(
             builder: WelcomeComponent.Builder,
-            onImportSelectedHandler: OnImportSelectedHandler,
-        ): WelcomeComponent = builder
-            .onImportSelectedHandler(onImportSelectedHandler)
-            .build()
+        ): WelcomeComponent = builder.build()
 
         @Provides
         @HomeScope
         fun transactionComponent(
             builder: TransactionComponent.Builder,
-            onTransactionSelectedHandler: OnTransactionSelectedHandler,
-            transactionFilterUseCase: TransactionFilterUseCase,
-        ): TransactionComponent = builder
-            .onTransactionSelectHandler(onTransactionSelectedHandler)
-            .transactionFilterUseCase(transactionFilterUseCase)
-            .displayConfig(DisplayConfig())
-            .build()
+        ): TransactionComponent = builder.build()
 
         @Provides
         @HomeScope

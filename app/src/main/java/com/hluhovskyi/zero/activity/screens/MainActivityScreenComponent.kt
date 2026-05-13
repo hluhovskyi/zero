@@ -54,6 +54,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
@@ -88,6 +89,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val bottomBarComponentBuilder: BottomBarComponent.Builder
 
         val homeComponentBuilder: HomeComponent.Builder
+        val welcomeComponentBuilder: WelcomeComponent.Builder
         val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
@@ -226,7 +228,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun homeNavigationEntry(
-            component: HomeComponent.Builder,
+            homeComponentBuilder: HomeComponent.Builder,
+            welcomeComponentBuilder: WelcomeComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
@@ -235,15 +239,21 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             TransactionScreen(
-                component = component
-                    .onTransactionSelectedHandler { transactionId ->
-                        navigator.navigateTo(
-                            Destinations.Transaction.Item.Edit,
-                            Destinations.Transaction.Item.TransactionId.withValue(transactionId),
-                        )
-                    }
-                    .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
-                    .transactionFilterUseCase(transactionFilterUseCase)
+                component = homeComponentBuilder
+                    .welcomeComponentBuilder(
+                        welcomeComponentBuilder
+                            .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) },
+                    )
+                    .transactionComponentBuilder(
+                        transactionComponentBuilder
+                            .onTransactionSelectHandler { transactionId ->
+                                navigator.navigateTo(
+                                    Destinations.Transaction.Item.Edit,
+                                    Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                                )
+                            }
+                            .transactionFilterUseCase(transactionFilterUseCase),
+                    )
                     .logging(logger),
                 onTransactionEdit = { navigator.navigateTo(Destinations.Transaction.Edit) },
             )
