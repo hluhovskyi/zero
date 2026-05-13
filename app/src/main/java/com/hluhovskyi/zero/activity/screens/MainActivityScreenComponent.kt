@@ -636,6 +636,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .colorId(arguments.getValue(Destinations.Icon.Picker.ColorId))
                 .selectedIconId(arguments.getValue(Destinations.Icon.Picker.SelectedIconId))
+                .moneyFirst(arguments.getValue(Destinations.Icon.Picker.MoneyPlacement) != "last")
                 .onIconSelectedHandler { icon, colorScheme ->
                     accountEditIconUseCase.perform(
                         AccountEditIconUseCase.Action.Pick(
