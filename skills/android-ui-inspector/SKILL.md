@@ -15,36 +15,36 @@ Use this skill **before committing any UI change** — not only when something l
 
 1. **Prerequisites:** Ensure `.emulator-serial` exists in the worktree root — it pins this session to a specific emulator so parallel sessions don't interfere. If it's missing, run:
    ```bash
-   ./scripts/acquire-emulator.sh
+   ./scripts/emulator/acquire-emulator.sh
    ```
-   This scans all active worktrees, finds an unclaimed running emulator, and writes its serial to `.emulator-serial`. If it fails (all emulators claimed or none running), start another AVD before continuing. Once acquired, confirm the app is installed and running on that emulator.
+   This claims an unclaimed running emulator, and auto-invokes `./scripts/emulator/start-emulator.sh` to launch a new one (with `-read-only` on a free port) if all running emulators are claimed. Pass `--no-auto-start` to suppress that fallback. Once acquired, confirm the app is installed and running on that emulator.
 
 2. **Dump the Screen:** Run the UI dump script to get the current hierarchy:
    ```bash
-   ./scripts/dump-ui.sh
+   ./scripts/ui/dump-ui.sh
    ```
    Parse the output to check:
    - `bounds="[x1,y1][x2,y2]"` — zero-width/height = invisible
    - Expected nodes are present (missing = component not rendered)
    - No node is clipped by a parent with smaller bounds
    - Bottom sheets: bounds should be partial overlay, not full screen `[0,0][1080,2040]`
-   - **Focus state** — a screenshot cannot capture a blinking cursor reliably. For focus fixes, grep the raw dump: `./scripts/dump-ui.sh --raw | grep 'focused="true"'`
+   - **Focus state** — a screenshot cannot capture a blinking cursor reliably. For focus fixes, grep the raw dump: `./scripts/ui/dump-ui.sh --raw | grep 'focused="true"'`
 
 3. **Verify Navigation After Any Interaction:** This app uses single-Activity Compose navigation. After tapping anything that should keep you on the current screen (or navigate to a specific screen), immediately verify by grepping for a text landmark unique to the expected screen:
    ```bash
-   ./scripts/verify-screen.sh "Account name"   # confirms account edit screen is active
+   ./scripts/ui/verify-screen.sh "Account name"   # confirms account edit screen is active
    ```
    Or combine with the tap in one call:
    ```bash
-   ./scripts/tap-label.sh "Bank" --verify "Account name"
+   ./scripts/ui/tap-label.sh "Bank" --verify "Account name"
    ```
    **Do not skip this step** after interactions that affect navigation — a screenshot alone cannot tell you which screen you're on, and `adb dumpsys activity` won't help with Compose navigation.
 
 4. **Interact via ADB (If needed):** To tap a UI element by its visible label or content-desc:
    ```bash
-   ./scripts/tap-label.sh "Food"                              # tap and continue
-   ./scripts/tap-label.sh "Add transaction" --verify "Name"  # tap then assert screen
-   ./scripts/tap-label.sh "Save" --screenshot                 # tap then capture screenshot
+   ./scripts/ui/tap-label.sh "Food"                              # tap and continue
+   ./scripts/ui/tap-label.sh "Add transaction" --verify "Name"  # tap then assert screen
+   ./scripts/ui/tap-label.sh "Save" --screenshot                 # tap then capture screenshot
    ```
    For elements with no text/content-desc, fall back to manual coordinates from the dump:
    ```bash
@@ -55,6 +55,8 @@ Use this skill **before committing any UI change** — not only when something l
    ```bash
    adb shell input keyevent 111   # KEYCODE_ESCAPE — dismisses keyboard without closing the screen
    ```
+
+   **Bottom-sheet scroll hazard:** swiping past the last item of a bottom sheet dismisses it. Dump after each swipe to confirm the sheet is still mounted, or use a smaller swipe delta. For long sheets like the icon picker, use `./scripts/ui/open-screen.sh icon-picker-expense` (or `-income` / `-account`) to land directly on the sheet without rebuilding the tap chain each iteration.
 
 5. **Screenshot (Only When Needed):** The XML dump covers structure, bounds, and navigation. Take a screenshot only when you suspect a **visual rendering artifact** — wrong color, clipping, overflow, or a composable that the dump shows as present but looks broken:
    ```bash
