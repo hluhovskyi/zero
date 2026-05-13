@@ -1,49 +1,58 @@
-# Zero — Personal Finance Tracker
+# Zero
 
-Personal finance Android app (Kotlin, Jetpack Compose) for tracking expenses, income, and transfers across accounts with multi-currency support. Built as a hands-on experiment in agentic development with Claude Code.
+<p>
+  <img src="docs/screenshots/transactions.png" height="520">
+  <img src="docs/screenshots/accounts.png" height="520">
+</p>
 
-<img src="docs/screenshots/transactions.png" height="500"> <img src="docs/screenshots/accounts.png" height="500">
+**A personal finance Android app.** Track expenses, income, and transfers across accounts in any currency. Multi-account, multi-currency, fast.
 
 ## Features
 
-- Expense, income, and transfer tracking across accounts in any currency
-- Per-category monthly spending stats (amount, count, % of total)
-- ZenMoney CSV import; JSON export/import with LWW delta sync
-- Real-time search by account or category name
-
-## Development process
-
-Each feature follows a structured agent session: brainstorm → UI design in Claude Design → written spec → implementation plan committed to `docs/superpowers/plans/` → Claude implements task-by-task with lint, tests, and UI verification at the end.
-
-Every module has an `AGENTS.md` with the non-obvious rules and invariants the agent needs across sessions.
-
-## Skills
-
-Custom Claude Code skills in `skills/`:
-
-| Skill | Description |
-|---|---|
-| `lets-do` | Full development workflow — worktree isolation, brainstorm, plan, implement, verify (tests + lint + UI), open PR |
-| `android-ui-inspector` | ADB + uiautomator screenshot so the agent verifies actual Compose layout bounds, not just a successful build |
-| `fetch-design` | Downloads design assets and reads layout specs before writing any Compose code |
-| `scaffold-feature` | Generates Component / ViewModel / ViewProvider / Handlers stubs so plans describe business logic, not boilerplate |
-| `pr-merge` | Runs tests + lint + build, merges with squash, polls CI, cleans up branch |
-| `pr-address` | Pulls review comments and addresses them one by one; supports creating GitHub issues for deferred work |
-| `retro` | Post-feature retrospective that surfaces what caused extra iterations and updates `AGENTS.md` so the next session starts smarter |
+- **Multi-currency** accounts and transfers — record amounts at the rate you saw
+- **Per-category** monthly stats: amount, count, share of total
+- **ZenMoney CSV** import — bring your history with you
+- **Local-first sync** — JSON export/import with LWW delta semantics; merge devices without a server
+- **Real-time search** across accounts and categories
 
 ## Tech
 
 Kotlin · Jetpack Compose · Room · Dagger 2 · Coroutines + Flow · kotlinx-serialization
 
-7 modules with enforced dependency boundaries. `zero-sync` is a pure Kotlin JVM LWW delta sync engine — no Android deps, versioned JSON format, backward-compat fixture tests, and a lint rule that fails the build if any serialized field is missing `@SerialName`.
+7 modules with enforced dependency boundaries. `zero-sync` is a pure Kotlin JVM LWW delta engine — versioned JSON format, backward-compatible fixture tests, and a lint rule that fails the build if any serialized field is missing `@SerialName`.
 
 ## Build
 
 ```bash
-./gradlew assembleDebug
-./gradlew installDebug
-./gradlew lintDebug
-./gradlew testDebugUnitTest
+./gradlew installDebug          # build + install to a connected device
+./gradlew testDebugUnitTest     # unit tests
+./gradlew lintDebug             # lint + custom rules
 ```
 
 Requires Android SDK 34, JDK 21.
+
+## How it's built
+
+Every feature ships through the same pipeline: **brainstorm → spec → plan-on-disk → implement → verify → PR.** The plumbing lives in this repo:
+
+- [`AGENTS.md`](AGENTS.md) at every module — non-obvious invariants, gotchas, conventions
+- [`docs/agents/`](docs/agents/) — architecture, concurrency, navigation, DI, testing
+- [`docs/superpowers/plans/`](docs/superpowers/plans/) — every implementation plan, committed before any code is written
+- [`skills/`](skills/) — custom workflow automation:
+
+| Skill | What it does |
+|---|---|
+| `lets-do` | One command for the full SDLC — worktree → brainstorm → plan → implement → verify → PR |
+| `android-ui-inspector` | ADB + uiautomator: read the live layout tree, because "it compiled" isn't validation |
+| `fetch-design` | Pulls design assets and specs before the first line of Compose code |
+| `scaffold-feature` | Generates Component / ViewModel / ViewProvider / Handlers stubs so plans focus on logic |
+| `pr-merge` | Tests + lint + build, squash-merge, polls CI, cleans the branch |
+| `pr-address` | Walks PR review comments one by one; opens issues for deferred work |
+| `retro` | Post-feature retrospective; updates `AGENTS.md` so the next session starts smarter |
+
+A handful of patterns keep the wheels on as the codebase grows:
+
+- **Per-module `AGENTS.md`** — invariants live next to the code they constrain, not in one giant root doc
+- **Plans on disk** — an untracked plan is a lost plan; every feature has a committed spec under `docs/superpowers/plans/`
+- **Lint as guardrail** — custom rules catch hardcoded Compose strings, uppercase string-resources, and serialization fields missing `@SerialName`, so the build fails before a bad PR can ship
+- **Worktree + emulator pool** — each working session gets its own git worktree and a pinned emulator, so parallel work doesn't collide (`scripts/emulator/`)
