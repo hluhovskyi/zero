@@ -44,12 +44,13 @@ inline compound bash command the skill suggests.
 After the worktree is created, acquire a dedicated emulator for this session:
 
 ```bash
-./scripts/acquire-emulator.sh
+./scripts/emulator/acquire-emulator.sh
 ```
 
-This pins the session to one emulator so parallel sessions don't interfere. If it fails because all
-emulators are claimed, start another AVD before continuing. The `.emulator-serial` file it writes is
-read automatically by all `./scripts/` adb helpers.
+This pins the session to one emulator so parallel sessions don't interfere. If all are claimed it
+auto-starts a new instance via `./scripts/emulator/start-emulator.sh` (pass `--no-auto-start` to
+suppress). The `.emulator-serial` file it writes is read by `scripts/ui/adb.sh` and every other
+UI helper.
 
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
 user declined), stop and explain that master must not be modified directly.

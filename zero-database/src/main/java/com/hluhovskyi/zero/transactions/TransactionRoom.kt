@@ -15,6 +15,15 @@ internal interface TransactionRoom {
     @Query("SELECT * FROM TransactionEntity WHERE userId=:userId ORDER BY datetime(enteredDateTime) DESC")
     fun selectByUserId(userId: String): Flow<List<TransactionEntity>>
 
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId = :userId AND deletedAt IS NULL
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectAllAlive(userId: String): Flow<List<TransactionEntity>>
+
     // Reactive — Room re-emits when any matching row is inserted/updated/deleted
     // after: ISO datetime string e.g. "2024-01-15T10:30:00"
     @Query(

@@ -89,6 +89,18 @@ class RoomTransactionRepositoryPaginationTest {
         job.cancel()
     }
 
+    // --- Criteria.All without trigger (one-shot fetch-all) ---
+
+    @Test
+    fun `Criteria_All without trigger returns all alive transactions in one batch`() = runTest {
+        whenever(transactionRoom.selectAllAlive("user1"))
+            .thenReturn(flowOf(listOf(expenseEntity("t1", jan15h10), expenseEntity("t2", jan15h08))))
+
+        val result = repo.query(TransactionRepository.Criteria.All()).first()
+
+        assertEquals(listOf("t1", "t2"), result.map { it.id.value })
+    }
+
     // --- Criteria.All with trigger ---
 
     @Test
@@ -98,7 +110,9 @@ class RoomTransactionRepositoryPaginationTest {
         whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15h10.toString()))
             .thenReturn(listOf(expenseEntity("t2", jan15h08)))
 
-        val result = repo.query(TransactionRepository.Criteria.All()).first()
+        // Pass an explicit trigger so we stay on the paginated path; a trigger-less
+        // Criteria.All() routes to selectAllAlive (covered by a separate test below).
+        val result = repo.query(TransactionRepository.Criteria.All(), MutableSharedFlow<Unit>()).first()
 
         assertEquals(listOf("t1", "t2"), result.map { it.id.value })
     }

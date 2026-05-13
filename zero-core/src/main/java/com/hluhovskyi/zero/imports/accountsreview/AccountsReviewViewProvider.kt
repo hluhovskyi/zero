@@ -22,10 +22,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
@@ -33,13 +35,17 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.imports.ImportAccount
+import com.hluhovskyi.zero.imports.ImportStrategyChip
+import com.hluhovskyi.zero.imports.ResolveStrategy
 import com.hluhovskyi.zero.ui.ImportStepHeader
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+
+private val ExistsBadgeBackground = Color(0xFFE8EEFF)
 
 internal class AccountsReviewViewProvider(
     private val viewModel: AccountsReviewViewModel,
@@ -55,8 +61,8 @@ internal class AccountsReviewViewProvider(
 @Composable
 private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: ImageLoader) {
     val state by viewModel.state.collectAsState(initial = AccountsReviewViewModel.State())
-
     val totalTransactions = state.accounts.sumOf { it.transactionCount }
+
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
             title = stringResource(R.string.import_accounts_review_title),
@@ -78,7 +84,14 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
                 )
             }
             items(state.accounts, key = { it.id.value }) { account ->
-                AccountRow(account = account, imageLoader = imageLoader)
+                val strategy = state.strategies[account.id]
+                    ?: if (account.existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
+                AccountRow(
+                    account = account,
+                    strategy = strategy,
+                    imageLoader = imageLoader,
+                    onChange = { viewModel.perform(AccountsReviewViewModel.Action.SetStrategy(account.id, it)) },
+                )
             }
             item { Box(modifier = Modifier.padding(bottom = 8.dp)) }
         }
@@ -92,27 +105,44 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = stringResource(R.string.import_accounts_review_continue), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = stringResource(R.string.import_accounts_review_continue),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AccountRow(account: ImportAccount, imageLoader: ImageLoader) {
+private fun AccountRow(
+    account: ImportAccount,
+    strategy: ResolveStrategy,
+    imageLoader: ImageLoader,
+    onChange: (ResolveStrategy) -> Unit,
+) {
+    val isSkipped = strategy == ResolveStrategy.Skip
+    val options = if (account.existingId != null) {
+        listOf(ResolveStrategy.Merge, ResolveStrategy.New, ResolveStrategy.Skip)
+    } else {
+        listOf(ResolveStrategy.New, ResolveStrategy.Skip)
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(SurfaceContainerLowest)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .alpha(if (isSkipped) 0.4f else 1f)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(40.dp)
                 .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
@@ -120,7 +150,7 @@ private fun AccountRow(account: ImportAccount, imageLoader: ImageLoader) {
             if (icon != null) {
                 imageLoader.View(
                     image = icon,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(22.dp),
                     tint = OnSurfaceVariant,
                 )
             } else {
@@ -128,26 +158,61 @@ private fun AccountRow(account: ImportAccount, imageLoader: ImageLoader) {
                     imageVector = Icons.Filled.AccountBalance,
                     contentDescription = null,
                     tint = OnSurfaceVariant,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(22.dp),
                 )
             }
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = account.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
-            Text(text = account.currencyId.value, fontSize = 12.sp, color = OnSurfaceVariant)
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(SurfaceContainerLow)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = account.name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (account.existingId != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ExistsBadgeBackground)
+                            .padding(horizontal = 5.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.import_resolve_exists_badge).uppercase(),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryContainer,
+                            letterSpacing = 0.06.sp,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+            val displayedCount = when (strategy) {
+                ResolveStrategy.Merge -> account.newTransactionCount
+                ResolveStrategy.New -> account.transactionCount
+                ResolveStrategy.Skip -> 0
+            }
             Text(
-                text = stringResource(R.string.import_accounts_review_tx_count, account.transactionCount),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = OnSurfaceVariant,
+                text = if (isSkipped) {
+                    stringResource(R.string.import_resolve_wont_be_imported)
+                } else {
+                    stringResource(R.string.import_accounts_review_tx_count, displayedCount)
+                },
+                fontSize = 11.sp,
+                color = if (isSkipped) Outline else OnSurfaceVariant,
             )
         }
+        ImportStrategyChip(
+            selected = strategy,
+            options = options,
+            onChange = onChange,
+        )
     }
 }

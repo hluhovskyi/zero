@@ -11,7 +11,7 @@ internal class DefaultAccountsReviewViewModel(
 
     override val state: Flow<AccountsReviewViewModel.State> = importUseCase.state
         .filterIsInstance<ImportUseCase.State.AccountsReview>()
-        .map { AccountsReviewViewModel.State(accounts = it.accounts) }
+        .map { AccountsReviewViewModel.State(it.accounts, it.strategies) }
 
     override fun perform(action: AccountsReviewViewModel.Action) {
         when (action) {
@@ -19,6 +19,8 @@ internal class DefaultAccountsReviewViewModel(
                 importUseCase.perform(ImportUseCase.Action.ConfirmAccounts)
             is AccountsReviewViewModel.Action.Back ->
                 importUseCase.perform(ImportUseCase.Action.Back)
+            is AccountsReviewViewModel.Action.SetStrategy ->
+                importUseCase.perform(ImportUseCase.Action.SetAccountStrategy(action.id, action.strategy))
         }
     }
 }
