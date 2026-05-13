@@ -26,7 +26,7 @@ Verify with the view dump, not a screenshot: `grep 'focused="true"' /tmp/ui.xml`
 
 ## Layout Verification
 
-**Verify layout with a UI dump + screenshot after every layout change** — visual gaps, clipping, and alignment errors are invisible in code. Run `./scripts/dump-ui.sh` and check element bounds. For alignment fixes, verify both x-position *and* vertical gap between related elements — passing one check while ignoring the other is the most common source of "still broken" follow-ups.
+**Verify layout with a UI dump + screenshot after every layout change** — visual gaps, clipping, and alignment errors are invisible in code. Run `./scripts/ui/dump-ui.sh` and check element bounds. For alignment fixes, verify both x-position *and* vertical gap between related elements — passing one check while ignoring the other is the most common source of "still broken" follow-ups.
 
 ## `stringResource` Outside Composable Context
 
