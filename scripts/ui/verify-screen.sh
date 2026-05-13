@@ -1,13 +1,11 @@
 #!/bin/bash
 # Verifies the current screen contains an expected text or content-desc landmark.
-# Usage: ./scripts/verify-screen.sh <expected-text>
+# Usage: ./scripts/ui/verify-screen.sh <expected-text>
 #
 # Refreshes the UI dump and exits 0 if the landmark is found, 1 if not.
 # Use after any navigation action to confirm the expected screen is active.
 
-if [ -f ".emulator-serial" ]; then
-    export ANDROID_SERIAL=$(cat .emulator-serial)
-fi
+ADB="$(dirname "$0")/adb.sh"
 
 LANDMARK="${1:-}"
 if [ -z "$LANDMARK" ]; then
@@ -15,9 +13,9 @@ if [ -z "$LANDMARK" ]; then
     exit 1
 fi
 
-adb shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1
+"$ADB" shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1
 
-FOUND=$(adb shell cat /sdcard/window_dump.xml | python3 -c "
+FOUND=$("$ADB" shell cat /sdcard/window_dump.xml | python3 -c "
 import sys, xml.etree.ElementTree as ET
 landmark = sys.argv[1]
 root = ET.fromstring(sys.stdin.read())

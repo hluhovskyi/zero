@@ -47,6 +47,11 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        buildConfigField "String", "FEEDBACK_ENDPOINT",
+            "\"${System.getenv("FEEDBACK_ENDPOINT") ?: localProps['feedbackEndpoint'] ?: ""}\""
+        buildConfigField "String", "FEEDBACK_INTEGRITY_PROJECT",
+            "\"${System.getenv("FEEDBACK_INTEGRITY_PROJECT") ?: localProps['feedbackIntegrityProject'] ?: ""}\""
     }
 
     signingConfigs {
@@ -106,6 +111,7 @@ dependencies {
     implementation(project(":zero-sync"))
     implementation(project(":zero-core"))
     implementation(project(":zero-image-loading"))
+    implementation(project(":zero-remote"))
 
     implementation deps.kotlin.serialization
 

@@ -31,13 +31,13 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
 3. **Strict Development Lifecycle**:
     - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
-    - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
+    - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/ui/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
     - **Implicit Denial**: Technical feedback is NOT approval. Re-propose and wait for a fresh handshake after any plan update.
     - **Minimalism**: Change ONLY what is in the approved plan. No unrelated refactors, visibility changes, or "cleanup".
     - **Zero Deviation**: Approved plans are binding. Stop and re-propose if implementation requires any architectural or logic change.
     - See [Execution Workflow](docs/agents/execution-workflow.md).
 4. **Shared Agent Skills** — Skills live in `skills/` and are symlinked into `.claude/plugins/zero-project/skills/` to keep a single source of truth. Edit via the real path, not the symlink — see [Skills](docs/agents/skills.md).
-5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
+5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/ui/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
 
@@ -87,3 +87,4 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Execution Workflow](docs/agents/execution-workflow.md) — Design-first, UI verification loop, complexity circuit breaker
 - [Superpowers Workflow](docs/agents/superpowers-workflow.md) — Project-specific rules for keeping plans lean and design docs focused
 - [Skills](docs/agents/skills.md) — Adding skills, plugin loader setup, troubleshooting
+- [Feedback Infra](docs/agents/feedback-infra.md) — Play Integrity-gated feedback pipe (zero-remote module, cloud function, secrets matrix)
