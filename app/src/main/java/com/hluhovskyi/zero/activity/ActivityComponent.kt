@@ -33,6 +33,7 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
+import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -43,6 +44,7 @@ import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -71,6 +73,8 @@ abstract class ActivityComponent :
     CategoryPickerComponent.Dependencies,
     CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
+    HomeComponent.Dependencies,
+    WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
@@ -187,10 +191,20 @@ abstract class ActivityComponent :
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionComponentBuilder(
             component: ActivityComponent,
         ): TransactionComponent.Builder = TransactionComponent.builder(component)
+
+        @Provides
+        fun welcomeComponentBuilder(
+            component: ActivityComponent,
+        ): WelcomeComponent.Builder = WelcomeComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun homeComponentBuilder(
+            component: ActivityComponent,
+        ): HomeComponent.Builder = HomeComponent.builder(component)
 
         @Provides
         @ActivityScope
