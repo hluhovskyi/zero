@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero
 
 import android.content.Context
+import android.os.Build
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
@@ -123,10 +124,10 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun deviceInfo(): DeviceInfo = DeviceInfo(
-            manufacturer = android.os.Build.MANUFACTURER.orEmpty(),
-            model = android.os.Build.MODEL.orEmpty(),
-            osVersion = android.os.Build.VERSION.RELEASE.orEmpty(),
-            sdkInt = android.os.Build.VERSION.SDK_INT,
+            manufacturer = Build.MANUFACTURER.orEmpty(),
+            model = Build.MODEL.orEmpty(),
+            osVersion = Build.VERSION.RELEASE.orEmpty(),
+            sdkInt = Build.VERSION.SDK_INT,
             versionName = BuildConfig.VERSION_NAME,
             versionCode = BuildConfig.VERSION_CODE.toLong(),
         )
