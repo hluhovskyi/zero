@@ -441,6 +441,106 @@ class DefaultImportUseCaseTest {
     }
 
     @Test
+    fun `re-confirming categories after Back preserves full account list`() = runTest {
+        // Repro: user went Categories → Accounts → Back → Categories → Continue.
+        // Old bug: storedDelta was narrowed by ConfirmCategories, so the second pass produced fewer accounts.
+        val existingCat = CategoryRepository.Category(
+            id = Id.Known("cat-local"),
+            parentCategoryId = Id.Unknown,
+            name = "Food",
+            iconId = Id.Known("i"),
+            colorId = Id.Known("c"),
+        )
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existingCat)))
+
+        val snapshot = snapshotWith(
+            categories = listOf(syncCategory("c-merge", "food")),
+            accounts = listOf(
+                syncAccount("a1", "Wallet"),
+                syncAccount("a2", "Savings"),
+                syncAccount("a3", "Credit"),
+            ),
+            transactions = listOf(
+                syncTransaction("t1", accountId = "a1", categoryId = "c-merge"),
+                syncTransaction("t2", accountId = "a2", categoryId = "c-merge"),
+                syncTransaction("t3", accountId = "a3", categoryId = "c-merge"),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+
+        val firstPass = useCase.state.first() as ImportUseCase.State.AccountsReview
+        assert(firstPass.accounts.size == 3) {
+            "First pass: expected 3 accounts but got ${firstPass.accounts.size}"
+        }
+
+        useCase.perform(ImportUseCase.Action.Back)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+
+        val secondPass = useCase.state.first() as ImportUseCase.State.AccountsReview
+        assert(secondPass.accounts.size == 3) {
+            "Second pass: expected 3 accounts but got ${secondPass.accounts.size}"
+        }
+    }
+
+    @Test
+    fun `re-confirming accounts after Back produces same final transactions`() = runTest {
+        // Repro: Accounts → TransactionsPreview → Back → Accounts → Continue.
+        // Old bug: storedDelta was narrowed each ConfirmAccounts call, dropping accounts on the second pass.
+        val existingAccount = AccountRepository.Account(
+            id = Id.Known("acc-local"),
+            name = "Wallet",
+            currencyId = Id.Known("usd"),
+            iconId = Id.Known("i"),
+            initialBalance = Amount(java.math.BigDecimal.ZERO),
+            category = AccountCategory.CASH,
+            details = null,
+        )
+        whenever(accountRepository.query(any<AccountRepository.Criteria>()))
+            .thenReturn(flowOf(listOf(existingAccount)))
+
+        val snapshot = snapshotWith(
+            accounts = listOf(syncAccount("a-import", "wallet")),
+            transactions = listOf(
+                syncTransaction("t1", accountId = "a-import", categoryId = null),
+                syncTransaction("t2", accountId = "a-import", categoryId = null),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmCategories)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val firstPreview = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        val firstCount = firstPreview.transactions.size
+
+        useCase.perform(ImportUseCase.Action.Back)
+        advanceUntilIdle()
+        useCase.perform(ImportUseCase.Action.ConfirmAccounts)
+        advanceUntilIdle()
+
+        val secondPreview = useCase.state.first() as ImportUseCase.State.TransactionsPreview
+        assert(secondPreview.transactions.size == firstCount) {
+            "Re-confirm produced ${secondPreview.transactions.size} but first pass had $firstCount"
+        }
+    }
+
+    @Test
     fun `Back from UpToDate returns to SourceSelection`() = runTest {
         val emptySnapshot = SyncSnapshot(
             version = 1,
