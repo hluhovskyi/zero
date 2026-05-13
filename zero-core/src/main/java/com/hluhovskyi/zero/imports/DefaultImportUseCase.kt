@@ -160,7 +160,10 @@ internal class DefaultImportUseCase(
                 val accounts = current.storedAccounts ?: return@update current
                 val categories = current.storedCategories ?: emptyList()
                 val nextDelta = applyAccountStrategies(delta, accounts, current.accountStrategies)
-                val transactions = toImportTransactions(nextDelta)
+                val transactions = toImportTransactions(
+                    nextDelta,
+                    buildCategoryNameLookup(categories, current.existingCategoryById),
+                )
                 current.copy(
                     storedDelta = nextDelta,
                     screen = ImportUseCase.State.TransactionsPreview(
@@ -323,10 +326,20 @@ internal class DefaultImportUseCase(
         return delta.copy(accounts = filteredAccounts, transactions = filteredTransactions)
     }
 
-    private fun toImportTransactions(delta: SyncSnapshot): List<ImportTransaction> {
-        val categoryById = delta.categories.associateBy { it.id }
+    private fun buildCategoryNameLookup(
+        importCategories: List<ImportCategory>,
+        existingCategoryById: Map<Id.Known, CategoryRepository.Category>,
+    ): Map<Id.Known, String> = buildMap {
+        importCategories.forEach { put(it.id, it.name) }
+        existingCategoryById.forEach { (id, cat) -> put(id, cat.name) }
+    }
+
+    private fun toImportTransactions(
+        delta: SyncSnapshot,
+        categoryNameById: Map<Id.Known, String>,
+    ): List<ImportTransaction> {
         return delta.transactions.map { syncTx ->
-            val categoryName = syncTx.categoryId?.let { categoryById[Id.Known(it)]?.name }
+            val categoryName = syncTx.categoryId?.let { categoryNameById[Id.Known(it)] }
             when (syncTx.type) {
                 SyncTransaction.Type.EXPENSE -> ImportTransaction.Expense(
                     id = syncTx.id,
