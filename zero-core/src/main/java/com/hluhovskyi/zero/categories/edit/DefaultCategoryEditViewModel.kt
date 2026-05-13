@@ -78,7 +78,9 @@ internal class DefaultCategoryEditViewModel(
                     ),
                 )
                 if (isNewCategory) {
-                    configurationRepository.write(CategoryConfigurationKey.HasAddedCategory, true)
+                    launch {
+                        configurationRepository.write(CategoryConfigurationKey.HasAddedCategory, true)
+                    }
                 }
                 launch(context = Dispatchers.Main) { onCategorySavedHandler.onSaved() }
             }

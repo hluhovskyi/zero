@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -45,7 +46,8 @@ internal class DefaultAccountViewModel(
         scope.launch {
             combine(
                 useCase.state,
-                configurationRepository.observe(AccountConfigurationKey.HasAddedAccount),
+                configurationRepository.observe(AccountConfigurationKey.HasAddedAccount)
+                    .flowOn(dispatchers.io()),
             ) { useCaseState, hasAdded -> useCaseState to hasAdded }
                 .collectLatest { (useCaseState, hasAdded) ->
                     mutableState.update { state ->

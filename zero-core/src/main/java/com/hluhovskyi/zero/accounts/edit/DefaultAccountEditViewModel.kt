@@ -105,7 +105,9 @@ internal class DefaultAccountEditViewModel(
                     ),
                 )
                 if (isNewAccount) {
-                    configurationRepository.write(AccountConfigurationKey.HasAddedAccount, true)
+                    launch {
+                        configurationRepository.write(AccountConfigurationKey.HasAddedAccount, true)
+                    }
                 }
                 launch(context = Dispatchers.Main) {
                     onAccountSavedHandler.onSaved()
