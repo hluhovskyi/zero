@@ -149,7 +149,6 @@ private fun CategoryRow(
             colorScheme = category.colorScheme.toUi(),
             size = 40.dp,
             contentPadding = 9.dp,
-            isSelected = !isSkipped,
         ) { iconTint ->
             imageLoader.View(
                 image = category.icon,
@@ -167,8 +166,9 @@ private fun CategoryRow(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = OnSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 if (category.existingId != null) {
                     Box(
@@ -183,6 +183,7 @@ private fun CategoryRow(
                             fontWeight = FontWeight.Bold,
                             color = PrimaryContainer,
                             letterSpacing = 0.06.sp,
+                            maxLines = 1,
                         )
                     }
                 }

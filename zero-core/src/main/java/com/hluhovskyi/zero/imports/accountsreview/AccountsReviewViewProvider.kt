@@ -172,8 +172,9 @@ private fun AccountRow(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = OnSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 if (account.existingId != null) {
                     Box(
@@ -188,6 +189,7 @@ private fun AccountRow(
                             fontWeight = FontWeight.Bold,
                             color = PrimaryContainer,
                             letterSpacing = 0.06.sp,
+                            maxLines = 1,
                         )
                     }
                 }
