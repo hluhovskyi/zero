@@ -67,7 +67,7 @@ New files in `app/src/main/java/com/hluhovskyi/zero/feedback/`:
 
 - **`InMemoryBreadcrumbs`** — the only `Breadcrumbs` impl. Two `ArrayDeque<Entry>` rings (`navigation` cap 50, `breadcrumbs` cap 200) guarded by a single `Mutex`. Reads return defensive copies. Constructor takes a `Navigator` (or a `Flow<Navigator.State>`), a `Clock`, and a `CoroutineScope`. On `attach()` it launches a coroutine that maps `navigator.state.distinctUntilChanged { it.destination }` to `Entry(clock.now(), state.destination.route)` and appends to the navigation ring. `distinctUntilChanged` correctly admits back-navigation (different destination than previous) but rejects config-change re-emits.
 - **`ShakeDetector`** — Android-only utility. Constructor: `SensorManager`, `onShake: () -> Unit`. `start()` registers a `SensorEventListener` on `Sensor.TYPE_ACCELEROMETER` with `SENSOR_DELAY_GAME`. Trigger condition: linear acceleration magnitude `sqrt(x² + y² + z²) − g > 13 m/s²` for 3+ consecutive samples within 500 ms. Internal 1.5-second debounce after each fire. `stop()` unregisters.
-- **`ShakeFeedbackEntry`** — small `Closeable` glue. On `start()`, instantiates a `ShakeDetector` whose `onShake` is `navigator.navigateTo(Destinations.Feedback)`. On `close()`, stops the detector. Started from `MainActivityScreenComponent.attach()` (which already wires other screen-scoped lifecycles).
+- **`ShakeFeedbackEntry`** — small `Closeable` glue. On `start()`, instantiates a `ShakeDetector` whose `onShake` is `navigator.navigateTo(Destinations.Feedback)`. On `close()`, stops the detector. Started from `MainActivityScreenComponent.attach()` — that method currently returns `Closeables.empty()`; the override returns `Closeables.combine(breadcrumbs.attach(), shakeFeedbackEntry.start())` so both the breadcrumb-history collector and the shake listener share the screen's lifecycle.
 - **`FeedbackNavigationEntry`** — `@IntoSet` provider in `MainActivityScreenComponent.Module`. Registers `Destinations.Feedback` as a `BottomSheet` and builds the `FeedbackComponent` from `zero-core`, injecting `feedbackService`, `breadcrumbs`, `deviceInfo`, and `isDebugBuild = BuildConfig.DEBUG`. Provides an `OnFeedbackSubmittedHandler` that calls `navigator.back()`.
 
 Changes to existing files:
@@ -229,7 +229,7 @@ Device strings (`Build.MANUFACTURER`, `Build.MODEL`) are technically attacker-co
   1. Title: first non-blank line, truncated at 80 chars; fallback when description blank.
   2. Body sections omitted when their inputs are empty.
   3. Injection guard: description containing ```` ``` ```` produces 4-backtick fence; ````` ```` ````` produces 5-backtick fence.
-  4. Device-info sanitiser: `MANUFACTURER = "[evil](http://x)"` → `?evil??http????x?`.
+  4. Device-info sanitiser: `MANUFACTURER = "[evil](http://x)"` → `?evil??http???x?`.
   5. Labels: `feedback` always; `+ debug` when `isDebugBuild = true`.
   6. `<details>` block omitted when both rings empty.
 - **`DefaultFeedbackViewModelTest`** (`zero-core/src/test`):
