@@ -166,7 +166,7 @@ private fun CategoryRow(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = OnSurface,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
