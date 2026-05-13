@@ -78,17 +78,20 @@ For everything else, invoke `superpowers:writing-plans`.
 Read `docs/agents/superpowers-workflow.md` for plan length rules — plans over ~400 lines slow
 execution significantly. Replace boilerplate blocks with doc/skill references where possible.
 
-**Commit the plan before execution** — this is mandatory, not optional:
+**Commit, push, and open a draft PR for the plan.** Mandatory. Step 6 flips this same PR to
+ready — never open a second one.
 
 ```bash
 git add docs/superpowers/plans/<plan-file>.md
 git commit -m "docs: add <feature> implementation plan"
+git push -u origin HEAD
+gh pr create --draft --title "<feature>: plan" --body "Plan: docs/superpowers/plans/<plan-file>.md"
 ```
 
-An untracked plan is a lost plan; if the session is interrupted the plan must survive.
+Report the PR URL. For `--no-questions`, do the same after writing the plan inline.
 
-If `--no-questions` was passed: write a concise plan inline based on the task description
-(no clarifying questions), commit it, then proceed to execution.
+**Planning-only sessions** (design-to-PR flows split per `docs/agents/superpowers-workflow.md`):
+open a **non-draft** `docs: <feature> plan` PR, skip Steps 4–6, stop.
 
 ## Step 4 — Execution
 
@@ -123,22 +126,14 @@ is not validation.
 documentation, CI config, or build scripts with no runtime behaviour change. When in doubt,
 run it anyway.
 
-## Step 6 — Open PR
+## Step 6 — Mark PR ready
 
-**Before creating the PR, verify the working tree is clean:**
-
-```bash
-git status --short
-```
-
-If output is non-empty, surface the listed files to the user and confirm before proceeding —
-`gh pr create` only warns about uncommitted changes; unintended files can silently land in the
-squash commit.
+The draft PR from Step 3 already exists. Verify the tree is clean, update title + body to
+reflect the implementation, then flip it.
 
 ```bash
-gh pr create \
-  --title "<concise title, under 70 chars>" \
-  --body "$(cat <<'EOF'
+git status --short   # confirm clean before proceeding
+gh pr edit --title "<concise title, under 70 chars>" --body "$(cat <<'EOF'
 ## Summary
 - <bullet per meaningful change>
 
@@ -148,6 +143,7 @@ gh pr create \
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
+gh pr ready
 ```
 
-The PR is the deliverable. Don't report the task as done until the PR URL is in hand.
+Don't report the task as done until the PR is ready-for-review.
