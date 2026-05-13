@@ -17,6 +17,7 @@ import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
 import com.hluhovskyi.zero.sync.SyncTransaction
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.users.User
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +54,8 @@ class DefaultImportUseCaseTest {
 
     @Mock private lateinit var accountRepository: AccountRepository
 
+    @Mock private lateinit var transactionRepository: TransactionRepository
+
     private val source = KnownSource.ZeroBackup
     private val userId = Id.Known("user-1")
     private val testUri = Uri("file://test.zero") as Uri.NonEmpty
@@ -63,6 +66,7 @@ class DefaultImportUseCaseTest {
         whenever(currentUserRepository.query()).thenReturn(flowOf(User(id = userId)))
         lenient().`when`(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>())).thenReturn(flowOf(emptyList()))
         lenient().`when`(accountRepository.query(any<AccountRepository.Criteria>())).thenReturn(flowOf(emptyList()))
+        lenient().`when`(transactionRepository.query(any<TransactionRepository.Criteria<List<TransactionRepository.Transaction>>>(), any())).thenReturn(flowOf(emptyList()))
         lenient().`when`(iconRepository.query(any<IconRepository.Criteria<List<Icon>>>())).thenReturn(flowOf(emptyList()))
         lenient().`when`(colorRepository.schemeFor(any())).thenReturn(ColorScheme.Grey)
     }
@@ -75,6 +79,7 @@ class DefaultImportUseCaseTest {
         colorRepository = colorRepository,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,
+        transactionRepository = transactionRepository,
         onImportFinishedHandler = OnImportFinishedHandler.Noop,
         coroutineScope = scope,
     )

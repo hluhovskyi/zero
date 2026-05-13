@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.sync.SyncAccount
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSnapshot
 import com.hluhovskyi.zero.sync.SyncTransaction
+import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ internal class DefaultImportUseCase(
     private val colorRepository: ColorRepository,
     private val categoryRepository: CategoryRepository,
     private val accountRepository: AccountRepository,
+    private val transactionRepository: TransactionRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : ImportUseCase {
@@ -46,6 +48,7 @@ internal class DefaultImportUseCase(
         val existingCategoryByName: Map<String, CategoryRepository.Category> = emptyMap(),
         val existingAccountById: Map<Id.Known, AccountRepository.Account> = emptyMap(),
         val existingAccountByName: Map<String, AccountRepository.Account> = emptyMap(),
+        val existingTransactionSignatures: Set<TransactionSignature> = emptySet(),
         val allIconsById: Map<Id.Known, Icon> = emptyMap(),
         val screen: ImportUseCase.State,
     )
@@ -83,6 +86,12 @@ internal class DefaultImportUseCase(
                     val existingAccountById = existingAccounts.associateBy { it.id }
                     val existingAccountByName = existingAccounts.associateBy { it.name.lowercase() }
 
+                    val existingTransactionSignatures = transactionRepository
+                        .query(TransactionRepository.Criteria.All())
+                        .first()
+                        .map { it.toSignature() }
+                        .toSet()
+
                     val categories = buildCategories(delta, existingCategoryById, existingCategoryByName, allIconsById)
                     if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
                         mutableState.update { current ->
@@ -101,6 +110,7 @@ internal class DefaultImportUseCase(
                             existingCategoryByName = existingCategoryByName,
                             existingAccountById = existingAccountById,
                             existingAccountByName = existingAccountByName,
+                            existingTransactionSignatures = existingTransactionSignatures,
                             allIconsById = allIconsById,
                             screen = ImportUseCase.State.CategoriesReview(categories, defaults),
                         )
@@ -159,7 +169,8 @@ internal class DefaultImportUseCase(
                 val delta = current.storedDelta ?: return@update current
                 val accounts = current.storedAccounts ?: return@update current
                 val categories = current.storedCategories ?: emptyList()
-                val nextDelta = applyAccountStrategies(delta, accounts, current.accountStrategies)
+                val afterAccounts = applyAccountStrategies(delta, accounts, current.accountStrategies)
+                val nextDelta = dedupeAgainstExisting(afterAccounts, current.existingTransactionSignatures)
                 val transactions = toImportTransactions(
                     nextDelta,
                     buildCategoryNameLookup(categories, current.existingCategoryById),
@@ -371,5 +382,75 @@ internal class DefaultImportUseCase(
                 )
             }
         }
+    }
+
+    private fun dedupeAgainstExisting(
+        delta: SyncSnapshot,
+        existingSignatures: Set<TransactionSignature>,
+    ): SyncSnapshot {
+        if (existingSignatures.isEmpty()) return delta
+        val filtered = delta.transactions.filterNot { it.toSignature() in existingSignatures }
+        return delta.copy(transactions = filtered)
+    }
+}
+
+private data class TransactionSignature(
+    val type: SyncTransaction.Type,
+    val accountId: String,
+    val currencyId: String,
+    val amount: String,
+    val dateTime: String,
+    val categoryId: String?,
+    val targetAccountId: String?,
+    val targetAmount: String?,
+)
+
+private fun SyncTransaction.toSignature() = TransactionSignature(
+    type = type,
+    accountId = accountId.value,
+    currencyId = currencyId.value,
+    amount = amount.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString().orEmpty(),
+    dateTime = enteredDateTime.toString(),
+    categoryId = categoryId,
+    targetAccountId = targetAccountId,
+    targetAmount = targetAmount?.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString(),
+)
+
+private fun TransactionRepository.Transaction.toSignature(): TransactionSignature {
+    val baseAmount = amount.value.stripTrailingZeros().toPlainString()
+    val dateStr = dateTime.toString()
+    val currency = currencyId.value
+    val account = accountId.value
+    return when (this) {
+        is TransactionRepository.Transaction.Expense -> TransactionSignature(
+            type = SyncTransaction.Type.EXPENSE,
+            accountId = account,
+            currencyId = currency,
+            amount = baseAmount,
+            dateTime = dateStr,
+            categoryId = categoryId.value,
+            targetAccountId = null,
+            targetAmount = null,
+        )
+        is TransactionRepository.Transaction.Income -> TransactionSignature(
+            type = SyncTransaction.Type.INCOME,
+            accountId = account,
+            currencyId = currency,
+            amount = baseAmount,
+            dateTime = dateStr,
+            categoryId = categoryId.value,
+            targetAccountId = null,
+            targetAmount = null,
+        )
+        is TransactionRepository.Transaction.Transfer -> TransactionSignature(
+            type = SyncTransaction.Type.TRANSFER,
+            accountId = account,
+            currencyId = currency,
+            amount = baseAmount,
+            dateTime = dateStr,
+            categoryId = null,
+            targetAccountId = targetAccount.value,
+            targetAmount = targetAmount.value.stripTrailingZeros().toPlainString(),
+        )
     }
 }
