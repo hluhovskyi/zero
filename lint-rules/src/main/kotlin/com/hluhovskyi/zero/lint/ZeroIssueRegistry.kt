@@ -13,6 +13,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         ViewProviderDependencyDetector.ISSUE,
         HandlerFunInterfaceDetector.ISSUE,
         DatabaseComponentEncapsulationDetector.ISSUE,
+        RemoteComponentEncapsulationDetector.ISSUE,
         SyncEntitySerialNameDetector.ISSUE,
         NoNamedAnnotationDetector.ISSUE,
         UnhandledCloseableDetector.ISSUE,
