@@ -264,6 +264,8 @@ internal class DefaultImportUseCase(
 
     override fun attach(): Closeable = Closeables.empty()
 
+    /** Maps each `SyncCategory` in the delta to an [ImportCategory] for the review UI, pre-resolving
+     *  icon/color from the matched local row and counting how many of its transactions would survive dedup. */
     private fun buildCategories(
         delta: SyncSnapshot,
         matchedCategoryByImportId: Map<Id.Known, CategoryRepository.Category>,
@@ -295,6 +297,8 @@ internal class DefaultImportUseCase(
         }
     }
 
+    /** Maps each `SyncAccount` in the delta to an [ImportAccount] for the review UI, pre-resolving
+     *  icon from the matched local row and counting how many of its transactions would survive dedup. */
     private fun buildAccounts(
         syncAccounts: List<SyncAccount>,
         transactions: List<SyncTransaction>,
@@ -340,6 +344,8 @@ internal class DefaultImportUseCase(
         }.toMap()
     }
 
+    /** Returns the ids of incoming transactions whose content signature (after applying the given
+     *  remaps) already exists in [existingSignatures] — i.e. duplicates of rows already in the DB. */
     private fun computeDuplicateTxIds(
         transactions: List<SyncTransaction>,
         categoryRemap: Map<Id.Known, Id.Known>,
@@ -347,12 +353,13 @@ internal class DefaultImportUseCase(
         existingSignatures: Set<TransactionSignature>,
     ): Set<Id.Known> {
         if (existingSignatures.isEmpty()) return emptySet()
-        return transactions
-            .filter { tx -> tx.signatureAfterRemap(categoryRemap, accountRemap) in existingSignatures }
-            .map { it.id }
-            .toSet()
+        return transactions.mapNotNullTo(HashSet()) { tx ->
+            tx.id.takeIf { tx.signatureAfterRemap(categoryRemap, accountRemap) in existingSignatures }
+        }
     }
 
+    /** Lookup of category-name by id covering both imported (New) categories and local categories
+     *  that imported rows may have been merged into — used to label transactions in the preview. */
     private fun categoryNameLookup(
         importCategories: List<ImportCategory>,
         matchedCategoryByImportId: Map<Id.Known, CategoryRepository.Category>,
@@ -361,9 +368,13 @@ internal class DefaultImportUseCase(
         matchedCategoryByImportId.values.forEach { put(it.id, it.name) }
     }
 
+    /** Default per-row resolution: Merge when an existing match was found, otherwise New. */
     private fun defaultStrategy(existingId: Id.Known?): ResolveStrategy =
         if (existingId != null) ResolveStrategy.Merge else ResolveStrategy.New
 
+    /** Applies the user's per-category choices to a snapshot: drops Skip + Merge categories,
+     *  remaps transaction `categoryId`s of merged categories to their local id, drops transactions
+     *  whose category was skipped. */
     private fun applyCategoryStrategies(
         delta: SyncSnapshot,
         categories: List<ImportCategory>,
@@ -385,6 +396,9 @@ internal class DefaultImportUseCase(
         return delta.copy(categories = filteredCategories, transactions = filteredTransactions)
     }
 
+    /** Applies the user's per-account choices to a snapshot: drops Skip + Merge accounts, remaps
+     *  transaction `accountId`/`targetAccountId` of merged accounts to their local id, drops
+     *  transactions that reference a skipped account on either leg of a transfer. */
     private fun applyAccountStrategies(
         delta: SyncSnapshot,
         accounts: List<ImportAccount>,
@@ -416,6 +430,8 @@ internal class DefaultImportUseCase(
         existingCategoryById.forEach { (id, cat) -> put(id, cat.name) }
     }
 
+    /** Converts the post-strategy `SyncTransaction` rows into the `ImportTransaction` display
+     *  models used by the preview screen, attaching a resolved category name to each. */
     private fun toImportTransactions(
         delta: SyncSnapshot,
         categoryNameById: Map<Id.Known, String>,
@@ -455,6 +471,9 @@ internal class DefaultImportUseCase(
         }
     }
 
+    /** Computes the final delta to be imported by applying category strategies, then account
+     *  strategies, then content-based dedup against the local DB — derived freshly from
+     *  [InternalState.originalDelta] each time so back-and-forth navigation can't narrow it. */
     private fun processedDelta(state: InternalState): SyncSnapshot? {
         val original = state.originalDelta ?: return null
         val categories = state.storedCategories ?: emptyList()
@@ -464,6 +483,7 @@ internal class DefaultImportUseCase(
         return dedupeAgainstExisting(afterAcc, state.existingTransactionSignatures)
     }
 
+    /** Drops incoming transactions whose content signature already exists in the local DB. */
     private fun dedupeAgainstExisting(
         delta: SyncSnapshot,
         existingSignatures: Set<TransactionSignature>,

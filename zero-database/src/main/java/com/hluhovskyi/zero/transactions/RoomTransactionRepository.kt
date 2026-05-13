@@ -12,7 +12,6 @@ import com.hluhovskyi.zero.common.time.ZonedClock
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -37,7 +36,7 @@ internal class RoomTransactionRepository(
     ): Flow<T> = currentUserId.take(1)
         .flatMapConcat { userId ->
             when (criteria) {
-                is TransactionRepository.Criteria.All -> if (trigger === EMPTY_TRIGGER) {
+                is TransactionRepository.Criteria.All -> if (trigger === TransactionRepository.NO_TRIGGER) {
                     transactionRoom().selectAllAlive(userId.value)
                         .map { entities -> entities.mapNotNull { it.toRepository() } }
                 } else {
@@ -322,10 +321,3 @@ internal class RoomTransactionRepository(
         const val PAGE_SIZE = 100
     }
 }
-
-/**
- * Identity-comparable singleton matching the default `trigger` value in
- * [TransactionRepository.query]. When a caller doesn't supply a trigger,
- * `Criteria.All` returns every live transaction in one batch instead of paginating.
- */
-private val EMPTY_TRIGGER: Flow<*> = emptyFlow<Any>()
