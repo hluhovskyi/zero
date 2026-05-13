@@ -16,7 +16,7 @@ Bottom-up so each step compiles. Each numbered step is one logical commit.
 
 - `FeedbackReport.kt` — data class (`title: String`, `body: String`, `labels: List<String> = emptyList()`).
 - `FeedbackSubmitResult.kt` — sealed interface with `Success(issueUrl: String)` and `object Failure`.
-- `FeedbackRemoteService.kt` — interface with `suspend fun submit(report: FeedbackReport): FeedbackSubmitResult`.
+- `FeedbackService.kt` — interface with `suspend fun submit(report: FeedbackReport): FeedbackSubmitResult`.
 
 No tests in `zero-api` (it has none today).
 
@@ -43,23 +43,25 @@ playIntegrity    : "com.google.android.play:integrity:1.4.0",
 
 ### 4. `RemoteComponent` and integrity providers
 
-`zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt` — Mirror `DatabaseComponent`'s structure. Public surface = exactly `feedbackRemoteService: FeedbackRemoteService`. Builder takes `Dependencies` (just `context`) plus two `@BindsInstance` fields: `@FeedbackEndpoint endpoint: String`, `@IntegrityCloudProject cloudProjectNumber: Long`. Module provides OkHttpClient (10s connect, 30s read), Json (`ignoreUnknownKeys = true`), `IntegrityTokenProvider` (delegates to `PlayIntegrityTokenProvider`), and `FeedbackRemoteService` (delegates to `OkHttpFeedbackRemoteService`).
+`zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt` — Mirror `DatabaseComponent`'s structure. Public surface = exactly `feedbackService: FeedbackService`. Builder takes `Dependencies` (just `context`) plus two `@BindsInstance` fields: `@FeedbackEndpoint endpoint: String`, `@IntegrityCloudProject cloudProjectNumber: Long`. Module provides OkHttpClient (10s connect, 30s read), Json (`ignoreUnknownKeys = true`), `IntegrityTokenProvider` (delegates to `PlayIntegrityTokenProvider`), and `FeedbackService` (delegates to `OkHttpFeedbackService`).
 
 `zero-remote/src/main/java/com/hluhovskyi/zero/integrity/IntegrityTokenProvider.kt` — internal interface: `suspend fun getToken(nonce: String): String?`.
 
 `zero-remote/src/main/java/com/hluhovskyi/zero/integrity/PlayIntegrityTokenProvider.kt` — internal class wrapping Google's `StandardIntegrityManager`. On construction caches `prepareIntegrityToken(cloudProjectNumber)`. `getToken(nonce)` calls `provider.request(StandardIntegrityTokenRequest.builder().setRequestHash(nonce).build())`. Wraps the entire body in try/catch returning `null` on any exception (Play Services missing, network, IntegrityServiceException). Logs failures via `Timber.w`.
 
-### 5. `OkHttpFeedbackRemoteService` + DTOs
+### 5. `OkHttpFeedbackService` + payloads
 
-`zero-remote/src/main/java/com/hluhovskyi/zero/feedback/FeedbackDto.kt` — internal `@Serializable` `Request(title, body, labels)` and `Response(issueUrl)`.
+`zero-remote/src/main/java/com/hluhovskyi/zero/feedback/FeedbackRequest.kt` — internal `@Serializable data class FeedbackRequest(val title: String, val body: String, val labels: List<String>)`.
 
-`zero-remote/src/main/java/com/hluhovskyi/zero/feedback/OkHttpFeedbackRemoteService.kt` — internal class. Behaviour per spec §4. Uses `withContext(Dispatchers.IO)`. Logs all failure paths via `Timber.w`. Public method returns only `Success` or `Failure`.
+`zero-remote/src/main/java/com/hluhovskyi/zero/feedback/FeedbackResponse.kt` — internal `@Serializable data class FeedbackResponse(val issueUrl: String)`.
+
+`zero-remote/src/main/java/com/hluhovskyi/zero/feedback/OkHttpFeedbackService.kt` — internal class. Behaviour per spec §4. Uses `withContext(Dispatchers.IO)`. Logs all failure paths via `Timber.w`. Public method returns only `Success` or `Failure`.
 
 ### 6. zero-remote tests
 
 `zero-remote/src/test/java/com/hluhovskyi/zero/integrity/FakeIntegrityTokenProvider.kt` — test-internal class taking a `(nonce) -> String?` lambda.
 
-`zero-remote/src/test/java/com/hluhovskyi/zero/feedback/OkHttpFeedbackRemoteServiceTest.kt` — `MockWebServer` based; six cases per spec §11. Each Failure case asserts the result type AND the relevant transport invariant (e.g. `mockWebServer.requestCount == 0` when no token).
+`zero-remote/src/test/java/com/hluhovskyi/zero/feedback/OkHttpFeedbackServiceTest.kt` — `MockWebServer` based; six cases per spec §11. Each Failure case asserts the result type AND the relevant transport invariant (e.g. `mockWebServer.requestCount == 0` when no token).
 
 ### 7. Lint rule
 
@@ -67,7 +69,7 @@ playIntegrity    : "com.google.android.play:integrity:1.4.0",
 
 `lint-rules/src/main/kotlin/com/hluhovskyi/zero/lint/ZeroIssueRegistry.kt` — append `RemoteComponentEncapsulationDetector.ISSUE` to the list.
 
-`lint-rules/src/test/java/com/hluhovskyi/zero/lint/RemoteComponentEncapsulationDetectorTest.java` — mirror the existing `DatabaseComponentEncapsulationDetectorTest` shape. Positive case: a `RemoteComponent` returning `OkHttpClient` triggers the rule. Negative case: returning `FeedbackRemoteService` is clean.
+`lint-rules/src/test/java/com/hluhovskyi/zero/lint/RemoteComponentEncapsulationDetectorTest.java` — mirror the existing `DatabaseComponentEncapsulationDetectorTest` shape. Positive case: a `RemoteComponent` returning `OkHttpClient` triggers the rule. Negative case: returning `FeedbackService` is clean.
 
 ### 8. `app` wiring
 
@@ -75,7 +77,7 @@ playIntegrity    : "com.google.android.play:integrity:1.4.0",
 - Add `implementation project(":zero-remote")`.
 - In `defaultConfig`, add two `buildConfigField` lines per spec §6 (`FEEDBACK_ENDPOINT`, `FEEDBACK_INTEGRITY_PROJECT`). Use the `System.getenv ?: localProps[...] ?: ''` pattern that already exists for the keystore.
 
-`app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt` — Build a `RemoteComponent` from `BuildConfig.FEEDBACK_ENDPOINT`, `BuildConfig.FEEDBACK_INTEGRITY_PROJECT.toLongOrNull() ?: 0L`, and `Context`. Expose `val feedbackRemoteService: FeedbackRemoteService` as a field (no consumer in this PR — Phase 2 will inject downstream).
+`app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt` — Build a `RemoteComponent` from `BuildConfig.FEEDBACK_ENDPOINT`, `BuildConfig.FEEDBACK_INTEGRITY_PROJECT.toLongOrNull() ?: 0L`, and `Context`. Expose `val feedbackService: FeedbackService` as a field (no consumer in this PR — Phase 2 will inject downstream).
 
 ### 9. Cloud function
 
@@ -103,7 +105,7 @@ If `assembleDebug` fails on missing Play Integrity classes, ensure the dep versi
 
 ## Out of Scope (Phase 2+)
 
-Captured in spec §13. Notably: shake detection, log buffer, feedback UI, ViewModel wiring of `FeedbackRemoteService`, server-side rate limiting, Production track promotion.
+Captured in spec §13. Notably: shake detection, log buffer, feedback UI, ViewModel wiring of `FeedbackService`, server-side rate limiting, Production track promotion.
 
 ## PII Discipline
 

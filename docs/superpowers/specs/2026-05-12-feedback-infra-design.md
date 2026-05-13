@@ -10,7 +10,7 @@ Build the abuse-protected pipe that future shake-to-feedback UI will call. The p
 
 1. Authenticate the caller as a genuine, Play-distributed copy of the app (no static secret in the AAB).
 2. Forward a sanitized payload to a GitHub Issues API call made server-side.
-3. Encapsulate all HTTP / Play Integrity / JSON details inside a dedicated module so the broader app sees only `FeedbackRemoteService`.
+3. Encapsulate all HTTP / Play Integrity / JSON details inside a dedicated module so the broader app sees only `FeedbackService`.
 
 ## Non-Goals
 
@@ -41,13 +41,14 @@ zero-remote/
   src/main/java/com/hluhovskyi/zero/
     RemoteComponent.kt                  # public Dagger component
     feedback/
-      OkHttpFeedbackRemoteService.kt    # internal
-      FeedbackDto.kt                    # internal @Serializable types
+      OkHttpFeedbackService.kt    # internal
+      FeedbackRequest.kt                # internal @Serializable POST body
+      FeedbackResponse.kt               # internal @Serializable 201 body
     integrity/
       IntegrityTokenProvider.kt         # internal interface
       PlayIntegrityTokenProvider.kt     # internal impl wrapping com.google.android.play:integrity
   src/test/java/com/hluhovskyi/zero/
-    feedback/OkHttpFeedbackRemoteServiceTest.kt
+    feedback/OkHttpFeedbackServiceTest.kt
     integrity/FakeIntegrityTokenProvider.kt   # test util
 ```
 
@@ -63,7 +64,7 @@ Add to `settings.gradle`: `include ':zero-remote'`.
 )
 interface RemoteComponent {
 
-    val feedbackRemoteService: FeedbackRemoteService   // only zero-api types exposed
+    val feedbackService: FeedbackService   // only zero-api types exposed
 
     interface Dependencies {
         val context: Context                   // for Play Integrity SDK init
@@ -94,12 +95,12 @@ interface RemoteComponent {
         @Provides @RemoteScope internal fun integrityTokenProvider(context: Context): IntegrityTokenProvider =
             PlayIntegrityTokenProvider(context)
 
-        @Provides @RemoteScope internal fun feedbackRemoteService(
+        @Provides @RemoteScope internal fun feedbackService(
             @FeedbackEndpoint endpoint: String,
             client: OkHttpClient,
             tokenProvider: IntegrityTokenProvider,
             json: Json,
-        ): FeedbackRemoteService = OkHttpFeedbackRemoteService(endpoint, client, tokenProvider, json)
+        ): FeedbackService = OkHttpFeedbackService(endpoint, client, tokenProvider, json)
     }
 }
 ```
@@ -122,35 +123,35 @@ sealed interface FeedbackSubmitResult {
     object Failure : FeedbackSubmitResult
 }
 
-interface FeedbackRemoteService {
+interface FeedbackService {
     suspend fun submit(report: FeedbackReport): FeedbackSubmitResult
 }
 ```
 
 This is the **entire** public surface from this PR. Phase 2's UI imports only these types.
 
-## 4. `OkHttpFeedbackRemoteService` Behaviour
+## 4. `OkHttpFeedbackService` Behaviour
 
 Internal to `zero-remote`. Sequence per `submit(report)`:
 
 1. If `endpoint.isBlank()` → log a warning and return `Failure` (no network, no Integrity call).
 2. Generate a nonce (random UUID hashed to base64).
 3. `tokenProvider.getToken(nonce)` → `null` ⇒ log warning, return `Failure`.
-4. Build OkHttp `Request`: `POST endpoint`, header `X-Integrity-Token: <token>`, JSON body from `FeedbackDto.Request(title, body, labels)`.
+4. Build OkHttp `Request`: `POST endpoint`, header `X-Integrity-Token: <token>`, JSON body from `FeedbackRequest(title, body, labels)`.
 5. Execute on `Dispatchers.IO`. Map response:
-   - `201` → parse `FeedbackDto.Response(issueUrl)` → `Success(issueUrl)`
+   - `201` → parse `FeedbackResponse(issueUrl)` → `Success(issueUrl)`
    - Anything else (4xx, 5xx, `IOException`) → log status / exception, return `Failure`.
 
 The public API is intentionally coarse: callers cannot distinguish "Play Services missing" from "401 Integrity rejected" from "TCP reset". Transport-level diagnosis stays inside this class via Timber logs. Rationale: the UI's only meaningful action on any failure is "show a generic error and let the user retry"; richer typing would tempt callers to branch on internals that should stay private.
 
-DTOs (`FeedbackDto.Request`, `FeedbackDto.Response`) are `internal @Serializable` data classes inside `feedback/`. They never appear in the public API.
+`FeedbackRequest` and `FeedbackResponse` are `internal @Serializable` data classes inside `feedback/`. They never appear in the public API.
 
 ## 5. `PlayIntegrityTokenProvider`
 
 Internal. Wraps `com.google.android.play.integrity.StandardIntegrityManager`.
 
 - On construction, calls `prepareIntegrityToken(cloudProjectNumber)` lazily and caches the warm provider (Google's recommended pattern for low-latency requests).
-- `getToken(nonce)` calls `provider.request(StandardIntegrityTokenRequest(nonce))`. On any exception (Play Services missing, network, IntegrityServiceException) returns `null` — `OkHttpFeedbackRemoteService` translates that into a generic `Failure`.
+- `getToken(nonce)` calls `provider.request(StandardIntegrityTokenRequest(nonce))`. On any exception (Play Services missing, network, IntegrityServiceException) returns `null` — `OkHttpFeedbackService` translates that into a generic `Failure`.
 
 The `cloudProjectNumber` is supplied via the same wiring path as `feedbackEndpoint` (a separate `@BindsInstance` on the builder, sourced from `BuildConfig`).
 
@@ -187,7 +188,7 @@ Pattern matches the existing keystore wiring in §1. Empty defaults keep local b
 
 ## 7. Debug Builds (Play Integrity test devices)
 
-No special code path — `OkHttpFeedbackRemoteService` is the only binding in all build types. The setup that makes debug builds work is operational, documented in `docs/agents/feedback-infra.md`:
+No special code path — `OkHttpFeedbackService` is the only binding in all build types. The setup that makes debug builds work is operational, documented in `docs/agents/feedback-infra.md`:
 
 1. In Play Console → App integrity → Integrity API → "Test devices", register your dev device's Google Account.
 2. Configure the test device response: `MEETS_DEVICE_INTEGRITY`, `PLAY_RECOGNIZED`.
@@ -230,11 +231,11 @@ Registered in `ZeroIssueRegistry`. Test file `RemoteComponentEncapsulationDetect
 ## 10. `app` Wiring
 
 - `app/build.gradle`: add `implementation project(":zero-remote")`. No direct OkHttp / Play Integrity / Json deps in `app` — they remain transitive through `zero-remote` and are only used internally there.
-- `ApplicationComponent.kt`: build a `RemoteComponent` with `Context` + `BuildConfig.FEEDBACK_ENDPOINT` + `BuildConfig.FEEDBACK_INTEGRITY_PROJECT`. Expose `feedbackRemoteService: FeedbackRemoteService` for downstream components (no consumer in this PR).
+- `ApplicationComponent.kt`: build a `RemoteComponent` with `Context` + `BuildConfig.FEEDBACK_ENDPOINT` + `BuildConfig.FEEDBACK_INTEGRITY_PROJECT`. Expose `feedbackService: FeedbackService` for downstream components (no consumer in this PR).
 
 ## 11. Verification
 
-- **Unit tests** (`zero-remote/src/test`): `OkHttpFeedbackRemoteServiceTest` with `MockWebServer` + `FakeIntegrityTokenProvider`. Six cases — all map to the public `Success` / `Failure` pair, with the test asserting *both* the result type and the relevant transport-level invariant (e.g. no request emitted) so coverage doesn't regress when the impl is refactored:
+- **Unit tests** (`zero-remote/src/test`): `OkHttpFeedbackServiceTest` with `MockWebServer` + `FakeIntegrityTokenProvider`. Six cases — all map to the public `Success` / `Failure` pair, with the test asserting *both* the result type and the relevant transport-level invariant (e.g. no request emitted) so coverage doesn't regress when the impl is refactored:
   1. Happy path → `Success(issueUrl)` with body parsed from server response.
   2. Blank endpoint → `Failure`; assert `mockWebServer.requestCount == 0`.
   3. Token provider returns `null` → `Failure`; assert `mockWebServer.requestCount == 0`.
@@ -263,6 +264,6 @@ Captured here so reviewers know what is intentionally absent:
 - In-memory log sink (custom `Timber` tree) and navigation-history ring buffer.
 - Feedback bottom sheet / screen UI.
 - Device info + app version attached automatically.
-- Wiring `FeedbackRemoteService` into a ViewModel.
+- Wiring `FeedbackService` into a ViewModel.
 - Server-side rate limiting.
 - Promotion to Play Production track.
