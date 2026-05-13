@@ -21,6 +21,10 @@ private annotation class ColorId
 @Retention(AnnotationRetention.BINARY)
 private annotation class SelectedIconId
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+private annotation class MoneyFirst
+
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class IconPickerScope
@@ -53,6 +57,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
             .onColorSelectedHandler(OnColorSelectedHandler.Noop)
             .colorId(Id.Unknown)
             .selectedIconId(Id.Unknown)
+            .moneyFirst(true)
     }
 
     @dagger.Component.Builder
@@ -71,6 +76,9 @@ abstract class IconPickerComponent : AttachableViewComponent {
 
         @BindsInstance
         fun selectedIconId(@SelectedIconId selectedIconId: Id): Builder
+
+        @BindsInstance
+        fun moneyFirst(@MoneyFirst moneyFirst: Boolean): Builder
     }
 
     @dagger.Module
@@ -85,6 +93,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
             onColorSelectedHandler: OnColorSelectedHandler,
             @ColorId colorId: Id,
             @SelectedIconId selectedIconId: Id,
+            @MoneyFirst moneyFirst: Boolean,
         ): IconPickerViewModel = DefaultIconPickerViewModel(
             iconRepository = iconRepository,
             colorRepository = colorRepository,
@@ -92,6 +101,7 @@ abstract class IconPickerComponent : AttachableViewComponent {
             onColorSelectedHandler = onColorSelectedHandler,
             colorId = colorId,
             selectedIconId = selectedIconId,
+            moneyFirst = moneyFirst,
         )
 
         @Provides

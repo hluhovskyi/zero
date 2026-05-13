@@ -53,6 +53,7 @@ internal class DefaultCategoryEditViewModel(
                     CategoryEditIconUseCase.Action.Request(
                         colorId = mutableState.value.colorId,
                         iconId = mutableState.value.iconId,
+                        moneyFirst = mutableState.value.type == CategoryType.INCOME,
                     ),
                 )
             is CategoryEditViewModel.Action.SelectColor ->

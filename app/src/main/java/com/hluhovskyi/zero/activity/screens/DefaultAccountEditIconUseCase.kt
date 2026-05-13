@@ -56,6 +56,7 @@ internal class DefaultAccountEditIconUseCase(
                     (action.colorId as? Id.Known)?.let { colorId ->
                         add(Destinations.Icon.Picker.ColorId.withValue(colorId))
                     }
+                    add(Destinations.Icon.Picker.MoneyPlacement.withValue("first"))
                 }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,
