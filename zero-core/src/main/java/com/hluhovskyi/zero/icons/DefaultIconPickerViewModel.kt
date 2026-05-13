@@ -21,6 +21,7 @@ internal class DefaultIconPickerViewModel(
     private val onColorSelectedHandler: OnColorSelectedHandler,
     private val colorId: Id = Id.Unknown,
     private val selectedIconId: Id = Id.Unknown,
+    private val moneyFirst: Boolean = true,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : IconPickerViewModel {
 
@@ -65,10 +66,11 @@ internal class DefaultIconPickerViewModel(
     private suspend fun loadIcons() {
         iconRepository.query(IconRepository.Criteria.All())
             .collectLatest { icons ->
-                val sections = icons
+                val baseSections = icons
                     .groupBy { it.category }
                     .filter { (category, _) -> category != IconCategory.system() }
                     .map { (category, categoryIcons) -> IconPickerSection(category, categoryIcons) }
+                val sections = orderMoneySection(baseSections)
                 val selectedIcon = (selectedIconId as? Id.Known)
                     ?.let { id -> icons.find { it.id == id } }
 
@@ -79,5 +81,17 @@ internal class DefaultIconPickerViewModel(
                     )
                 }
             }
+    }
+
+    private fun orderMoneySection(sections: List<IconPickerSection>): List<IconPickerSection> {
+        val moneyIndex = sections.indexOfFirst { it.category.id == MONEY_BANKING_CATEGORY_ID }
+        if (moneyIndex == -1) return sections
+        val money = sections[moneyIndex]
+        val rest = sections.toMutableList().apply { removeAt(moneyIndex) }
+        return if (moneyFirst) listOf(money) + rest else rest + money
+    }
+
+    private companion object {
+        const val MONEY_BANKING_CATEGORY_ID = "money_banking"
     }
 }

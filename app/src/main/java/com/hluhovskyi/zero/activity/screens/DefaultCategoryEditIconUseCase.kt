@@ -51,6 +51,11 @@ internal class DefaultCategoryEditIconUseCase(
                     (action.iconId as? Id.Known)?.let { selectedId ->
                         add(Destinations.Icon.Picker.SelectedIconId.withValue(selectedId))
                     }
+                    add(
+                        Destinations.Icon.Picker.MoneyPlacement.withValue(
+                            if (action.moneyFirst) "first" else "last",
+                        ),
+                    )
                 }
                 navigator.navigateTo(
                     destination = Destinations.Icon.Picker,

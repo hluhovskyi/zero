@@ -57,10 +57,11 @@ internal object Destinations {
     }
 
     sealed interface Icon : Destination {
-        object Picker : Icon, Destination by destinationOf("icons/picker", RequestId, ColorId, SelectedIconId) {
+        object Picker : Icon, Destination by destinationOf("icons/picker", RequestId, ColorId, SelectedIconId, MoneyPlacement) {
             object RequestId : Argument<Id> by idOptionalValueOf("requestId")
             object ColorId : Argument<Id> by idOptionalValueOf("colorId")
             object SelectedIconId : Argument<Id> by idOptionalValueOf("selectedIconId")
+            object MoneyPlacement : Argument<String> by stringOptionalValueOf("moneyPlacement")
         }
     }
 

@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.emptyFlow
 interface CategoryEditIconUseCase : ActionStateModel<CategoryEditIconUseCase.Action, CategoryEditIconUseCase.State> {
 
     sealed interface Action {
-        data class Request(val colorId: Id? = null, val iconId: Id = Id.Unknown) : Action
+        data class Request(
+            val colorId: Id? = null,
+            val iconId: Id = Id.Unknown,
+            val moneyFirst: Boolean = true,
+        ) : Action
         data class Pick(val icon: Icon) : Action
     }
 
