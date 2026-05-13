@@ -2,6 +2,8 @@ package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.observe
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,7 @@ internal class DefaultCategoryViewModel(
     private val categorySpendingUseCase: CategorySpendingUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onCategorySelectedHandler: OnCategorySelectedHandler,
+    private val configurationRepository: ConfigurationRepository = ConfigurationRepository.Noop,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : CategoryViewModel {
 
@@ -45,7 +48,8 @@ internal class DefaultCategoryViewModel(
                 categoriesQueryUseCase.queryAll(),
                 categorySpendingUseCase.query(CategorySpendingUseCase.Period.CurrentMonth),
                 mutableState.map { it.selectedTab },
-            ) { categories, spendingList, selectedTab ->
+                configurationRepository.observe(CategoryConfigurationKey.HasAddedCategory),
+            ) { categories, spendingList, selectedTab, hasAddedCategory ->
                 val spendingById = spendingList.associateBy { it.categoryId }
                 val items = categories
                     .filter { it.type == selectedTab }
@@ -73,10 +77,16 @@ internal class DefaultCategoryViewModel(
                 val sorted = active.sortedByDescending {
                     (it.spending as CategoryViewModel.Spending.Active).totalAmount.value
                 } + inactive.sortedBy { it.name }
-                sorted to grandTotal
+                Triple(sorted, grandTotal, hasAddedCategory)
             }
-                .collectLatest { (items, grandTotal) ->
-                    mutableState.update { it.copy(categories = items, grandTotal = grandTotal) }
+                .collectLatest { (items, grandTotal, hasAddedCategory) ->
+                    mutableState.update {
+                        it.copy(
+                            categories = items,
+                            grandTotal = grandTotal,
+                            hasAddedCategory = hasAddedCategory,
+                        )
+                    }
                 }
         }
     }

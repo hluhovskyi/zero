@@ -110,7 +110,7 @@ private fun AccountView(
     val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     var showArchived by remember { mutableStateOf(false) }
-    val fabExpanded = state.activeAccounts.isEmpty() && archivedAccounts.isEmpty()
+    val fabExpanded = !state.hasAddedAccount
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

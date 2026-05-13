@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.categories.edit
 
+import com.hluhovskyi.zero.categories.CategoryConfigurationKey
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.colors.Color
@@ -8,6 +9,8 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.write
 import com.hluhovskyi.zero.icons.IconRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +34,7 @@ internal class DefaultCategoryEditViewModel(
     private val categoryEditIconUseCase: CategoryEditIconUseCase,
     private val categoryEditColorUseCase: CategoryEditColorUseCase,
     private val onCategorySavedHandler: OnCategorySavedHandler,
+    private val configurationRepository: ConfigurationRepository = ConfigurationRepository.Noop,
     private val ioCoroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : CategoryEditViewModel {
 
@@ -61,6 +65,7 @@ internal class DefaultCategoryEditViewModel(
                 mutableState.update { it.copy(type = action.type) }
             is CategoryEditViewModel.Action.Save -> ioCoroutineScope.launch {
                 val state = mutableState.value
+                val isNewCategory = categoryId !is Id.Known
                 categoryRepository.insert(
                     CategoryRepository.CategoryInsert(
                         id = categoryId,
@@ -71,6 +76,9 @@ internal class DefaultCategoryEditViewModel(
                         type = state.type,
                     ),
                 )
+                if (isNewCategory) {
+                    configurationRepository.write(CategoryConfigurationKey.HasAddedCategory, true)
+                }
                 launch(context = Dispatchers.Main) { onCategorySavedHandler.onSaved() }
             }
         }

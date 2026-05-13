@@ -2,9 +2,12 @@ package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.observe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -14,6 +17,7 @@ internal class DefaultAccountViewModel(
     private val onAccountSelectedHandler: OnAccountSelectedHandler = OnAccountSelectedHandler.Noop,
     private val onEditAccountHandler: OnEditAccountHandler = OnEditAccountHandler.Noop,
     private val accountRepository: AccountRepository = AccountRepository.Noop,
+    private val configurationRepository: ConfigurationRepository = ConfigurationRepository.Noop,
 ) : BaseViewModel(dispatchers),
     AccountViewModel {
 
@@ -39,8 +43,11 @@ internal class DefaultAccountViewModel(
 
     override fun attachOnMain() {
         scope.launch {
-            useCase.state
-                .collectLatest { useCaseState ->
+            combine(
+                useCase.state,
+                configurationRepository.observe(AccountConfigurationKey.HasAddedAccount),
+            ) { useCaseState, hasAdded -> useCaseState to hasAdded }
+                .collectLatest { (useCaseState, hasAdded) ->
                     mutableState.update { state ->
                         state.copy(
                             balance = useCaseState.balance,
@@ -49,6 +56,7 @@ internal class DefaultAccountViewModel(
                             currency = useCaseState.currency,
                             activeAccounts = useCaseState.accounts.filter { it.archivedAt == null },
                             archivedAccounts = useCaseState.accounts.filter { it.archivedAt != null },
+                            hasAddedAccount = hasAdded,
                         )
                     }
                 }

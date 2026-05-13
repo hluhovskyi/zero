@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -48,6 +49,7 @@ abstract class AccountComponent : AttachableViewComponent {
         val currencyRepository: CurrencyRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
+        val configurationRepository: ConfigurationRepository
     }
 
     companion object {
@@ -115,12 +117,14 @@ abstract class AccountComponent : AttachableViewComponent {
             onAccountSelectedHandler: OnAccountSelectedHandler,
             onEditAccountHandler: OnEditAccountHandler,
             accountRepository: AccountRepository,
+            configurationRepository: ConfigurationRepository,
         ): AccountViewModel = DefaultAccountViewModel(
             useCase = useCase,
             dispatchers = dispatcherProvider,
             onAccountSelectedHandler = onAccountSelectedHandler,
             onEditAccountHandler = onEditAccountHandler,
             accountRepository = accountRepository,
+            configurationRepository = configurationRepository,
         )
 
         @Provides

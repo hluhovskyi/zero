@@ -172,7 +172,7 @@ private fun CategoryView(
             onClick = { onAddCategory.onAdd(state.selectedTab) },
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.category_add_description),
-            expanded = state.categories.isEmpty(),
+            expanded = !state.hasAddedCategory,
             text = stringResource(R.string.category_add),
         )
     }

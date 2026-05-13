@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.accounts.edit
 
 import com.hluhovskyi.zero.accounts.AccountCategory
+import com.hluhovskyi.zero.accounts.AccountConfigurationKey
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
@@ -8,6 +9,8 @@ import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.write
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
@@ -33,6 +36,7 @@ internal class DefaultAccountEditViewModel(
     private val accountEditIconUseCase: AccountEditIconUseCase,
     private val accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
     private val onAccountSavedHandler: OnAccountSavedHandler,
+    private val configurationRepository: ConfigurationRepository = ConfigurationRepository.Noop,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : AccountEditViewModel {
 
@@ -87,6 +91,7 @@ internal class DefaultAccountEditViewModel(
             is AccountEditViewModel.Action.Save -> coroutineScope.launch {
                 val state = mutableState.value
                 val selectedCurrency = state.selectedCurrency ?: return@launch
+                val isNewAccount = accountId !is Id.Known
                 accountRepository.insert(
                     AccountRepository.AccountInsert(
                         id = accountId,
@@ -99,6 +104,9 @@ internal class DefaultAccountEditViewModel(
                         details = state.details.takeIf { it.isNotBlank() },
                     ),
                 )
+                if (isNewAccount) {
+                    configurationRepository.write(AccountConfigurationKey.HasAddedAccount, true)
+                }
                 launch(context = Dispatchers.Main) {
                     onAccountSavedHandler.onSaved()
                 }

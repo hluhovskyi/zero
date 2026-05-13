@@ -18,6 +18,7 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
         val grandTotal: Amount = Amount.zero(),
         val currencySymbol: String = "",
         val selectedTab: CategoryType = CategoryType.EXPENSE,
+        val hasAddedCategory: Boolean = false,
     )
 
     data class CategoryItem(
