@@ -189,13 +189,11 @@ abstract class ActivityComponent :
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionComponentBuilder(
             component: ActivityComponent,
         ): TransactionComponent.Builder = TransactionComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun welcomeComponentBuilder(
             component: ActivityComponent,
         ): WelcomeComponent.Builder = WelcomeComponent.builder(component)
