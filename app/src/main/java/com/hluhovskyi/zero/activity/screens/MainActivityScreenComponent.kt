@@ -1,8 +1,12 @@
 package com.hluhovskyi.zero.activity.screens
 
+import android.content.Context
+import android.hardware.SensorManager
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
+import com.hluhovskyi.zero.BuildConfig
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
@@ -41,7 +45,15 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
+import com.hluhovskyi.zero.feedback.Breadcrumbs
+import com.hluhovskyi.zero.feedback.DeviceInfo
+import com.hluhovskyi.zero.feedback.FeedbackComponent
+import com.hluhovskyi.zero.feedback.FeedbackService
+import com.hluhovskyi.zero.feedback.InMemoryBreadcrumbs
+import com.hluhovskyi.zero.feedback.ShakeFeedbackEntry
+import kotlinx.coroutines.flow.map
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -74,15 +86,33 @@ private const val TAG = "MainActivityScreenComponent"
     dependencies = [MainActivityScreenComponent.Dependencies::class],
     modules = [MainActivityScreenComponent.Module::class],
 )
-internal abstract class MainActivityScreenComponent : AttachableViewComponent {
+internal abstract class MainActivityScreenComponent :
+    AttachableViewComponent,
+    FeedbackComponent.Dependencies {
 
     override val tag: String = TAG
-    override fun attach(): Closeable = Closeables.empty()
+
+    protected abstract val inMemoryBreadcrumbs: InMemoryBreadcrumbs
+    protected abstract val shakeFeedbackEntry: ShakeFeedbackEntry
+
+    override fun attach(): Closeable {
+        val breadcrumbsCloseable = inMemoryBreadcrumbs.attach()
+        val shakeCloseable = shakeFeedbackEntry.start()
+        return Closeable {
+            breadcrumbsCloseable.close()
+            shakeCloseable.close()
+        }
+    }
 
     interface Dependencies {
         val idGenerator: IdGenerator
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
+
+        val context: Context
+        val clock: Clock
+        val feedbackService: FeedbackService
+        val deviceInfo: DeviceInfo
 
         val bottomBarComponentBuilder: BottomBarComponent.Builder
 
@@ -728,5 +758,58 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .logging(logger)
         }
+
+        @Provides
+        @MainActivityScreenScope
+        fun inMemoryBreadcrumbs(
+            navigator: Navigator,
+            clock: Clock,
+        ): InMemoryBreadcrumbs = InMemoryBreadcrumbs(
+            routes = navigator.state.map { it.destination.route },
+            clock = clock,
+        )
+
+        @Provides
+        @MainActivityScreenScope
+        fun breadcrumbs(impl: InMemoryBreadcrumbs): Breadcrumbs = impl
+
+        @Provides
+        @MainActivityScreenScope
+        fun shakeFeedbackEntry(
+            context: Context,
+            navigator: Navigator,
+        ): ShakeFeedbackEntry = ShakeFeedbackEntry(
+            sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager,
+            navigator = navigator,
+        )
+
+        @Provides
+        @MainActivityScreenScope
+        fun feedbackComponentFactory(
+            component: MainActivityScreenComponent,
+        ): FeedbackComponent.Factory = FeedbackComponent.factory(component)
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun feedbackNavigationEntry(
+            factory: FeedbackComponent.Factory,
+            navigatorScope: NavigatorScope,
+            deviceInfo: DeviceInfo,
+            context: Context,
+        ): NavigatorEntry = navigatorScope.component(
+            destination = Destinations.Feedback,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            factory.create(
+                isDebugBuild = BuildConfig.DEBUG,
+                deviceInfoPreview = formatDeviceInfoPreview(deviceInfo),
+                errorMessageProvider = { context.getString(R.string.feedback_error_generic) },
+                onFeedbackSubmittedHandler = { navigator.back() },
+            )
+        }
     }
 }
+
+private fun formatDeviceInfoPreview(deviceInfo: DeviceInfo): String =
+    "${deviceInfo.manufacturer} ${deviceInfo.model} · Android ${deviceInfo.osVersion} (${deviceInfo.sdkInt}) · ${deviceInfo.versionName} (${deviceInfo.versionCode})"

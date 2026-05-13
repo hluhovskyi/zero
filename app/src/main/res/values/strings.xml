@@ -4,4 +4,7 @@
     <!-- Screens -->
     <string name="categories_edit">Edit categories</string>
     <string name="transactions_add">Add transaction</string>
+
+    <!-- Feedback -->
+    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
 </resources>

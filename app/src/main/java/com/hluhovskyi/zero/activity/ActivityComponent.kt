@@ -32,7 +32,10 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
+import com.hluhovskyi.zero.feedback.DeviceInfo
+import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.icons.IconPickerComponent
+import android.content.Context
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.presets.PresetsComponent
@@ -85,6 +88,7 @@ abstract class ActivityComponent :
 
     interface Dependencies {
 
+        val context: Context
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val zoneProvider: ZoneProvider
@@ -109,6 +113,9 @@ abstract class ActivityComponent :
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
         val presetsComponent: PresetsComponent
+
+        val feedbackService: FeedbackService
+        val deviceInfo: DeviceInfo
     }
 
     companion object {
