@@ -39,7 +39,7 @@ internal class DefaultImportUseCase(
 
     private data class InternalState(
         val selectedSource: Source? = null,
-        val storedDelta: SyncSnapshot? = null,
+        val originalDelta: SyncSnapshot? = null,
         val storedCategories: List<ImportCategory>? = null,
         val storedAccounts: List<ImportAccount>? = null,
         val categoryStrategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
@@ -114,7 +114,7 @@ internal class DefaultImportUseCase(
                     val defaults = categories.associate { it.id to defaultStrategy(it.existingId) }
                     mutableState.update { current ->
                         current.copy(
-                            storedDelta = delta,
+                            originalDelta = delta,
                             storedCategories = categories,
                             categoryStrategies = defaults,
                             accountStrategies = emptyMap(),
@@ -157,51 +157,50 @@ internal class DefaultImportUseCase(
             }
             is ImportUseCase.Action.ConfirmCategories -> coroutineScope.launch {
                 val current = mutableState.value
-                val delta = current.storedDelta ?: return@launch
+                val original = current.originalDelta ?: return@launch
                 val categories = current.storedCategories ?: return@launch
-                val nextDelta = applyCategoryStrategies(delta, categories, current.categoryStrategies)
+                val afterCat = applyCategoryStrategies(original, categories, current.categoryStrategies)
                 val accountDuplicateTxIds = computeDuplicateTxIds(
-                    transactions = nextDelta.transactions,
+                    transactions = afterCat.transactions,
                     categoryRemap = emptyMap(), // categoryIds already remapped by applyCategoryStrategies
                     accountRemap = defaultAccountRemap(
-                        nextDelta.accounts,
+                        afterCat.accounts,
                         current.existingAccountById,
                         current.existingAccountByName,
                     ),
                     existingSignatures = current.existingTransactionSignatures,
                 )
                 val accounts = buildAccounts(
-                    syncAccounts = nextDelta.accounts,
-                    transactions = nextDelta.transactions,
+                    syncAccounts = afterCat.accounts,
+                    transactions = afterCat.transactions,
                     existingAccountById = current.existingAccountById,
                     existingAccountByName = current.existingAccountByName,
                     duplicateTxIds = accountDuplicateTxIds,
                     allIconsById = current.allIconsById,
                 )
-                val defaults = accounts.associate { it.id to defaultStrategy(it.existingId) }
+                val priorStrategies = current.accountStrategies
+                val accountStrategies = accounts.associate { acc ->
+                    acc.id to (priorStrategies[acc.id] ?: defaultStrategy(acc.existingId))
+                }
                 mutableState.update { cur ->
                     cur.copy(
-                        storedDelta = nextDelta,
                         storedAccounts = accounts,
-                        accountStrategies = defaults,
-                        screen = ImportUseCase.State.AccountsReview(accounts, defaults),
+                        accountStrategies = accountStrategies,
+                        screen = ImportUseCase.State.AccountsReview(accounts, accountStrategies),
                     )
                 }
             }
             is ImportUseCase.Action.ConfirmAccounts -> coroutineScope.launch {
                 val current = mutableState.value
-                val delta = current.storedDelta ?: return@launch
-                val accounts = current.storedAccounts ?: return@launch
+                val processed = processedDelta(current) ?: return@launch
                 val categories = current.storedCategories ?: emptyList()
-                val afterAccounts = applyAccountStrategies(delta, accounts, current.accountStrategies)
-                val nextDelta = dedupeAgainstExisting(afterAccounts, current.existingTransactionSignatures)
+                val accounts = current.storedAccounts ?: emptyList()
                 val transactions = toImportTransactions(
-                    nextDelta,
+                    processed,
                     buildCategoryNameLookup(categories, current.existingCategoryById),
                 )
                 mutableState.update { cur ->
                     cur.copy(
-                        storedDelta = nextDelta,
                         screen = ImportUseCase.State.TransactionsPreview(
                             transactions = transactions,
                             totalCount = transactions.size,
@@ -212,10 +211,10 @@ internal class DefaultImportUseCase(
                 }
             }
             is ImportUseCase.Action.Confirm -> {
-                val delta = mutableState.value.storedDelta ?: return
+                val processed = processedDelta(mutableState.value) ?: return
                 coroutineScope.launch {
                     val userId = currentUserRepository.query().first().id
-                    syncEngine.import(delta, userId)
+                    syncEngine.import(processed, userId)
                     coroutineScope.launch(Dispatchers.Main) {
                         onImportFinishedHandler.onFinished()
                     }
@@ -448,6 +447,15 @@ internal class DefaultImportUseCase(
                 )
             }
         }
+    }
+
+    private fun processedDelta(state: InternalState): SyncSnapshot? {
+        val original = state.originalDelta ?: return null
+        val categories = state.storedCategories ?: emptyList()
+        val accounts = state.storedAccounts ?: emptyList()
+        val afterCat = applyCategoryStrategies(original, categories, state.categoryStrategies)
+        val afterAcc = applyAccountStrategies(afterCat, accounts, state.accountStrategies)
+        return dedupeAgainstExisting(afterAcc, state.existingTransactionSignatures)
     }
 
     private fun dedupeAgainstExisting(
