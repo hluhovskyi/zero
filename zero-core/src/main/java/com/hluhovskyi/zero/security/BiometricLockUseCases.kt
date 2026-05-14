@@ -7,3 +7,11 @@ fun BiometricLockUseCase(
 ): BiometricLockUseCase = DefaultBiometricLockUseCase(
     configurationRepository = configurationRepository,
 )
+
+fun BiometricLockGateViewModel(
+    biometricLockUseCase: BiometricLockUseCase,
+    biometricAuthenticator: BiometricAuthenticator,
+): BiometricLockGateViewModel = DefaultBiometricLockGateViewModel(
+    biometricLockUseCase = biometricLockUseCase,
+    biometricAuthenticator = biometricAuthenticator,
+)

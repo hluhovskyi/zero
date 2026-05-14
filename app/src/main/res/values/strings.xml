@@ -9,4 +9,9 @@
     <string name="biometric_prompt_title_enable">Enable biometric lock</string>
     <string name="biometric_prompt_title_disable">Disable biometric lock</string>
     <string name="biometric_prompt_subtitle">Use biometrics or device credential</string>
+
+    <!-- Biometric lock overlay screen -->
+    <string name="biometric_lock_screen_title">Zero is locked</string>
+    <string name="biometric_lock_screen_subtitle">Unlock to view your finances</string>
+    <string name="biometric_lock_screen_action">Unlock</string>
 </resources>

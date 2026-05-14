@@ -118,9 +118,6 @@
     <string name="settings_biometric_lock_description_enabled">Unlock required on open</string>
     <string name="settings_biometric_unavailable">Biometrics aren\'t available on this device</string>
     <string name="settings_biometric_auth_failed">Authentication failed</string>
-    <string name="biometric_lock_screen_title">Zero is locked</string>
-    <string name="biometric_lock_screen_subtitle">Unlock to view your finances</string>
-    <string name="biometric_lock_screen_action">Unlock</string>
     <string name="settings_backup_saved">Backup saved</string>
     <string name="settings_export_failed">Export failed: %1$s</string>
 

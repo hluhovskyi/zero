@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-internal class AndroidBiometricAuthenticator(
+class AndroidBiometricAuthenticator(
     private val context: Context,
 ) : BiometricAuthenticator {
 

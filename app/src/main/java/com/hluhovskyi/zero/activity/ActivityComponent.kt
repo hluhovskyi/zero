@@ -38,9 +38,9 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.presets.PresetsComponent
-import com.hluhovskyi.zero.security.BiometricAuthenticator
+import androidx.fragment.app.FragmentActivity
+import com.hluhovskyi.zero.security.BiometricLockComponent
 import com.hluhovskyi.zero.security.BiometricLockGateComponent
-import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -83,8 +83,7 @@ abstract class ActivityComponent :
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
-    TransactionFilterSheetComponent.Dependencies,
-    BiometricLockGateComponent.Dependencies {
+    TransactionFilterSheetComponent.Dependencies {
 
     override val tag: String = TAG
 
@@ -119,8 +118,7 @@ abstract class ActivityComponent :
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
         val presetsComponent: PresetsComponent
-        val biometricLockUseCase: BiometricLockUseCase
-        val biometricAuthenticator: BiometricAuthenticator
+        val biometricLockComponent: BiometricLockComponent
     }
 
     companion object {
@@ -141,6 +139,9 @@ abstract class ActivityComponent :
 
         @BindsInstance
         fun idGenerator(idGenerator: IdGenerator): Builder
+
+        @BindsInstance
+        fun activity(activity: FragmentActivity): Builder
     }
 
     @dagger.Module(
@@ -278,6 +279,8 @@ internal object MainActivityModule {
     @Provides
     @ActivityScope
     fun biometricLockGateComponentBuilder(
-        component: ActivityComponent,
-    ): BiometricLockGateComponent.Builder = BiometricLockGateComponent.builder(component)
+        biometricLockComponent: BiometricLockComponent,
+        activity: FragmentActivity,
+    ): BiometricLockGateComponent.Builder = biometricLockComponent.gateComponentBuilder
+        .activity(activity)
 }

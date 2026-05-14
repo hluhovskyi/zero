@@ -51,8 +51,8 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
-import com.hluhovskyi.zero.security.AndroidBiometricAuthenticator
 import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockComponent
 import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
@@ -82,7 +82,8 @@ abstract class ApplicationComponent :
     RemoteComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
     SettingsComponent.Dependencies,
-    ImportComponent.Dependencies {
+    ImportComponent.Dependencies,
+    BiometricLockComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val logger: Logger
@@ -359,22 +360,23 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun biometricLockComponent(
+            component: ApplicationComponent,
+        ): BiometricLockComponent = BiometricLockComponent.builder(component).build()
+
+        @Provides
+        @ApplicationScope
         fun biometricLockUseCase(
-            configurationRepository: ConfigurationRepository,
-        ): BiometricLockUseCase = BiometricLockUseCase(
-            configurationRepository = configurationRepository,
-        )
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricLockUseCase = biometricLockComponent.biometricLockUseCase
 
         @Provides
         @ApplicationScope
         fun biometricAuthenticator(
-            context: Context,
-        ): BiometricAuthenticator = AndroidBiometricAuthenticator(
-            context = context,
-        )
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricAuthenticator = biometricLockComponent.biometricAuthenticator
 
         @Provides
-        @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
             logger: Logger,
