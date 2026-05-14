@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero
 
 import android.content.Context
+import android.os.Build
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
@@ -41,6 +42,7 @@ import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
+import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
@@ -83,7 +85,8 @@ abstract class ApplicationComponent :
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val logger: Logger
-    abstract val feedbackService: FeedbackService
+    abstract override val feedbackService: FeedbackService
+    abstract override val deviceInfo: DeviceInfo
 
     interface Dependencies {
 
@@ -117,6 +120,17 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun logger(): Logger = TimberLogger()
+
+        @Provides
+        @ApplicationScope
+        fun deviceInfo(): DeviceInfo = DeviceInfo(
+            manufacturer = Build.MANUFACTURER.orEmpty(),
+            model = Build.MODEL.orEmpty(),
+            osVersion = Build.VERSION.RELEASE.orEmpty(),
+            sdkInt = Build.VERSION.SDK_INT,
+            versionName = BuildConfig.VERSION_NAME,
+            versionCode = BuildConfig.VERSION_CODE.toLong(),
+        )
 
         @Provides
         @ApplicationScope

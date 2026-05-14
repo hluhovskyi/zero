@@ -34,10 +34,11 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.SegmentedToggle
+import com.hluhovskyi.zero.ui.SwipeableSegmentedTabs
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -46,6 +47,8 @@ import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+
+private val CATEGORY_TABS = listOf(CategoryType.EXPENSE, CategoryType.INCOME)
 
 internal class CategoryViewProvider(
     private val viewModel: CategoryViewModel,
@@ -73,95 +76,40 @@ private fun CategoryView(
     onAddCategory: OnAddCategoryHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
-
-    val currencySymbol = state.currencySymbol
-    val grandTotal = state.grandTotal
-    val active = remember(state.categories) {
-        state.categories.filter { it.spending is CategoryViewModel.Spending.Active }
-    }
-    val inactive = remember(state.categories) {
-        state.categories.filter { it.spending is CategoryViewModel.Spending.None }
-    }
+    val expenseLabel = stringResource(R.string.transaction_type_expense)
+    val incomeLabel = stringResource(R.string.transaction_type_income)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)) {
-            item {
-                Text(
-                    text = stringResource(R.string.category_title),
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-                    style = TextStyle(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Primary,
-                    ),
-                )
-            }
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = stringResource(R.string.category_title),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Primary,
+                ),
+            )
 
-            item {
-                val expenseLabel = stringResource(R.string.transaction_type_expense)
-                val incomeLabel = stringResource(R.string.transaction_type_income)
-                SegmentedToggle(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 6.dp),
-                    items = listOf(CategoryType.EXPENSE, CategoryType.INCOME),
-                    selectedItem = state.selectedTab,
-                    onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
-                    labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
-                )
-            }
-
-            items(active, key = { it.id.value }) { category ->
-                val spending = category.spending as CategoryViewModel.Spending.Active
-                val barFraction = if (grandTotal > 0L) {
-                    (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
-                } else {
-                    0f
-                }
-                val percentOfTotal = if (grandTotal > 0L) {
-                    (spending.totalAmount / grandTotal * 100).toInt()
-                } else {
-                    0
-                }
-
-                ActiveCategoryCard(
-                    category = category,
-                    spending = spending,
-                    formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
-                    barFraction = barFraction,
-                    percentOfTotal = percentOfTotal,
-                    barColor = category.colorScheme.toUi().primary,
-                    onClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) },
+            SwipeableSegmentedTabs(
+                items = CATEGORY_TABS,
+                selectedItem = state.selectedTab,
+                onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
+                labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
+                modifier = Modifier.fillMaxSize(),
+                toggleModifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 6.dp),
+            ) { tab ->
+                CategoryPage(
+                    categories = state.categoriesByType[tab].orEmpty(),
+                    grandTotal = state.grandTotalByType[tab] ?: Amount.zero(),
+                    currencySymbol = state.currencySymbol,
+                    amountFormatter = amountFormatter,
                     imageLoader = imageLoader,
+                    onCategoryClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(it)) },
                 )
-            }
-
-            if (inactive.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.category_unused_this_month),
-                        modifier = Modifier.padding(
-                            start = 20.dp,
-                            end = 20.dp,
-                            top = 10.dp,
-                            bottom = 6.dp,
-                        ),
-                        style = TextStyle(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Outline,
-                            letterSpacing = 0.7.sp,
-                        ),
-                    )
-                }
-                items(inactive, key = { it.id.value }) { category ->
-                    InactiveCategoryCard(
-                        category = category,
-                        onClick = { viewModel.perform(CategoryViewModel.Action.SelectCategory(category)) },
-                        imageLoader = imageLoader,
-                    )
-                }
             }
         }
 
@@ -175,6 +123,80 @@ private fun CategoryView(
             expanded = !state.hasAddedCategory,
             text = stringResource(R.string.category_add),
         )
+    }
+}
+
+@Composable
+private fun CategoryPage(
+    categories: List<CategoryViewModel.CategoryItem>,
+    grandTotal: Amount,
+    currencySymbol: String,
+    amountFormatter: AmountFormatter,
+    imageLoader: ImageLoader,
+    onCategoryClick: (CategoryViewModel.CategoryItem) -> Unit,
+) {
+    val active = remember(categories) {
+        categories.filter { it.spending is CategoryViewModel.Spending.Active }
+    }
+    val inactive = remember(categories) {
+        categories.filter { it.spending is CategoryViewModel.Spending.None }
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 96.dp),
+    ) {
+        items(active, key = { it.id.value }) { category ->
+            val spending = category.spending as CategoryViewModel.Spending.Active
+            val barFraction = if (grandTotal > 0L) {
+                (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
+            } else {
+                0f
+            }
+            val percentOfTotal = if (grandTotal > 0L) {
+                (spending.totalAmount / grandTotal * 100).toInt()
+            } else {
+                0
+            }
+
+            ActiveCategoryCard(
+                category = category,
+                spending = spending,
+                formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
+                barFraction = barFraction,
+                percentOfTotal = percentOfTotal,
+                barColor = category.colorScheme.toUi().primary,
+                onClick = { onCategoryClick(category) },
+                imageLoader = imageLoader,
+            )
+        }
+
+        if (inactive.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.category_unused_this_month),
+                    modifier = Modifier.padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 10.dp,
+                        bottom = 6.dp,
+                    ),
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Outline,
+                        letterSpacing = 0.7.sp,
+                    ),
+                )
+            }
+            items(inactive, key = { it.id.value }) { category ->
+                InactiveCategoryCard(
+                    category = category,
+                    onClick = { onCategoryClick(category) },
+                    imageLoader = imageLoader,
+                )
+            }
+        }
     }
 }
 

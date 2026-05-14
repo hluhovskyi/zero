@@ -212,6 +212,12 @@
     <string name="transaction_notes_label">Notes</string>
     <string name="transaction_notes_hint">Add a note…</string>
 
+    <!-- Feedback -->
+    <string name="feedback_title">Send feedback</string>
+    <string name="feedback_description_hint">Describe what happened…</string>
+    <string name="feedback_submit">Send</string>
+    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+
     <!-- Home / Welcome -->
     <string name="home_title">Zero</string>
     <string name="welcome_heading">Your finances,\none place.</string>

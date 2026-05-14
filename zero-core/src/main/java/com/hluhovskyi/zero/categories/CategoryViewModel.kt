@@ -14,8 +14,8 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
     }
 
     data class State(
-        val categories: List<CategoryItem> = emptyList(),
-        val grandTotal: Amount = Amount.zero(),
+        val categoriesByType: Map<CategoryType, List<CategoryItem>> = emptyMap(),
+        val grandTotalByType: Map<CategoryType, Amount> = emptyMap(),
         val currencySymbol: String = "",
         val selectedTab: CategoryType = CategoryType.EXPENSE,
         val hasAddedCategory: Boolean = false,

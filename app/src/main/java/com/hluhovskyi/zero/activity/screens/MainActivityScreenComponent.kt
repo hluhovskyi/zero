@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.activity.screens
 
+import android.content.Context
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
@@ -34,14 +35,17 @@ import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
+import com.hluhovskyi.zero.feedback.DeviceInfo
+import com.hluhovskyi.zero.feedback.FeedbackComponent
+import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -90,12 +94,20 @@ private const val TAG = "MainActivityScreenComponent"
 internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
     override val tag: String = TAG
-    override fun attach(): Closeable = Closeables.empty()
+
+    protected abstract val feedbackComponent: FeedbackComponent
+
+    override fun attach(): Closeable = feedbackComponent.attach()
 
     interface Dependencies {
         val idGenerator: IdGenerator
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
+
+        val context: Context
+        val clock: Clock
+        val feedbackService: FeedbackService
+        val deviceInfo: DeviceInfo
 
         val bottomBarComponentBuilder: BottomBarComponent.Builder
 
@@ -788,5 +800,33 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .logging(logger)
         }
+
+        @Provides
+        @MainActivityScreenScope
+        fun feedbackComponent(
+            context: Context,
+            clock: Clock,
+            navigator: Navigator,
+            navigatorScope: NavigatorScope,
+            feedbackService: FeedbackService,
+            deviceInfo: DeviceInfo,
+        ): FeedbackComponent {
+            val dependencies = object : FeedbackComponent.Dependencies {
+                override val context: Context = context
+                override val clock: Clock = clock
+                override val navigator: Navigator = navigator
+                override val navigatorScope: NavigatorScope = navigatorScope
+                override val feedbackService: FeedbackService = feedbackService
+                override val deviceInfo: DeviceInfo = deviceInfo
+            }
+            return FeedbackComponent.builder(dependencies).build()
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun feedbackNavigationEntry(
+            feedbackComponent: FeedbackComponent,
+        ): NavigatorEntry = feedbackComponent.navigationEntry
     }
 }
