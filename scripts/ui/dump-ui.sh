@@ -11,14 +11,14 @@ for arg in "$@"; do
   [[ "$arg" == "--raw" ]] && RAW=true
 done
 
-if ! DUMP_OUT=$("$ADB" shell uiautomator dump /sdcard/window_dump.xml 2>&1); then
+if ! DUMP_OUT=$("$ADB" shell uiautomator dump /data/local/tmp/window_dump.xml 2>&1); then
   echo "Failed to dump UI hierarchy. adb said:" >&2
   echo "$DUMP_OUT" >&2
   echo "Is the emulator/device connected? Is .emulator-serial pointing to a live serial?" >&2
   exit 1
 fi
 
-XML=$("$ADB" shell cat /sdcard/window_dump.xml 2>&1)
+XML=$("$ADB" shell cat /data/local/tmp/window_dump.xml 2>&1)
 if [ -z "$XML" ] || [ "${XML:0:1}" != "<" ]; then
   echo "Dump file empty or unreadable. adb cat returned:" >&2
   printf '%s\n' "$XML" >&2

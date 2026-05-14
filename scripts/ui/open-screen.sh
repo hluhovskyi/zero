@@ -36,9 +36,9 @@ fi
 # accessible text/content-desc.
 tap_icon_next_to() {
   local label="$1"
-  "$ADB" shell uiautomator dump /sdcard/window_dump.xml > /dev/null 2>&1
+  "$ADB" shell uiautomator dump /data/local/tmp/window_dump.xml > /dev/null 2>&1
   local xml
-  xml=$("$ADB" shell cat /sdcard/window_dump.xml 2>/dev/null)
+  xml=$("$ADB" shell cat /data/local/tmp/window_dump.xml 2>/dev/null)
   echo "$xml" | python3 -c "
 import sys, xml.etree.ElementTree as ET
 label = sys.argv[1]
@@ -127,6 +127,6 @@ echo ""
 echo "── UI Hierarchy ──────────────────────────────────────────────"
 "$DUMP"
 echo ""
-"$ADB" shell screencap -p /sdcard/screen.png 2>/dev/null
-"$ADB" pull /sdcard/screen.png /tmp/screen.png > /dev/null 2>&1
+"$ADB" shell screencap -p /data/local/tmp/screen.png 2>/dev/null
+"$ADB" pull /data/local/tmp/screen.png /tmp/screen.png > /dev/null 2>&1
 echo "  📸 Screenshot saved to /tmp/screen.png"
