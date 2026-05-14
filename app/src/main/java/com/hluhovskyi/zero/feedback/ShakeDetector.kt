@@ -4,6 +4,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import com.hluhovskyi.zero.common.Attachable
+import com.hluhovskyi.zero.common.Closeables
+import java.io.Closeable
 import kotlin.math.sqrt
 
 private const val THRESHOLD_MS2 = 13f
@@ -14,20 +17,23 @@ private const val DEBOUNCE_MS = 1_500L
 internal class ShakeDetector(
     private val sensorManager: SensorManager,
     private val onShake: () -> Unit,
+) : Attachable {
+
+    override fun attach(): Closeable {
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            ?: return Closeables.empty()
+        val listener = AccelerometerListener(onShake)
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+        return Closeables.from { sensorManager.unregisterListener(listener) }
+    }
+}
+
+private class AccelerometerListener(
+    private val onShake: () -> Unit,
 ) : SensorEventListener {
 
     private val timestamps = ArrayDeque<Long>()
     private var lastFireMs: Long = 0L
-
-    fun start() {
-        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
-    }
-
-    fun stop() {
-        sensorManager.unregisterListener(this)
-        timestamps.clear()
-    }
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return

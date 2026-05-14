@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -16,12 +17,12 @@ internal class DefaultFeedbackViewModel(
     private val reportFormatter: FeedbackReportFormatter,
     private val onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
     private val errorMessageProvider: () -> String,
-    deviceInfoPreview: String,
+    deviceInfo: DeviceInfo,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : FeedbackViewModel {
 
     private val mutableState = MutableStateFlow(
-        FeedbackViewModel.State(deviceInfoPreview = deviceInfoPreview),
+        FeedbackViewModel.State(deviceInfoPreview = formatPreview(deviceInfo)),
     )
     override val state: Flow<FeedbackViewModel.State> = mutableState
 
@@ -35,11 +36,16 @@ internal class DefaultFeedbackViewModel(
     }
 
     private fun submit() {
-        val current = mutableState.value
-        if (current.description.isBlank() || current.isSubmitting) return
-        mutableState.update { it.copy(isSubmitting = true, errorMessage = null) }
+        val previous = mutableState.getAndUpdate { current ->
+            if (current.description.isBlank() || current.isSubmitting) {
+                current
+            } else {
+                current.copy(isSubmitting = true, errorMessage = null)
+            }
+        }
+        if (previous.description.isBlank() || previous.isSubmitting) return
         coroutineScope.launch {
-            val report = reportFormatter.format(current.description, breadcrumbs.snapshot())
+            val report = reportFormatter.format(previous.description, breadcrumbs.snapshot())
             when (feedbackService.submit(report)) {
                 is FeedbackSubmitResult.Success -> {
                     mutableState.update { it.copy(isSubmitting = false) }
@@ -56,3 +62,6 @@ internal class DefaultFeedbackViewModel(
 
     override fun attach(): Closeable = Closeables.from { coroutineScope.cancel() }
 }
+
+private fun formatPreview(deviceInfo: DeviceInfo): String =
+    "${deviceInfo.manufacturer} ${deviceInfo.model} · Android ${deviceInfo.osVersion} (${deviceInfo.sdkInt}) · ${deviceInfo.versionName} (${deviceInfo.versionCode})"

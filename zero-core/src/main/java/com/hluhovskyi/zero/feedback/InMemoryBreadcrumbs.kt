@@ -1,10 +1,10 @@
 package com.hluhovskyi.zero.feedback
 
+import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -19,7 +19,7 @@ class InMemoryBreadcrumbs(
     private val routes: Flow<String>,
     private val clock: Clock,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
-) : Breadcrumbs {
+) : Breadcrumbs, Attachable {
 
     private val lock = Any()
     private val navigation = ArrayDeque<Breadcrumbs.Entry>(NAV_CAPACITY)
@@ -40,7 +40,7 @@ class InMemoryBreadcrumbs(
         )
     }
 
-    fun attach(): Closeable {
+    override fun attach(): Closeable = Closeables.of {
         routes
             .distinctUntilChanged()
             .onEach { route ->
@@ -51,6 +51,5 @@ class InMemoryBreadcrumbs(
                 }
             }
             .launchIn(scope)
-        return Closeables.from { scope.cancel() }
     }
 }

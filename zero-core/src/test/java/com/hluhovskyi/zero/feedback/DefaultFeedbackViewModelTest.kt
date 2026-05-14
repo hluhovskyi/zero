@@ -65,7 +65,7 @@ class DefaultFeedbackViewModelTest {
         reportFormatter = formatter,
         onFeedbackSubmittedHandler = handler,
         errorMessageProvider = { "error" },
-        deviceInfoPreview = "preview",
+        deviceInfo = deviceInfo,
         coroutineScope = scope,
     )
 

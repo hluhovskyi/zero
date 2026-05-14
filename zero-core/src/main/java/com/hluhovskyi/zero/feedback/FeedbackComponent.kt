@@ -13,7 +13,6 @@ class FeedbackComponent private constructor(
     deviceInfo: DeviceInfo,
     clock: Clock,
     isDebugBuild: Boolean,
-    deviceInfoPreview: String,
     errorMessageProvider: () -> String,
     onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
 ) : AttachableViewComponent {
@@ -31,7 +30,7 @@ class FeedbackComponent private constructor(
             ),
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
             errorMessageProvider = errorMessageProvider,
-            deviceInfoPreview = deviceInfoPreview,
+            deviceInfo = deviceInfo,
         )
     }
 
@@ -52,7 +51,6 @@ class FeedbackComponent private constructor(
 
         fun create(
             isDebugBuild: Boolean,
-            deviceInfoPreview: String,
             errorMessageProvider: () -> String,
             onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler.Noop,
         ): FeedbackComponent = FeedbackComponent(
@@ -61,7 +59,6 @@ class FeedbackComponent private constructor(
             deviceInfo = dependencies.deviceInfo,
             clock = dependencies.clock,
             isDebugBuild = isDebugBuild,
-            deviceInfoPreview = deviceInfoPreview,
             errorMessageProvider = errorMessageProvider,
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
         )
