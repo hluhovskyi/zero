@@ -6,13 +6,10 @@ import com.hluhovskyi.zero.activity.navigation.back
 import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.transactions.TransactionFilter
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.withContext
 
 internal class DefaultTransactionFilterUseCase(
     private val navigator: Navigator,
@@ -42,6 +39,7 @@ internal class DefaultTransactionFilterUseCase(
                 navigator.navigateTo(Destinations.Transaction.Filter)
             }
             is TransactionFilterUseCase.Action.Apply -> {
+                navigator.back()
                 applyAction.tryEmit(action)
             }
             TransactionFilterUseCase.Action.Close -> {
@@ -52,5 +50,4 @@ internal class DefaultTransactionFilterUseCase(
 
     override val state: Flow<TransactionFilterUseCase.State> = applyAction
         .mapNotNull { TransactionFilterUseCase.State.Applied(it.filter) }
-        .onEach { withContext(Dispatchers.Main) { navigator.back() } }
 }
