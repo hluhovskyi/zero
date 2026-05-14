@@ -69,14 +69,14 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @Provides
         @BudgetScope
-        fun periodResolver(
+        internal fun periodResolver(
             clock: Clock,
             zoneProvider: ZoneProvider,
-        ): PeriodResolver = PeriodResolver(clock = clock, zoneProvider = zoneProvider)
+        ): PeriodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider)
 
         @Provides
         @BudgetScope
-        fun viewModel(
+        internal fun viewModel(
             budgetQueryUseCase: BudgetQueryUseCase,
             periodResolver: PeriodResolver,
             dispatcherProvider: DispatcherProvider,
