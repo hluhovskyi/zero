@@ -6,6 +6,8 @@ import androidx.room.TypeConverters
 import com.hluhovskyi.zero.accounts.AccountEntity
 import com.hluhovskyi.zero.accounts.AccountRoom
 import com.hluhovskyi.zero.accounts.AccountSyncDao
+import com.hluhovskyi.zero.budget.BudgetEntity
+import com.hluhovskyi.zero.budget.BudgetRoom
 import com.hluhovskyi.zero.categories.CategoryEntity
 import com.hluhovskyi.zero.categories.CategoryRoom
 import com.hluhovskyi.zero.categories.CategorySyncDao
@@ -18,7 +20,7 @@ import com.hluhovskyi.zero.transactions.TransactionSyncDao
 import com.hluhovskyi.zero.users.CurrentUserEntity
 import com.hluhovskyi.zero.users.CurrentUserRoom
 
-private const val MAIN_DATABASE_VERSION = 7
+private const val MAIN_DATABASE_VERSION = 8
 
 @Database(
     entities = [
@@ -27,6 +29,7 @@ private const val MAIN_DATABASE_VERSION = 7
         TransactionEntity::class,
         CategoryEntity::class,
         ConfigurationEntity::class,
+        BudgetEntity::class,
     ],
     version = MAIN_DATABASE_VERSION,
 )
@@ -35,6 +38,7 @@ private const val MAIN_DATABASE_VERSION = 7
         IdConverters::class,
         BigDecimalConverters::class,
         LocalDateTimeConverter::class,
+        LocalDateConverter::class,
     ],
 )
 internal abstract class MainDatabase : RoomDatabase() {
@@ -50,6 +54,8 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun configuration(): ConfigurationRoom
 
     abstract fun currenciesRoom(): CurrenciesRoom
+
+    abstract fun budget(): BudgetRoom
 
     abstract fun categorySync(): CategorySyncDao
 
