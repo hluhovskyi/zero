@@ -9,6 +9,11 @@ import com.hluhovskyi.zero.accounts.MIGRATION_5_6
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
+import com.hluhovskyi.zero.budget.BudgetRepository
+import com.hluhovskyi.zero.budget.MIGRATION_7_8
+import com.hluhovskyi.zero.budget.RoomBudgetRepository
+import com.hluhovskyi.zero.budget.RoomBudgetSyncSink
+import com.hluhovskyi.zero.budget.RoomBudgetSyncSource
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.MIGRATION_6_7
 import com.hluhovskyi.zero.categories.RoomCategoryRepository
@@ -26,6 +31,7 @@ import com.hluhovskyi.zero.currencies.InUseCurrencyRepository
 import com.hluhovskyi.zero.sync.EntitySyncSink
 import com.hluhovskyi.zero.sync.EntitySyncSource
 import com.hluhovskyi.zero.sync.SyncAccount
+import com.hluhovskyi.zero.sync.SyncBudget
 import com.hluhovskyi.zero.sync.SyncCategory
 import com.hluhovskyi.zero.sync.SyncTransaction
 import com.hluhovskyi.zero.transactions.MIGRATION_4_5
@@ -62,6 +68,7 @@ interface DatabaseComponent {
     val accountRepository: AccountRepository
     val transactionRepository: TransactionRepository
     val categoryRepository: CategoryRepository
+    val budgetRepository: BudgetRepository
     val configurationRepository: ConfigurationRepository
 
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
@@ -75,6 +82,8 @@ interface DatabaseComponent {
     fun accountSyncSink(): EntitySyncSink<SyncAccount>
     fun transactionSyncSource(): EntitySyncSource<SyncTransaction>
     fun transactionSyncSink(): EntitySyncSink<SyncTransaction>
+    fun budgetSyncSource(): EntitySyncSource<SyncBudget>
+    fun budgetSyncSink(): EntitySyncSink<SyncBudget>
 
     interface Dependencies {
 
@@ -124,7 +133,7 @@ interface DatabaseComponent {
             MainDatabase::class.java,
             "MainDatabase",
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .build()
 
         @Provides
@@ -179,6 +188,22 @@ interface DatabaseComponent {
             zonedClock: ZonedClock,
         ): CategoryRepository = RoomCategoryRepository(
             categoryRoom = { database.get().category() },
+            currentUserId = currentUserId,
+            idGenerator = idGenerator,
+            zonedClock = zonedClock,
+            incorrectStateDetector = incorrectStateDetector,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun budgetRepository(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            idGenerator: IdGenerator,
+            incorrectStateDetector: IncorrectStateDetector,
+            zonedClock: ZonedClock,
+        ): BudgetRepository = RoomBudgetRepository(
+            budgetRoom = { database.get().budget() },
             currentUserId = currentUserId,
             idGenerator = idGenerator,
             zonedClock = zonedClock,
@@ -266,6 +291,24 @@ interface DatabaseComponent {
             @CurrentUserId currentUserId: Flow<Id.Known>,
         ): EntitySyncSink<SyncTransaction> = RoomTransactionSyncSink(
             dao = { database.get().transactionSync() },
+            currentUserId = currentUserId,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun budgetSyncSource(
+            database: Provider<MainDatabase>,
+        ): EntitySyncSource<SyncBudget> = RoomBudgetSyncSource(
+            dao = { database.get().budgetSync() },
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun budgetSyncSink(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+        ): EntitySyncSink<SyncBudget> = RoomBudgetSyncSink(
+            dao = { database.get().budgetSync() },
             currentUserId = currentUserId,
         )
     }

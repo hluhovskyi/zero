@@ -43,9 +43,11 @@ PICKED="${1:-}"
 if [ -z "$PICKED" ]; then
   for AVD in "${AVAILABLE[@]}"; do
     SKIP=false
-    for R in "${RUNNING_AVDS[@]}"; do
-      [[ "$R" == "$AVD" ]] && SKIP=true && break
-    done
+    if [ ${#RUNNING_AVDS[@]} -gt 0 ]; then
+      for R in "${RUNNING_AVDS[@]}"; do
+        [[ "$R" == "$AVD" ]] && SKIP=true && break
+      done
+    fi
     if ! $SKIP; then
       PICKED="$AVD"
       break

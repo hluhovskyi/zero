@@ -6,6 +6,9 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.budget.BudgetComponent
+import com.hluhovskyi.zero.budget.BudgetQueryUseCase
+import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -281,6 +284,26 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun budgetQueryUseCase(
+            categoriesQueryUseCase: CategoriesQueryUseCase,
+            budgetRepository: BudgetRepository,
+            transactionRepository: TransactionRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): BudgetQueryUseCase = BudgetComponent.queryUseCase(
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            budgetRepository = budgetRepository,
+            categorySpendingUseCase = CategoryComponent.spendingUseCase(
+                transactionRepository = transactionRepository,
+                currencyConvertUseCase = currencyConvertUseCase,
+                clock = clock,
+                zoneProvider = zoneProvider,
+            ),
+        )
+
+        @Provides
+        @ApplicationScope
         fun categoryQueryUseCase(
             categoryRepository: CategoryRepository,
             iconRepository: IconRepository,
@@ -324,6 +347,8 @@ abstract class ApplicationComponent :
                 override val accountSyncSink = databaseComponent.accountSyncSink()
                 override val transactionSyncSource = databaseComponent.transactionSyncSource()
                 override val transactionSyncSink = databaseComponent.transactionSyncSink()
+                override val budgetSyncSource = databaseComponent.budgetSyncSource()
+                override val budgetSyncSink = databaseComponent.budgetSyncSink()
                 override val resourceResolver = resourceResolver
             },
         ).create()
@@ -422,6 +447,12 @@ internal object DatabaseModule {
     fun categoryRepository(
         databaseComponent: DatabaseComponent,
     ): CategoryRepository = databaseComponent.categoryRepository
+
+    @Provides
+    @ApplicationScope
+    fun budgetRepository(
+        databaseComponent: DatabaseComponent,
+    ): BudgetRepository = databaseComponent.budgetRepository
 
     @Provides
     @ApplicationScope

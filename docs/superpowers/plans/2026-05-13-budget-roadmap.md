@@ -16,7 +16,7 @@ Update the **Status** column when a phase merges. Acceptable values:
 
 | # | Plan | Ships | Status |
 |---|------|-------|--------|
-| 1 | [Foundation](2026-05-13-budget-phase-1-foundation.md) | `BudgetEntity` + Room + repository + sync + `BudgetComponent` skeleton + Budget tab destination + empty-state UI (matches design's no-budget month) | ☐ Pending |
+| 1 | [Foundation](2026-05-13-budget-phase-1-foundation.md) | `BudgetEntity` + Room + repository + sync + `BudgetComponent` skeleton + Budget tab destination + empty-state UI (matches design's no-budget month) | ▶ In progress (PR #201) |
 | 2 | [Single-category edit](2026-05-13-budget-phase-2-single-edit.md) | `BudgetEditComponent` bottom sheet — NumPad + "Last month" chip → persist one budget | ☐ Pending |
 | 3 | [Bulk setup + copy-from-last-month](2026-05-13-budget-phase-3-bulk-setup.md) | `BudgetBulkSetupComponent` full-screen flow; "Copy from {prev}" cards on screen and inside flow; inline numpad auto-advance | ☐ Pending |
 | 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ☐ Pending |

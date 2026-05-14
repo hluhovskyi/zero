@@ -10,6 +10,9 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.budget.BudgetComponent
+import com.hluhovskyi.zero.budget.BudgetQueryUseCase
+import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -76,6 +79,7 @@ abstract class ActivityComponent :
     AccountComponent.Dependencies,
     AccountEditComponent.Dependencies,
     AccountDetailComponent.Dependencies,
+    BudgetComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
@@ -112,12 +116,14 @@ abstract class ActivityComponent :
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val accountsQueryUseCase: AccountsQueryUseCase
+        val budgetQueryUseCase: BudgetQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
         val categoryRepository: CategoryRepository
+        val budgetRepository: BudgetRepository
         val transactionRepository: TransactionRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository
@@ -178,6 +184,11 @@ abstract class ActivityComponent :
         fun categoryComponentBuilder(
             component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
+
+        @Provides
+        fun budgetComponentBuilder(
+            component: ActivityComponent,
+        ): BudgetComponent.Builder = BudgetComponent.builder(component)
 
         @Provides
         fun categoryPickerComponentBuilder(

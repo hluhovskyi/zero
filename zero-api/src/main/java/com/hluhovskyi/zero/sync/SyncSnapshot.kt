@@ -13,4 +13,5 @@ data class SyncSnapshot(
     @SerialName("categories") val categories: List<SyncCategory>,
     @SerialName("accounts") val accounts: List<SyncAccount>,
     @SerialName("transactions") val transactions: List<SyncTransaction>,
+    @SerialName("budgets") val budgets: List<SyncBudget> = emptyList(),
 )
