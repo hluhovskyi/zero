@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.settings.OnImportSelectedHandler
+import com.hluhovskyi.zero.transactions.OnAddTransactionHandler
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -33,6 +34,7 @@ abstract class WelcomeComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerWelcomeComponent.builder()
             .dependencies(dependencies)
             .onImportSelectedHandler(OnImportSelectedHandler.Noop)
+            .onAddTransactionHandler(OnAddTransactionHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -41,6 +43,9 @@ abstract class WelcomeComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onImportSelectedHandler(handler: OnImportSelectedHandler): Builder
+
+        @BindsInstance
+        fun onAddTransactionHandler(handler: OnAddTransactionHandler): Builder
     }
 
     @dagger.Module
@@ -56,6 +61,12 @@ abstract class WelcomeComponent : AttachableViewComponent {
 
         @Provides
         @WelcomeScope
-        fun viewProvider(viewModel: WelcomeViewModel): ViewProvider = WelcomeViewProvider(viewModel = viewModel)
+        fun viewProvider(
+            viewModel: WelcomeViewModel,
+            onAddTransaction: OnAddTransactionHandler,
+        ): ViewProvider = WelcomeViewProvider(
+            viewModel = viewModel,
+            onAddTransaction = onAddTransaction,
+        )
     }
 }
