@@ -20,6 +20,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -45,6 +47,7 @@ import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 import java.text.SimpleDateFormat
@@ -68,6 +71,9 @@ private fun MoreView(viewModel: SettingsViewModel) {
     val backupSaved = stringResource(R.string.settings_backup_saved)
     val exportFailedTemplate = stringResource(R.string.settings_export_failed)
 
+    val biometricUnavailable = stringResource(R.string.settings_biometric_unavailable)
+    val biometricAuthFailed = stringResource(R.string.settings_biometric_auth_failed)
+
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
     ) { androidUri ->
@@ -85,6 +91,20 @@ private fun MoreView(viewModel: SettingsViewModel) {
                 snackbarHostState.showSnackbar(backupSaved)
             is SettingsViewModel.ExportFeedback.Error ->
                 snackbarHostState.showSnackbar(String.format(exportFailedTemplate, feedback.message))
+            null -> Unit
+        }
+    }
+
+    LaunchedEffect(state.biometricFeedback) {
+        when (state.biometricFeedback) {
+            SettingsViewModel.BiometricFeedback.Unavailable -> {
+                snackbarHostState.showSnackbar(biometricUnavailable)
+                viewModel.perform(SettingsViewModel.Action.BiometricFeedbackShown)
+            }
+            SettingsViewModel.BiometricFeedback.AuthFailed -> {
+                snackbarHostState.showSnackbar(biometricAuthFailed)
+                viewModel.perform(SettingsViewModel.Action.BiometricFeedbackShown)
+            }
             null -> Unit
         }
     }
@@ -127,12 +147,16 @@ private fun MoreView(viewModel: SettingsViewModel) {
             }
             item {
                 MoreSection(title = stringResource(R.string.settings_section_security).uppercase()) {
-                    MoreRow(
+                    MoreToggleRow(
                         icon = Icons.Outlined.Fingerprint,
                         primaryText = stringResource(R.string.settings_biometric_lock),
-                        secondaryText = stringResource(R.string.settings_biometric_lock_description),
-                        onClick = { /* placeholder */ },
-                        showChevron = false,
+                        secondaryText = if (state.biometricLockEnabled) {
+                            stringResource(R.string.settings_biometric_lock_description_enabled)
+                        } else {
+                            stringResource(R.string.settings_biometric_lock_description_disabled)
+                        },
+                        checked = state.biometricLockEnabled,
+                        onToggle = { viewModel.perform(SettingsViewModel.Action.ToggleBiometricLock) },
                     )
                 }
             }
@@ -239,5 +263,61 @@ private fun MoreRow(
                 tint = OnSurfaceVariant,
             )
         }
+    }
+}
+
+@Composable
+private fun MoreToggleRow(
+    icon: ImageVector,
+    primaryText: String,
+    secondaryText: String,
+    checked: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(SurfaceContainer, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = OnSurfaceVariant,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = primaryText,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnSurface,
+                ),
+            )
+            Text(
+                text = secondaryText,
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = OnSurfaceVariant,
+                ),
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = { onToggle() },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = PrimaryContainer,
+            ),
+        )
     }
 }

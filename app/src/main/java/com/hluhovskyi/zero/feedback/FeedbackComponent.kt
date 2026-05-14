@@ -9,20 +9,21 @@ import com.hluhovskyi.zero.activity.navigation.Navigator
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.activity.navigation.NavigatorScope
 import com.hluhovskyi.zero.activity.navigation.back
+import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.time.Clock
 import dagger.Provides
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.Closeable
+import javax.inject.Provider
 import javax.inject.Scope
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 internal annotation class FeedbackScope
-
-private const val TAG = "FeedbackComponent"
 
 @FeedbackScope
 @dagger.Component(
@@ -34,11 +35,11 @@ internal abstract class FeedbackComponent : Attachable {
     abstract val navigationEntry: NavigatorEntry
 
     protected abstract val inMemoryBreadcrumbs: InMemoryBreadcrumbs
-    protected abstract val shakeFeedbackEntry: ShakeFeedbackEntry
+    protected abstract val shakeDetector: ShakeDetector
 
     override fun attach(): Closeable = Closeables.merge(
         inMemoryBreadcrumbs.attach(),
-        shakeFeedbackEntry.attach(),
+        shakeDetector.attach(),
     )
 
     interface Dependencies {
@@ -65,11 +66,15 @@ internal abstract class FeedbackComponent : Attachable {
 
         @Provides
         @FeedbackScope
+        fun routes(navigator: Navigator): Flow<String> = navigator.state.map { it.destination.route }
+
+        @Provides
+        @FeedbackScope
         fun inMemoryBreadcrumbs(
-            navigator: Navigator,
+            routes: Flow<String>,
             clock: Clock,
         ): InMemoryBreadcrumbs = InMemoryBreadcrumbs(
-            routes = navigator.state.map { it.destination.route },
+            routes = routes,
             clock = clock,
         )
 
@@ -79,46 +84,55 @@ internal abstract class FeedbackComponent : Attachable {
 
         @Provides
         @FeedbackScope
-        fun shakeFeedbackEntry(
+        fun shakeDetector(
             context: Context,
             navigator: Navigator,
-        ): ShakeFeedbackEntry = ShakeFeedbackEntry(
+        ): ShakeDetector = ShakeDetector(
             sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager,
-            navigator = navigator,
+            onShake = { navigator.navigateTo(Destinations.Feedback) },
         )
 
         @Provides
         @FeedbackScope
-        fun feedbackSheetComponentFactory(
+        fun isDebugBuild(): Boolean = BuildConfig.DEBUG
+
+        @Provides
+        @FeedbackScope
+        fun errorMessageProvider(context: Context): () -> String = { context.getString(R.string.feedback_error_generic) }
+
+        @Provides
+        @FeedbackScope
+        fun onFeedbackSubmittedHandler(navigator: Navigator): OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler { navigator.back() }
+
+        @Provides
+        fun feedbackSheetComponent(
             feedbackService: FeedbackService,
             breadcrumbs: Breadcrumbs,
             deviceInfo: DeviceInfo,
             clock: Clock,
-        ): FeedbackSheetComponent.Factory {
-            val dependencies = object : FeedbackSheetComponent.Dependencies {
-                override val feedbackService: FeedbackService = feedbackService
-                override val breadcrumbs: Breadcrumbs = breadcrumbs
-                override val deviceInfo: DeviceInfo = deviceInfo
-                override val clock: Clock = clock
-            }
-            return FeedbackSheetComponent.factory(dependencies)
-        }
+            isDebugBuild: Boolean,
+            errorMessageProvider: () -> String,
+            onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
+        ): FeedbackSheetComponent = FeedbackSheetComponent(
+            feedbackService = feedbackService,
+            breadcrumbs = breadcrumbs,
+            deviceInfo = deviceInfo,
+            clock = clock,
+            isDebugBuild = isDebugBuild,
+            errorMessageProvider = errorMessageProvider,
+            onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
+        )
 
         @Provides
         @FeedbackScope
         fun navigationEntry(
-            factory: FeedbackSheetComponent.Factory,
+            sheetComponentProvider: Provider<FeedbackSheetComponent>,
             navigatorScope: NavigatorScope,
-            context: Context,
         ): NavigatorEntry = navigatorScope.component(
             destination = Destinations.Feedback,
             displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
         ) {
-            factory.create(
-                isDebugBuild = BuildConfig.DEBUG,
-                errorMessageProvider = { context.getString(R.string.feedback_error_generic) },
-                onFeedbackSubmittedHandler = { navigator.back() },
-            )
+            sheetComponentProvider.get()
         }
     }
 }

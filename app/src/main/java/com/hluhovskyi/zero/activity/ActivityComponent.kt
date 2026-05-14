@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.activity
 
 import android.content.Context
+import androidx.fragment.app.FragmentActivity
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
@@ -22,6 +23,7 @@ import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
+import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
@@ -44,6 +46,9 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.presets.PresetsComponent
+import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockComponent
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -87,17 +92,19 @@ abstract class ActivityComponent :
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
-    TransactionFilterSheetComponent.Dependencies {
+    TransactionFilterSheetComponent.Dependencies,
+    BiometricLockComponent.Dependencies {
 
     override val tag: String = TAG
 
-    protected abstract val attachActivityComponent: AttachActivityComponent
+    protected abstract val attachActivityComponent: Attachable
 
     override fun attach(): Closeable = attachActivityComponent.attach()
 
     interface Dependencies {
 
         val context: Context
+
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val zoneProvider: ZoneProvider
@@ -148,6 +155,9 @@ abstract class ActivityComponent :
 
         @BindsInstance
         fun idGenerator(idGenerator: IdGenerator): Builder
+
+        @BindsInstance
+        fun activity(activity: FragmentActivity): Builder
     }
 
     @dagger.Module(
@@ -156,49 +166,41 @@ abstract class ActivityComponent :
     object Module {
 
         @Provides
-        @ActivityScope
         fun accountComponentBuilder(
             component: ActivityComponent,
         ): AccountComponent.Builder = AccountComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun accountEditComponentBuilder(
             component: ActivityComponent,
         ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun accountDetailComponentBuilder(
             component: ActivityComponent,
         ): AccountDetailComponent.Builder = AccountDetailComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryComponentBuilder(
             component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun budgetComponentBuilder(
             component: ActivityComponent,
         ): BudgetComponent.Builder = BudgetComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryPickerComponentBuilder(
             component: ActivityComponent,
         ): CategoryPickerComponent.Builder = CategoryPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun currencyPickerComponentBuilder(
             component: ActivityComponent,
         ): CurrencyPickerComponent.Builder = CurrencyPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryEditComponentBuilder(
             component: ActivityComponent,
         ): CategoryEditComponent.Builder = CategoryEditComponent.builder(component)
@@ -219,25 +221,21 @@ abstract class ActivityComponent :
         ): WelcomeComponent.Builder = WelcomeComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun homeComponentBuilder(
             component: ActivityComponent,
         ): HomeComponent.Builder = HomeComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryDetailComponentBuilder(
             component: ActivityComponent,
         ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun iconPickerComponentBuilder(
             component: ActivityComponent,
         ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionFilterSheetComponentBuilder(
             component: ActivityComponent,
         ): TransactionFilterSheetComponent.Builder = TransactionFilterSheetComponent.builder(component)
@@ -249,7 +247,6 @@ abstract class ActivityComponent :
         ): ColorPickerComponent.Factory = ColorPickerComponent.factory(component)
 
         @Provides
-        @ActivityScope
         fun transactionPreviewBuilder(
             component: ActivityComponent,
         ): TransactionPreviewComponent.Builder = TransactionPreviewComponent.builder(component)
@@ -258,7 +255,32 @@ abstract class ActivityComponent :
         @ActivityScope
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
-        ): AttachActivityComponent = AttachActivityComponent(presetsComponent)
+            biometricLockComponent: BiometricLockComponent,
+        ): Attachable = AttachActivityComponent(
+            presetsComponent = presetsComponent,
+            biometricLockComponent = biometricLockComponent,
+        )
+
+        @Provides
+        @ActivityScope
+        fun biometricLockComponent(
+            component: ActivityComponent,
+            activity: FragmentActivity,
+        ): BiometricLockComponent = BiometricLockComponent.builder(component)
+            .activity(activity)
+            .build()
+
+        @Provides
+        @ActivityScope
+        fun biometricLockUseCase(
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricLockUseCase = biometricLockComponent.biometricLockUseCase
+
+        @Provides
+        @ActivityScope
+        fun biometricAuthenticator(
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricAuthenticator = biometricLockComponent.biometricAuthenticator
     }
 }
 
@@ -269,18 +291,18 @@ internal object MainActivityModule {
     @ActivityScope
     fun viewProvider(
         screenComponent: MainActivityScreenComponent.Builder,
+        biometricLockComponent: BiometricLockComponent,
     ): ViewProvider = MainActivityViewProvider(
         screenComponent = screenComponent,
+        biometricLockGateComponent = biometricLockComponent.gateComponent,
     )
 
     @Provides
-    @ActivityScope
     fun bottomBarComponentBuilder(
         component: ActivityComponent,
     ): BottomBarComponent.Builder = BottomBarComponent.builder(component)
 
     @Provides
-    @ActivityScope
     fun mainActivityScreenComponentBuilder(
         component: ActivityComponent,
     ): MainActivityScreenComponent.Builder = MainActivityScreenComponent.builder(component)

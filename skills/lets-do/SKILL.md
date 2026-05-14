@@ -20,8 +20,9 @@ End-to-end development workflow: worktree → brainstorm → plan → execute �
 /lets-do [--no-questions] <task description>
 ```
 
-- `--no-questions` — skip brainstorming; go straight to planning (or execution for tiny fixes).
-  Useful when the task is already well-understood or when the user wants zero friction.
+- `--no-questions` — run the full flow without prompting the user. Architecture research,
+  spec, plan, execution all still happen; just skip the interactive clarifying questions.
+  Means "don't bother me," not "ship blind."
 - Everything else is the task description passed to brainstorming / planning.
 
 ## Step 1 — Worktree isolation
@@ -55,20 +56,17 @@ UI helper.
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
 user declined), stop and explain that master must not be modified directly.
 
-## Step 2 — Brainstorming (skip if --no-questions or tiny fix)
+## Step 2 — Brainstorming
 
-Skip this step if:
-- `--no-questions` was passed, OR
-- The task is clearly a small bug fix or tweak (≤ ~100 LOC, no architecture decisions)
-
-Otherwise invoke `superpowers:brainstorming`.
-
-Before brainstorming, read `docs/agents/superpowers-workflow.md` — it has project-specific
-shortcuts that keep brainstorming sessions focused (e.g. fetch design before exploring context,
-what sections to omit from the spec).
+Invoke `superpowers:brainstorming` for the spec, unless this is a tiny fix (≤ ~100 LOC,
+no new files, no architectural decisions). **Under `--no-questions`, do not prompt the user
+with clarifying questions — answer them yourself from the architecture research and write
+the spec.** Read `docs/agents/superpowers-workflow.md` first for the "Explore project context"
+reads (the way you find the canonical precedent — e.g. `FeedbackComponent` for a new feature
+`@Component` — before designing).
 
 If the user provided a Claude Design URL, invoke `zero-project:fetch-design` **before**
-brainstorming, not during it.
+brainstorming.
 
 ## Step 3 — Planning (skip if tiny fix)
 
@@ -88,7 +86,9 @@ git push -u origin HEAD
 gh pr create --draft --title "<feature>: plan" --body "Plan: docs/superpowers/plans/<plan-file>.md"
 ```
 
-Report the PR URL. For `--no-questions`, do the same after writing the plan inline.
+Report the PR URL. Under `--no-questions`, follow the same flow — `writing-plans` still
+runs; just answer its decision points from the architecture research instead of asking
+the user.
 
 **Planning-only sessions** (design-to-PR flows split per `docs/agents/superpowers-workflow.md`):
 open a **non-draft** `docs: <feature> plan` PR, skip Steps 4–6, stop.

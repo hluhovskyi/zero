@@ -9,6 +9,8 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         object Import : Action
         data class Export(val uri: Uri.NonEmpty) : Action
         object OpenCurrencyPicker : Action
+        object ToggleBiometricLock : Action
+        object BiometricFeedbackShown : Action
     }
 
     sealed interface ExportFeedback {
@@ -16,8 +18,15 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         data class Error(val message: String) : ExportFeedback
     }
 
+    sealed interface BiometricFeedback {
+        object Unavailable : BiometricFeedback
+        object AuthFailed : BiometricFeedback
+    }
+
     data class State(
         val selectedCurrencyName: String = "",
         val exportFeedback: ExportFeedback? = null,
+        val biometricLockEnabled: Boolean = false,
+        val biometricFeedback: BiometricFeedback? = null,
     )
 }

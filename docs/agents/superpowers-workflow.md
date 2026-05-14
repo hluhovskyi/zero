@@ -20,6 +20,8 @@ The `writing-plans` skill generates full code blocks by default. In this project
 
 If a plan task is nothing but boilerplate that a doc or skill already covers, remove the code block entirely and leave only the intent (e.g., "Add `ForAccount` criteria to `TransactionRepository` following the `ForCategory` pattern").
 
+**Every new file names an existing-file analog as its structural template** — e.g., "model after `CategoryEntity`", "follow `RoomCategoryRepository.kt`", "use `accountNavigationEntry` as the structural reference". The analog covers structure *and* surface patterns (string handling, visibility, naming, lint conformance), not only shape. Without an analog, the executor re-derives conventions from AGENTS.md per task and re-litigates choices the plan-writer already made.
+
 ## brainstorming — Fetch design before designing
 
 **Use `fetch-design` skill before the brainstorming "Explore project context" step** when the user provides a Claude Design URL. The design file is the layout spec; prose descriptions ("card at top, list below") are ambiguous and produce avoidable back-and-forth.

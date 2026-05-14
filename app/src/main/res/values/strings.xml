@@ -3,6 +3,13 @@
 
     <!-- Screens -->
     <string name="categories_edit">Edit categories</string>
+
+    <!-- Biometric prompt (app-module only — system BiometricPrompt is shown from MainActivity) -->
+    <string name="biometric_prompt_title_unlock">Unlock Zero</string>
+    <string name="biometric_prompt_title_enable">Enable biometric lock</string>
+    <string name="biometric_prompt_title_disable">Disable biometric lock</string>
+    <string name="biometric_prompt_subtitle">Use biometrics or device credential</string>
+
     <!-- Feedback -->
     <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
 </resources>

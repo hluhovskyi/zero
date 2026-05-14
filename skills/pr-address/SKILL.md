@@ -74,8 +74,10 @@ For each remaining (non-prefixed) comment:
 
 1. **Read the file** at the flagged line to understand context.
 2. **Understand the intent** — do not make literal word-for-word changes; implement what the reviewer actually meant.
-3. **Make the change** — edit only what the comment asks for. Do not refactor surrounding code that wasn't mentioned.
-4. **Keep a mental list** of all changed files to compile before committing.
+3. **Interpret-first for non-trivial comments.** If the comment is anything beyond a single-line fix (typo, missing field, obvious rename) — i.e. it implies an architectural choice, a refactor, or has more than one plausible reading — pause and surface your interpretation in 1–2 sentences plus the planned diff shape, then wait for ack. Cheap clarification beats 3–5 revision commits.
+4. **Match the reviewer's vocabulary.** If a comment names a specific language/framework primitive (a Dagger annotation, a Compose modifier, a Kotlin keyword, etc.), use that primitive — don't substitute a different mechanism unless the named one demonstrably doesn't fit.
+5. **Make the change** — edit only what the comment asks for. Do not refactor surrounding code that wasn't mentioned.
+6. **Keep a mental list** of all changed files to compile before committing.
 
 Work through comments in file order (top to bottom within each file, files in alphabetical order) to avoid re-reading the same file multiple times.
 

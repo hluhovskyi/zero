@@ -19,12 +19,12 @@ import com.hluhovskyi.zero.activity.navigation.back
 import com.hluhovskyi.zero.activity.navigation.getValue
 import com.hluhovskyi.zero.activity.navigation.navigateTo
 import com.hluhovskyi.zero.activity.navigation.route.DefaultNavigationRouteResolver
-import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.activity.navigation.route.NavigationRouteResolver
 import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -50,6 +50,8 @@ import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
+import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.DisplayConfig
@@ -136,6 +138,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val settingsComponentBuilder: SettingsComponent.Builder
         val importComponentBuilder: ImportComponent.Builder
+
+        val biometricLockUseCase: BiometricLockUseCase
+        val biometricAuthenticator: BiometricAuthenticator
     }
 
     companion object {
@@ -783,12 +788,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun settingsNavigationEntry(
             componentBuilder: SettingsComponent.Builder,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
+            biometricLockUseCase: BiometricLockUseCase,
+            biometricAuthenticator: BiometricAuthenticator,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Settings) {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
+                .biometricLockUseCase(biometricLockUseCase)
+                .biometricAuthenticator(biometricAuthenticator)
                 .logging(logger)
         }
 

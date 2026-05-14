@@ -7,6 +7,8 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.export.DefaultExportUseCase
 import com.hluhovskyi.zero.export.ExportUseCase
 import com.hluhovskyi.zero.export.ExportWriter
+import com.hluhovskyi.zero.security.BiometricAuthenticator
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.users.CurrentUserRepository
@@ -57,6 +59,12 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun settingsCurrencyUseCase(useCase: SettingsCurrencyUseCase): Builder
+
+        @BindsInstance
+        fun biometricLockUseCase(useCase: BiometricLockUseCase): Builder
+
+        @BindsInstance
+        fun biometricAuthenticator(authenticator: BiometricAuthenticator): Builder
     }
 
     @dagger.Module
@@ -83,11 +91,15 @@ abstract class SettingsComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
             exportUseCase: ExportUseCase,
+            biometricLockUseCase: BiometricLockUseCase,
+            biometricAuthenticator: BiometricAuthenticator,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,
             exportUseCase = exportUseCase,
+            biometricLockUseCase = biometricLockUseCase,
+            biometricAuthenticator = biometricAuthenticator,
         )
 
         @Provides
