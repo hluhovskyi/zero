@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.budget
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategorySpendingUseCase
+import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -36,8 +37,6 @@ abstract class BudgetComponent : AttachableViewComponent {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dispatcherProvider: DispatcherProvider
-        val categoriesQueryUseCase: CategoriesQueryUseCase
-        val categorySpendingUseCase: CategorySpendingUseCase
         val budgetQueryUseCase: BudgetQueryUseCase
         val clock: Clock
         val zoneProvider: ZoneProvider

@@ -6,6 +6,8 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.budget.BudgetComponent
+import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -278,6 +280,26 @@ abstract class ApplicationComponent :
             accountRepository = accountRepository,
             iconRepository = iconRepository,
             colorRepository = colorRepository,
+        )
+
+        @Provides
+        @ApplicationScope
+        fun budgetQueryUseCase(
+            categoriesQueryUseCase: CategoriesQueryUseCase,
+            budgetRepository: BudgetRepository,
+            transactionRepository: TransactionRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): BudgetQueryUseCase = BudgetComponent.queryUseCase(
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            budgetRepository = budgetRepository,
+            categorySpendingUseCase = CategoryComponent.spendingUseCase(
+                transactionRepository = transactionRepository,
+                currencyConvertUseCase = currencyConvertUseCase,
+                clock = clock,
+                zoneProvider = zoneProvider,
+            ),
         )
 
         @Provides
