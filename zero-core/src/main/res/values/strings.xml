@@ -230,4 +230,20 @@
     <string name="welcome_subtitle">Add your first transaction or bring in data from another app to get started.</string>
     <string name="welcome_import_action">Import from another app</string>
     <string name="welcome_illustration_amount_placeholder" translatable="false">$0.00</string>
+
+    <string name="budget_title">Budget</string>
+    <string name="budget_previous_month_cd">Previous month</string>
+    <string name="budget_next_month_cd">Next month</string>
+    <string name="budget_empty_title">No budget for %1$s</string>
+    <string name="budget_empty_subtitle">Set per-category limits to track this month\'s spending.</string>
+    <string name="budget_stat_categories">Categories</string>
+    <string name="budget_stat_budgets_set">Budgets set</string>
+    <string name="budget_stat_last_month">Last month</string>
+    <string name="budget_stat_last_month_set">set</string>
+    <string name="budget_stat_last_month_none">none</string>
+    <string name="budget_create">Create budget</string>
+    <string name="budget_copy_from_previous">Copy from %1$s</string>
+    <string name="budget_copy_count">%1$d budgets last month</string>
+    <string name="budget_section_set_limits">Set spending limits</string>
+    <string name="budget_set_limit">Set limit</string>
 </resources>

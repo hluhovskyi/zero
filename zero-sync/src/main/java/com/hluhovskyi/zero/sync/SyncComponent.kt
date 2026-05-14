@@ -11,6 +11,8 @@ interface SyncComponent {
         val accountSyncSink: EntitySyncSink<SyncAccount>
         val transactionSyncSource: EntitySyncSource<SyncTransaction>
         val transactionSyncSink: EntitySyncSink<SyncTransaction>
+        val budgetSyncSource: EntitySyncSource<SyncBudget>
+        val budgetSyncSink: EntitySyncSink<SyncBudget>
         val resourceResolver: ResourceResolver
     }
 
@@ -45,6 +47,11 @@ internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : 
             transactionPipeline = SyncPipeline(
                 source = dependencies.transactionSyncSource,
                 sink = dependencies.transactionSyncSink,
+                resolver = LastWriteWinsResolver(),
+            ),
+            budgetPipeline = SyncPipeline(
+                source = dependencies.budgetSyncSource,
+                sink = dependencies.budgetSyncSink,
                 resolver = LastWriteWinsResolver(),
             ),
             resourceResolver = dependencies.resourceResolver,

@@ -66,6 +66,18 @@ abstract class CategoryComponent : AttachableViewComponent {
             zoneProvider = zoneProvider,
         )
 
+        fun spendingUseCase(
+            transactionRepository: TransactionRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
+            transactionRepository = transactionRepository,
+            currencyConvertUseCase = currencyConvertUseCase,
+            clock = clock,
+            zoneProvider = zoneProvider,
+        )
+
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)

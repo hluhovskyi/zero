@@ -88,7 +88,7 @@ fun <T> SegmentedToggle(
         val itemConstraints = constraints.copy(minWidth = itemWidth, maxWidth = itemWidth)
 
         val labelPlaceables = measurables.drop(1).map { it.measure(itemConstraints) }
-        val height = labelPlaceables.maxOf { it.height }
+        val height = labelPlaceables.maxOfOrNull { it.height } ?: 0
         val indicatorPlaceable = measurables[0].measure(Constraints.fixed(itemWidth, height))
 
         layout(totalWidth, height) {

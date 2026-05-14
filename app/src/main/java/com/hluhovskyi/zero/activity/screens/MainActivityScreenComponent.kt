@@ -24,6 +24,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -127,6 +128,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
         val accountDetailComponentBuilder: AccountDetailComponent.Builder
+
+        val budgetComponentBuilder: BudgetComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -508,6 +511,20 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     )
                 }
                 .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun budgetNavigationEntry(
+            componentBuilder: BudgetComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.composable(
+            destination = Destinations.Budget,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
+            AccountsScreen(component = componentBuilder.logging(logger))
         }
 
         @Provides

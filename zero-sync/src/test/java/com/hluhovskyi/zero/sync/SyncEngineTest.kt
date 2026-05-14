@@ -182,6 +182,7 @@ class SyncEngineTest {
         categories: List<SyncCategory> = emptyList(),
         accounts: List<SyncAccount> = emptyList(),
         transactions: List<SyncTransaction> = emptyList(),
+        budgets: List<SyncBudget> = emptyList(),
         categorySink: FakeCategorySink = FakeCategorySink(),
     ): SyncEngine = DefaultSyncEngine(
         categoryPipeline = SyncPipeline(
@@ -197,6 +198,11 @@ class SyncEngineTest {
         transactionPipeline = SyncPipeline(
             source = FakeTransactionSource(transactions),
             sink = FakeTransactionSink(),
+            resolver = LastWriteWinsResolver(),
+        ),
+        budgetPipeline = SyncPipeline(
+            source = FakeBudgetSource(budgets),
+            sink = FakeBudgetSink(),
             resolver = LastWriteWinsResolver(),
         ),
         resourceResolver = ResourceResolver.Noop,
@@ -260,4 +266,13 @@ private class FakeTransactionSource(private val data: List<SyncTransaction>) : E
 
 private class FakeTransactionSink : EntitySyncSink<SyncTransaction> {
     override suspend fun syncUpsert(entities: List<SyncTransaction>) {}
+}
+
+private class FakeBudgetSource(private val data: List<SyncBudget>) : EntitySyncSource<SyncBudget> {
+    override suspend fun exportAll(userId: Id.Known) = data
+    override suspend fun exportSince(userId: Id.Known, since: LocalDateTime) = data.filter { it.updatedDateTime > since }
+}
+
+private class FakeBudgetSink : EntitySyncSink<SyncBudget> {
+    override suspend fun syncUpsert(entities: List<SyncBudget>) {}
 }
