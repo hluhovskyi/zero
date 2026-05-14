@@ -15,8 +15,7 @@ internal interface BudgetRoom {
 
     fun selectByUserId(userId: Id.Known): Flow<List<BudgetEntity>> = selectByUserId(userId.value)
 
-    fun selectForPeriod(userId: Id.Known, from: LocalDate, to: LocalDate, type: String): Flow<List<BudgetEntity>> =
-        selectForPeriod(userId.value, from.toString(), to.toString(), type)
+    fun selectForPeriod(userId: Id.Known, from: LocalDate, to: LocalDate, type: String): Flow<List<BudgetEntity>> = selectForPeriod(userId.value, from.toString(), to.toString(), type)
 
     fun selectForCategoryAndPeriod(
         userId: Id.Known,
@@ -26,8 +25,7 @@ internal interface BudgetRoom {
         type: String,
     ): Flow<BudgetEntity?> = selectForCategoryAndPeriod(userId.value, categoryId.value, from.toString(), to.toString(), type)
 
-    fun selectHasAnyForPeriod(userId: Id.Known, from: LocalDate, to: LocalDate, type: String): Flow<Boolean> =
-        selectHasAnyForPeriod(userId.value, from.toString(), to.toString(), type)
+    fun selectHasAnyForPeriod(userId: Id.Known, from: LocalDate, to: LocalDate, type: String): Flow<Boolean> = selectHasAnyForPeriod(userId.value, from.toString(), to.toString(), type)
 
     @Query(
         """
@@ -93,8 +91,7 @@ internal interface BudgetRoom {
         entities.forEach { insert(it) }
     }
 
-    suspend fun softDelete(id: Id.Known, userId: Id.Known, updatedDateTime: LocalDateTime) =
-        softDelete(id.value, userId.value, updatedDateTime.toString())
+    suspend fun softDelete(id: Id.Known, userId: Id.Known, updatedDateTime: LocalDateTime) = softDelete(id.value, userId.value, updatedDateTime.toString())
 
     @Query(
         """

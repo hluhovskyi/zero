@@ -9,11 +9,9 @@ internal class RoomBudgetSyncSource(
     private val dao: () -> BudgetSyncDao,
 ) : EntitySyncSource<SyncBudget> {
 
-    override suspend fun exportAll(userId: Id.Known): List<SyncBudget> =
-        dao().selectAllForSync(userId).map { it.toSyncModel() }
+    override suspend fun exportAll(userId: Id.Known): List<SyncBudget> = dao().selectAllForSync(userId).map { it.toSyncModel() }
 
-    override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncBudget> =
-        dao().selectSince(userId, since).map { it.toSyncModel() }
+    override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncBudget> = dao().selectSince(userId, since).map { it.toSyncModel() }
 
     private fun BudgetEntity.toSyncModel() = SyncBudget(
         id = id,
