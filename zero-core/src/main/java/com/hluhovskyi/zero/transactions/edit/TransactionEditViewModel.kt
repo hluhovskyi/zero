@@ -16,7 +16,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
     }
 
     data class State(
-        val transactionTypes: List<TransactionEditType> = emptyList(),
+        val transactionTypes: List<TransactionEditType> = TransactionEditType.values().toList(),
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val date: LocalDateTime? = null,
         val selectedCategory: TransactionEditCategory? = null,
