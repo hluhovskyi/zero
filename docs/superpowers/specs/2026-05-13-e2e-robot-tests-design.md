@@ -141,6 +141,13 @@ abstract class ApplicationComponent : ... {
 }
 ```
 
+### Module boundary enforcement
+
+The boundary "test code imports only from `:zero-test-bridge`" and "`:zero-test-bridge`
+never imports from `androidTest` sourcesets" can be enforced mechanically with a custom
+lint rule or Gradle dependency check if drift becomes a problem. Treat this as an available
+safety net — add it when violations appear, not upfront.
+
 ---
 
 ## Robot Pattern
