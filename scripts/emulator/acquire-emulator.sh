@@ -73,18 +73,7 @@ _lock_release() {
 # Claim logic (must run inside the mutex)
 # ---------------------------------------------------------------------------
 claim_unused() {
-    # Collect claimed serials from all active worktrees.
-    local CLAIMED=()
-    while IFS= read -r WORKTREE_PATH; do
-        local SERIAL_FILE="$WORKTREE_PATH/.emulator-serial"
-        if [ -f "$SERIAL_FILE" ]; then
-            local SERIAL
-            SERIAL=$(cat "$SERIAL_FILE")
-            [ -n "$SERIAL" ] && CLAIMED+=("$SERIAL")
-        fi
-    done < <(git worktree list --porcelain | grep "^worktree " | sed 's/^worktree //')
-
-    # Get all running emulators.
+    # Get all running emulators first — needed for stale-claim pruning below.
     local RUNNING=()
     while IFS= read -r line; do
         local SERIAL
@@ -96,6 +85,32 @@ claim_unused() {
         echo "__NONE_RUNNING__"
         return 1
     fi
+
+    # Collect claimed serials from all active worktrees.
+    # Prune any claim whose emulator is no longer running — these are
+    # left-over .emulator-serial files from previous sessions where the
+    # emulator has since been shut down.
+    local CLAIMED=()
+    while IFS= read -r WORKTREE_PATH; do
+        local SERIAL_FILE="$WORKTREE_PATH/.emulator-serial"
+        [ -f "$SERIAL_FILE" ] || continue
+        local SERIAL
+        SERIAL=$(cat "$SERIAL_FILE" 2>/dev/null | tr -d '[:space:]')
+        [ -n "$SERIAL" ] || continue
+
+        local IS_RUNNING=false
+        for R in "${RUNNING[@]}"; do
+            [[ "$R" == "$SERIAL" ]] && IS_RUNNING=true && break
+        done
+
+        if $IS_RUNNING; then
+            CLAIMED+=("$SERIAL")
+        else
+            # Emulator is gone — the claim is stale; remove it automatically.
+            rm -f "$SERIAL_FILE"
+            echo "  Pruned stale claim: $SERIAL from $(basename "$WORKTREE_PATH") (emulator not running)" >&2
+        fi
+    done < <(git worktree list --porcelain | grep "^worktree " | sed 's/^worktree //')
 
     for SERIAL in "${RUNNING[@]}"; do
         local CLAIMED_FLAG=false
