@@ -43,15 +43,13 @@ private class PresetsAttachable(
 
 ## Mixed-Lifecycle Features Get Their Own Component
 
-**When a feature combines long-lived bindings (attached for the screen) with per-navigation bindings (rebuilt per visit), make it a dedicated `@Component` with its own `@Scope` — not a `@Module` included into the parent.** The parent receives only the built feature component and asks it for `attach()` and (where relevant) its `NavigatorEntry`.
+**If you find yourself adding `protected abstract val X` to a parent component just to call `.attach()` on it, stop — extract a dedicated `@Component` with its own `@Scope` instead.** That field is the signal that you've leaked a feature's internals into the parent's graph; the parent should only see the built feature component and ask it for `attach()` and (where relevant) its `NavigatorEntry`.
 
-Why: a `@Module` included into the parent puts every binding into the parent's graph, forcing the parent to expose abstract fields just to call `.attach()` on them, and leaks the parent's `@Scope` into the feature's file. The parent ends up knowing internals it shouldn't. See `FeedbackComponent` for the canonical example.
-
-Single-binding features (e.g., a picker that registers one `NavigatorEntry`) stay in the parent's module — this rule kicks in only once binding count climbs and the lifetimes diverge.
+Single-binding features (e.g., a picker that registers one `NavigatorEntry`) stay in the parent's module — this rule kicks in only when there's lifecycle state to attach. See `FeedbackComponent` for the canonical example.
 
 ## Feature Components Live in `zero-core`; `app` Owns Navigation Wiring
 
-**Put the feature `@Component` in `zero-core`, not `app`.** `Navigator`, `NavigatorScope`, `NavigatorEntry`, `Destinations`, and `BuildConfig` are all `internal` to `app` — that's the seam. A feature component in `zero-core` exposes plain factories or callbacks (`val sheetComponentFactory: () -> SheetComponent`, `onTriggered: () -> Unit`); `app`'s wiring module wraps those in a `NavigatorEntry` that calls into them. Keeps feature logic testable without Android-navigation coupling and limits `app` to gluing components to the nav graph.
+**Feature `@Component` classes go in `zero-core`, not `app`.** Activity-shell / navigation-host components (`MainActivityScreenComponent`, `BottomBarComponent`) stay in `app` — they're what defines the seam. Everything else: in `zero-core`. `Navigator`, `NavigatorScope`, `NavigatorEntry`, `Destinations`, and `BuildConfig` are all `internal` to `app`, so a feature component in `zero-core` exposes plain factories or callbacks (`val sheetComponentFactory: () -> SheetComponent`, `onTriggered: () -> Unit`); `app`'s wiring module wraps those in a `NavigatorEntry` that calls into them.
 
 ## Collapse `Factory.create()` Parameters Into `Dependencies` When Constant
 
