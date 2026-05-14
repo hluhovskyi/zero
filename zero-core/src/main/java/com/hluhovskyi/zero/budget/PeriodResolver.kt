@@ -8,7 +8,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-internal class PeriodResolver(
+class PeriodResolver internal constructor(
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
 ) {
