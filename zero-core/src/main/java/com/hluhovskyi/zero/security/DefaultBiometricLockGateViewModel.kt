@@ -31,9 +31,6 @@ internal class DefaultBiometricLockGateViewModel(
                     Result.Unavailable -> biometricLockUseCase.unlock()
                 }
             }
-            is BiometricLockGateViewModel.Action.PromptShown -> {
-                mutableState.update { it.copy(canPromptOnLaunch = false) }
-            }
         }
     }
 
@@ -45,12 +42,7 @@ internal class DefaultBiometricLockGateViewModel(
             ) { enabled, lockState ->
                 enabled && lockState is LockState.Locked
             }.collect { isLocked ->
-                mutableState.update { current ->
-                    current.copy(
-                        isLocked = isLocked,
-                        canPromptOnLaunch = if (isLocked) current.canPromptOnLaunch else true,
-                    )
-                }
+                mutableState.update { it.copy(isLocked = isLocked) }
             }
         }
     }

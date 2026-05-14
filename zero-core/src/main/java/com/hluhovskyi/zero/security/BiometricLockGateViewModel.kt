@@ -9,12 +9,10 @@ interface BiometricLockGateViewModel : AttachableActionStateModel<BiometricLockG
 
     sealed interface Action {
         object Unlock : Action
-        object PromptShown : Action
     }
 
     data class State(
         val isLocked: Boolean = false,
-        val canPromptOnLaunch: Boolean = true,
     )
 
     object Noop : BiometricLockGateViewModel {
