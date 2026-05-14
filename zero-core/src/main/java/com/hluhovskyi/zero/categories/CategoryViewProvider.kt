@@ -25,9 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -144,35 +144,24 @@ private fun CategoryPage(
     val inactive = remember(categories) {
         categories.filter { it.spending is CategoryViewModel.Spending.None }
     }
-    val maxTotal = remember(active) {
-        active.fold(Amount.zero()) { acc, cat ->
-            val spending = cat.spending as CategoryViewModel.Spending.Active
-            if (spending.totalAmount > acc) spending.totalAmount else acc
-        }
-    }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 96.dp),
     ) {
         items(active, key = { it.id.value }) { category ->
             val spending = category.spending as CategoryViewModel.Spending.Active
-            val maxFraction = if (maxTotal > 0L) {
-                (spending.totalAmount / maxTotal).toFloat().coerceIn(0f, 1f)
+            val fraction = if (grandTotal > 0L) {
+                (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
             } else {
                 0f
             }
-            val percentOfTotal = if (grandTotal > 0L) {
-                (spending.totalAmount / grandTotal * 100).toInt()
-            } else {
-                0
-            }
+            val percentOfTotal = (fraction * 100).toInt()
 
             ActiveCategoryCard(
                 category = category,
                 spending = spending,
                 formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
-                maxFraction = maxFraction,
+                maxFraction = fraction,
                 percentOfTotal = percentOfTotal,
                 onClick = { onCategoryClick(category) },
                 imageLoader = imageLoader,
@@ -221,27 +210,18 @@ private fun ActiveCategoryCard(
     val colorScheme = category.colorScheme.toUi()
     val categoryBg = colorScheme.background
     val tintedBg = lerp(Color.White, categoryBg, 0.45f)
-    val gradientBrush = remember(maxFraction, categoryBg) {
-        if (maxFraction > 0f) {
-            Brush.horizontalGradient(
-                colorStops = arrayOf(
-                    0f to tintedBg,
-                    maxFraction to tintedBg,
-                    maxFraction to Color.White,
-                    1f to Color.White,
-                )
-            )
-        } else {
-            SolidColor(Color.White)
-        }
-    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(gradientBrush)
+            .drawBehind {
+                drawRect(Color.White)
+                if (maxFraction > 0f) {
+                    drawRect(tintedBg, size = Size(size.width * maxFraction, size.height))
+                }
+            }
             .clickable(onClick = onClick),
     ) {
         Row(
