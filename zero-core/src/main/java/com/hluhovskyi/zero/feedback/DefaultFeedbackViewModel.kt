@@ -63,5 +63,4 @@ internal class DefaultFeedbackViewModel(
     override fun attach(): Closeable = Closeables.from { coroutineScope.cancel() }
 }
 
-private fun formatPreview(deviceInfo: DeviceInfo): String =
-    "${deviceInfo.manufacturer} ${deviceInfo.model} · Android ${deviceInfo.osVersion} (${deviceInfo.sdkInt}) · ${deviceInfo.versionName} (${deviceInfo.versionCode})"
+private fun formatPreview(deviceInfo: DeviceInfo): String = "${deviceInfo.manufacturer} ${deviceInfo.model} · Android ${deviceInfo.osVersion} (${deviceInfo.sdkInt}) · ${deviceInfo.versionName} (${deviceInfo.versionCode})"

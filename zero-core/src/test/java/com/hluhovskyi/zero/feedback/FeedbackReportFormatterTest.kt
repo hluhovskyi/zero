@@ -22,8 +22,7 @@ class FeedbackReportFormatterTest {
         versionCode = 142L,
     )
 
-    private fun formatter(isDebugBuild: Boolean = false): FeedbackReportFormatter =
-        FeedbackReportFormatter(deviceInfo = deviceInfo, isDebugBuild = isDebugBuild, clock = clock)
+    private fun formatter(isDebugBuild: Boolean = false): FeedbackReportFormatter = FeedbackReportFormatter(deviceInfo = deviceInfo, isDebugBuild = isDebugBuild, clock = clock)
 
     private val emptySnapshot = Breadcrumbs.Snapshot(navigation = emptyList(), breadcrumbs = emptyList())
 

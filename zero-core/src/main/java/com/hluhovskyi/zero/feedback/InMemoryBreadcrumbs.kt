@@ -19,7 +19,8 @@ class InMemoryBreadcrumbs(
     private val routes: Flow<String>,
     private val clock: Clock,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
-) : Breadcrumbs, Attachable {
+) : Breadcrumbs,
+    Attachable {
 
     private val lock = Any()
     private val navigation = ArrayDeque<Breadcrumbs.Entry>(NAV_CAPACITY)

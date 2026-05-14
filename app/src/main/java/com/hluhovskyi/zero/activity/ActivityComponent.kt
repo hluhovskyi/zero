@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.activity
 
+import android.content.Context
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
@@ -35,7 +36,6 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.icons.IconPickerComponent
-import android.content.Context
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.presets.PresetsComponent

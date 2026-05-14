@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.feedback
 
 import com.hluhovskyi.zero.common.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -29,8 +28,7 @@ class DefaultFeedbackViewModelTest {
     )
     private val emptyBreadcrumbs = object : Breadcrumbs {
         override fun log(message: String) = Unit
-        override fun snapshot(): Breadcrumbs.Snapshot =
-            Breadcrumbs.Snapshot(navigation = emptyList(), breadcrumbs = emptyList())
+        override fun snapshot(): Breadcrumbs.Snapshot = Breadcrumbs.Snapshot(navigation = emptyList(), breadcrumbs = emptyList())
     }
     private val formatter = FeedbackReportFormatter(
         deviceInfo = deviceInfo,
