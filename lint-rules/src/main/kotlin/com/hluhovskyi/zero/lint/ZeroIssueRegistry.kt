@@ -23,6 +23,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         HardcodedComposableStringDetector.ISSUE,
         UppercaseStringResourceDetector.ISSUE,
         BreadcrumbsLiteralOnlyDetector.ISSUE,
+        ScopedComponentBuilderDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API

@@ -150,43 +150,36 @@ abstract class ActivityComponent :
     object Module {
 
         @Provides
-        @ActivityScope
         fun accountComponentBuilder(
             component: ActivityComponent,
         ): AccountComponent.Builder = AccountComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun accountEditComponentBuilder(
             component: ActivityComponent,
         ): AccountEditComponent.Builder = AccountEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun accountDetailComponentBuilder(
             component: ActivityComponent,
         ): AccountDetailComponent.Builder = AccountDetailComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryComponentBuilder(
             component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryPickerComponentBuilder(
             component: ActivityComponent,
         ): CategoryPickerComponent.Builder = CategoryPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun currencyPickerComponentBuilder(
             component: ActivityComponent,
         ): CurrencyPickerComponent.Builder = CurrencyPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryEditComponentBuilder(
             component: ActivityComponent,
         ): CategoryEditComponent.Builder = CategoryEditComponent.builder(component)
@@ -207,25 +200,21 @@ abstract class ActivityComponent :
         ): WelcomeComponent.Builder = WelcomeComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun homeComponentBuilder(
             component: ActivityComponent,
         ): HomeComponent.Builder = HomeComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun categoryDetailComponentBuilder(
             component: ActivityComponent,
         ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun iconPickerComponentBuilder(
             component: ActivityComponent,
         ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionFilterSheetComponentBuilder(
             component: ActivityComponent,
         ): TransactionFilterSheetComponent.Builder = TransactionFilterSheetComponent.builder(component)
@@ -237,7 +226,6 @@ abstract class ActivityComponent :
         ): ColorPickerComponent.Factory = ColorPickerComponent.factory(component)
 
         @Provides
-        @ActivityScope
         fun transactionPreviewBuilder(
             component: ActivityComponent,
         ): TransactionPreviewComponent.Builder = TransactionPreviewComponent.builder(component)
@@ -262,13 +250,11 @@ internal object MainActivityModule {
     )
 
     @Provides
-    @ActivityScope
     fun bottomBarComponentBuilder(
         component: ActivityComponent,
     ): BottomBarComponent.Builder = BottomBarComponent.builder(component)
 
     @Provides
-    @ActivityScope
     fun mainActivityScreenComponentBuilder(
         component: ActivityComponent,
     ): MainActivityScreenComponent.Builder = MainActivityScreenComponent.builder(component)
