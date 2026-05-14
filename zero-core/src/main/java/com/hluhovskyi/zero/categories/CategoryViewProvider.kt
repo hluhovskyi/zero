@@ -14,18 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +38,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.SegmentedToggle
+import com.hluhovskyi.zero.ui.SwipeableSegmentedTabs
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
@@ -51,7 +47,6 @@ import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val CATEGORY_TABS = listOf(CategoryType.EXPENSE, CategoryType.INCOME)
 
@@ -81,25 +76,8 @@ private fun CategoryView(
     onAddCategory: OnAddCategoryHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
-    val pagerState = rememberPagerState(initialPage = CATEGORY_TABS.indexOf(state.selectedTab).coerceAtLeast(0)) { CATEGORY_TABS.size }
-
-    LaunchedEffect(state.selectedTab) {
-        val target = CATEGORY_TABS.indexOf(state.selectedTab)
-        if (target >= 0 && pagerState.currentPage != target) {
-            pagerState.animateScrollToPage(target)
-        }
-    }
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }
-            .distinctUntilChanged()
-            .collect { page ->
-                val tab = CATEGORY_TABS.getOrNull(page) ?: return@collect
-                if (tab != state.selectedTab) {
-                    viewModel.perform(CategoryViewModel.Action.SelectTab(tab))
-                }
-            }
-    }
+    val expenseLabel = stringResource(R.string.transaction_type_expense)
+    val incomeLabel = stringResource(R.string.transaction_type_income)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -113,30 +91,20 @@ private fun CategoryView(
                 ),
             )
 
-            val expenseLabel = stringResource(R.string.transaction_type_expense)
-            val incomeLabel = stringResource(R.string.transaction_type_income)
-            SegmentedToggle(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 6.dp),
+            SwipeableSegmentedTabs(
                 items = CATEGORY_TABS,
                 selectedItem = state.selectedTab,
                 onItemSelected = { viewModel.perform(CategoryViewModel.Action.SelectTab(it)) },
                 labelMapping = { if (it == CategoryType.EXPENSE) expenseLabel else incomeLabel },
-                selectedFraction = pagerState.currentPage + pagerState.currentPageOffsetFraction,
-            )
-
-            HorizontalPager(
-                state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-            ) { page ->
-                val tab = CATEGORY_TABS[page]
-                val categories = state.categoriesByType[tab].orEmpty()
-                val grandTotal = state.grandTotalByType[tab] ?: Amount.zero()
+                toggleModifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 6.dp),
+            ) { tab ->
                 CategoryPage(
-                    categories = categories,
-                    grandTotal = grandTotal,
+                    categories = state.categoriesByType[tab].orEmpty(),
+                    grandTotal = state.grandTotalByType[tab] ?: Amount.zero(),
                     currencySymbol = state.currencySymbol,
                     amountFormatter = amountFormatter,
                     imageLoader = imageLoader,
