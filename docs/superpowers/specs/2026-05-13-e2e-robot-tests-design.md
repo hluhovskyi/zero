@@ -18,8 +18,8 @@ covering the 6 scenarios from issue #180.
 
 `app/src/androidTest/java/com/hluhovskyi/zero/`
 
-The `app` module already depends on every other module, so robots have access to all public
-APIs. The `androidTest` sourceset sees `internal` members from `app/src/main` (same module).
+The `app` module already depends on every other module, so it can reach all public APIs.
+The `androidTest` sourceset sees `internal` members from `app/src/main` (same module).
 
 ### Test framework
 
@@ -33,48 +33,49 @@ device or emulator; they are instrumented tests (`./gradlew connectedDebugAndroi
 ### Database isolation
 
 **TestBridge pattern** (see below). Before each test the bridge calls
-`RoomDatabase.clearAllTables()` on the live database instance that the app already has open.
+`RoomDatabase.clearAllTables()` on the live database instance the app already has open.
 No file deletion, no process restart, no in-memory override.
+
+---
+
+## Module Structure
+
+### New module: `:zero-test-bridge`
+
+A standalone Android library module. Its purpose is to provide the `TestBridge` interface
+and all concrete implementations. It can depend on zero-database, zero-core, zero-api, or any
+other project module it needs to implement bridges — but it never depends on `:app` (circular)
+and it cannot access `androidTest` sourcesets.
+
+```
+zero-test-bridge/
+  src/main/java/com/hluhovskyi/zero/testbridge/
+    TestBridge.kt          ← interface — the only type test files import
+    DatabaseTestBridge.kt  ← implementation backed by RoomDatabase
+```
+
+The `app/build.gradle` declares:
+```groovy
+androidTestImplementation project(':zero-test-bridge')
+```
+
+Test files import only from `com.hluhovskyi.zero.testbridge`. They never import
+`RoomDatabase`, `TransactionRepository`, or any other zero-api / zero-core / Room type.
 
 ---
 
 ## TestBridge
 
-### Production seam (`app/src/main`)
+### Interface (`zero-test-bridge/src/main`)
 
-Two small additions to existing production files:
-
-**`TestBridge.kt`** (new file):
 ```kotlin
 interface TestBridge {
     fun clearData()
-
-    companion object {
-        var installed: TestBridge? = null
-    }
+    // Future: fun uploadFixture(fixture: TestFixture)
 }
 ```
 
-`installed` is always `null` in production — no production code ever reads or calls it.
-
-**`DatabaseComponent`** (`zero-database`) — expose `RoomDatabase` (public Jetpack type):
-```kotlin
-interface DatabaseComponent {
-    // ... existing members ...
-    val roomDatabase: RoomDatabase
-}
-// + one @Provides in Module: fun roomDatabase(db: MainDatabase): RoomDatabase = db
-```
-
-**`ApplicationComponent`** (`app`) — expose the already-provided `DatabaseComponent`:
-```kotlin
-abstract class ApplicationComponent : ... {
-    // ... existing members ...
-    abstract val databaseComponent: DatabaseComponent
-}
-```
-
-### Test implementation (`app/src/androidTest`)
+### Implementation (`zero-test-bridge/src/main`)
 
 ```kotlin
 class DatabaseTestBridge(private val db: RoomDatabase) : TestBridge {
@@ -84,19 +85,61 @@ class DatabaseTestBridge(private val db: RoomDatabase) : TestBridge {
 }
 ```
 
-Installed in a shared `@Before`:
-```kotlin
-@Before fun setUp() {
-    val component = (applicationContext as HasApplicationComponent).applicationComponent
-    TestBridge.installed = DatabaseTestBridge(component.databaseComponent.roomDatabase)
-    TestBridge.installed!!.clearData()
-}
-```
+`RoomDatabase` is a public Jetpack type — no internal types leak from zero-database.
+The implementation receives the already-open database instance (see wiring below).
 
 ### Future extension point
 
-`TestBridge` will gain a `fun uploadFixture(fixture: TestFixture)` method (separate task) for
-seeding the database with pre-defined data before import-flow tests.
+`TestBridge` will gain `fun uploadFixture(fixture: TestFixture)` (separate task) for seeding
+the database before import-flow tests. `TestFixture` will be defined in `:zero-test-bridge`
+with its own data model — tests never reference zero-api domain types directly.
+
+---
+
+## Wiring layer (`app/androidTest`)
+
+One abstract base class resolves the bridge from the app's DI graph. This is the only
+place in the test codebase that knows about `HasApplicationComponent`, `DatabaseComponent`,
+and `RoomDatabase`. User-written `@Test` methods extend this class and see only `TestBridge`.
+
+```kotlin
+abstract class BaseE2eTest {
+
+    @get:Rule
+    val composeRule = createAndroidComposeRule<MainActivity>()
+
+    private val bridge: TestBridge by lazy {
+        val component = (applicationContext as HasApplicationComponent).applicationComponent
+        DatabaseTestBridge(component.databaseComponent.roomDatabase)
+    }
+
+    @Before
+    fun setUp() {
+        bridge.clearData()
+    }
+}
+```
+
+### Production changes required to close the access gap
+
+Two small additions to existing files:
+
+**`DatabaseComponent` (zero-database)** — expose `RoomDatabase` (public Jetpack type):
+```kotlin
+interface DatabaseComponent {
+    // ... existing members ...
+    val roomDatabase: RoomDatabase
+}
+// + one @Provides in Module: fun roomDatabase(db: MainDatabase): RoomDatabase = db
+```
+
+**`ApplicationComponent` (app)** — expose the already-provided `DatabaseComponent`:
+```kotlin
+abstract class ApplicationComponent : ... {
+    // ... existing members ...
+    abstract val databaseComponent: DatabaseComponent
+}
+```
 
 ---
 
@@ -112,6 +155,7 @@ app/src/androidTest/java/com/hluhovskyi/zero/
   robots/
     TransactionsRobot.kt       ← home list: assertions + navigation
     TransactionEditRobot.kt    ← add/edit form: fill + save/discard
+  BaseE2eTest.kt               ← wiring: bridge + composeRule
   ZeroE2eTest.kt               ← first test class
 ```
 
@@ -141,36 +185,65 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
 
 ### Selector strategy
 
-Use `onNodeWithText()` and `onNodeWithContentDescription()` wherever elements already carry
-meaningful text. Add `Modifier.testTag("Screen.element")` annotations to production Compose
-code only where text-based selectors are ambiguous (e.g. amount field vs. rate field).
-Tag naming convention: `TransactionList.addButton`, `TransactionEdit.amountField`, etc.
+Use `onNodeWithText()` and `onNodeWithContentDescription()` where elements already carry
+meaningful text. Add `Modifier.testTag("Screen.element")` to production Compose code only
+where text-based selectors are ambiguous (e.g. amount field vs. rate field). Tag naming
+convention: `TransactionList.addButton`, `TransactionEdit.amountField`, etc.
 
 ---
 
 ## New Test Dependencies
 
-Add to `app/build.gradle`:
-
+`app/build.gradle`:
 ```groovy
+androidTestImplementation project(':zero-test-bridge')
 androidTestImplementation "androidx.test.ext:junit:1.1.5"
 androidTestImplementation "androidx.compose.ui:ui-test-junit4:1.7.8"
 androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
 debugImplementation "androidx.compose.ui:ui-test-manifest:1.7.8"
 ```
 
+`zero-test-bridge/build.gradle`:
+```groovy
+// depends on whatever each bridge implementation needs
+implementation "androidx.room:room-runtime:$room_version"  // for RoomDatabase type
+```
+
 ---
 
 ## Phase 1 Test Scope
 
-One test class (`ZeroE2eTest`), two tests:
+One test class (`ZeroE2eTest extends BaseE2eTest`), two tests:
 
-1. **`transaction list is empty on fresh install`** — baseline sanity check; asserts empty
-   state message is visible after `clearData()`.
+1. **`transaction list is empty on fresh install`** — baseline sanity; asserts empty-state
+   message is visible after `clearData()`.
 
 2. **`add expense appears in transaction list`** — full happy path:
    open add-transaction form → fill expense (amount + category + account) → save →
    assert transaction count = 1 → assert the entered amount is visible in the list.
+
+```kotlin
+class ZeroE2eTest : BaseE2eTest() {
+
+    @Test
+    fun `transaction list is empty on fresh install`() {
+        onTransactions()
+            .assertEmpty()
+    }
+
+    @Test
+    fun `add expense appears in transaction list`() {
+        onTransactions()
+            .tapAddTransaction()
+            .fillExpense(amount = "42", category = "Food", account = "Wallet")
+            .save()
+            .assertTransactionCount(1)
+            .assertHasExpense(amount = "42")
+    }
+
+    private fun onTransactions() = TransactionsRobot(composeRule)
+}
+```
 
 ---
 
@@ -178,5 +251,5 @@ One test class (`ZeroE2eTest`), two tests:
 
 - `ImportFlowRobotTest` covering the 6 scenarios from issue #180
 - `TestBridge.uploadFixture()` for seeding pre-defined data
-- Compose UI tests for layout/interaction (issue #180 "Compose UI tests next?" section)
+- Compose layout/interaction tests (issue #180 "Compose UI tests next?" section)
 - CI workflow changes (measure test duration first)
