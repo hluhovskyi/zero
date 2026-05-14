@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -314,6 +315,25 @@ private fun TransactionView(
                                         expanded = expandedItemId == transaction.id,
                                         onDismissRequest = { expandedItemId = null },
                                     ) {
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                viewModel.perform(TransactionViewModel.Action.DuplicateTransaction(transaction.id))
+                                                expandedItemId = null
+                                            },
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.ContentCopy,
+                                                    contentDescription = null,
+                                                    tint = OnSurfaceVariant,
+                                                    modifier = Modifier.size(20.dp),
+                                                )
+                                                Spacer(modifier = Modifier.size(8.dp))
+                                                Text(
+                                                    text = stringResource(R.string.transaction_duplicate),
+                                                )
+                                            }
+                                        }
                                         DropdownMenuItem(
                                             onClick = {
                                                 viewModel.perform(TransactionViewModel.Action.DeleteTransaction(transaction.id))

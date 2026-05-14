@@ -3,8 +3,10 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -51,6 +53,8 @@ abstract class TransactionEditComponent :
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
         val imageLoader: ImageLoader
+        val amountFormatter: AmountFormatter
+        val dateFormatter: DateFormatter
 
         val categoriesQueryUseCase: CategoriesQueryUseCase
 
@@ -65,11 +69,13 @@ abstract class TransactionEditComponent :
         fun builder(dependencies: Dependencies): Builder = DaggerTransactionEditComponent.builder()
             .dependencies(dependencies)
             .transactionId(Id.Unknown)
+            .duplicateFromTransactionId(Id.Unknown)
             .preSelectedCategoryId(Id.Unknown)
             .preSelectedAccountId(Id.Unknown)
             .onTransactionSavedHandler(OnTransactionSavedHandler.Noop)
             .onEditCategoriesHandler(OnEditCategoriesHandler.Noop)
             .onDiscardHandler(OnDiscardHandler.Noop)
+            .onDuplicateHandler(OnDuplicateHandler.Noop)
             .transactionEditCategoryUseCase(TransactionEditCategoryUseCase.Noop)
             .transactionEditCurrencyUseCase(TransactionEditCurrencyUseCase.Noop)
     }
@@ -81,6 +87,9 @@ abstract class TransactionEditComponent :
 
         @BindsInstance
         fun transactionId(transactionId: Id): Builder
+
+        @BindsInstance
+        fun duplicateFromTransactionId(@DuplicateFromTransactionId id: Id): Builder
 
         @BindsInstance
         fun preSelectedCategoryId(@PreSelectedCategoryId id: Id): Builder
@@ -98,6 +107,9 @@ abstract class TransactionEditComponent :
         fun onDiscardHandler(handler: OnDiscardHandler): Builder
 
         @BindsInstance
+        fun onDuplicateHandler(handler: OnDuplicateHandler): Builder
+
+        @BindsInstance
         fun transactionEditCategoryUseCase(useCase: TransactionEditCategoryUseCase): Builder
 
         @BindsInstance
@@ -111,6 +123,7 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun useCase(
             transactionId: Id,
+            @DuplicateFromTransactionId duplicateFromTransactionId: Id,
             @PreSelectedCategoryId preSelectedCategoryId: Id,
             @PreSelectedAccountId preSelectedAccountId: Id,
             accountRepository: AccountRepository,
@@ -122,6 +135,7 @@ abstract class TransactionEditComponent :
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
+            onDuplicateHandler: OnDuplicateHandler,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
             incorrectStateDetector: IncorrectStateDetector,
@@ -130,6 +144,7 @@ abstract class TransactionEditComponent :
             logger: Logger,
         ): TransactionEditUseCase = DefaultTransactionEditUseCase(
             transactionId = transactionId,
+            duplicateFromTransactionId = duplicateFromTransactionId,
             preSelectedCategoryId = preSelectedCategoryId,
             preSelectedAccountId = preSelectedAccountId,
             accountRepository = accountRepository,
@@ -141,6 +156,7 @@ abstract class TransactionEditComponent :
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
+            onDuplicateHandler = onDuplicateHandler,
             transactionEditCategoryUseCase = transactionEditCategoryUseCase,
             transactionEditCurrencyUseCase = transactionEditCurrencyUseCase,
             incorrectStateDetector = incorrectStateDetector,
@@ -154,9 +170,15 @@ abstract class TransactionEditComponent :
         fun viewModel(
             useCase: TransactionEditUseCase,
             transactionId: Id,
+            @DuplicateFromTransactionId duplicateFromTransactionId: Id,
+            amountFormatter: AmountFormatter,
+            dateFormatter: DateFormatter,
         ): TransactionEditViewModel = DefaultTransactionEditViewModel(
             useCase = useCase,
             isEditMode = transactionId is Id.Known,
+            isDuplicateMode = duplicateFromTransactionId is Id.Known,
+            amountFormatter = amountFormatter,
+            dateFormatter = dateFormatter,
         )
 
         @Provides
