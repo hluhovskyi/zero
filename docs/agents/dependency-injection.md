@@ -47,9 +47,11 @@ private class PresetsAttachable(
 
 Single-binding features (e.g., a picker that registers one `NavigatorEntry`) stay in the parent's module — this rule kicks in only when there's lifecycle state to attach. See `FeedbackComponent` for the canonical example.
 
-## Feature Components Live in `zero-core`; `app` Owns Navigation Wiring
+## Choose the Module That Matches the Feature's Dependencies
 
-**Feature `@Component` classes go in `zero-core`, not `app`.** Activity-shell / navigation-host components (`MainActivityScreenComponent`, `BottomBarComponent`) stay in `app` — they're what defines the seam. Everything else: in `zero-core`. `Navigator`, `NavigatorScope`, `NavigatorEntry`, `Destinations`, and `BuildConfig` are all `internal` to `app`, so a feature component in `zero-core` exposes plain factories or callbacks (`val sheetComponentFactory: () -> SheetComponent`, `onTriggered: () -> Unit`); `app`'s wiring module wraps those in a `NavigatorEntry` that calls into them.
+**Feature `@Component` classes live where their dependencies allow.** A feature with no `app`-internal types (`Navigator`, `Destinations`, `BuildConfig`) and no Android-only types belongs in `zero-core` — and benefits from being KMP-portable later. A feature that needs sensors, Android lifecycle, navigation, or `BuildConfig` lives in `app` — splitting it would require an abstraction layer that isn't worth the cost for a single consumer.
+
+The split inside a feature can be hybrid: keep the pure UI/logic (`FeedbackSheetComponent`, `InMemoryBreadcrumbs`) in `zero-core` and put the Android-coupled orchestrator (`FeedbackComponent`, `ShakeDetector`) in `app`. The `app`-side Dagger component consumes the zero-core pieces directly via its graph.
 
 ## Collapse `Factory.create()` Parameters Into `Dependencies` When Constant
 

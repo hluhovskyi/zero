@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.io.Closeable
-import java.util.ArrayDeque
 
 private const val NAV_CAPACITY = 50
 private const val LOG_CAPACITY = 200
