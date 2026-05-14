@@ -15,7 +15,6 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.DisplayConfig
-import com.hluhovskyi.zero.transactions.OnDuplicateTransactionHandler
 import com.hluhovskyi.zero.transactions.OnTransactionSelectedHandler
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionFilter
@@ -62,7 +61,6 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             .onEditHandler(OnCategoryDetailEditHandler.Noop)
             .onBackHandler(OnBackHandler.Noop)
             .onTransactionSelectedHandler(OnTransactionSelectedHandler.Noop)
-            .onDuplicateTransactionHandler(OnDuplicateTransactionHandler.Noop)
             .onCreateTransactionHandler(OnCategoryDetailCreateTransactionHandler.Noop)
     }
 
@@ -81,9 +79,6 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onTransactionSelectedHandler(handler: OnTransactionSelectedHandler): Builder
-
-        @BindsInstance
-        fun onDuplicateTransactionHandler(handler: OnDuplicateTransactionHandler): Builder
 
         @BindsInstance
         fun onCreateTransactionHandler(handler: OnCategoryDetailCreateTransactionHandler): Builder
@@ -136,12 +131,10 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             builder: TransactionComponent.Builder,
             categoryId: Id.Known,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
-            onDuplicateTransactionHandler: OnDuplicateTransactionHandler,
         ): TransactionComponent = builder
             .transactionFilter(TransactionFilter.forCategory(categoryId))
             .displayConfig(DisplayConfig(showSearchBar = false, showFilterButton = false))
             .onTransactionSelectHandler(onTransactionSelectedHandler)
-            .onDuplicateTransactionHandler(onDuplicateTransactionHandler)
             .build()
 
         @Provides

@@ -251,8 +251,10 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.CycleTransferRateMode -> cycleTransferRateMode()
             is TransactionEditUseCase.Action.SwapAccounts -> swapAccounts()
             is TransactionEditUseCase.Action.Duplicate -> {
-                coroutineScope.launch(context = Dispatchers.Main) {
-                    (transactionId as? Id.Known)?.let { id -> onDuplicateHandler.onDuplicate(id) }
+                (transactionId as? Id.Known)?.let { id ->
+                    coroutineScope.launch(context = Dispatchers.Main) {
+                        onDuplicateHandler.onDuplicate(id)
+                    }
                 }
             }
         }

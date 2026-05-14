@@ -185,7 +185,6 @@ abstract class ActivityComponent :
         ): CategoryEditComponent.Builder = CategoryEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionEditComponentBuilder(
             component: ActivityComponent,
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
