@@ -79,7 +79,6 @@ abstract class BiometricLockComponent : Attachable {
         )
 
         @Provides
-        @BiometricLockScope
         fun gateComponent(
             biometricLockUseCase: BiometricLockUseCase,
             biometricAuthenticator: BiometricAuthenticator,
