@@ -11,27 +11,15 @@ import com.hluhovskyi.zero.security.BiometricAuthenticator.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executor
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class AndroidBiometricAuthenticator(
+internal class AndroidBiometricAuthenticator(
     private val context: Context,
+    private val activity: FragmentActivity,
 ) : BiometricAuthenticator {
 
-    private val activityRef = AtomicReference<FragmentActivity?>(null)
-
-    fun register(activity: FragmentActivity) {
-        activityRef.set(activity)
-    }
-
-    fun unregister(activity: FragmentActivity) {
-        activityRef.compareAndSet(activity, null)
-    }
-
     override suspend fun authenticate(reason: AuthReason): Result {
-        val activity = activityRef.get() ?: return Result.Unavailable
-
         val biometricManager = BiometricManager.from(context)
         val authenticatorFlags = Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
         if (biometricManager.canAuthenticate(authenticatorFlags) != BiometricManager.BIOMETRIC_SUCCESS) {

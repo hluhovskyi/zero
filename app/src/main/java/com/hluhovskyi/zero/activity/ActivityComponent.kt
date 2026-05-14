@@ -37,16 +37,21 @@ import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.presets.PresetsComponent
 import androidx.fragment.app.FragmentActivity
+import com.hluhovskyi.zero.export.ExportWriter
+import com.hluhovskyi.zero.presets.PresetsComponent
+import com.hluhovskyi.zero.security.BiometricAuthenticator
 import com.hluhovskyi.zero.security.BiometricLockComponent
-import com.hluhovskyi.zero.security.BiometricLockGateComponent
+import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
+import com.hluhovskyi.zero.sync.SyncEngine
+import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -83,7 +88,9 @@ abstract class ActivityComponent :
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
-    TransactionFilterSheetComponent.Dependencies {
+    TransactionFilterSheetComponent.Dependencies,
+    SettingsComponent.Dependencies,
+    BiometricLockComponent.Dependencies {
 
     override val tag: String = TAG
 
@@ -92,6 +99,8 @@ abstract class ActivityComponent :
     override fun attach(): Closeable = attachActivityComponent.attach()
 
     interface Dependencies {
+
+        val context: android.content.Context
 
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
@@ -116,9 +125,13 @@ abstract class ActivityComponent :
         val configurationRepository: ConfigurationRepository
 
         val importComponentBuilder: ImportComponent.Builder
-        val settingsComponentBuilder: SettingsComponent.Builder
         val presetsComponent: PresetsComponent
-        val biometricLockComponent: BiometricLockComponent
+
+        // Required by SettingsComponent (which is built per-activity, see Module below).
+        val syncEngine: SyncEngine
+        val currentUserRepository: CurrentUserRepository
+        val serializer: SyncSerializer
+        val exportWriter: ExportWriter
     }
 
     companion object {
@@ -247,7 +260,38 @@ abstract class ActivityComponent :
         @ActivityScope
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
-        ): AttachActivityComponent = AttachActivityComponent(presetsComponent)
+            biometricLockComponent: BiometricLockComponent,
+        ): AttachActivityComponent = AttachActivityComponent(
+            presetsComponent = presetsComponent,
+            biometricLockComponent = biometricLockComponent,
+        )
+
+        @Provides
+        @ActivityScope
+        fun biometricLockComponent(
+            component: ActivityComponent,
+            activity: FragmentActivity,
+        ): BiometricLockComponent = BiometricLockComponent.builder(component)
+            .activity(activity)
+            .build()
+
+        @Provides
+        @ActivityScope
+        fun biometricLockUseCase(
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricLockUseCase = biometricLockComponent.biometricLockUseCase
+
+        @Provides
+        @ActivityScope
+        fun biometricAuthenticator(
+            biometricLockComponent: BiometricLockComponent,
+        ): BiometricAuthenticator = biometricLockComponent.biometricAuthenticator
+
+        @Provides
+        @ActivityScope
+        fun settingsComponentBuilder(
+            component: ActivityComponent,
+        ): SettingsComponent.Builder = SettingsComponent.builder(component)
     }
 }
 
@@ -258,10 +302,10 @@ internal object MainActivityModule {
     @ActivityScope
     fun viewProvider(
         screenComponent: MainActivityScreenComponent.Builder,
-        biometricLockGateComponent: BiometricLockGateComponent.Builder,
+        biometricLockComponent: BiometricLockComponent,
     ): ViewProvider = MainActivityViewProvider(
         screenComponent = screenComponent,
-        biometricLockGateComponent = biometricLockGateComponent,
+        biometricLockGateComponent = biometricLockComponent.gateComponent,
     )
 
     @Provides
@@ -275,12 +319,4 @@ internal object MainActivityModule {
     fun mainActivityScreenComponentBuilder(
         component: ActivityComponent,
     ): MainActivityScreenComponent.Builder = MainActivityScreenComponent.builder(component)
-
-    @Provides
-    @ActivityScope
-    fun biometricLockGateComponentBuilder(
-        biometricLockComponent: BiometricLockComponent,
-        activity: FragmentActivity,
-    ): BiometricLockGateComponent.Builder = biometricLockComponent.gateComponentBuilder
-        .activity(activity)
 }

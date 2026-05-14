@@ -51,10 +51,6 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
-import com.hluhovskyi.zero.security.BiometricAuthenticator
-import com.hluhovskyi.zero.security.BiometricLockComponent
-import com.hluhovskyi.zero.security.BiometricLockUseCase
-import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
@@ -81,9 +77,7 @@ abstract class ApplicationComponent :
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
-    SettingsComponent.Dependencies,
-    ImportComponent.Dependencies,
-    BiometricLockComponent.Dependencies {
+    ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val logger: Logger
@@ -351,30 +345,6 @@ abstract class ApplicationComponent :
             return ImportComponent.builder(component)
                 .parsers(parsers)
         }
-
-        @Provides
-        @ApplicationScope
-        fun settingsComponentBuilder(
-            component: ApplicationComponent,
-        ): SettingsComponent.Builder = SettingsComponent.builder(component)
-
-        @Provides
-        @ApplicationScope
-        fun biometricLockComponent(
-            component: ApplicationComponent,
-        ): BiometricLockComponent = BiometricLockComponent.builder(component).build()
-
-        @Provides
-        @ApplicationScope
-        fun biometricLockUseCase(
-            biometricLockComponent: BiometricLockComponent,
-        ): BiometricLockUseCase = biometricLockComponent.biometricLockUseCase
-
-        @Provides
-        @ApplicationScope
-        fun biometricAuthenticator(
-            biometricLockComponent: BiometricLockComponent,
-        ): BiometricAuthenticator = biometricLockComponent.biometricAuthenticator
 
         @Provides
         fun activityComponentBuilder(
