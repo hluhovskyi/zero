@@ -78,16 +78,15 @@ plugins {
     id 'com.google.devtools.ksp' version '2.3.6' apply false
 }
 
-// Run only modules that have unit tests, skipping :app:, :zero-ui:, :zero-image-loading: whose
-// KSP/compilation would otherwise run for nothing.
+// Run unit tests only for modules that actually have test sources.
+// Skips modules like :app: whose KSP/compilation would otherwise run for nothing.
+// Automatically picks up any module that gains tests in the future.
 tasks.register("testAll") {
-    dependsOn(
-        ":zero-core:testDebugUnitTest",
-        ":zero-database:testDebugUnitTest",
-        ":zero-remote:testDebugUnitTest",
-        ":zero-sync:test",
-        ":lint-rules:test"
-    )
+    group = "verification"
+    description = "Runs unit tests for every module that has a src/test directory."
+    subprojects.findAll { sub -> sub.file("src/test").exists() }.each { sub ->
+        dependsOn("${sub.path}:test")
+    }
 }
 
 spotless {
