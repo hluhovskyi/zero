@@ -53,6 +53,7 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
@@ -79,6 +80,7 @@ abstract class ApplicationComponent :
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
+    SettingsComponent.Dependencies,
     ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
@@ -359,6 +361,11 @@ abstract class ApplicationComponent :
             return ImportComponent.builder(component)
                 .parsers(parsers)
         }
+
+        @Provides
+        fun settingsComponentBuilder(
+            component: ApplicationComponent,
+        ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
         fun activityComponentBuilder(

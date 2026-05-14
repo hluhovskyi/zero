@@ -41,8 +41,6 @@ abstract class SettingsComponent : AttachableViewComponent {
         val currentUserRepository: CurrentUserRepository
         val serializer: SyncSerializer
         val exportWriter: ExportWriter
-        val biometricLockUseCase: BiometricLockUseCase
-        val biometricAuthenticator: BiometricAuthenticator
     }
 
     companion object {
@@ -61,6 +59,12 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun settingsCurrencyUseCase(useCase: SettingsCurrencyUseCase): Builder
+
+        @BindsInstance
+        fun biometricLockUseCase(useCase: BiometricLockUseCase): Builder
+
+        @BindsInstance
+        fun biometricAuthenticator(authenticator: BiometricAuthenticator): Builder
     }
 
     @dagger.Module

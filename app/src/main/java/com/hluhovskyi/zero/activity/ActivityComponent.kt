@@ -19,6 +19,7 @@ import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
+import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
@@ -41,20 +42,16 @@ import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import androidx.fragment.app.FragmentActivity
-import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.security.BiometricAuthenticator
 import com.hluhovskyi.zero.security.BiometricLockComponent
 import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
-import com.hluhovskyi.zero.sync.SyncEngine
-import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
-import com.hluhovskyi.zero.users.CurrentUserRepository
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -92,12 +89,11 @@ abstract class ActivityComponent :
     IconPickerComponent.Dependencies,
     ColorPickerComponent.Dependencies,
     TransactionFilterSheetComponent.Dependencies,
-    SettingsComponent.Dependencies,
     BiometricLockComponent.Dependencies {
 
     override val tag: String = TAG
 
-    protected abstract val attachActivityComponent: AttachActivityComponent
+    protected abstract val attachActivityComponent: Attachable
 
     override fun attach(): Closeable = attachActivityComponent.attach()
 
@@ -128,16 +124,11 @@ abstract class ActivityComponent :
         val configurationRepository: ConfigurationRepository
 
         val importComponentBuilder: ImportComponent.Builder
+        val settingsComponentBuilder: SettingsComponent.Builder
         val presetsComponent: PresetsComponent
 
         val feedbackService: FeedbackService
         val deviceInfo: DeviceInfo
-
-        // Required by SettingsComponent (which is built per-activity, see Module below).
-        val syncEngine: SyncEngine
-        val currentUserRepository: CurrentUserRepository
-        val serializer: SyncSerializer
-        val exportWriter: ExportWriter
     }
 
     companion object {
@@ -266,7 +257,7 @@ abstract class ActivityComponent :
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
             biometricLockComponent: BiometricLockComponent,
-        ): AttachActivityComponent = AttachActivityComponent(
+        ): Attachable = AttachActivityComponent(
             presetsComponent = presetsComponent,
             biometricLockComponent = biometricLockComponent,
         )
@@ -291,12 +282,6 @@ abstract class ActivityComponent :
         fun biometricAuthenticator(
             biometricLockComponent: BiometricLockComponent,
         ): BiometricAuthenticator = biometricLockComponent.biometricAuthenticator
-
-        @Provides
-        @ActivityScope
-        fun settingsComponentBuilder(
-            component: ActivityComponent,
-        ): SettingsComponent.Builder = SettingsComponent.builder(component)
     }
 }
 

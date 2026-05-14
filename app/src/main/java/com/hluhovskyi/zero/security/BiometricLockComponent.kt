@@ -23,7 +23,7 @@ abstract class BiometricLockComponent : Attachable {
 
     abstract val biometricLockUseCase: BiometricLockUseCase
     abstract val biometricAuthenticator: BiometricAuthenticator
-    abstract val gateComponent: BiometricLockGateComponent
+    abstract val gateComponent: BiometricLockGateComponent.Builder
 
     protected abstract val lifecycleObserver: Attachable
 
@@ -83,11 +83,11 @@ abstract class BiometricLockComponent : Attachable {
         fun gateComponent(
             biometricLockUseCase: BiometricLockUseCase,
             biometricAuthenticator: BiometricAuthenticator,
-        ): BiometricLockGateComponent = BiometricLockGateComponent.builder(
+        ): BiometricLockGateComponent.Builder = BiometricLockGateComponent.builder(
             object : BiometricLockGateComponent.Dependencies {
                 override val biometricLockUseCase = biometricLockUseCase
                 override val biometricAuthenticator = biometricAuthenticator
             },
-        ).build()
+        )
     }
 }
