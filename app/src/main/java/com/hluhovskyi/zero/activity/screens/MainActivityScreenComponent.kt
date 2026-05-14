@@ -3,9 +3,7 @@ package com.hluhovskyi.zero.activity.screens
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
-import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
-import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditCurrencyUseCase
@@ -25,7 +23,6 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
-import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -34,34 +31,24 @@ import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditIconUseCase
 import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
-import com.hluhovskyi.zero.colors.ColorRepository
-import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.logging
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
-import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
 import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.TransactionComponent
-import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
@@ -81,6 +68,28 @@ private annotation class MainActivityScreenScope
 
 private const val TAG = "MainActivityScreenComponent"
 
+private fun TransactionComponent.Builder.withDuplicateNavigation(
+    navigator: Navigator,
+): TransactionComponent.Builder = onDuplicateTransactionHandler { transactionId ->
+    navigator.navigateTo(
+        Destinations.Transaction.Item.Duplicate,
+        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+    )
+}
+
+private fun TransactionEditComponent.Builder.applyCommonBindings(
+    navigator: Navigator,
+    transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+    transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+    logger: Logger,
+): Buildable<out AttachableViewComponent> = this
+    .onTransactionSavedHandler { navigator.back() }
+    .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+    .onDiscardHandler { navigator.back() }
+    .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
+    .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
+    .logging(logger)
+
 /**
  * Component which is responsible for screens rendering, navigation and communication between ones.
  * All business-logic dependencies of screens should be satisfied before providing to this component.
@@ -90,11 +99,7 @@ private const val TAG = "MainActivityScreenComponent"
     dependencies = [MainActivityScreenComponent.Dependencies::class],
     modules = [MainActivityScreenComponent.Module::class],
 )
-internal abstract class MainActivityScreenComponent :
-    AttachableViewComponent,
-    TransactionComponent.Dependencies,
-    AccountDetailComponent.Dependencies,
-    CategoryDetailComponent.Dependencies {
+internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
     override val tag: String = TAG
     override fun attach(): Closeable = Closeables.empty()
@@ -104,35 +109,22 @@ internal abstract class MainActivityScreenComponent :
         val logger: Logger
         val incorrectStateDetector: IncorrectStateDetector
 
-        val imageLoader: ImageLoader
-        val amountFormatter: AmountFormatter
-        val dateFormatter: DateFormatter
-        val clock: Clock
-        val zoneProvider: ZoneProvider
-
-        val transactionRepository: TransactionRepository
-        val accountRepository: AccountRepository
-        val currencyRepository: CurrencyRepository
-        val iconRepository: IconRepository
-        val colorRepository: ColorRepository
-
-        val categoriesQueryUseCase: CategoriesQueryUseCase
-        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
-        val currencyConvertUseCase: CurrencyConvertUseCase
-
         val bottomBarComponentBuilder: BottomBarComponent.Builder
 
         val homeComponentBuilder: HomeComponent.Builder
         val welcomeComponentBuilder: WelcomeComponent.Builder
+        val transactionComponentBuilder: TransactionComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
         val categoryComponentBuilder: CategoryComponent.Builder
+        val categoryDetailComponentBuilder: CategoryDetailComponent.Builder
         val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
 
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
+        val accountDetailComponentBuilder: AccountDetailComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -166,30 +158,6 @@ internal abstract class MainActivityScreenComponent :
 
     @dagger.Module
     object Module {
-
-        @Provides
-        fun transactionComponentBuilder(
-            component: MainActivityScreenComponent,
-            navigator: Navigator,
-        ): TransactionComponent.Builder = TransactionComponent.builder(component)
-            .onDuplicateTransactionHandler { transactionId ->
-                navigator.navigateTo(
-                    Destinations.Transaction.Item.Duplicate,
-                    Destinations.Transaction.Item.TransactionId.withValue(transactionId),
-                )
-            }
-
-        @Provides
-        @MainActivityScreenScope
-        fun accountDetailComponentBuilder(
-            component: MainActivityScreenComponent,
-        ): AccountDetailComponent.Builder = AccountDetailComponent.builder(component)
-
-        @Provides
-        @MainActivityScreenScope
-        fun categoryDetailComponentBuilder(
-            component: MainActivityScreenComponent,
-        ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
 
         @Provides
         @MainActivityScreenScope
@@ -308,6 +276,7 @@ internal abstract class MainActivityScreenComponent :
                                 )
                             }
                             .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
+                            .withDuplicateNavigation(navigator)
                             .transactionFilterUseCase(transactionFilterUseCase)
                             .displayConfig(DisplayConfig(showFab = true)),
                     )
@@ -376,12 +345,7 @@ internal abstract class MainActivityScreenComponent :
             componentBuilder
                 .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
                 .preSelectedAccountId(arguments.getValue(Destinations.Transaction.Edit.SelectedAccountId))
-                .onTransactionSavedHandler { navigator.back() }
-                .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
-                .onDiscardHandler { navigator.back() }
-                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
-                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
-                .logging(logger)
+                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
         }
 
         @Provides
@@ -396,9 +360,6 @@ internal abstract class MainActivityScreenComponent :
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
             componentBuilder
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
-                .onTransactionSavedHandler { navigator.back() }
-                .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
-                .onDiscardHandler { navigator.back() }
                 .onDuplicateHandler { transactionId ->
                     navigator.back()
                     navigator.navigateTo(
@@ -406,9 +367,7 @@ internal abstract class MainActivityScreenComponent :
                         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                     )
                 }
-                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
-                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
-                .logging(logger)
+                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
         }
 
         @Provides
@@ -423,12 +382,7 @@ internal abstract class MainActivityScreenComponent :
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Duplicate) {
             componentBuilder
                 .duplicateFromTransactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
-                .onTransactionSavedHandler { navigator.back() }
-                .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
-                .onDiscardHandler { navigator.back() }
-                .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
-                .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
-                .logging(logger)
+                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
         }
 
         @Provides
@@ -502,12 +456,14 @@ internal abstract class MainActivityScreenComponent :
         @MainActivityScreenScope
         fun categoryDetailNavigationEntry(
             componentBuilder: CategoryDetailComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
             val categoryId = arguments.getValue(Destinations.Category.Item.CategoryId)
             componentBuilder
                 .categoryId(categoryId)
+                .transactionComponentBuilder(transactionComponentBuilder.withDuplicateNavigation(navigator))
                 .onBackHandler { navigator.back() }
                 .onEditHandler {
                     navigator.navigateTo(
@@ -621,12 +577,14 @@ internal abstract class MainActivityScreenComponent :
         @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Detail) {
             val accountId = arguments.getValue(Destinations.Account.Item.AccountId)
             componentBuilder
                 .accountId(accountId)
+                .transactionComponentBuilder(transactionComponentBuilder.withDuplicateNavigation(navigator))
                 .onBackHandler { navigator.back() }
                 .onEditHandler {
                     navigator.navigateTo(

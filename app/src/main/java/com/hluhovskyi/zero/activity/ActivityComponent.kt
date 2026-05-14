@@ -4,12 +4,14 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
+import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
+import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
 import com.hluhovskyi.zero.categories.edit.CategoryEditComponent
 import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
@@ -37,6 +39,7 @@ import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
+import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
@@ -64,12 +67,15 @@ abstract class ActivityComponent :
     MainActivityScreenComponent.Dependencies,
     AccountComponent.Dependencies,
     AccountEditComponent.Dependencies,
+    AccountDetailComponent.Dependencies,
     CategoryComponent.Dependencies,
+    CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
     CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
+    TransactionComponent.Dependencies,
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
@@ -150,6 +156,12 @@ abstract class ActivityComponent :
 
         @Provides
         @ActivityScope
+        fun accountDetailComponentBuilder(
+            component: ActivityComponent,
+        ): AccountDetailComponent.Builder = AccountDetailComponent.builder(component)
+
+        @Provides
+        @ActivityScope
         fun categoryComponentBuilder(
             component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
@@ -178,6 +190,11 @@ abstract class ActivityComponent :
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)
 
         @Provides
+        fun transactionComponentBuilder(
+            component: ActivityComponent,
+        ): TransactionComponent.Builder = TransactionComponent.builder(component)
+
+        @Provides
         fun welcomeComponentBuilder(
             component: ActivityComponent,
         ): WelcomeComponent.Builder = WelcomeComponent.builder(component)
@@ -187,6 +204,12 @@ abstract class ActivityComponent :
         fun homeComponentBuilder(
             component: ActivityComponent,
         ): HomeComponent.Builder = HomeComponent.builder(component)
+
+        @Provides
+        @ActivityScope
+        fun categoryDetailComponentBuilder(
+            component: ActivityComponent,
+        ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
 
         @Provides
         @ActivityScope

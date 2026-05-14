@@ -44,7 +44,6 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
-        val transactionComponentBuilder: TransactionComponent.Builder
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val categoriesQueryUseCase: CategoriesQueryUseCase
@@ -70,6 +69,9 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun categoryId(id: Id.Known): Builder
+
+        @BindsInstance
+        fun transactionComponentBuilder(builder: TransactionComponent.Builder): Builder
 
         @BindsInstance
         fun onEditHandler(handler: OnCategoryDetailEditHandler): Builder
