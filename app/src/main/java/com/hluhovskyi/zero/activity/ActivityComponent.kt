@@ -13,6 +13,7 @@ import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
+import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -80,6 +81,7 @@ abstract class ActivityComponent :
     AccountEditComponent.Dependencies,
     AccountDetailComponent.Dependencies,
     BudgetComponent.Dependencies,
+    BudgetEditComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
@@ -189,6 +191,11 @@ abstract class ActivityComponent :
         fun budgetComponentBuilder(
             component: ActivityComponent,
         ): BudgetComponent.Builder = BudgetComponent.builder(component)
+
+        @Provides
+        fun budgetEditComponentBuilder(
+            component: ActivityComponent,
+        ): BudgetEditComponent.Builder = BudgetEditComponent.builder(component)
 
         @Provides
         fun categoryPickerComponentBuilder(

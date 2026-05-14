@@ -15,6 +15,7 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetQueryUseCase: BudgetQueryUseCase,
     private val periodResolver: PeriodResolver,
+    private val onCategoryTappedHandler: OnCategoryTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
@@ -30,8 +31,12 @@ internal class DefaultBudgetViewModel(
             BudgetViewModel.Action.SelectNewerMonth -> monthOffset.update { it + 1 }
             BudgetViewModel.Action.TapCreateBudget -> Unit
             BudgetViewModel.Action.TapCopyFromPrevious -> Unit
-            is BudgetViewModel.Action.TapUnsetCategory -> Unit
-            is BudgetViewModel.Action.TapSetCategory -> Unit
+            is BudgetViewModel.Action.TapCategory -> scope.launch {
+                val offset = monthOffset.value
+                val today = periodResolver.today()
+                val (currentStart, currentEnd) = periodResolver.monthOffsetFrom(today, offset)
+                onCategoryTappedHandler.onTap(action.categoryId, currentStart, currentEnd)
+            }
         }
     }
 

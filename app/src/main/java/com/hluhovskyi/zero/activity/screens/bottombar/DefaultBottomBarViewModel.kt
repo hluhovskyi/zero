@@ -88,7 +88,7 @@ internal class DefaultBottomBarViewModel(
                     homeId -> Destinations.Home
                     categoriesId -> Destinations.Category.All
                     accountsId -> Destinations.Account.All
-                    budgetId -> Destinations.Budget
+                    budgetId -> Destinations.Budget.All
                     settingsId -> Destinations.Settings
                     else -> null
                 }
@@ -131,7 +131,7 @@ internal class DefaultBottomBarViewModel(
         Destinations.Home.route -> homeId
         Destinations.Category.All.route -> categoriesId
         Destinations.Account.All.route -> accountsId
-        Destinations.Budget.route -> budgetId
+        Destinations.Budget.All.route -> budgetId
         Destinations.Settings.route -> settingsId
         else -> Id.Unknown
     }

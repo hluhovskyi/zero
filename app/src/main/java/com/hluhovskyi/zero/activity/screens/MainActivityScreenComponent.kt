@@ -25,6 +25,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
+import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -35,6 +36,7 @@ import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
+import kotlinx.datetime.LocalDate
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
@@ -130,6 +132,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val accountDetailComponentBuilder: AccountDetailComponent.Builder
 
         val budgetComponentBuilder: BudgetComponent.Builder
+        val budgetEditComponentBuilder: BudgetEditComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -521,10 +524,41 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(
-            destination = Destinations.Budget,
+            destination = Destinations.Budget.All,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
-            AccountsScreen(component = componentBuilder.logging(logger))
+            AccountsScreen(
+                component = componentBuilder
+                    .onCategoryTappedHandler { categoryId, start, end ->
+                        navigator.navigateTo(
+                            Destinations.Budget.Edit,
+                            Destinations.Budget.Edit.CategoryId.withValue(categoryId),
+                            Destinations.Budget.Edit.PeriodStart.withValue(start.toString()),
+                            Destinations.Budget.Edit.PeriodEnd.withValue(end.toString()),
+                        )
+                    }
+                    .logging(logger),
+            )
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun budgetEditNavigationEntry(
+            componentBuilder: BudgetEditComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Budget.Edit,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            componentBuilder
+                .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
+                .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)))
+                .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)))
+                .onBudgetSavedHandler { _, _ -> navigator.back() }
+                .onBackHandler { navigator.back() }
+                .logging(logger)
         }
 
         @Provides

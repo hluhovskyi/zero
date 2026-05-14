@@ -72,7 +72,17 @@ internal object Destinations {
     }
 
     object Home : Destination by destinationOf("home")
-    object Budget : Destination by destinationOf("budget")
+
+    sealed interface Budget : Destination {
+        object All : Budget, Destination by destinationOf("budget")
+
+        object Edit : Budget, Destination by destinationOf("budget/edit", CategoryId, PeriodStart, PeriodEnd) {
+            object CategoryId : Argument<Id.Known> by idKnownValueOf("categoryId")
+            object PeriodStart : Argument<String> by stringValueOf("periodStart")
+            object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
+        }
+    }
+
     object Settings : Destination by destinationOf("settings")
     object Import : Destination by destinationOf("import")
     object Feedback : Destination by destinationOf("feedback")
