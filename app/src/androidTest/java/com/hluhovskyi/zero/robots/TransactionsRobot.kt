@@ -29,7 +29,7 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
             composeRule.onAllNodesWithText(amount, substring = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText(amount, substring = true).assertIsDisplayed()
+        composeRule.onAllNodesWithText(amount, substring = true)[0].assertIsDisplayed()
         return this
     }
 }

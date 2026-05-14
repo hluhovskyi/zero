@@ -24,7 +24,7 @@ class DatabaseTestBridge(
 ) : TestBridge {
 
     override suspend fun clearData() {
-        cleanupJob.clearAllTables()
+        cleanupJob.clearExceptUser()
     }
 
     override suspend fun seedDefaultSetup() {
