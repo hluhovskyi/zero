@@ -1,0 +1,84 @@
+package com.hluhovskyi.zero.ui.budget
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ui.theme.OutlineVariant
+import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+
+private val KEYS = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫")
+
+internal fun handleNumPadKey(value: String, key: String): String = when {
+    key == "⌫" -> if (value.length <= 1) "0" else value.dropLast(1)
+    key == "." -> if (value.contains(".")) value else "$value."
+    else -> {
+        if (value == "0") {
+            key
+        } else {
+            val dotIndex = value.indexOf('.')
+            if (dotIndex >= 0 && value.length - dotIndex - 1 >= 2) {
+                value
+            } else {
+                "$value$key"
+            }
+        }
+    }
+}
+
+@Composable
+fun NumPad(
+    value: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        KEYS.chunked(3).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                row.forEach { key ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .clickable { onChange(handleNumPadKey(value, key)) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (key == "⌫") {
+                            Icon(
+                                imageVector = Icons.Filled.Backspace,
+                                contentDescription = "Delete",
+                                tint = OutlineVariant,
+                            )
+                        } else {
+                            Text(
+                                text = key,
+                                style = TextStyle(
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PrimaryContainer,
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
