@@ -60,11 +60,23 @@ import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
 import java.io.Closeable
+import javax.inject.Provider
+import javax.inject.Qualifier
 import javax.inject.Scope
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class MainActivityScreenScope
+
+/**
+ * Tags a [TransactionEditComponent.Builder] that has the navigation-shared bindings (save/discard/
+ * edit-categories handlers + edit-category/currency use cases) pre-applied. Inject as
+ * `Provider<@WithCommonBindings TransactionEditComponent.Builder>` so each navigation gets a
+ * fresh, pre-configured Builder.
+ */
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class WithCommonBindings
 
 private const val TAG = "MainActivityScreenComponent"
 
@@ -76,19 +88,6 @@ private fun TransactionComponent.Builder.withDuplicateNavigation(
         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
     )
 }
-
-private fun TransactionEditComponent.Builder.applyCommonBindings(
-    navigator: Navigator,
-    transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
-    transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
-    logger: Logger,
-): Buildable<out AttachableViewComponent> = this
-    .onTransactionSavedHandler { navigator.back() }
-    .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
-    .onDiscardHandler { navigator.back() }
-    .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
-    .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
-    .logging(logger)
 
 /**
  * Component which is responsible for screens rendering, navigation and communication between ones.
@@ -158,6 +157,20 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
     @dagger.Module
     object Module {
+
+        @Provides
+        @WithCommonBindings
+        fun transactionEditComponentBuilderWithCommonBindings(
+            builder: TransactionEditComponent.Builder,
+            navigator: Navigator,
+            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
+            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+        ): TransactionEditComponent.Builder = builder
+            .onTransactionSavedHandler { navigator.back() }
+            .onEditCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+            .onDiscardHandler { navigator.back() }
+            .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
+            .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
 
         @Provides
         @MainActivityScreenScope
@@ -333,32 +346,28 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
-            componentBuilder: TransactionEditComponent.Builder,
-            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
-            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Transaction.Edit,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
-            componentBuilder
+            componentBuilderProvider.get()
                 .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
                 .preSelectedAccountId(arguments.getValue(Destinations.Transaction.Edit.SelectedAccountId))
-                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
+                .logging(logger)
         }
 
         @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemEditNavigationEntry(
-            componentBuilder: TransactionEditComponent.Builder,
-            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
-            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
-            componentBuilder
+            componentBuilderProvider.get()
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .onDuplicateHandler { transactionId ->
                     navigator.back()
@@ -367,22 +376,20 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                         Destinations.Transaction.Item.TransactionId.withValue(transactionId),
                     )
                 }
-                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
+                .logging(logger)
         }
 
         @Provides
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemDuplicateNavigationEntry(
-            componentBuilder: TransactionEditComponent.Builder,
-            transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
-            transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
+            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Duplicate) {
-            componentBuilder
+            componentBuilderProvider.get()
                 .duplicateFromTransactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
-                .applyCommonBindings(navigator, transactionEditCategoryUseCase, transactionEditCurrencyUseCase, logger)
+                .logging(logger)
         }
 
         @Provides
