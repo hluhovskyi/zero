@@ -134,9 +134,10 @@ private fun BudgetEditSheet(
                     color = OnSurface,
                 ),
             )
-            if (state.previousPeriodAmount != null) {
+            val prevAmount = state.previousPeriodAmount
+            if (prevAmount != null) {
                 PreviousChip(
-                    amount = state.previousPeriodAmount,
+                    amount = prevAmount,
                     selected = state.isPreviousSelected,
                     amountFormatter = amountFormatter,
                     onClick = { viewModel.perform(BudgetEditViewModel.Action.TapPreviousChip) },
