@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.activity
 
 import android.content.Context
+import androidx.fragment.app.FragmentActivity
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
@@ -41,7 +42,6 @@ import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import androidx.fragment.app.FragmentActivity
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.security.BiometricAuthenticator
 import com.hluhovskyi.zero.security.BiometricLockComponent
