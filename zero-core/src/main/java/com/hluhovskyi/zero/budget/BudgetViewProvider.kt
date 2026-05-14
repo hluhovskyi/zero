@@ -31,12 +31,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Id
@@ -107,7 +109,7 @@ private fun BudgetView(
                     )
                 }
             }
-            item { SectionLabel("Set spending limits") }
+            item { SectionLabel(stringResource(R.string.budget_section_set_limits)) }
             items(state.budgeted, key = { it.categoryId.value }) { row ->
                 UnsetCategoryRow(
                     name = row.categoryName,
@@ -130,7 +132,7 @@ private fun BudgetTitle() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Budget",
+            text = stringResource(R.string.budget_title),
             style = TextStyle(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -157,7 +159,7 @@ private fun BudgetMonthSelector(
     ) {
         Icon(
             imageVector = Icons.Filled.ChevronLeft,
-            contentDescription = "Previous month",
+            contentDescription = stringResource(R.string.budget_previous_month_cd),
             modifier = Modifier
                 .size(24.dp)
                 .clickable(enabled = hasOlder, onClick = onOlder),
@@ -175,7 +177,7 @@ private fun BudgetMonthSelector(
         Spacer(Modifier.width(16.dp))
         Icon(
             imageVector = Icons.Filled.ChevronRight,
-            contentDescription = "Next month",
+            contentDescription = stringResource(R.string.budget_next_month_cd),
             modifier = Modifier
                 .size(24.dp)
                 .clickable(enabled = hasNewer, onClick = onNewer),
@@ -200,7 +202,7 @@ private fun EmptyBudgetCallout(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
-            text = "No budget for $periodLabel".trim(),
+            text = stringResource(R.string.budget_empty_title, periodLabel),
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -208,7 +210,7 @@ private fun EmptyBudgetCallout(
             ),
         )
         Text(
-            text = "Set per-category limits to track this month's spending.",
+            text = stringResource(R.string.budget_empty_subtitle),
             style = TextStyle(
                 fontSize = 13.sp,
                 color = OnPrimaryContainer,
@@ -219,11 +221,15 @@ private fun EmptyBudgetCallout(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            CalloutStat(label = "Categories", value = totalCategories.toString())
-            CalloutStat(label = "Budgets set", value = "0")
+            CalloutStat(label = stringResource(R.string.budget_stat_categories), value = totalCategories.toString())
+            CalloutStat(label = stringResource(R.string.budget_stat_budgets_set), value = "0")
             CalloutStat(
-                label = "Last month",
-                value = if (previousPeriodHadBudgets) "set" else "none",
+                label = stringResource(R.string.budget_stat_last_month),
+                value = if (previousPeriodHadBudgets) {
+                    stringResource(R.string.budget_stat_last_month_set)
+                } else {
+                    stringResource(R.string.budget_stat_last_month_none)
+                },
             )
         }
         Spacer(Modifier.height(4.dp))
@@ -236,7 +242,7 @@ private fun EmptyBudgetCallout(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Create budget",
+                text = stringResource(R.string.budget_create),
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -288,7 +294,7 @@ private fun CopyFromPreviousCard(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Copy from $monthLabel".trim(),
+                text = stringResource(R.string.budget_copy_from_previous, monthLabel),
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -296,7 +302,7 @@ private fun CopyFromPreviousCard(
                 ),
             )
             Text(
-                text = "$count budgets last month",
+                text = stringResource(R.string.budget_copy_count, count),
                 style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
             )
         }
@@ -378,7 +384,7 @@ private fun UnsetCategoryRow(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
             Text(
-                text = "Set limit",
+                text = stringResource(R.string.budget_set_limit),
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
