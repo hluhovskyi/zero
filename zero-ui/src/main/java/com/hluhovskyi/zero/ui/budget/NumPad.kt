@@ -18,6 +18,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.hluhovskyi.zero.ui.R
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 
@@ -63,7 +65,7 @@ fun NumPad(
                         if (key == "⌫") {
                             Icon(
                                 imageVector = Icons.Filled.Backspace,
-                                contentDescription = "Delete",
+                                contentDescription = stringResource(R.string.numpad_backspace_cd),
                                 tint = OutlineVariant,
                             )
                         } else {
