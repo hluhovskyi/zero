@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -38,19 +38,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - if: steps.changes.outputs.runtime == 'true'
-        name: Run spotless check
-        run: ./gradlew spotlessCheck
-
-      - if: steps.changes.outputs.runtime == 'true'
-        name: Run unit tests
-        run: ./gradlew testAll
-
-      - if: steps.changes.outputs.runtime == 'true'
-        name: Run lint
-        run: ./gradlew lintDebug
+        name: Run spotless, tests, lint
+        run: ./gradlew spotlessCheck testAll lintDebug
 
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: '**/build/reports/tests/'
+          path: '**/build/reports/'
