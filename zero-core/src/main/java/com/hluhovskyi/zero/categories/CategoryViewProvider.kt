@@ -24,7 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -46,7 +50,6 @@ import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 
 private val CATEGORY_TABS = listOf(CategoryType.EXPENSE, CategoryType.INCOME)
 
@@ -141,6 +144,12 @@ private fun CategoryPage(
     val inactive = remember(categories) {
         categories.filter { it.spending is CategoryViewModel.Spending.None }
     }
+    val maxTotal = remember(active) {
+        active.fold(Amount.zero()) { acc, cat ->
+            val spending = cat.spending as CategoryViewModel.Spending.Active
+            if (spending.totalAmount > acc) spending.totalAmount else acc
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -148,8 +157,8 @@ private fun CategoryPage(
     ) {
         items(active, key = { it.id.value }) { category ->
             val spending = category.spending as CategoryViewModel.Spending.Active
-            val barFraction = if (grandTotal > 0L) {
-                (spending.totalAmount / grandTotal).toFloat().coerceIn(0f, 1f)
+            val maxFraction = if (maxTotal > 0L) {
+                (spending.totalAmount / maxTotal).toFloat().coerceIn(0f, 1f)
             } else {
                 0f
             }
@@ -163,9 +172,8 @@ private fun CategoryPage(
                 category = category,
                 spending = spending,
                 formattedTotal = amountFormatter.format(spending.totalAmount, currencySymbol),
-                barFraction = barFraction,
+                maxFraction = maxFraction,
                 percentOfTotal = percentOfTotal,
-                barColor = category.colorScheme.toUi().primary,
                 onClick = { onCategoryClick(category) },
                 imageLoader = imageLoader,
             )
@@ -205,22 +213,42 @@ private fun ActiveCategoryCard(
     category: CategoryViewModel.CategoryItem,
     spending: CategoryViewModel.Spending.Active,
     formattedTotal: String,
-    barFraction: Float,
+    maxFraction: Float,
     percentOfTotal: Int,
-    barColor: Color,
     onClick: () -> Unit,
     imageLoader: ImageLoader,
 ) {
-    Column(
+    val colorScheme = category.colorScheme.toUi()
+    val categoryBg = colorScheme.background
+    val tintedBg = lerp(Color.White, categoryBg, 0.45f)
+    val gradientBrush = remember(maxFraction, categoryBg) {
+        if (maxFraction > 0f) {
+            Brush.horizontalGradient(
+                colorStops = arrayOf(
+                    0f to tintedBg,
+                    maxFraction to tintedBg,
+                    maxFraction to Color.White,
+                    1f to Color.White,
+                )
+            )
+        } else {
+            SolidColor(Color.White)
+        }
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(SurfaceContainerLowest, shape = RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp),
+            .clip(RoundedCornerShape(16.dp))
+            .background(gradientBrush)
+            .clickable(onClick = onClick),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CategoryIconView(colorScheme = category.colorScheme.toUi(), size = 40.dp) { tint ->
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CategoryIconView(colorScheme = colorScheme, size = 40.dp) { tint ->
                 imageLoader.View(
                     image = category.icon,
                     modifier = Modifier
@@ -271,11 +299,22 @@ private fun ActiveCategoryCard(
                 }
             }
         }
-        SpendingBar(
-            fraction = barFraction,
-            color = barColor,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+
+        // Bottom progress bar — track covers full width, fill shows relative spending vs max category
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(SurfaceContainer)
+                .align(Alignment.BottomStart),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(maxFraction)
+                    .height(3.dp)
+                    .background(categoryBg),
+            )
+        }
     }
 }
 
@@ -289,7 +328,7 @@ private fun InactiveCategoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(SurfaceContainerLowest, shape = RoundedCornerShape(16.dp))
+            .background(Color.White, shape = RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -322,27 +361,6 @@ private fun InactiveCategoryCard(
                 fontWeight = FontWeight.Medium,
                 color = Outline,
             ),
-        )
-    }
-}
-
-@Composable
-private fun SpendingBar(
-    fraction: Float,
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(4.dp)
-            .background(SurfaceContainer, shape = RoundedCornerShape(2.dp)),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(fraction)
-                .height(4.dp)
-                .background(color.copy(alpha = 0.75f), shape = RoundedCornerShape(2.dp)),
         )
     }
 }
