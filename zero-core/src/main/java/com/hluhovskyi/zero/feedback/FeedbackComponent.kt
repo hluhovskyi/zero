@@ -25,8 +25,8 @@ abstract class FeedbackComponent : Attachable {
 
     abstract val sheetComponentProvider: Provider<FeedbackSheetComponent>
 
-    protected abstract val inMemoryBreadcrumbs: InMemoryBreadcrumbs
-    protected abstract val shakeDetector: ShakeDetector
+    internal abstract val inMemoryBreadcrumbs: InMemoryBreadcrumbs
+    internal abstract val shakeDetector: ShakeDetector
 
     override fun attach(): Closeable = Closeables.merge(
         inMemoryBreadcrumbs.attach(),
@@ -74,7 +74,7 @@ abstract class FeedbackComponent : Attachable {
 
         @Provides
         @FeedbackScope
-        fun shakeDetector(
+        internal fun shakeDetector(
             context: Context,
             onShakeDetected: () -> Unit,
         ): ShakeDetector = ShakeDetector(
