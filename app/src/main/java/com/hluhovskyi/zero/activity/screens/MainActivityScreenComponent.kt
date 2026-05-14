@@ -60,7 +60,6 @@ import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
 import java.io.Closeable
-import javax.inject.Provider
 import javax.inject.Qualifier
 import javax.inject.Scope
 
@@ -69,25 +68,22 @@ import javax.inject.Scope
 private annotation class MainActivityScreenScope
 
 /**
- * Tags a [TransactionEditComponent.Builder] that has the navigation-shared bindings (save/discard/
- * edit-categories handlers + edit-category/currency use cases) pre-applied. Inject as
- * `Provider<@WithCommonBindings TransactionEditComponent.Builder>` so each navigation gets a
- * fresh, pre-configured Builder.
+ * Tags a [TransactionEditComponent.Builder] with the navigation-shared bindings pre-applied
+ * (save/discard/edit-categories handlers + edit-category/currency use cases).
  */
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
 private annotation class WithCommonBindings
 
-private const val TAG = "MainActivityScreenComponent"
+/**
+ * Tags a [TransactionComponent.Builder] with the duplicate handler pre-applied — tapping
+ * "Duplicate" in any transaction list navigates to the Duplicate destination.
+ */
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class WithDuplicateNavigation
 
-private fun TransactionComponent.Builder.withDuplicateNavigation(
-    navigator: Navigator,
-): TransactionComponent.Builder = onDuplicateTransactionHandler { transactionId ->
-    navigator.navigateTo(
-        Destinations.Transaction.Item.Duplicate,
-        Destinations.Transaction.Item.TransactionId.withValue(transactionId),
-    )
-}
+private const val TAG = "MainActivityScreenComponent"
 
 /**
  * Component which is responsible for screens rendering, navigation and communication between ones.
@@ -171,6 +167,18 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             .onDiscardHandler { navigator.back() }
             .transactionEditCategoryUseCase(transactionEditCategoryUseCase)
             .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
+
+        @Provides
+        @WithDuplicateNavigation
+        fun transactionComponentBuilderWithDuplicateNavigation(
+            builder: TransactionComponent.Builder,
+            navigator: Navigator,
+        ): TransactionComponent.Builder = builder.onDuplicateTransactionHandler { transactionId ->
+            navigator.navigateTo(
+                Destinations.Transaction.Item.Duplicate,
+                Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+            )
+        }
 
         @Provides
         @MainActivityScreenScope
@@ -266,7 +274,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun homeNavigationEntry(
             homeComponentBuilder: HomeComponent.Builder,
             welcomeComponentBuilder: WelcomeComponent.Builder,
-            transactionComponentBuilder: TransactionComponent.Builder,
+            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
@@ -289,7 +297,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                                 )
                             }
                             .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
-                            .withDuplicateNavigation(navigator)
                             .transactionFilterUseCase(transactionFilterUseCase)
                             .displayConfig(DisplayConfig(showFab = true)),
                     )
@@ -346,14 +353,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
-            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
+            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Transaction.Edit,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
-            componentBuilderProvider.get()
+            componentBuilder
                 .preSelectedCategoryId(arguments.getValue(Destinations.Transaction.Edit.SelectedCategoryId))
                 .preSelectedAccountId(arguments.getValue(Destinations.Transaction.Edit.SelectedAccountId))
                 .logging(logger)
@@ -363,11 +370,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemEditNavigationEntry(
-            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
+            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
-            componentBuilderProvider.get()
+            componentBuilder
                 .transactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .onDuplicateHandler { transactionId ->
                     navigator.back()
@@ -383,11 +390,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemDuplicateNavigationEntry(
-            @WithCommonBindings componentBuilderProvider: Provider<TransactionEditComponent.Builder>,
+            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Duplicate) {
-            componentBuilderProvider.get()
+            componentBuilder
                 .duplicateFromTransactionId(arguments.getValue(Destinations.Transaction.Item.TransactionId))
                 .logging(logger)
         }
@@ -463,14 +470,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryDetailNavigationEntry(
             componentBuilder: CategoryDetailComponent.Builder,
-            transactionComponentBuilder: TransactionComponent.Builder,
+            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
             val categoryId = arguments.getValue(Destinations.Category.Item.CategoryId)
             componentBuilder
                 .categoryId(categoryId)
-                .transactionComponentBuilder(transactionComponentBuilder.withDuplicateNavigation(navigator))
+                .transactionComponentBuilder(transactionComponentBuilder)
                 .onBackHandler { navigator.back() }
                 .onEditHandler {
                     navigator.navigateTo(
@@ -584,14 +591,14 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
-            transactionComponentBuilder: TransactionComponent.Builder,
+            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Detail) {
             val accountId = arguments.getValue(Destinations.Account.Item.AccountId)
             componentBuilder
                 .accountId(accountId)
-                .transactionComponentBuilder(transactionComponentBuilder.withDuplicateNavigation(navigator))
+                .transactionComponentBuilder(transactionComponentBuilder)
                 .onBackHandler { navigator.back() }
                 .onEditHandler {
                     navigator.navigateTo(
