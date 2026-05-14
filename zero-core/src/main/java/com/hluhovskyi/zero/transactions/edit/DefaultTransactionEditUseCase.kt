@@ -81,6 +81,7 @@ internal class DefaultTransactionEditUseCase(
                     rate = state.rate,
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    sourceSnapshot = state.sourceSnapshot,
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -94,6 +95,7 @@ internal class DefaultTransactionEditUseCase(
                     rate = state.rate,
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    sourceSnapshot = state.sourceSnapshot,
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -115,6 +117,7 @@ internal class DefaultTransactionEditUseCase(
                         targetCurrencySymbol = targetCurrencySymbol,
                         notes = state.notes,
                         date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                        sourceSnapshot = state.sourceSnapshot,
                     )
                 }
             }
@@ -292,12 +295,22 @@ internal class DefaultTransactionEditUseCase(
                                 state.accounts.firstOrNull { it.id == transaction.accountId }
                             val currencyToSelect =
                                 state.currencies.firstOrNull { it.id == transaction.currencyId }
+                            val snapshot = if (duplicateFromTransactionId is Id.Known) {
+                                TransactionEditUseCase.SourceSnapshot(
+                                    amount = transaction.amount.value.toString(),
+                                    date = transaction.dateTime,
+                                    currencySymbol = currencyToSelect?.currencySymbol.orEmpty(),
+                                )
+                            } else {
+                                null
+                            }
                             val partialState = state.copy(
                                 amount = transaction.amount.value.toString(),
                                 selectedCurrency = currencyToSelect ?: state.selectedCurrency,
                                 selectedAccount = accountToSelect ?: state.selectedAccount,
                                 localDateTime = transaction.dateTime,
                                 notes = transaction.notes.orEmpty(),
+                                sourceSnapshot = snapshot,
                             )
 
                             when (transaction) {
@@ -689,5 +702,6 @@ internal class DefaultTransactionEditUseCase(
         val targetAmount: String = "",
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val notes: String = "",
+        val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
     )
 }

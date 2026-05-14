@@ -74,20 +74,16 @@ internal class DefaultTransactionEditViewModel(
     }
 
     private fun formatSubtitle(state: TransactionEditUseCase.State): String {
-        val (amountRaw, currencySymbol) = when (state) {
-            is TransactionEditUseCase.State.Expense -> state.amount to state.selectedCurrency?.currencySymbol.orEmpty()
-            is TransactionEditUseCase.State.Income -> state.amount to state.selectedCurrency?.currencySymbol.orEmpty()
-            is TransactionEditUseCase.State.Transfer -> state.amount to state.sourceCurrencySymbol
-        }
+        val snapshot = state.sourceSnapshot ?: return ""
         val dateText = dateFormatter.format(
-            date = state.date.date,
+            date = snapshot.date.date,
             dayConfig = DateFormatter.DayConfig.WithoutZero,
             monthConfig = DateFormatter.MonthConfig.Readable,
             yearConfig = DateFormatter.YearConfig.Default,
         )
-        val amountValue = amountRaw.toBigDecimalOrNull()
+        val amountValue = snapshot.amount.toBigDecimalOrNull()
         return if (amountValue != null) {
-            val amountText = amountFormatter.format(Amount(amountValue), currencySymbol)
+            val amountText = amountFormatter.format(Amount(amountValue), snapshot.currencySymbol)
             "$amountText · $dateText"
         } else {
             dateText

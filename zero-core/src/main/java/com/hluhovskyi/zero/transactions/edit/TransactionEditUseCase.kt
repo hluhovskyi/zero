@@ -36,6 +36,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
     sealed interface State {
 
         val date: LocalDateTime
+        val sourceSnapshot: SourceSnapshot?
 
         data class Expense(
             val accounts: List<TransactionEditAccount> = emptyList(),
@@ -48,6 +49,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val rate: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
+            override val sourceSnapshot: SourceSnapshot? = null,
         ) : State
 
         data class Income(
@@ -61,6 +63,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val rate: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
+            override val sourceSnapshot: SourceSnapshot? = null,
         ) : State
 
         data class Transfer(
@@ -75,8 +78,19 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val targetCurrencySymbol: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
+            override val sourceSnapshot: SourceSnapshot? = null,
         ) : State
     }
+
+    /**
+     * Snapshot of the source transaction captured once at load time. Used by the duplicate flow
+     * to render a stable "Duplicate from $X · date" header that doesn't change as the user edits.
+     */
+    data class SourceSnapshot(
+        val amount: String,
+        val date: LocalDateTime,
+        val currencySymbol: String,
+    )
 
     object Noop : TransactionEditUseCase {
         override val state: Flow<State> = emptyFlow()
