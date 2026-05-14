@@ -43,7 +43,7 @@ jobs:
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run unit tests
-        run: ./gradlew test
+        run: ./gradlew testAll
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run lint

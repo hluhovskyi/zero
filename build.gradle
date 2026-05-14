@@ -78,6 +78,18 @@ plugins {
     id 'com.google.devtools.ksp' version '2.3.6' apply false
 }
 
+// Run only modules that have unit tests, skipping :app:, :zero-ui:, :zero-image-loading: whose
+// KSP/compilation would otherwise run for nothing.
+tasks.register("testAll") {
+    dependsOn(
+        ":zero-core:testDebugUnitTest",
+        ":zero-database:testDebugUnitTest",
+        ":zero-remote:testDebugUnitTest",
+        ":zero-sync:test",
+        ":lint-rules:test"
+    )
+}
+
 spotless {
     kotlin {
         target '**/*.kt'
