@@ -23,8 +23,8 @@ done
 # ---------------------------------------------------------------------------
 REPO_SLUG=$(git rev-parse --show-toplevel 2>/dev/null | tr '/' '_')
 LOCK_DIR="/tmp/zero-emulator-claim${REPO_SLUG}.lock"
-LOCK_TIMEOUT=120   # seconds to wait for the lock before giving up
-LOCK_MAX_AGE=60    # seconds: locks older than this are presumed stale
+LOCK_TIMEOUT=300   # seconds to wait for the lock before giving up
+LOCK_MAX_AGE=300   # seconds: locks older than this are presumed stale (must exceed emulator boot time)
 
 _lock_acquire() {
     local deadline=$(( $(date +%s) + LOCK_TIMEOUT ))
@@ -137,25 +137,26 @@ trap _lock_release EXIT INT TERM
 OUTPUT=$(claim_unused)
 RC=$?
 
-_lock_release
-trap - EXIT INT TERM
-
 if [ $RC -eq 0 ]; then
+    # Claim written inside claim_unused while lock was held.
+    _lock_release
+    trap - EXIT INT TERM
     echo "$OUTPUT"
     exit 0
 fi
 
 # ---------------------------------------------------------------------------
 # Phase 2: no unclaimed emulator — start a fresh one, then claim it.
+# The lock is held throughout start-emulator.sh so concurrent sessions
+# cannot race to pick the same port.  Sessions 2 and 3 will block in
+# _lock_acquire until session 1 has both started the emulator AND written
+# the claim, at which point they enter claim_unused and find it available.
 # ---------------------------------------------------------------------------
 if $AUTO_START; then
     echo "No free running emulator — starting a new one (use --no-auto-start to disable)..."
     if "$(dirname "$0")/start-emulator.sh" > /tmp/start-emulator.out 2>&1; then
         SERIAL=$(tail -1 /tmp/start-emulator.out)
         if [[ "$SERIAL" == emulator-* ]]; then
-            # Re-acquire the lock to write the claim atomically.
-            _lock_acquire
-            trap _lock_release EXIT INT TERM
             echo "$SERIAL" > .emulator-serial
             _lock_release
             trap - EXIT INT TERM
