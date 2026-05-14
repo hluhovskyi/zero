@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
-import com.hluhovskyi.zero.ui.R
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 
