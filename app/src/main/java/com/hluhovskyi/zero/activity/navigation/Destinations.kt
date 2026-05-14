@@ -27,6 +27,7 @@ internal object Destinations {
 
             object Preview : Item, Destination by destinationOf("transactions/{transactionId}", TransactionId)
             object Edit : Item, Destination by destinationOf("transactions/{transactionId}/edit", TransactionId)
+            object Duplicate : Item, Destination by destinationOf("transactions/{transactionId}/duplicate", TransactionId)
         }
     }
 
@@ -73,4 +74,5 @@ internal object Destinations {
     object Home : Destination by destinationOf("home")
     object Settings : Destination by destinationOf("settings")
     object Import : Destination by destinationOf("import")
+    object Feedback : Destination by destinationOf("feedback")
 }

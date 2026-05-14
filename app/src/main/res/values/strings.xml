@@ -3,4 +3,6 @@
 
     <!-- Screens -->
     <string name="categories_edit">Edit categories</string>
+    <!-- Feedback -->
+    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
 </resources>

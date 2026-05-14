@@ -52,6 +52,7 @@ internal class DefaultTransactionViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
+    private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
     private val transactionFilterApplicator: TransactionFilterApplicator,
@@ -90,6 +91,10 @@ internal class DefaultTransactionViewModel(
                 coroutineScope.launch {
                     transactionRepository.delete(action.id)
                 }
+            }
+
+            is TransactionViewModel.Action.DuplicateTransaction -> {
+                onDuplicateTransactionHandler.onDuplicate(action.id)
             }
 
             is TransactionViewModel.Action.Filter.Open -> {

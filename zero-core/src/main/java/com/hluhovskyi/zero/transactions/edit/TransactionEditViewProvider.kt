@@ -24,6 +24,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -90,10 +91,17 @@ private fun TransactionEditView(
             contentPadding = PaddingValues(bottom = 120.dp),
         ) {
             item {
+                val title = when (state.headerMode) {
+                    is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
+                    is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
+                    is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
+                }
+                val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
                 ModalHeader(
-                    title = if (state.isEditMode) stringResource(R.string.transaction_edit_title) else stringResource(R.string.transaction_new_title),
+                    title = title,
+                    subtitle = subtitle,
                     onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
-                    trailingContent = if (state.isEditMode) {
+                    trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
                         {
                             Box {
                                 IconButton(onClick = { menuExpanded = true }) {
@@ -107,6 +115,26 @@ private fun TransactionEditView(
                                     expanded = menuExpanded,
                                     onDismissRequest = { menuExpanded = false },
                                 ) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            menuExpanded = false
+                                            viewModel.perform(TransactionEditViewModel.Action.Duplicate)
+                                        },
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.ContentCopy,
+                                                contentDescription = null,
+                                                tint = OnSurface,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(
+                                                text = stringResource(R.string.transaction_duplicate),
+                                                color = OnSurface,
+                                            )
+                                        }
+                                    }
                                     DropdownMenuItem(
                                         onClick = {
                                             menuExpanded = false
