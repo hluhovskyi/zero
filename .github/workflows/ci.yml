@@ -9,15 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  changes:
     runs-on: ubuntu-latest
-
+    outputs:
+      runtime: ${{ steps.detect.outputs.runtime }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - id: changes
+      - id: detect
         name: Detect runtime changes
         run: |
           if git diff --name-only origin/${{ github.base_ref }}...HEAD \
@@ -28,29 +29,53 @@ jobs:
             echo "Only non-runtime files changed — skipping gradle."
           fi
 
-      - if: steps.changes.outputs.runtime == 'true'
-        uses: actions/setup-java@v4
+  test:
+    needs: changes
+    if: needs.changes.outputs.runtime == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - if: steps.changes.outputs.runtime == 'true'
-        uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v3
 
-      - if: steps.changes.outputs.runtime == 'true'
-        name: Run spotless check
+      - name: Run spotless check
         run: ./gradlew spotlessCheck
 
-      - if: steps.changes.outputs.runtime == 'true'
-        name: Run unit tests
+      - name: Run unit tests
         run: ./gradlew testAll
-
-      - if: steps.changes.outputs.runtime == 'true'
-        name: Run lint
-        run: ./gradlew lintDebug
 
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: '**/build/reports/tests/'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.runtime == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Run lint
+        run: ./gradlew lintDebug
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: '**/build/reports/lint/'
