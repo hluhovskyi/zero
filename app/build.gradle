@@ -132,4 +132,8 @@ dependencies {
     implementation deps.android.core.lifecycle
     implementation deps.android.compose.uiPreview
     debugImplementation deps.android.compose.uiTooling
+
+    testImplementation deps.test.junit
+    testImplementation deps.test.mockito
+    testImplementation deps.test.coroutines
 }
