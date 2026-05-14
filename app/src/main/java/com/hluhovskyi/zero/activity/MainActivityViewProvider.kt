@@ -15,13 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.common.AttachWithView
-import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.security.BiometricLockGateComponent
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class MainActivityViewProvider(
     private val screenComponent: MainActivityScreenComponent.Builder,
-    private val biometricLockGateComponent: AttachableViewComponent,
+    private val biometricLockGateComponent: BiometricLockGateComponent,
 ) : ViewProvider {
 
     @Composable

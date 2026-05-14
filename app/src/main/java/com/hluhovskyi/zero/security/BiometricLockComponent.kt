@@ -3,9 +3,7 @@ package com.hluhovskyi.zero.security
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import com.hluhovskyi.zero.common.Attachable
-import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -16,8 +14,6 @@ import javax.inject.Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class BiometricLockScope
 
-private const val GATE_TAG = "BiometricLockGate"
-
 @BiometricLockScope
 @dagger.Component(
     modules = [BiometricLockComponent.Module::class],
@@ -27,7 +23,7 @@ abstract class BiometricLockComponent : Attachable {
 
     abstract val biometricLockUseCase: BiometricLockUseCase
     abstract val biometricAuthenticator: BiometricAuthenticator
-    abstract val gateComponent: AttachableViewComponent
+    abstract val gateComponent: BiometricLockGateComponent
 
     protected abstract val lifecycleObserver: Attachable
 
@@ -87,17 +83,11 @@ abstract class BiometricLockComponent : Attachable {
         fun gateComponent(
             biometricLockUseCase: BiometricLockUseCase,
             biometricAuthenticator: BiometricAuthenticator,
-        ): AttachableViewComponent {
-            val viewModel = BiometricLockGateViewModel(
-                biometricLockUseCase = biometricLockUseCase,
-                biometricAuthenticator = biometricAuthenticator,
-            )
-            val provider: ViewProvider = BiometricLockGateViewProvider(viewModel = viewModel)
-            return object : AttachableViewComponent {
-                override val tag: String = GATE_TAG
-                override val viewProvider: ViewProvider = provider
-                override fun attach(): Closeable = viewModel.attach()
-            }
-        }
+        ): BiometricLockGateComponent = BiometricLockGateComponent.builder(
+            object : BiometricLockGateComponent.Dependencies {
+                override val biometricLockUseCase = biometricLockUseCase
+                override val biometricAuthenticator = biometricAuthenticator
+            },
+        ).build()
     }
 }

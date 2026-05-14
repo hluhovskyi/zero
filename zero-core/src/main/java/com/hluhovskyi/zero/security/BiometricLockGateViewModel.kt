@@ -23,11 +23,3 @@ interface BiometricLockGateViewModel : AttachableActionStateModel<BiometricLockG
         override fun attach(): Closeable = Closeable { }
     }
 }
-
-fun BiometricLockGateViewModel(
-    biometricLockUseCase: BiometricLockUseCase,
-    biometricAuthenticator: BiometricAuthenticator,
-): BiometricLockGateViewModel = DefaultBiometricLockGateViewModel(
-    biometricLockUseCase = biometricLockUseCase,
-    biometricAuthenticator = biometricAuthenticator,
-)

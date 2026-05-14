@@ -11,12 +11,8 @@ class AttachActivityComponent(
     private val biometricLockComponent: BiometricLockComponent,
 ) : Attachable {
 
-    override fun attach(): Closeable {
-        val presets = presetsComponent.attachable.attach()
-        val biometric = biometricLockComponent.attach()
-        return Closeables.from {
-            biometric.close()
-            presets.close()
-        }
-    }
+    override fun attach(): Closeable = Closeables.merge(
+        presetsComponent.attachable.attach(),
+        biometricLockComponent.attach(),
+    )
 }
