@@ -76,7 +76,7 @@ internal object Destinations {
     sealed interface Budget : Destination {
         object All : Budget, Destination by destinationOf("budget")
 
-        object Edit : Budget, Destination by destinationOf("budget/edit", CategoryId, PeriodStart, PeriodEnd) {
+        object Edit : Budget, Destination by destinationOf("budget/edit/{categoryId}/{periodStart}/{periodEnd}", CategoryId, PeriodStart, PeriodEnd) {
             object CategoryId : Argument<Id.Known> by idKnownValueOf("categoryId")
             object PeriodStart : Argument<String> by stringValueOf("periodStart")
             object PeriodEnd : Argument<String> by stringValueOf("periodEnd")

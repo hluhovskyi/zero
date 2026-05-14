@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -72,6 +73,7 @@ private fun BudgetEditSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .fillMaxHeight()
             .background(Surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
     ) {
         // Header
@@ -183,8 +185,9 @@ private fun BudgetEditSheet(
             }
         }
 
-        // NumPad
+        // NumPad — weight(1f) fills remaining height so CTA stays pinned at bottom
         NumPad(
+            modifier = Modifier.weight(1f),
             value = state.amountText,
             onChange = { viewModel.perform(BudgetEditViewModel.Action.ChangeAmount(it)) },
         )
