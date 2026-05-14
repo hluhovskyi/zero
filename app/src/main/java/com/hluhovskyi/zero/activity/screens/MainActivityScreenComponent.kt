@@ -68,20 +68,13 @@ import javax.inject.Scope
 private annotation class MainActivityScreenScope
 
 /**
- * Tags a [TransactionEditComponent.Builder] with the navigation-shared bindings pre-applied
- * (save/discard/edit-categories handlers + edit-category/currency use cases).
+ * Tags a Builder that has been pre-configured with MainActivity-scoped navigation bindings
+ * (Navigator-bound handlers — save/discard/edit-categories on Transaction edit; duplicate
+ * navigation on the Transaction list). Applies to multiple Builder types via per-type @Provides.
  */
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-private annotation class WithCommonBindings
-
-/**
- * Tags a [TransactionComponent.Builder] with the duplicate handler pre-applied — tapping
- * "Duplicate" in any transaction list navigates to the Duplicate destination.
- */
-@Qualifier
-@Retention(AnnotationRetention.RUNTIME)
-private annotation class WithDuplicateNavigation
+private annotation class ForMainActivity
 
 private const val TAG = "MainActivityScreenComponent"
 
@@ -155,8 +148,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
     object Module {
 
         @Provides
-        @WithCommonBindings
-        fun transactionEditComponentBuilderWithCommonBindings(
+        @ForMainActivity
+        fun transactionEditComponentBuilderForMainActivity(
             builder: TransactionEditComponent.Builder,
             navigator: Navigator,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
@@ -169,8 +162,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
 
         @Provides
-        @WithDuplicateNavigation
-        fun transactionComponentBuilderWithDuplicateNavigation(
+        @ForMainActivity
+        fun transactionComponentBuilderForMainActivity(
             builder: TransactionComponent.Builder,
             navigator: Navigator,
         ): TransactionComponent.Builder = builder.onDuplicateTransactionHandler { transactionId ->
@@ -274,7 +267,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun homeNavigationEntry(
             homeComponentBuilder: HomeComponent.Builder,
             welcomeComponentBuilder: WelcomeComponent.Builder,
-            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
+            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
@@ -353,7 +346,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionEditNavigationEntry(
-            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
+            @ForMainActivity componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
@@ -370,7 +363,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemEditNavigationEntry(
-            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
+            @ForMainActivity componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Edit) {
@@ -390,7 +383,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun transactionItemDuplicateNavigationEntry(
-            @WithCommonBindings componentBuilder: TransactionEditComponent.Builder,
+            @ForMainActivity componentBuilder: TransactionEditComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Transaction.Item.Duplicate) {
@@ -470,7 +463,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryDetailNavigationEntry(
             componentBuilder: CategoryDetailComponent.Builder,
-            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
+            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
@@ -591,7 +584,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
-            @WithDuplicateNavigation transactionComponentBuilder: TransactionComponent.Builder,
+            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Detail) {
