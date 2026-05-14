@@ -105,6 +105,25 @@ internal abstract class FeedbackComponent : Attachable {
         fun onFeedbackSubmittedHandler(navigator: Navigator): OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler { navigator.back() }
 
         @Provides
+        fun feedbackSheetComponent(
+            feedbackService: FeedbackService,
+            breadcrumbs: Breadcrumbs,
+            deviceInfo: DeviceInfo,
+            clock: Clock,
+            isDebugBuild: Boolean,
+            errorMessageProvider: () -> String,
+            onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
+        ): FeedbackSheetComponent = FeedbackSheetComponent(
+            feedbackService = feedbackService,
+            breadcrumbs = breadcrumbs,
+            deviceInfo = deviceInfo,
+            clock = clock,
+            isDebugBuild = isDebugBuild,
+            errorMessageProvider = errorMessageProvider,
+            onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
+        )
+
+        @Provides
         @FeedbackScope
         fun navigationEntry(
             sheetComponentProvider: Provider<FeedbackSheetComponent>,

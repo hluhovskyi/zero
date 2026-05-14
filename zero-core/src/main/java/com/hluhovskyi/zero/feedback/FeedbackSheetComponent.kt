@@ -4,11 +4,10 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import java.io.Closeable
-import javax.inject.Inject
 
 private const val TAG = "FeedbackSheetComponent"
 
-class FeedbackSheetComponent @Inject internal constructor(
+class FeedbackSheetComponent(
     feedbackService: FeedbackService,
     breadcrumbs: Breadcrumbs,
     deviceInfo: DeviceInfo,
