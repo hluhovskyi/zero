@@ -71,6 +71,8 @@ interface DatabaseComponent {
     val budgetRepository: BudgetRepository
     val configurationRepository: ConfigurationRepository
 
+    val cleanupJob: CleanupJob
+
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
 
     fun transform(repository: CurrencyRepository): CurrencyRepository = currencyRepositoryTransformer.transform(repository)
@@ -135,6 +137,12 @@ interface DatabaseComponent {
         )
             .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .build()
+
+        @Provides
+        @DatabaseScope
+        internal fun cleanupJob(db: MainDatabase): CleanupJob = object : CleanupJob {
+            override suspend fun clearAllTables() = db.clearAllTables()
+        }
 
         @Provides
         @DatabaseScope

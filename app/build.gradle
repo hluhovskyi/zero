@@ -138,4 +138,10 @@ dependencies {
     testImplementation deps.test.junit
     testImplementation deps.test.mockito
     testImplementation deps.test.coroutines
+
+    androidTestImplementation project(':zero-test-bridge')
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:${versions.compose}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:${versions.compose}"
 }
