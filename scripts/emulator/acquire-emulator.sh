@@ -7,83 +7,160 @@
 # If all running emulators are claimed, auto-invokes start-emulator.sh to add
 # capacity, then claims the new instance.
 # Pass --no-auto-start to disable auto-start and fail instead.
+#
+# RACE SAFETY: concurrent invocations from different worktrees are serialised
+# by a mkdir-based mutex in /tmp.  mkdir(2) is atomic on all Unix filesystems,
+# so only one process can own the lock at a time.  A stale-lock guard (PID
+# liveness check + age limit) prevents a crashed holder from blocking forever.
 
 AUTO_START=true
 for arg in "$@"; do
   [[ "$arg" == "--no-auto-start" ]] && AUTO_START=false
 done
 
-claim_unused() {
-  # Collect claimed serials from all active worktrees
-  local CLAIMED=()
-  while IFS= read -r WORKTREE_PATH; do
-      local SERIAL_FILE="$WORKTREE_PATH/.emulator-serial"
-      if [ -f "$SERIAL_FILE" ]; then
-          local SERIAL=$(cat "$SERIAL_FILE")
-          [ -n "$SERIAL" ] && CLAIMED+=("$SERIAL")
-      fi
-  done < <(git worktree list --porcelain | grep "^worktree " | sed 's/^worktree //')
+# ---------------------------------------------------------------------------
+# Mutex helpers
+# ---------------------------------------------------------------------------
+REPO_SLUG=$(git rev-parse --show-toplevel 2>/dev/null | tr '/' '_')
+LOCK_DIR="/tmp/zero-emulator-claim${REPO_SLUG}.lock"
+LOCK_TIMEOUT=120   # seconds to wait for the lock before giving up
+LOCK_MAX_AGE=60    # seconds: locks older than this are presumed stale
 
-  # Get all running emulators
-  local RUNNING=()
-  while IFS= read -r line; do
-      local SERIAL=$(echo "$line" | awk '{print $1}')
-      [[ "$SERIAL" == emulator-* ]] && RUNNING+=("$SERIAL")
-  done < <(adb devices | tail -n +2)
+_lock_acquire() {
+    local deadline=$(( $(date +%s) + LOCK_TIMEOUT ))
+    while true; do
+        # Atomic create: succeeds only if directory does not yet exist.
+        if mkdir "$LOCK_DIR" 2>/dev/null; then
+            echo $$ > "$LOCK_DIR/pid"
+            return 0
+        fi
 
-  if [ ${#RUNNING[@]} -eq 0 ]; then
-      echo "__NONE_RUNNING__"
-      return 1
-  fi
+        # Stale-lock recovery 1: owning PID is no longer alive.
+        local pid_file="$LOCK_DIR/pid"
+        if [ -f "$pid_file" ]; then
+            local lock_pid
+            lock_pid=$(cat "$pid_file" 2>/dev/null)
+            if [ -n "$lock_pid" ] && ! kill -0 "$lock_pid" 2>/dev/null; then
+                rm -rf "$LOCK_DIR"
+                continue
+            fi
+        fi
 
-  for SERIAL in "${RUNNING[@]}"; do
-      local CLAIMED_FLAG=false
-      for C in "${CLAIMED[@]}"; do
-          [[ "$C" == "$SERIAL" ]] && CLAIMED_FLAG=true && break
-      done
-      if ! $CLAIMED_FLAG; then
-          echo "$SERIAL" > .emulator-serial
-          echo "Assigned $SERIAL to this worktree"
-          return 0
-      fi
-  done
+        # Stale-lock recovery 2: lock dir is older than LOCK_MAX_AGE (belt+suspenders).
+        if [ -d "$LOCK_DIR" ]; then
+            local mtime
+            mtime=$(stat -f %m "$LOCK_DIR" 2>/dev/null || stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0)
+            local age=$(( $(date +%s) - mtime ))
+            if [ "$age" -gt "$LOCK_MAX_AGE" ]; then
+                rm -rf "$LOCK_DIR"
+                continue
+            fi
+        fi
 
-  echo "__ALL_CLAIMED__ ${RUNNING[*]}"
-  return 1
+        if [ "$(date +%s)" -ge "$deadline" ]; then
+            echo "ERROR: timed out waiting for emulator claim lock after ${LOCK_TIMEOUT}s" >&2
+            exit 1
+        fi
+        sleep 0.2
+    done
 }
+
+_lock_release() {
+    rm -rf "$LOCK_DIR"
+}
+
+# ---------------------------------------------------------------------------
+# Claim logic (must run inside the mutex)
+# ---------------------------------------------------------------------------
+claim_unused() {
+    # Collect claimed serials from all active worktrees.
+    local CLAIMED=()
+    while IFS= read -r WORKTREE_PATH; do
+        local SERIAL_FILE="$WORKTREE_PATH/.emulator-serial"
+        if [ -f "$SERIAL_FILE" ]; then
+            local SERIAL
+            SERIAL=$(cat "$SERIAL_FILE")
+            [ -n "$SERIAL" ] && CLAIMED+=("$SERIAL")
+        fi
+    done < <(git worktree list --porcelain | grep "^worktree " | sed 's/^worktree //')
+
+    # Get all running emulators.
+    local RUNNING=()
+    while IFS= read -r line; do
+        local SERIAL
+        SERIAL=$(echo "$line" | awk '{print $1}')
+        [[ "$SERIAL" == emulator-* ]] && RUNNING+=("$SERIAL")
+    done < <(adb devices | tail -n +2)
+
+    if [ ${#RUNNING[@]} -eq 0 ]; then
+        echo "__NONE_RUNNING__"
+        return 1
+    fi
+
+    for SERIAL in "${RUNNING[@]}"; do
+        local CLAIMED_FLAG=false
+        for C in "${CLAIMED[@]}"; do
+            [[ "$C" == "$SERIAL" ]] && CLAIMED_FLAG=true && break
+        done
+        if ! $CLAIMED_FLAG; then
+            echo "$SERIAL" > .emulator-serial
+            echo "Assigned $SERIAL to this worktree"
+            return 0
+        fi
+    done
+
+    echo "__ALL_CLAIMED__ ${RUNNING[*]}"
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# Phase 1: try to claim an already-running emulator.
+# ---------------------------------------------------------------------------
+_lock_acquire
+trap _lock_release EXIT INT TERM
 
 OUTPUT=$(claim_unused)
 RC=$?
 
+_lock_release
+trap - EXIT INT TERM
+
 if [ $RC -eq 0 ]; then
-  echo "$OUTPUT"
-  exit 0
+    echo "$OUTPUT"
+    exit 0
 fi
 
-# Auto-start if allowed.
+# ---------------------------------------------------------------------------
+# Phase 2: no unclaimed emulator — start a fresh one, then claim it.
+# ---------------------------------------------------------------------------
 if $AUTO_START; then
-  echo "No free running emulator — starting a new one (use --no-auto-start to disable)..."
-  if "$(dirname "$0")/start-emulator.sh" > /tmp/start-emulator.out 2>&1; then
-    SERIAL=$(tail -1 /tmp/start-emulator.out)
-    if [[ "$SERIAL" == emulator-* ]]; then
-      echo "$SERIAL" > .emulator-serial
-      echo "Started and assigned $SERIAL to this worktree"
-      exit 0
+    echo "No free running emulator — starting a new one (use --no-auto-start to disable)..."
+    if "$(dirname "$0")/start-emulator.sh" > /tmp/start-emulator.out 2>&1; then
+        SERIAL=$(tail -1 /tmp/start-emulator.out)
+        if [[ "$SERIAL" == emulator-* ]]; then
+            # Re-acquire the lock to write the claim atomically.
+            _lock_acquire
+            trap _lock_release EXIT INT TERM
+            echo "$SERIAL" > .emulator-serial
+            _lock_release
+            trap - EXIT INT TERM
+            echo "Started and assigned $SERIAL to this worktree"
+            exit 0
+        fi
     fi
-  fi
-  echo "start-emulator.sh failed. Output:"
-  cat /tmp/start-emulator.out
-  exit 1
+    echo "start-emulator.sh failed. Output:"
+    cat /tmp/start-emulator.out
+    exit 1
 fi
 
 # Auto-start disabled — print the diagnostic and suggested fix.
 case "$OUTPUT" in
-  __NONE_RUNNING__*)
-    echo "No running emulators. Run: ./scripts/start-emulator.sh"
-    ;;
-  __ALL_CLAIMED__*)
-    echo "All running emulators are claimed by other worktrees."
-    echo "Run: ./scripts/start-emulator.sh"
-    ;;
+    __NONE_RUNNING__*)
+        echo "No running emulators. Run: ./scripts/start-emulator.sh"
+        ;;
+    __ALL_CLAIMED__*)
+        echo "All running emulators are claimed by other worktrees."
+        echo "Run: ./scripts/start-emulator.sh"
+        ;;
 esac
 exit 1
