@@ -22,6 +22,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         SealedSubtypeDuplicatePropertyDetector.ISSUE,
         HardcodedComposableStringDetector.ISSUE,
         UppercaseStringResourceDetector.ISSUE,
+        BreadcrumbsLiteralOnlyDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API

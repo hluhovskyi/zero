@@ -12,6 +12,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         object Save : Action
         object Discard : Action
         object Delete : Action
+        object Duplicate : Action
     }
 
     data class State(
@@ -19,7 +20,13 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val date: LocalDateTime? = null,
         val selectedCategory: TransactionEditCategory? = null,
-        val isEditMode: Boolean = false,
+        val headerMode: HeaderMode = HeaderMode.New,
         val notes: String = "",
     )
+
+    sealed interface HeaderMode {
+        object New : HeaderMode
+        object Edit : HeaderMode
+        data class DuplicateFrom(val subtitle: String) : HeaderMode
+    }
 }

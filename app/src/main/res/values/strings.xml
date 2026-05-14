@@ -14,4 +14,7 @@
     <string name="biometric_lock_screen_title">Zero is locked</string>
     <string name="biometric_lock_screen_subtitle">Unlock to view your finances</string>
     <string name="biometric_lock_screen_action">Unlock</string>
+
+    <!-- Feedback -->
+    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
 </resources>

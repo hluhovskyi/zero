@@ -62,6 +62,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
             .onAddTransactionHandler(OnAddTransactionHandler.Noop)
+            .onDuplicateTransactionHandler(OnDuplicateTransactionHandler.Noop)
             .transactionFilter(TransactionFilter.All)
             .transactionFilterUseCase(TransactionFilterUseCase.Noop)
             .displayConfig(DisplayConfig())
@@ -77,6 +78,9 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAddTransactionHandler(handler: OnAddTransactionHandler): Builder
+
+        @BindsInstance
+        fun onDuplicateTransactionHandler(handler: OnDuplicateTransactionHandler): Builder
 
         @BindsInstance
         fun transactionFilter(filter: TransactionFilter): Builder
@@ -107,6 +111,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
             onTransactionSelectedHandler: OnTransactionSelectedHandler,
+            onDuplicateTransactionHandler: OnDuplicateTransactionHandler,
             filter: TransactionFilter,
             transactionFilterUseCase: TransactionFilterUseCase,
             transactionFilterApplicator: TransactionFilterApplicator,
@@ -122,6 +127,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
             onTransactionSelectedHandler = onTransactionSelectedHandler,
+            onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
             transactionFilterApplicator = transactionFilterApplicator,

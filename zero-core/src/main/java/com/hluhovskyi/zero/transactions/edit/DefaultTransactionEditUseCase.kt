@@ -42,6 +42,7 @@ private const val TAG = "DefaultTransactionEditUseCase"
 
 internal class DefaultTransactionEditUseCase(
     private val transactionId: Id,
+    private val duplicateFromTransactionId: Id = Id.Unknown,
     private val preSelectedCategoryId: Id = Id.Unknown,
     private val preSelectedAccountId: Id = Id.Unknown,
     private val accountRepository: AccountRepository,
@@ -53,6 +54,7 @@ internal class DefaultTransactionEditUseCase(
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
+    private val onDuplicateHandler: OnDuplicateHandler,
     private val transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
     private val transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
     private val clock: Clock,
@@ -79,6 +81,7 @@ internal class DefaultTransactionEditUseCase(
                     rate = state.rate,
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    sourceSnapshot = state.sourceSnapshot,
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -92,6 +95,7 @@ internal class DefaultTransactionEditUseCase(
                     rate = state.rate,
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    sourceSnapshot = state.sourceSnapshot,
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -113,6 +117,7 @@ internal class DefaultTransactionEditUseCase(
                         targetCurrencySymbol = targetCurrencySymbol,
                         notes = state.notes,
                         date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                        sourceSnapshot = state.sourceSnapshot,
                     )
                 }
             }
@@ -248,21 +253,30 @@ internal class DefaultTransactionEditUseCase(
             is TransactionEditUseCase.Action.Save -> save()
             is TransactionEditUseCase.Action.CycleTransferRateMode -> cycleTransferRateMode()
             is TransactionEditUseCase.Action.SwapAccounts -> swapAccounts()
+            is TransactionEditUseCase.Action.Duplicate -> {
+                (transactionId as? Id.Known)?.let { id ->
+                    coroutineScope.launch(context = Dispatchers.Main) {
+                        onDuplicateHandler.onDuplicate(id)
+                    }
+                }
+            }
         }
     }
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            if (transactionId is Id.Known) {
+            val loadFromId = (duplicateFromTransactionId as? Id.Known)
+                ?: (transactionId as? Id.Known)
+            if (loadFromId != null) {
                 launch {
                     incorrectStateDetector.asyncRequireNonNull(
                         value = transactionRepository.query(
                             TransactionRepository.Criteria.ById(
-                                transactionId,
+                                loadFromId,
                             ),
                         )
                             .firstOrNull(),
-                        message = "Transaction is not resolved with transactionId=$transactionId",
+                        message = "Transaction is not resolved with id=$loadFromId",
                     ) { transaction ->
                         logger.d("attach, transaction loading is finished, transactionId=${transaction.id}")
 
@@ -281,12 +295,22 @@ internal class DefaultTransactionEditUseCase(
                                 state.accounts.firstOrNull { it.id == transaction.accountId }
                             val currencyToSelect =
                                 state.currencies.firstOrNull { it.id == transaction.currencyId }
+                            val snapshot = if (duplicateFromTransactionId is Id.Known) {
+                                TransactionEditUseCase.SourceSnapshot(
+                                    amount = transaction.amount.value.toString(),
+                                    date = transaction.dateTime,
+                                    currencySymbol = currencyToSelect?.currencySymbol.orEmpty(),
+                                )
+                            } else {
+                                null
+                            }
                             val partialState = state.copy(
                                 amount = transaction.amount.value.toString(),
                                 selectedCurrency = currencyToSelect ?: state.selectedCurrency,
                                 selectedAccount = accountToSelect ?: state.selectedAccount,
                                 localDateTime = transaction.dateTime,
                                 notes = transaction.notes.orEmpty(),
+                                sourceSnapshot = snapshot,
                             )
 
                             when (transaction) {
@@ -678,5 +702,6 @@ internal class DefaultTransactionEditUseCase(
         val targetAmount: String = "",
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val notes: String = "",
+        val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
     )
 }

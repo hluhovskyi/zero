@@ -49,7 +49,6 @@ abstract class AccountDetailComponent : AttachableViewComponent {
     interface Dependencies {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
-        val transactionComponentBuilder: TransactionComponent.Builder
 
         val accountRepository: AccountRepository
         val transactionRepository: TransactionRepository
@@ -78,6 +77,9 @@ abstract class AccountDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun accountId(id: Id.Known): Builder
+
+        @BindsInstance
+        fun transactionComponentBuilder(builder: TransactionComponent.Builder): Builder
 
         @BindsInstance
         fun onBackHandler(handler: OnBackHandler): Builder

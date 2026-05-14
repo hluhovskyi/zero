@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.activity
 
+import android.content.Context
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
@@ -33,6 +34,8 @@ import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
+import com.hluhovskyi.zero.feedback.DeviceInfo
+import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.icons.IconRepository
@@ -100,7 +103,7 @@ abstract class ActivityComponent :
 
     interface Dependencies {
 
-        val context: android.content.Context
+        val context: Context
 
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
@@ -126,6 +129,9 @@ abstract class ActivityComponent :
 
         val importComponentBuilder: ImportComponent.Builder
         val presetsComponent: PresetsComponent
+
+        val feedbackService: FeedbackService
+        val deviceInfo: DeviceInfo
 
         // Required by SettingsComponent (which is built per-activity, see Module below).
         val syncEngine: SyncEngine
@@ -205,7 +211,6 @@ abstract class ActivityComponent :
         ): CategoryEditComponent.Builder = CategoryEditComponent.builder(component)
 
         @Provides
-        @ActivityScope
         fun transactionEditComponentBuilder(
             component: ActivityComponent,
         ): TransactionEditComponent.Builder = TransactionEditComponent.builder(component)

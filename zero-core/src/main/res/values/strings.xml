@@ -181,6 +181,8 @@
     <string name="transaction_search_placeholder">Search…</string>
     <string name="transaction_edit_title">Edit Transaction</string>
     <string name="transaction_new_title">New Transaction</string>
+    <string name="transaction_duplicate_from_title">Duplicate from</string>
+    <string name="transaction_duplicate">Duplicate</string>
     <string name="transaction_edit_more_options_description">More options</string>
     <string name="transaction_edit_delete">Delete</string>
     <string name="transaction_type_expense">Expense</string>
@@ -212,6 +214,12 @@
     <!-- Transaction Notes -->
     <string name="transaction_notes_label">Notes</string>
     <string name="transaction_notes_hint">Add a note…</string>
+
+    <!-- Feedback -->
+    <string name="feedback_title">Send feedback</string>
+    <string name="feedback_description_hint">Describe what happened…</string>
+    <string name="feedback_submit">Send</string>
+    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
 
     <!-- Home / Welcome -->
     <string name="home_title">Zero</string>

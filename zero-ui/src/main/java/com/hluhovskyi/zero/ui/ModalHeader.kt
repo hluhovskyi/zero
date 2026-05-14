@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
+import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 
 @Composable
@@ -27,6 +30,7 @@ fun ModalHeader(
     modifier: Modifier = Modifier,
     title: String,
     onClose: () -> Unit,
+    subtitle: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
@@ -43,14 +47,29 @@ fun ModalHeader(
                 tint = PrimaryContainer,
             )
         }
-        Text(
+        Column(
             modifier = Modifier.weight(1f),
-            text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryContainer,
-            textAlign = TextAlign.Center,
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryContainer,
+                textAlign = TextAlign.Center,
+            )
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = OnSurfaceVariant,
+                    letterSpacing = 0.4.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
         Box(modifier = Modifier.widthIn(min = 48.dp)) {
             trailingContent?.invoke()
         }
