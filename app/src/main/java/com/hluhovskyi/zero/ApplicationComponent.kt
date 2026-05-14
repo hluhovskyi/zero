@@ -325,6 +325,8 @@ abstract class ApplicationComponent :
                 override val accountSyncSink = databaseComponent.accountSyncSink()
                 override val transactionSyncSource = databaseComponent.transactionSyncSource()
                 override val transactionSyncSink = databaseComponent.transactionSyncSink()
+                override val budgetSyncSource = databaseComponent.budgetSyncSource()
+                override val budgetSyncSink = databaseComponent.budgetSyncSink()
                 override val resourceResolver = resourceResolver
             },
         ).create()

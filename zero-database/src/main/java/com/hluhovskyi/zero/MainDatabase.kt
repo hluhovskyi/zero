@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.accounts.AccountRoom
 import com.hluhovskyi.zero.accounts.AccountSyncDao
 import com.hluhovskyi.zero.budget.BudgetEntity
 import com.hluhovskyi.zero.budget.BudgetRoom
+import com.hluhovskyi.zero.budget.BudgetSyncDao
 import com.hluhovskyi.zero.categories.CategoryEntity
 import com.hluhovskyi.zero.categories.CategoryRoom
 import com.hluhovskyi.zero.categories.CategorySyncDao
@@ -56,6 +57,8 @@ internal abstract class MainDatabase : RoomDatabase() {
     abstract fun currenciesRoom(): CurrenciesRoom
 
     abstract fun budget(): BudgetRoom
+
+    abstract fun budgetSync(): BudgetSyncDao
 
     abstract fun categorySync(): CategorySyncDao
 
