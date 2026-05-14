@@ -62,8 +62,11 @@ if [ -z "$PICKED" ]; then
 fi
 
 # Find a free even-numbered port starting from 5554.
+# Use lsof instead of netstat: macOS netstat output format varies and the
+# "\.PORT .*LISTEN" grep pattern does not reliably match, causing the script
+# to always pick port 5554 even when it's occupied.
 PORT=5554
-while netstat -an 2>/dev/null | grep -q "\.${PORT} .*LISTEN"; do
+while lsof -iTCP:"${PORT}" -sTCP:LISTEN -t &>/dev/null 2>&1; do
   PORT=$((PORT + 2))
   if [ "$PORT" -gt 5680 ]; then
     echo "No free emulator ports between 5554 and 5680." >&2
