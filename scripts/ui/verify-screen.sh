@@ -13,9 +13,9 @@ if [ -z "$LANDMARK" ]; then
     exit 1
 fi
 
-"$ADB" shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1
+"$ADB" shell uiautomator dump /data/local/tmp/window_dump.xml >/dev/null 2>&1
 
-FOUND=$("$ADB" shell cat /sdcard/window_dump.xml | python3 -c "
+FOUND=$("$ADB" shell cat /data/local/tmp/window_dump.xml | python3 -c "
 import sys, xml.etree.ElementTree as ET
 landmark = sys.argv[1]
 root = ET.fromstring(sys.stdin.read())

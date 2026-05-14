@@ -28,9 +28,9 @@ if [ -z "$LABEL" ]; then
     exit 1
 fi
 
-"$ADB" shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1
+"$ADB" shell uiautomator dump /data/local/tmp/window_dump.xml >/dev/null 2>&1
 
-BOUNDS=$("$ADB" shell cat /sdcard/window_dump.xml | python3 -c "
+BOUNDS=$("$ADB" shell cat /data/local/tmp/window_dump.xml | python3 -c "
 import sys, xml.etree.ElementTree as ET
 label = sys.argv[1]
 root = ET.fromstring(sys.stdin.read())
@@ -54,8 +54,8 @@ echo "✓ Tapping '$LABEL' at ($CX,$CY)  bounds=$BOUNDS"
 "$ADB" shell input tap "$CX" "$CY"
 
 if $SCREENSHOT; then
-    "$ADB" shell screencap -p /sdcard/screen.png
-    "$ADB" pull /sdcard/screen.png /tmp/screen.png >/dev/null 2>&1
+    "$ADB" shell screencap -p /data/local/tmp/screen.png
+    "$ADB" pull /data/local/tmp/screen.png /tmp/screen.png >/dev/null 2>&1
     echo "📸 /tmp/screen.png"
 fi
 
