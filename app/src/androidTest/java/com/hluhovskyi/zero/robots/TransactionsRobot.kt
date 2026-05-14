@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -24,6 +25,10 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
     }
 
     fun assertHasExpense(amount: String): TransactionsRobot {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText(amount, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         composeRule.onNodeWithText(amount, substring = true).assertIsDisplayed()
         return this
     }

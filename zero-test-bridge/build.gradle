@@ -11,12 +11,14 @@ android {
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
 }
 
 dependencies {
+    coreLibraryDesugaring deps.android.tools.desugar
     implementation deps.kotlinxDatetime
     implementation deps.kotlin.coroutines
     implementation project(':zero-api')
