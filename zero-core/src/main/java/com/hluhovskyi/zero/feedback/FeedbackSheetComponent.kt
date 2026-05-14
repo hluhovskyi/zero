@@ -5,9 +5,9 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import java.io.Closeable
 
-private const val TAG = "FeedbackComponent"
+private const val TAG = "FeedbackSheetComponent"
 
-class FeedbackComponent private constructor(
+class FeedbackSheetComponent private constructor(
     feedbackService: FeedbackService,
     breadcrumbs: Breadcrumbs,
     deviceInfo: DeviceInfo,
@@ -53,7 +53,7 @@ class FeedbackComponent private constructor(
             isDebugBuild: Boolean,
             errorMessageProvider: () -> String,
             onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler.Noop,
-        ): FeedbackComponent = FeedbackComponent(
+        ): FeedbackSheetComponent = FeedbackSheetComponent(
             feedbackService = dependencies.feedbackService,
             breadcrumbs = dependencies.breadcrumbs,
             deviceInfo = dependencies.deviceInfo,

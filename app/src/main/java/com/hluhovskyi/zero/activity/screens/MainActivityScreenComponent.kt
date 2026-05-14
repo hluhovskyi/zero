@@ -45,10 +45,8 @@ import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.feedback.DeviceInfo
-import com.hluhovskyi.zero.feedback.FeedbackModule
+import com.hluhovskyi.zero.feedback.FeedbackComponent
 import com.hluhovskyi.zero.feedback.FeedbackService
-import com.hluhovskyi.zero.feedback.InMemoryBreadcrumbs
-import com.hluhovskyi.zero.feedback.ShakeFeedbackEntry
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -68,7 +66,7 @@ import javax.inject.Scope
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
-internal annotation class MainActivityScreenScope
+private annotation class MainActivityScreenScope
 
 private const val TAG = "MainActivityScreenComponent"
 
@@ -79,19 +77,15 @@ private const val TAG = "MainActivityScreenComponent"
 @MainActivityScreenScope
 @dagger.Component(
     dependencies = [MainActivityScreenComponent.Dependencies::class],
-    modules = [MainActivityScreenComponent.Module::class, FeedbackModule::class],
+    modules = [MainActivityScreenComponent.Module::class],
 )
 internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
     override val tag: String = TAG
 
-    protected abstract val inMemoryBreadcrumbs: InMemoryBreadcrumbs
-    protected abstract val shakeFeedbackEntry: ShakeFeedbackEntry
+    protected abstract val feedbackComponent: FeedbackComponent
 
-    override fun attach(): Closeable = Closeables.merge(
-        inMemoryBreadcrumbs.attach(),
-        shakeFeedbackEntry.attach(),
-    )
+    override fun attach(): Closeable = feedbackComponent.attach()
 
     interface Dependencies {
         val idGenerator: IdGenerator
@@ -748,5 +742,32 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .logging(logger)
         }
 
+        @Provides
+        @MainActivityScreenScope
+        fun feedbackComponent(
+            context: Context,
+            clock: Clock,
+            navigator: Navigator,
+            navigatorScope: NavigatorScope,
+            feedbackService: FeedbackService,
+            deviceInfo: DeviceInfo,
+        ): FeedbackComponent {
+            val dependencies = object : FeedbackComponent.Dependencies {
+                override val context: Context = context
+                override val clock: Clock = clock
+                override val navigator: Navigator = navigator
+                override val navigatorScope: NavigatorScope = navigatorScope
+                override val feedbackService: FeedbackService = feedbackService
+                override val deviceInfo: DeviceInfo = deviceInfo
+            }
+            return FeedbackComponent.builder(dependencies).build()
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun feedbackNavigationEntry(
+            feedbackComponent: FeedbackComponent,
+        ): NavigatorEntry = feedbackComponent.navigationEntry
     }
 }
