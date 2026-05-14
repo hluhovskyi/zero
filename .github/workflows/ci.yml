@@ -35,6 +35,11 @@ jobs:
           distribution: 'temurin'
 
       - if: steps.changes.outputs.runtime == 'true'
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
+
+      - if: steps.changes.outputs.runtime == 'true'
         uses: gradle/actions/setup-gradle@v3
 
       - if: steps.changes.outputs.runtime == 'true'
