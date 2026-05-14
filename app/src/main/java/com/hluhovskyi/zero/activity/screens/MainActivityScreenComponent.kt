@@ -556,7 +556,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
                 .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)))
                 .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)))
-                .onBudgetSavedHandler { _, _ -> navigator.back() }
+                .onBudgetSavedHandler { _, _ -> }
                 .onBackHandler { navigator.back() }
                 .logging(logger)
         }
