@@ -39,15 +39,23 @@ jobs:
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run spotless check
-        run: ./gradlew spotlessCheck
+        run: ./gradlew spotlessCheck --profile
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run unit tests
-        run: ./gradlew test
+        run: ./gradlew test --profile
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run lint
-        run: ./gradlew lintDebug
+        run: ./gradlew lintDebug --profile
+
+      - if: always() && steps.changes.outputs.runtime == 'true'
+        name: Upload gradle profile reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: '**/build/reports/profile/**'
+          if-no-files-found: warn
 
       - if: failure()
         uses: actions/upload-artifact@v4
