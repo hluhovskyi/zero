@@ -340,7 +340,6 @@ abstract class ApplicationComponent :
         fun exportWriter(context: Context): ExportWriter = DefaultExportWriter(context)
 
         @Provides
-        @ApplicationScope
         fun importComponentBuilder(
             component: ApplicationComponent,
             syncEngine: SyncEngine,

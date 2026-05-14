@@ -108,7 +108,6 @@ abstract class ImportComponent :
         fun viewModel(useCase: ImportUseCase): ImportViewModel = DefaultImportViewModel(useCase)
 
         @Provides
-        @ImportScope
         internal fun sourceSelectionComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
@@ -118,7 +117,6 @@ abstract class ImportComponent :
             .onImportFinishedHandler(onImportFinishedHandler)
 
         @Provides
-        @ImportScope
         internal fun categoriesReviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
@@ -128,7 +126,6 @@ abstract class ImportComponent :
             .imageLoader(imageLoader)
 
         @Provides
-        @ImportScope
         internal fun accountsReviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,
@@ -138,7 +135,6 @@ abstract class ImportComponent :
             .imageLoader(imageLoader)
 
         @Provides
-        @ImportScope
         internal fun transactionsPreviewComponentBuilder(
             component: ImportComponent,
             importUseCase: ImportUseCase,

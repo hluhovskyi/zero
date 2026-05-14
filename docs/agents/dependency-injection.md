@@ -22,6 +22,35 @@ Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
 
 **Scope a use case to the smallest component that needs it** — create it in `FeatureComponent.Module` via `@Provides`. Only add it to `Dependencies` and promote to `ActivityComponent` if two or more feature components need it.
 
+## Component Builder Providers Must Be Unscoped
+
+**Never put a `@Scope` annotation on a `@Provides` function that returns a `Component.Builder`** — scoping makes the Builder a shared mutable singleton across the scope's lifetime. Different consumers call different `@BindsInstance` setters on it, and values from one consumer leak into the next. Leave the Builder provider unscoped so each consumer gets a fresh Builder with the factory defaults intact. Enforced by lint rule `ScopedComponentBuilder`.
+
+## Pre-Configured Builder Defaults via Qualifier
+
+**When a Builder handler is identical across every consumer (typical: a Navigator-bound "navigate to fixed destination" handler), set it as a default on a qualifier-tagged `@Provides` at the layer that owns the Navigator** — don't thread the handler through each consumer's `@BindsInstance`. The qualifier marks the pre-configured Builder so injection sites opt in explicitly:
+
+```kotlin
+@Qualifier @Retention(AnnotationRetention.RUNTIME)
+private annotation class ForMainActivity
+
+@Provides @ForMainActivity
+fun transactionComponentBuilderForMainActivity(
+    builder: TransactionComponent.Builder,
+    navigator: Navigator,
+): TransactionComponent.Builder = builder.onDuplicateTransactionHandler { id ->
+    navigator.navigateTo(Destinations.Transaction.Item.Duplicate, ...)
+}
+
+// At injection site:
+fun homeNavigationEntry(
+    @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
+    ...
+)
+```
+
+Reuse a single qualifier across multiple Builder types — Dagger picks the matching `@Provides` by parameter type at each injection site.
+
 ## Lifecycle Timing
 
 Resolve dependencies that require runtime state (e.g. looking up a scheme by ID) in `attach()`, not in the constructor or `@Provides` methods. This ensures the component is fully wired before resolution occurs.
