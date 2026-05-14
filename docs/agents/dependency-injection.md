@@ -69,3 +69,19 @@ private class PresetsAttachable(
     override fun attach(): Closeable = Closeables.of { scope.launch { useCase.seed() } }
 }
 ```
+
+## Mixed-Lifecycle Features Get Their Own Component
+
+**If you find yourself adding `protected abstract val X` to a parent component just to call `.attach()` on it, stop — extract a dedicated `@Component` with its own `@Scope` instead.** That field is the signal that you've leaked a feature's internals into the parent's graph; the parent should only see the built feature component and ask it for `attach()` and (where relevant) its `NavigatorEntry`.
+
+Single-binding features (e.g., a picker that registers one `NavigatorEntry`) stay in the parent's module — this rule kicks in only when there's lifecycle state to attach. See `FeedbackComponent` for the canonical example.
+
+## Choose the Module That Matches the Feature's Dependencies
+
+**Feature `@Component` classes live where their dependencies allow.** A feature with no `app`-internal types (`Navigator`, `Destinations`, `BuildConfig`) and no Android-only types belongs in `zero-core` — and benefits from being KMP-portable later. A feature that needs sensors, Android lifecycle, navigation, or `BuildConfig` lives in `app` — splitting it would require an abstraction layer that isn't worth the cost for a single consumer.
+
+The split inside a feature can be hybrid: keep the pure UI/logic (`FeedbackSheetComponent`, `InMemoryBreadcrumbs`) in `zero-core` and put the Android-coupled orchestrator (`FeedbackComponent`, `ShakeDetector`) in `app`. The `app`-side Dagger component consumes the zero-core pieces directly via its graph.
+
+## Collapse `Factory.create()` Parameters Into `Dependencies` When Constant
+
+**`Factory.create(...)` parameters earn their place only when at least one call site needs a different value.** If every call site passes the same constants (single `BuildConfig.DEBUG`, same string resource, same back handler), move them into `Dependencies` and let Dagger build the component directly — drop the factory indirection. Reserve `Factory.create(...)` for genuinely reused components like `ColorPickerComponent`, which gets a different `OnColorSelectedHandler` per registration site.
