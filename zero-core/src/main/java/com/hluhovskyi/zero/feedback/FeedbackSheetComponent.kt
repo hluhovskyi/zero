@@ -4,10 +4,11 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import java.io.Closeable
+import javax.inject.Inject
 
 private const val TAG = "FeedbackSheetComponent"
 
-class FeedbackSheetComponent private constructor(
+class FeedbackSheetComponent @Inject internal constructor(
     feedbackService: FeedbackService,
     breadcrumbs: Breadcrumbs,
     deviceInfo: DeviceInfo,
@@ -39,32 +40,4 @@ class FeedbackSheetComponent private constructor(
     }
 
     override fun attach(): Closeable = viewModel.attach()
-
-    interface Dependencies {
-        val feedbackService: FeedbackService
-        val breadcrumbs: Breadcrumbs
-        val deviceInfo: DeviceInfo
-        val clock: Clock
-    }
-
-    class Factory(private val dependencies: Dependencies) {
-
-        fun create(
-            isDebugBuild: Boolean,
-            errorMessageProvider: () -> String,
-            onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler.Noop,
-        ): FeedbackSheetComponent = FeedbackSheetComponent(
-            feedbackService = dependencies.feedbackService,
-            breadcrumbs = dependencies.breadcrumbs,
-            deviceInfo = dependencies.deviceInfo,
-            clock = dependencies.clock,
-            isDebugBuild = isDebugBuild,
-            errorMessageProvider = errorMessageProvider,
-            onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
-        )
-    }
-
-    companion object {
-        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
-    }
 }

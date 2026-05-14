@@ -14,7 +14,7 @@ private const val WINDOW_MS = 500L
 private const val REQUIRED_SAMPLES = 3
 private const val DEBOUNCE_MS = 1_500L
 
-internal class ShakeDetector(
+class ShakeDetector(
     private val sensorManager: SensorManager,
     private val onShake: () -> Unit,
 ) : Attachable {

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.navigation.NavHostController
+import com.hluhovskyi.zero.BuildConfig
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
@@ -46,6 +48,7 @@ import com.hluhovskyi.zero.currencies.picker.CurrencyPickerComponent
 import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackComponent
 import com.hluhovskyi.zero.feedback.FeedbackService
+import com.hluhovskyi.zero.feedback.OnFeedbackSubmittedHandler
 import com.hluhovskyi.zero.home.HomeComponent
 import com.hluhovskyi.zero.icons.IconPickerComponent
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -63,6 +66,8 @@ import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.Closeable
 import javax.inject.Scope
 
@@ -762,17 +767,24 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             context: Context,
             clock: Clock,
             navigator: Navigator,
-            navigatorScope: NavigatorScope,
             feedbackService: FeedbackService,
             deviceInfo: DeviceInfo,
         ): FeedbackComponent {
             val dependencies = object : FeedbackComponent.Dependencies {
                 override val context: Context = context
                 override val clock: Clock = clock
-                override val navigator: Navigator = navigator
-                override val navigatorScope: NavigatorScope = navigatorScope
                 override val feedbackService: FeedbackService = feedbackService
                 override val deviceInfo: DeviceInfo = deviceInfo
+                override val routes: Flow<String> = navigator.state.map { it.destination.route }
+                override val onShakeDetected: () -> Unit = {
+                    navigator.navigateTo(Destinations.Feedback)
+                }
+                override val isDebugBuild: Boolean = BuildConfig.DEBUG
+                override val errorMessageProvider: () -> String = {
+                    context.getString(R.string.feedback_error_generic)
+                }
+                override val onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler =
+                    OnFeedbackSubmittedHandler { navigator.back() }
             }
             return FeedbackComponent.builder(dependencies).build()
         }
@@ -782,6 +794,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun feedbackNavigationEntry(
             feedbackComponent: FeedbackComponent,
-        ): NavigatorEntry = feedbackComponent.navigationEntry
+            navigatorScope: NavigatorScope,
+        ): NavigatorEntry = navigatorScope.component(
+            destination = Destinations.Feedback,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            feedbackComponent.sheetComponentProvider.get()
+        }
     }
 }
