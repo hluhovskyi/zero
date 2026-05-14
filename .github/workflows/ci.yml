@@ -35,7 +35,7 @@ jobs:
           distribution: 'temurin'
 
       - if: steps.changes.outputs.runtime == 'true'
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run spotless check
