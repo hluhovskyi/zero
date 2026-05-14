@@ -9,7 +9,9 @@ import com.hluhovskyi.zero.accounts.MIGRATION_5_6
 import com.hluhovskyi.zero.accounts.RoomAccountRepository
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSink
 import com.hluhovskyi.zero.accounts.RoomAccountSyncSource
+import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.budget.MIGRATION_7_8
+import com.hluhovskyi.zero.budget.RoomBudgetRepository
 import com.hluhovskyi.zero.categories.CategoryRepository
 import com.hluhovskyi.zero.categories.MIGRATION_6_7
 import com.hluhovskyi.zero.categories.RoomCategoryRepository
@@ -63,6 +65,7 @@ interface DatabaseComponent {
     val accountRepository: AccountRepository
     val transactionRepository: TransactionRepository
     val categoryRepository: CategoryRepository
+    val budgetRepository: BudgetRepository
     val configurationRepository: ConfigurationRepository
 
     val currencyRepositoryTransformer: CurrencyRepository.Transformer
@@ -180,6 +183,22 @@ interface DatabaseComponent {
             zonedClock: ZonedClock,
         ): CategoryRepository = RoomCategoryRepository(
             categoryRoom = { database.get().category() },
+            currentUserId = currentUserId,
+            idGenerator = idGenerator,
+            zonedClock = zonedClock,
+            incorrectStateDetector = incorrectStateDetector,
+        )
+
+        @Provides
+        @DatabaseScope
+        internal fun budgetRepository(
+            database: Provider<MainDatabase>,
+            @CurrentUserId currentUserId: Flow<Id.Known>,
+            idGenerator: IdGenerator,
+            incorrectStateDetector: IncorrectStateDetector,
+            zonedClock: ZonedClock,
+        ): BudgetRepository = RoomBudgetRepository(
+            budgetRoom = { database.get().budget() },
             currentUserId = currentUserId,
             idGenerator = idGenerator,
             zonedClock = zonedClock,

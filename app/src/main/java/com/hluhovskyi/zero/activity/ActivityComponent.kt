@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -111,6 +112,7 @@ abstract class ActivityComponent :
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
         val categoryRepository: CategoryRepository
+        val budgetRepository: BudgetRepository
         val transactionRepository: TransactionRepository
         val iconRepository: IconRepository
         val colorRepository: ColorRepository

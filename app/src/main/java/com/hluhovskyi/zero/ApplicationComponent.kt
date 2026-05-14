@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -425,6 +426,12 @@ internal object DatabaseModule {
     fun categoryRepository(
         databaseComponent: DatabaseComponent,
     ): CategoryRepository = databaseComponent.categoryRepository
+
+    @Provides
+    @ApplicationScope
+    fun budgetRepository(
+        databaseComponent: DatabaseComponent,
+    ): BudgetRepository = databaseComponent.budgetRepository
 
     @Provides
     @ApplicationScope
