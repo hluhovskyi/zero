@@ -340,7 +340,6 @@ abstract class ApplicationComponent :
         fun exportWriter(context: Context): ExportWriter = DefaultExportWriter(context)
 
         @Provides
-        @ApplicationScope
         fun importComponentBuilder(
             component: ApplicationComponent,
             syncEngine: SyncEngine,
@@ -363,13 +362,11 @@ abstract class ApplicationComponent :
         }
 
         @Provides
-        @ApplicationScope
         fun settingsComponentBuilder(
             component: ApplicationComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
 
         @Provides
-        @ApplicationScope
         fun activityComponentBuilder(
             component: ApplicationComponent,
             logger: Logger,
