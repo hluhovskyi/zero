@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.robots
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,6 +15,10 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
     }
 
     fun tapAddTransaction(): TransactionEditRobot {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithContentDescription("Add transaction")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         composeRule.onNodeWithContentDescription("Add transaction").performClick()
         return TransactionEditRobot(composeRule)
     }

@@ -9,12 +9,12 @@ import org.junit.runner.RunWith
 class ZeroE2eTest : BaseE2eTest() {
 
     @Test
-    fun `fresh install shows welcome screen`() {
+    fun freshInstallShowsWelcomeScreen() {
         onTransactions().assertWelcomeScreenVisible()
     }
 
     @Test
-    fun `add expense appears in transaction list`() {
+    fun addExpenseAppearsInTransactionList() {
         seedDefaultSetup()
         onTransactions()
             .tapAddTransaction()
