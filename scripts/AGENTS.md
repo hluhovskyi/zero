@@ -32,3 +32,4 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - **Don't bypass `ui/adb.sh`.** Direct `adb` calls in scripts duplicate the `.emulator-serial` sourcing and drift when the resolution logic changes.
 - **Fail loud.** Scripts swallowing stderr/exit codes turn into silent no-ops that waste turns; surface the actual adb / curl / gradle error.
 - **One responsibility per script.** If you reach for `&&`/`;` to chain unrelated work, write a second script instead.
+- **Don't use `./gradlew :app:installDebug` to deploy.** With multiple emulators running it installs to every connected device, clobbering parallel worktrees' APKs. Build with `./gradlew :app:assembleDebug` then deploy via `./scripts/ui/adb.sh install -r app/build/outputs/apk/debug/app-debug.apk` to target only this worktree's emulator.

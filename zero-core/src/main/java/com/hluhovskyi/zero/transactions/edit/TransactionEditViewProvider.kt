@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExtendedFloatingActionButton
-import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -48,6 +46,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
@@ -207,21 +206,15 @@ private fun TransactionEditView(
             }
         }
 
-        ExtendedFloatingActionButton(
+        ZeroFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                )
-            },
-            text = {
-                Text(text = stringResource(R.string.transaction_edit_save))
-            },
             onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+            icon = Icons.Filled.Check,
+            contentDescription = stringResource(R.string.transaction_edit_save),
+            expanded = true,
+            text = stringResource(R.string.transaction_edit_save),
         )
     }
 }

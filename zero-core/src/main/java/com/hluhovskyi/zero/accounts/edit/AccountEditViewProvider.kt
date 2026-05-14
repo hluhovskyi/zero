@@ -19,8 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExtendedFloatingActionButton
-import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -49,6 +47,7 @@ import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.UiColorScheme
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
@@ -162,14 +161,15 @@ private fun AccountEditView(
             }
         }
 
-        ExtendedFloatingActionButton(
+        ZeroFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp),
-            icon = { Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.account_edit_save_description)) },
-            text = { Text(stringResource(R.string.account_edit_save)) },
             onClick = { viewModel.perform(AccountEditViewModel.Action.Save) },
-            elevation = FloatingActionButtonDefaults.elevation(8.dp),
+            icon = Icons.Filled.Check,
+            contentDescription = stringResource(R.string.account_edit_save_description),
+            expanded = true,
+            text = stringResource(R.string.account_edit_save),
         )
     }
 }

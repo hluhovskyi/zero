@@ -15,6 +15,7 @@
       "Bash(./scripts/fetch-design.sh *)",
       "Bash(./scripts/detect-worktree.sh)",
       "Bash(./scripts/guard-branch-switch.sh)",
+      "Bash(./scripts/emulator/acquire-emulator.sh *)",
       "Bash(./scripts/github/wait-for-ci.sh *)"
     ]
   },

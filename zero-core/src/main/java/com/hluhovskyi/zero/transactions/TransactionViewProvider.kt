@@ -26,6 +26,7 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.outlined.Delete
@@ -60,6 +61,7 @@ import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
 import com.hluhovskyi.zero.ui.SearchBar
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
@@ -71,6 +73,7 @@ internal class TransactionViewProvider(
     private val amountFormatter: AmountFormatter,
     private val dateFormatter: DateFormatter,
     private val displayConfig: DisplayConfig = DisplayConfig(),
+    private val onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
 ) : ViewProvider {
 
     @Composable
@@ -81,6 +84,7 @@ internal class TransactionViewProvider(
             amountFormatter = amountFormatter,
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
+            onAddTransaction = onAddTransaction,
         )
     }
 }
@@ -92,6 +96,7 @@ private fun TransactionView(
     amountFormatter: AmountFormatter,
     dateFormatter: DateFormatter,
     displayConfig: DisplayConfig = DisplayConfig(),
+    onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
@@ -113,6 +118,10 @@ private fun TransactionView(
             viewModel.perform(TransactionViewModel.Action.LoadMore)
         }
     }
+
+    val fabExpanded = state.transactions.isEmpty() &&
+        state.searchQuery.isBlank() &&
+        !state.activeFilter.isActive
 
     Box(modifier = Modifier.fillMaxSize().focusTarget()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -332,6 +341,19 @@ private fun TransactionView(
                     }
                 }
             }
+        }
+
+        if (displayConfig.showFab) {
+            ZeroFab(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 32.dp),
+                onClick = { onAddTransaction.onAddTransaction() },
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.transaction_add),
+                expanded = fabExpanded,
+                text = stringResource(R.string.transaction_add),
+            )
         }
     }
 }

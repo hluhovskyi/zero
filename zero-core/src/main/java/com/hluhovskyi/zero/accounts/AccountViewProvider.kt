@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -59,9 +61,9 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSecondary
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
@@ -108,68 +110,84 @@ private fun AccountView(
     val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     var showArchived by remember { mutableStateOf(false) }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item {
-            NetWorthHeader(
-                balance = amountFormatter.format(
-                    amount = state.balance,
-                    currencySymbol = state.currency?.symbol.orEmpty(),
-                ),
-                assets = amountFormatter.format(
-                    amount = state.assets,
-                    currencySymbol = state.currency?.symbol.orEmpty(),
-                ),
-                liabilities = amountFormatter.format(
-                    amount = state.liabilities,
-                    currencySymbol = state.currency?.symbol.orEmpty(),
-                ),
-            )
-        }
-        item {
-            MyAccountsSectionHeader(onAddAccount = { onAddAccount.onAddAccount() })
-        }
-        grouped.forEach { (category, accounts) ->
-            item(key = category.name) {
-                CategoryHeader(category = category)
-            }
-            items(accounts, key = { it.id.value }) { account ->
-                AccountRow(
-                    account = account,
-                    imageLoader = imageLoader,
-                    amountFormatter = amountFormatter,
-                    onClick = { viewModel.perform(AccountViewModel.Action.Select(account.id)) },
-                    onLongClick = { expandedItemId = account.id },
-                    menuExpanded = expandedItemId == account.id,
-                    onMenuDismiss = { expandedItemId = null },
-                    onEditClick = {
-                        expandedItemId = null
-                        viewModel.perform(AccountViewModel.Action.Edit(account.id))
-                    },
-                    onArchiveClick = {
-                        expandedItemId = null
-                        viewModel.perform(AccountViewModel.Action.Archive(account.id))
-                    },
-                    onUnarchiveClick = {
-                        expandedItemId = null
-                        viewModel.perform(AccountViewModel.Action.Unarchive(account.id))
-                    },
+    val fabExpanded = !state.hasAddedAccount
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 96.dp),
+        ) {
+            item {
+                NetWorthHeader(
+                    balance = amountFormatter.format(
+                        amount = state.balance,
+                        currencySymbol = state.currency?.symbol.orEmpty(),
+                    ),
+                    assets = amountFormatter.format(
+                        amount = state.assets,
+                        currencySymbol = state.currency?.symbol.orEmpty(),
+                    ),
+                    liabilities = amountFormatter.format(
+                        amount = state.liabilities,
+                        currencySymbol = state.currency?.symbol.orEmpty(),
+                    ),
                 )
             }
-        }
-        if (archivedAccounts.isNotEmpty()) {
-            item(key = "archived_footer") {
-                ArchivedFooter(
-                    archivedAccounts = archivedAccounts,
-                    showArchived = showArchived,
-                    onToggle = { showArchived = !showArchived },
-                    onAccountClick = { account ->
-                        viewModel.perform(AccountViewModel.Action.Select(account.id))
-                    },
-                    imageLoader = imageLoader,
-                    amountFormatter = amountFormatter,
-                )
+            item {
+                MyAccountsSectionHeader()
+            }
+            grouped.forEach { (category, accounts) ->
+                item(key = category.name) {
+                    CategoryHeader(category = category)
+                }
+                items(accounts, key = { it.id.value }) { account ->
+                    AccountRow(
+                        account = account,
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                        onClick = { viewModel.perform(AccountViewModel.Action.Select(account.id)) },
+                        onLongClick = { expandedItemId = account.id },
+                        menuExpanded = expandedItemId == account.id,
+                        onMenuDismiss = { expandedItemId = null },
+                        onEditClick = {
+                            expandedItemId = null
+                            viewModel.perform(AccountViewModel.Action.Edit(account.id))
+                        },
+                        onArchiveClick = {
+                            expandedItemId = null
+                            viewModel.perform(AccountViewModel.Action.Archive(account.id))
+                        },
+                        onUnarchiveClick = {
+                            expandedItemId = null
+                            viewModel.perform(AccountViewModel.Action.Unarchive(account.id))
+                        },
+                    )
+                }
+            }
+            if (archivedAccounts.isNotEmpty()) {
+                item(key = "archived_footer") {
+                    ArchivedFooter(
+                        archivedAccounts = archivedAccounts,
+                        showArchived = showArchived,
+                        onToggle = { showArchived = !showArchived },
+                        onAccountClick = { account ->
+                            viewModel.perform(AccountViewModel.Action.Select(account.id))
+                        },
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                    )
+                }
             }
         }
+        ZeroFab(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
+            onClick = { onAddAccount.onAddAccount() },
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.account_add),
+            expanded = fabExpanded,
+            text = stringResource(R.string.account_add),
+        )
     }
 }
 
@@ -263,12 +281,11 @@ private fun NetWorthHeader(
 }
 
 @Composable
-private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
+private fun MyAccountsSectionHeader() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -279,24 +296,6 @@ private fun MyAccountsSectionHeader(onAddAccount: () -> Unit) {
                 color = OnSurface,
             ),
         )
-        Box(
-            modifier = Modifier
-                .background(
-                    color = Secondary,
-                    shape = RoundedCornerShape(20.dp),
-                )
-                .clickable(onClick = onAddAccount)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.account_add),
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = OnSecondary,
-                ),
-            )
-        }
     }
 }
 

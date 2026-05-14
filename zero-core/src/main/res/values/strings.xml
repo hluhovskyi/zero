@@ -160,6 +160,7 @@
     <string name="transaction_filter_icon_description">Filter</string>
     <string name="transaction_clear_all">Clear all</string>
     <string name="transaction_remove_filter_description">Remove filter</string>
+    <string name="transaction_add">Add transaction</string>
 
     <!-- Transaction Filter Sheet -->
     <string name="filter_title">Filter</string>
@@ -214,4 +215,11 @@
     <string name="feedback_description_hint">Describe what happened…</string>
     <string name="feedback_submit">Send</string>
     <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+
+    <!-- Home / Welcome -->
+    <string name="home_title">Zero</string>
+    <string name="welcome_heading">Your finances,\none place.</string>
+    <string name="welcome_subtitle">Add your first transaction or bring in data from another app to get started.</string>
+    <string name="welcome_import_action">Import from another app</string>
+    <string name="welcome_illustration_amount_placeholder" translatable="false">$0.00</string>
 </resources>

@@ -16,7 +16,6 @@ internal object Destinations {
     }
 
     sealed interface Transaction : Destination {
-        object All : Transaction, Destination by destinationOf("transactions")
         object Filter : Transaction, Destination by destinationOf("transactions/filter")
         object Edit : Transaction, Destination by destinationOf("transactions/edit", SelectedCategoryId, SelectedAccountId) {
             object SelectedCategoryId : Argument<Id> by idOptionalValueOf("selectedCategoryId")
@@ -71,6 +70,7 @@ internal object Destinations {
         }
     }
 
+    object Home : Destination by destinationOf("home")
     object Settings : Destination by destinationOf("settings")
     object Import : Destination by destinationOf("import")
     object Feedback : Destination by destinationOf("feedback")

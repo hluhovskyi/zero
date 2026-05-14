@@ -24,6 +24,7 @@ interface TransactionRepository {
     sealed interface Criteria<T> {
 
         class All : Criteria<List<Transaction>>
+        class HasAny : Criteria<Boolean>
         data class ById(val id: Id.Known) : Criteria<Transaction>
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
