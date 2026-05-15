@@ -21,13 +21,7 @@ import kotlinx.datetime.LocalDate
 @Retention(AnnotationRetention.SOURCE)
 private annotation class BudgetEditCategoryId
 
-@Qualifier
-@Retention(AnnotationRetention.SOURCE)
-private annotation class BudgetEditPeriodStart
-
-@Qualifier
-@Retention(AnnotationRetention.SOURCE)
-private annotation class BudgetEditPeriodEnd
+data class BudgetEditPeriod(val from: LocalDate, val to: LocalDate)
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -71,10 +65,7 @@ abstract class BudgetEditComponent : AttachableViewComponent {
         fun categoryId(@BudgetEditCategoryId id: Id.Known): Builder
 
         @BindsInstance
-        fun periodStart(@BudgetEditPeriodStart start: LocalDate): Builder
-
-        @BindsInstance
-        fun periodEnd(@BudgetEditPeriodEnd end: LocalDate): Builder
+        fun period(period: BudgetEditPeriod): Builder
 
         @BindsInstance
         fun onBudgetSavedHandler(handler: OnBudgetSavedHandler): Builder
@@ -90,8 +81,7 @@ abstract class BudgetEditComponent : AttachableViewComponent {
         @BudgetEditScope
         internal fun viewModel(
             @BudgetEditCategoryId categoryId: Id.Known,
-            @BudgetEditPeriodStart periodStart: LocalDate,
-            @BudgetEditPeriodEnd periodEnd: LocalDate,
+            period: BudgetEditPeriod,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             budgetRepository: BudgetRepository,
             onBudgetSavedHandler: OnBudgetSavedHandler,
@@ -99,8 +89,8 @@ abstract class BudgetEditComponent : AttachableViewComponent {
             dispatcherProvider: DispatcherProvider,
         ): BudgetEditViewModel = DefaultBudgetEditViewModel(
             categoryId = categoryId,
-            periodStart = periodStart,
-            periodEnd = periodEnd,
+            periodStart = period.from,
+            periodEnd = period.to,
             categoriesQueryUseCase = categoriesQueryUseCase,
             budgetRepository = budgetRepository,
             onBudgetSavedHandler = onBudgetSavedHandler,

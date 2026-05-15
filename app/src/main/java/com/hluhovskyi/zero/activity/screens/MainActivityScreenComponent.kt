@@ -26,6 +26,7 @@ import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
+import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -554,8 +555,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
-                .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)))
-                .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)))
+                .period(BudgetEditPeriod(
+                    from = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)),
+                    to = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)),
+                ))
                 .onBudgetSavedHandler { _, _ -> }
                 .onBackHandler { navigator.back() }
                 .logging(logger)
