@@ -32,5 +32,6 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val copyConfirmVisible: Boolean = false,
         val editingCategoryId: Id.Known? = null,
         val editingAmountText: String = "0",
+        val skippedInSession: Set<Id.Known> = emptySet(),
     )
 }

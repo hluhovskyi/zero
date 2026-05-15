@@ -63,6 +63,7 @@ internal class DefaultBudgetViewModel(
                     it.copy(
                         editingCategoryId = action.categoryId,
                         editingAmountText = seedText,
+                        skippedInSession = emptySet(),
                     )
                 }
             }
@@ -77,7 +78,13 @@ internal class DefaultBudgetViewModel(
                 mutableState.update { it.copy(editingAmountText = prevText) }
             }
             BudgetViewModel.Action.DismissInlineEdit -> {
-                mutableState.update { it.copy(editingCategoryId = null, editingAmountText = "0") }
+                mutableState.update {
+                    it.copy(
+                        editingCategoryId = null,
+                        editingAmountText = "0",
+                        skippedInSession = emptySet(),
+                    )
+                }
             }
             BudgetViewModel.Action.CommitInlineEdit -> commitInlineEdit()
         }
@@ -88,7 +95,8 @@ internal class DefaultBudgetViewModel(
         val editingId = state.editingCategoryId ?: return@launch
         val parsed = state.editingAmountText.toBigDecimalOrNull()
         val amount = if (parsed != null) Amount(parsed) else Amount.zero()
-        if (amount > Amount.zero()) {
+        val saved = amount > Amount.zero()
+        if (saved) {
             val (currentStart, currentEnd) = currentPeriod()
             val existing = state.budgeted.firstOrNull { it.categoryId == editingId }
             budgetRepository.insert(
@@ -102,25 +110,40 @@ internal class DefaultBudgetViewModel(
                 ),
             )
         }
-        val nextUnset = nextUnsetCategoryId(state, after = editingId)
+        val skipped = if (saved) state.skippedInSession else state.skippedInSession + editingId
+        val nextUnset = nextUnsetCategoryId(state, after = editingId, skipped = skipped)
         if (nextUnset != null) {
             mutableState.update {
-                it.copy(editingCategoryId = nextUnset, editingAmountText = "0")
+                it.copy(
+                    editingCategoryId = nextUnset,
+                    editingAmountText = "0",
+                    skippedInSession = skipped,
+                )
             }
         } else {
             mutableState.update {
-                it.copy(editingCategoryId = null, editingAmountText = "0")
+                it.copy(
+                    editingCategoryId = null,
+                    editingAmountText = "0",
+                    skippedInSession = emptySet(),
+                )
             }
         }
     }
 
-    private fun nextUnsetCategoryId(state: BudgetViewModel.State, after: Id.Known): Id.Known? {
+    private fun nextUnsetCategoryId(
+        state: BudgetViewModel.State,
+        after: Id.Known,
+        skipped: Set<Id.Known>,
+    ): Id.Known? {
         val rows = state.budgeted
         val currentIndex = rows.indexOfFirst { it.categoryId == after }
         if (currentIndex < 0) return null
         val tail = rows.drop(currentIndex + 1)
         val head = rows.take(currentIndex)
-        return (tail + head).firstOrNull { it.budgetId == null && it.categoryId != after }?.categoryId
+        return (tail + head)
+            .firstOrNull { it.budgetId == null && it.categoryId != after && it.categoryId !in skipped }
+            ?.categoryId
     }
 
     private fun performCopy() = scope.launch {

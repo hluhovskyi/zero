@@ -238,7 +238,11 @@ private fun InlineNumpadOverlay(
 }
 
 private fun hasNextUnset(state: BudgetViewModel.State, editingId: Id.Known): Boolean {
-    return state.budgeted.any { it.categoryId != editingId && it.budgetId == null }
+    return state.budgeted.any {
+        it.categoryId != editingId &&
+            it.budgetId == null &&
+            it.categoryId !in state.skippedInSession
+    }
 }
 
 @Composable
