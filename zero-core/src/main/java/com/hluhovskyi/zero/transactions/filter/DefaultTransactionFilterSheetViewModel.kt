@@ -44,8 +44,8 @@ internal class DefaultTransactionFilterSheetViewModel(
                 categoriesQueryUseCase.queryAll().onEmptyReturnEmptyList(),
                 accountsQueryUseCase.queryAll().onEmptyReturnEmptyList(),
             ) { categories, accounts ->
-                mutableState.value.copy(
-                    availableCategories = buildList {
+                Pair(
+                    buildList {
                         add(TransactionFilterSheetViewModel.FilterCategoryItem.All(count = categories.size))
                         categories.sortedBy { it.name }.forEach { c ->
                             add(
@@ -58,7 +58,7 @@ internal class DefaultTransactionFilterSheetViewModel(
                             )
                         }
                     },
-                    availableAccounts = buildList {
+                    buildList {
                         add(TransactionFilterSheetViewModel.FilterAccountItem.All(count = accounts.size))
                         accounts.sortedBy { it.name }.forEach { a ->
                             add(
@@ -72,7 +72,14 @@ internal class DefaultTransactionFilterSheetViewModel(
                         }
                     },
                 )
-            }.collect { mutableState.update { _ -> it } }
+            }.collect { (categories, accounts) ->
+                mutableState.update { current ->
+                    current.copy(
+                        availableCategories = categories,
+                        availableAccounts = accounts,
+                    )
+                }
+            }
         }
     }
 }
