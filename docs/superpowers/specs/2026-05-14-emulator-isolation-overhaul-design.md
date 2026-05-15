@@ -71,19 +71,22 @@ calling adb and parsing XML — rewriting them adds churn without payoff.
 - Stale-lock recovery: rely on `flock` releasing on process death. (Belt-and-suspenders
   PID + age check kept for legacy file remnants only — flock itself is self-cleaning.)
 
-### Hook (the invisible router)
+### Hook (deny-with-remediation)
 
-A single PreToolUse Bash hook at `scripts/guard-adb.sh`:
+A single PreToolUse Bash hook at `scripts/guard-adb.sh`. Claude Code's hook interface
+allows allow/deny/ask but does not allow mutating `tool_input`, so the hook denies the
+unsafe command with a remediation message pointing the agent at the wrapper. The agent
+re-runs the corrected command on its next turn.
 
-| Input command (regex match) | Rewritten to |
+| Input command (regex match) | Hook output |
 |---|---|
-| `adb <args>` (bare, not via wrapper) | `./scripts/ui/adb <args>` |
-| `./gradlew … installDebug …` | `./scripts/install-app.sh` |
-| `./gradlew … :app:installDebug …` | `./scripts/install-app.sh` |
-| anything else | passed through |
+| `adb <args>` (bare; not `./scripts/ui/adb`) | DENY with `"Run \`./scripts/ui/adb <args>\` — it pins to this worktree's emulator. Direct \`adb\` calls hit whichever device is first in \`adb devices\` and can clobber sibling worktrees."` |
+| `./gradlew … installDebug …` or `… :app:installDebug …` | DENY with `"Run \`./scripts/install-app.sh\` — \`installDebug\` installs to every connected device. The script does \`assembleDebug\` + \`adb install -r\` pinned to this worktree's emulator."` |
+| anything else | pass through |
 
-The hook never rejects — it transforms. If the resulting wrapper rejects (no serial /
-emulator dead), that's the wrapper's job and it has the remediation message.
+Allow-listed bare-adb forms that don't require pinning:
+- `adb devices`, `adb start-server`, `adb kill-server`, `adb version` — these enumerate
+  or manage the server, not a specific device. The hook lets these through.
 
 The existing `scripts/guard-branch-switch.sh` is also a PreToolUse Bash hook; both hooks
 co-exist. Hook configuration lives in `.claude/settings.json`.
@@ -254,6 +257,8 @@ inspector still *works* after the rename is part of step 2.)
 - **Language:** Python for the orchestrator pieces; bash kept for UI scripts.
 - **Isolation strength:** `ANDROID_SERIAL` everywhere is the real fence; per-session adb
   server gives no extra isolation, dropped.
-- **Routing:** auto-rewriting hook (transparent to agent) over reject-only hook.
+- **Routing:** PreToolUse hook denies bare `adb` / `gradle install*` with a remediation
+  message naming the wrapper. (Auto-rewriting was preferred but Claude Code hooks can't
+  mutate `tool_input`; the deny-with-remediation channel is the closest available.)
 - **No-serial path:** wrapper rejects with remediation; acquire is explicit and called at
   the UI verification step, not on every adb invocation.
