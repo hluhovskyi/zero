@@ -112,13 +112,14 @@ private fun BudgetView(
                     onNewer = { viewModel.perform(BudgetViewModel.Action.SelectNewerMonth) },
                 )
             }
-            item {
-                EmptyBudgetCallout(
-                    periodLabel = state.displayedPeriodLabel,
-                    totalCategories = state.budgeted.size,
-                    previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
-                    onCreateBudget = { viewModel.perform(BudgetViewModel.Action.TapCreateBudget) },
-                )
+            if (state.budgeted.none { it.budgetId != null }) {
+                item {
+                    EmptyBudgetCallout(
+                        periodLabel = state.displayedPeriodLabel,
+                        totalCategories = state.budgeted.size,
+                        previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                    )
+                }
             }
             if (state.previousPeriodBudgets.any { it.budgetId != null }) {
                 item {
@@ -334,10 +335,10 @@ private fun InlineCommitButton(text: String, hasNextUnset: Boolean, onCommit: ()
     val parsed = text.toBigDecimalOrNull()
     val hasAmount = parsed != null && parsed > BigDecimal.ZERO
     val label = when {
-        hasNextUnset && hasAmount -> stringResource(R.string.budget_bulk_numpad_set_next, "$$text")
-        hasNextUnset && !hasAmount -> stringResource(R.string.budget_bulk_numpad_skip_next)
-        !hasNextUnset && hasAmount -> stringResource(R.string.budget_bulk_numpad_set, "$$text")
-        else -> stringResource(R.string.budget_bulk_numpad_close)
+        hasNextUnset && hasAmount -> stringResource(R.string.budget_numpad_set_next, "$$text")
+        hasNextUnset && !hasAmount -> stringResource(R.string.budget_numpad_skip_next)
+        !hasNextUnset && hasAmount -> stringResource(R.string.budget_numpad_set, "$$text")
+        else -> stringResource(R.string.budget_numpad_close)
     }
     Box(
         modifier = Modifier
@@ -429,7 +430,6 @@ private fun EmptyBudgetCallout(
     periodLabel: String,
     totalCategories: Int,
     previousPeriodHadBudgets: Boolean,
-    onCreateBudget: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -468,24 +468,6 @@ private fun EmptyBudgetCallout(
                 } else {
                     stringResource(R.string.budget_stat_last_month_none)
                 },
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(OnPrimary, RoundedCornerShape(10.dp))
-                .clickable(onClick = onCreateBudget)
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.budget_create),
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryContainer,
-                ),
             )
         }
     }

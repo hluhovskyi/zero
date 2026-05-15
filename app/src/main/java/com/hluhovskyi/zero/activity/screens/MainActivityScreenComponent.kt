@@ -26,7 +26,6 @@ import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetToastUseCase
-import com.hluhovskyi.zero.budget.bulksetup.BudgetBulkSetupComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -136,7 +135,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val budgetComponentBuilder: BudgetComponent.Builder
         val budgetEditComponentBuilder: BudgetEditComponent.Builder
-        val budgetBulkSetupComponentBuilder: BudgetBulkSetupComponent.Builder
         val budgetToastUseCase: BudgetToastUseCase
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
@@ -543,37 +541,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Budget.Edit.PeriodEnd.withValue(end.toString()),
                         )
                     }
-                    .onCreateBudgetHandler { start, end ->
-                        navigator.navigateTo(
-                            Destinations.Budget.BulkSetup,
-                            Destinations.Budget.BulkSetup.PeriodStart.withValue(start.toString()),
-                            Destinations.Budget.BulkSetup.PeriodEnd.withValue(end.toString()),
-                        )
-                    }
                     .logging(logger),
             )
-        }
-
-        @Provides
-        @IntoSet
-        @MainActivityScreenScope
-        fun budgetBulkSetupNavigationEntry(
-            componentBuilder: BudgetBulkSetupComponent.Builder,
-            navigatorScope: NavigatorScope,
-            budgetToastUseCase: BudgetToastUseCase,
-            logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(
-            destination = Destinations.Budget.BulkSetup,
-            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
-        ) {
-            componentBuilder
-                .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.BulkSetup.PeriodStart)))
-                .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.BulkSetup.PeriodEnd)))
-                .onBulkSavedHandler { count, _ ->
-                    budgetToastUseCase.show("Created $count ${if (count == 1) "budget" else "budgets"}")
-                }
-                .onBackHandler { navigator.back() }
-                .logging(logger)
         }
 
         @Provides

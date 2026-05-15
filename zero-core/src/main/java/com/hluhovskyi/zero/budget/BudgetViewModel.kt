@@ -9,7 +9,6 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         object SelectOlderMonth : Action
         object SelectNewerMonth : Action
         data class TapCategory(val categoryId: Id.Known) : Action
-        object TapCreateBudget : Action
         object TapCopyFromPrevious : Action
         object ConfirmCopy : Action
         object CancelCopy : Action

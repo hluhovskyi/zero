@@ -21,7 +21,6 @@ internal class DefaultBudgetViewModel(
     private val budgetToastUseCase: BudgetToastUseCase,
     private val budgetRepository: BudgetRepository,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
-    private val onCreateBudgetHandler: OnCreateBudgetHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
@@ -35,10 +34,6 @@ internal class DefaultBudgetViewModel(
         when (action) {
             BudgetViewModel.Action.SelectOlderMonth -> monthOffset.update { it - 1 }
             BudgetViewModel.Action.SelectNewerMonth -> monthOffset.update { it + 1 }
-            BudgetViewModel.Action.TapCreateBudget -> scope.launch {
-                val (currentStart, currentEnd) = currentPeriod()
-                onCreateBudgetHandler.onCreate(currentStart, currentEnd)
-            }
             BudgetViewModel.Action.TapCopyFromPrevious -> {
                 val current = mutableState.value
                 if (current.budgeted.none { it.budgetId != null }) {

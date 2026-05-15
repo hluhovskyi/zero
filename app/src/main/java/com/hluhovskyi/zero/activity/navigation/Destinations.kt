@@ -82,10 +82,6 @@ internal object Destinations {
             object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
         }
 
-        object BulkSetup : Budget, Destination by destinationOf("budget/bulksetup/{periodStart}/{periodEnd}", PeriodStart, PeriodEnd) {
-            object PeriodStart : Argument<String> by stringValueOf("periodStart")
-            object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
-        }
     }
 
     object Settings : Destination by destinationOf("settings")

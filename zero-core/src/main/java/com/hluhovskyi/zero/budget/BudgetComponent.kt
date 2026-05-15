@@ -67,7 +67,6 @@ abstract class BudgetComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
             .dependencies(dependencies)
             .onCategoryTappedHandler(OnCategoryTappedHandler.Noop)
-            .onCreateBudgetHandler(OnCreateBudgetHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -77,9 +76,6 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCategoryTappedHandler(handler: OnCategoryTappedHandler): Builder
-
-        @BindsInstance
-        fun onCreateBudgetHandler(handler: OnCreateBudgetHandler): Builder
     }
 
     @dagger.Module
@@ -101,7 +97,6 @@ abstract class BudgetComponent : AttachableViewComponent {
             budgetToastUseCase: BudgetToastUseCase,
             budgetRepository: BudgetRepository,
             onCategoryTappedHandler: OnCategoryTappedHandler,
-            onCreateBudgetHandler: OnCreateBudgetHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
             budgetQueryUseCase = budgetQueryUseCase,
@@ -110,7 +105,6 @@ abstract class BudgetComponent : AttachableViewComponent {
             budgetToastUseCase = budgetToastUseCase,
             budgetRepository = budgetRepository,
             onCategoryTappedHandler = onCategoryTappedHandler,
-            onCreateBudgetHandler = onCreateBudgetHandler,
             dispatchers = dispatcherProvider,
         )
 
