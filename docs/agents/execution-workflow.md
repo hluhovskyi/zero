@@ -11,7 +11,7 @@ Plans are saved to `docs/superpowers/plans/` and serve as the contract between s
 **After every UI change, verify before claiming it works.** No exceptions.
 
 ```bash
-./gradlew installDebug && ./scripts/ui/open-screen.sh <screen>
+./scripts/install-app.sh && ./scripts/ui/open-screen.sh <screen>
 ```
 
 `open-screen.sh` launches the app, navigates to the target screen, prints a readable hierarchy summary, and saves `/tmp/screen.png`. Read the screenshot with your image tool. If the expected composable is missing or has zero-size bounds, the fix did not work — do not report success.
