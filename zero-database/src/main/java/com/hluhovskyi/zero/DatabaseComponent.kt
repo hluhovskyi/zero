@@ -2,7 +2,6 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.withTransaction
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.MIGRATION_1_2
 import com.hluhovskyi.zero.accounts.MIGRATION_3_4
@@ -143,14 +142,6 @@ interface DatabaseComponent {
         @DatabaseScope
         internal fun cleanupJob(db: MainDatabase): CleanupJob = object : CleanupJob {
             override suspend fun clearAllTables() = db.clearAllTables()
-            override suspend fun clearExceptUser() = db.withTransaction {
-                val d = db.openHelper.writableDatabase
-                d.execSQL("DELETE FROM AccountEntity")
-                d.execSQL("DELETE FROM TransactionEntity")
-                d.execSQL("DELETE FROM CategoryEntity")
-                d.execSQL("DELETE FROM ConfigurationEntity")
-                d.execSQL("DELETE FROM BudgetEntity")
-            }
         }
 
         @Provides
