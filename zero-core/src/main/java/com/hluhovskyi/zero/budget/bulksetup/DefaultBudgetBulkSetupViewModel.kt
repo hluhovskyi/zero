@@ -108,24 +108,29 @@ internal class DefaultBudgetBulkSetupViewModel(
             ) { current, previous -> current to previous }
                 .collectLatest { (current, previous) ->
                     val prevByCategory = previous.associateBy { it.categoryId }
+                    val shouldSeed = !initialSeedDone && current.isNotEmpty()
                     val rows = current.map { row ->
                         val prevAmount = prevByCategory[row.categoryId]
                             ?.takeIf { it.budgetId != null }
                             ?.budgeted
-                        val seedAmount = if (!initialSeedDone) row.budgeted else null
                         val existingRow = mutableState.value.categories.firstOrNull { it.categoryId == row.categoryId }
+                        val amount = when {
+                            shouldSeed -> row.budgeted
+                            existingRow != null -> existingRow.amount
+                            else -> Amount.zero()
+                        }
                         BudgetBulkSetupViewModel.CategoryRow(
                             categoryId = row.categoryId,
                             name = row.categoryName,
                             icon = row.icon,
                             colorScheme = row.colorScheme,
-                            amount = seedAmount ?: existingRow?.amount ?: Amount.zero(),
+                            amount = amount,
                             previousAmount = prevAmount,
                         )
                     }
                     val prevWithBudgets = previous.filter { it.budgetId != null }
                     val prevTotal = prevWithBudgets.fold(Amount.zero()) { acc, b -> acc + b.budgeted }
-                    initialSeedDone = true
+                    if (shouldSeed) initialSeedDone = true
                     mutableState.update {
                         it.copy(
                             periodLabel = label(periodStart),
