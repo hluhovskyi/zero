@@ -8,8 +8,7 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
     sealed interface Action {
         object SelectOlderMonth : Action
         object SelectNewerMonth : Action
-        data class TapUnsetCategory(val categoryId: Id.Known) : Action
-        data class TapSetCategory(val categoryId: Id.Known) : Action
+        data class TapCategory(val categoryId: Id.Known) : Action
         object TapCreateBudget : Action
         object TapCopyFromPrevious : Action
     }

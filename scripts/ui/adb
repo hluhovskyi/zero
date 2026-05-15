@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""adb wrapper pinned to this worktree's .emulator-serial.
+
+Behaviour:
+- If invoked with one of {devices, start-server, kill-server, version, help},
+  exec adb directly without requiring a serial. These are server-level commands
+  that don't need pinning and are required for acquire to work.
+- Else require .emulator-serial; export ANDROID_SERIAL; verify the emulator is
+  connected; exec adb. Fail with a clear remediation if any check fails.
+"""
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+_HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(_HERE.parent))
+from lib.emulator import adb_devices, read_serial_file, worktree_root  # noqa: E402
+
+SERVER_LEVEL_COMMANDS = {"devices", "start-server", "kill-server", "version", "help", "--version", "--help"}
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    first = args[0] if args else ""
+
+    if first in SERVER_LEVEL_COMMANDS:
+        os.execvp("adb", ["adb", *args])
+        return  # unreachable
+
+    serial = read_serial_file(worktree_root())
+    if not serial:
+        sys.exit(
+            "No emulator claimed for this worktree (no .emulator-serial).\n"
+            "Run: ./scripts/emulator/acquire when you reach UI verification."
+        )
+
+    if serial not in adb_devices():
+        sys.exit(
+            f"Claimed emulator '{serial}' is not running.\n"
+            f"Either start it (./scripts/emulator/start) or re-acquire "
+            f"(./scripts/emulator/release && ./scripts/emulator/acquire)."
+        )
+
+    os.environ["ANDROID_SERIAL"] = serial
+    os.execvp("adb", ["adb", *args])
+
+
+if __name__ == "__main__":
+    main()

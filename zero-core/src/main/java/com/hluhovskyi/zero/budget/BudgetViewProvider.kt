@@ -115,7 +115,7 @@ private fun BudgetView(
                     colorScheme = row.colorScheme,
                     icon = row.icon,
                     imageLoader = imageLoader,
-                    onClick = { viewModel.perform(BudgetViewModel.Action.TapUnsetCategory(row.categoryId)) },
+                    onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
                 )
             }
         }

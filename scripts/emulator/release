@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""Release this worktree's emulator claim. Optionally kill the emulator too."""
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+_HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(_HERE.parent))
+from lib.emulator import read_serial_file, remove_serial_file, worktree_root  # noqa: E402
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--kill", action="store_true",
+                        help="Also send `adb emu kill` to terminate the emulator process")
+    args = parser.parse_args()
+
+    this = worktree_root()
+    serial = read_serial_file(this)
+    if not serial:
+        print(f"No emulator claimed by this worktree (no .emulator-serial).")
+        return
+
+    remove_serial_file(this)
+    print(f"Released {serial} (removed .emulator-serial)")
+
+    if args.kill:
+        result = subprocess.run(
+            ["adb", "-s", serial, "emu", "kill"],
+            capture_output=True, text=True, check=False,
+        )
+        if result.returncode == 0:
+            print(f"Sent emu kill to {serial}")
+        else:
+            sys.stderr.write(result.stderr)
+            print(f"Could not kill {serial} (may already be down)", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

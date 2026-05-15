@@ -12,7 +12,7 @@
 # Always dumps a fresh UI hierarchy before searching.
 # Exits 1 if the label is not found.
 
-ADB="$(dirname "$0")/adb.sh"
+ADB="$(dirname "$0")/adb"
 
 LABEL="${1:-}"
 SCREENSHOT=false

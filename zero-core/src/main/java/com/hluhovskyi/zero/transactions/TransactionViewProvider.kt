@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -41,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.Color
@@ -250,10 +248,9 @@ private fun TransactionView(
                                                     imageLoader.View(
                                                         image = transaction.accountIcon,
                                                         modifier = Modifier
-                                                            .alpha(ContentAlpha.medium)
                                                             .padding(end = 6.dp)
-                                                            .size(20.dp),
-                                                        tint = transaction.accountColorScheme.primary.toUi(),
+                                                            .size(14.dp),
+                                                        tint = Color(0xFF44464F),
                                                     )
                                                 },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),
@@ -276,10 +273,9 @@ private fun TransactionView(
                                                     imageLoader.View(
                                                         image = transaction.accountIcon,
                                                         modifier = Modifier
-                                                            .alpha(ContentAlpha.medium)
                                                             .padding(end = 6.dp)
-                                                            .size(20.dp),
-                                                        tint = transaction.accountColorScheme.primary.toUi(),
+                                                            .size(14.dp),
+                                                        tint = Color(0xFF44464F),
                                                     )
                                                 },
                                                 convertedAmount = transaction.conversion.format(amountFormatter),

@@ -20,7 +20,7 @@ PACKAGE="com.hluhovskyi.zero"
 ACTIVITY=".activity.MainActivity"
 
 DIR="$(dirname "$0")"
-ADB="$DIR/adb.sh"
+ADB="$DIR/adb"
 TAP="$DIR/tap-label.sh"
 DUMP="$DIR/dump-ui.sh"
 

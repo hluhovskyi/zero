@@ -15,7 +15,15 @@
       "Bash(./scripts/fetch-design.sh *)",
       "Bash(./scripts/detect-worktree.sh)",
       "Bash(./scripts/guard-branch-switch.sh)",
-      "Bash(./scripts/emulator/acquire-emulator.sh *)",
+      "Bash(./scripts/guard-adb.sh)",
+      "Bash(./scripts/emulator/acquire)",
+      "Bash(./scripts/emulator/acquire *)",
+      "Bash(./scripts/emulator/release)",
+      "Bash(./scripts/emulator/release *)",
+      "Bash(./scripts/emulator/start)",
+      "Bash(./scripts/emulator/start *)",
+      "Bash(./scripts/ui/adb *)",
+      "Bash(./scripts/install-app.sh)",
       "Bash(./scripts/github/wait-for-ci.sh *)"
     ]
   },
@@ -38,6 +46,15 @@
             "type": "command",
             "if": "Bash(gh *)",
             "command": "./scripts/guard-branch-switch.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/guard-adb.sh"
           }
         ]
       },
