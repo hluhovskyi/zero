@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,10 +25,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -72,8 +79,14 @@ private fun CategoryEditView(
     val state by viewModel.state.collectAsState(initial = CategoryEditViewModel.State())
     val expenseLabel = stringResource(R.string.transaction_type_expense)
     val incomeLabel = stringResource(R.string.transaction_type_income)
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    Box(modifier = Modifier.fillMaxSize().focusTarget()) {
         Column {
             ModalHeader(
                 title = stringResource(R.string.category_edit_title),
@@ -105,11 +118,15 @@ private fun CategoryEditView(
                         colorScheme = state.colorScheme.toUi(),
                         imageLoader = imageLoader,
                         icon = state.icon,
-                        onClick = { viewModel.perform(CategoryEditViewModel.Action.SelectIcon) },
+                        onClick = {
+                            focusManager.clearFocus()
+                            viewModel.perform(CategoryEditViewModel.Action.SelectIcon)
+                        },
                     )
                     NameFormCard(
                         modifier = Modifier.weight(1f),
                         value = state.name,
+                        focusRequester = focusRequester,
                         onValueChange = { viewModel.perform(CategoryEditViewModel.Action.ChangeName(it)) },
                     )
                 }
@@ -141,7 +158,7 @@ private fun CategoryIconTile(
 ) {
     Box(
         modifier = modifier
-            .size(64.dp)
+            .aspectRatio(1f)
             .background(colorScheme.background, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick),
     ) {
@@ -168,6 +185,7 @@ private fun CategoryIconTile(
 private fun NameFormCard(
     modifier: Modifier = Modifier,
     value: String,
+    focusRequester: FocusRequester,
     onValueChange: (String) -> Unit,
 ) {
     Column(
@@ -187,7 +205,9 @@ private fun NameFormCard(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             textStyle = TextStyle(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
