@@ -24,7 +24,8 @@
       "Bash(./scripts/emulator/start *)",
       "Bash(./scripts/ui/adb *)",
       "Bash(./scripts/install-app.sh)",
-      "Bash(./scripts/github/wait-for-ci.sh *)"
+      "Bash(./scripts/github/wait-for-ci.sh *)",
+      "Bash(./gradlew *)"
     ]
   },
   "hooks": {
