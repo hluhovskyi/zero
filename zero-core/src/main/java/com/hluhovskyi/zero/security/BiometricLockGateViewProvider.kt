@@ -48,9 +48,8 @@ internal class BiometricLockGateViewProvider(
         val state by viewModel.state.collectAsState(initial = BiometricLockGateViewModel.State())
         if (!state.isLocked) return
 
-        LaunchedEffect(state.canPromptOnLaunch) {
-            if (state.canPromptOnLaunch) {
-                viewModel.perform(BiometricLockGateViewModel.Action.PromptShown)
+        LaunchedEffect(state.promptToken) {
+            if (state.promptToken > 0) {
                 viewModel.perform(BiometricLockGateViewModel.Action.Unlock)
             }
         }
