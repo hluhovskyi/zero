@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.datetime.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 internal class DefaultBiometricLockUseCase(
     private val configurationRepository: ConfigurationRepository,
@@ -19,9 +22,11 @@ internal class DefaultBiometricLockUseCase(
 
     private val mutableLockState = MutableStateFlow<LockState>(LockState.Unlocked)
     private val mutableAutoPromptRequests = MutableSharedFlow<Unit>(
-        extraBufferCapacity = 1,
+        replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
+
+    private var lastBackgroundedAt: Instant? = null
 
     override val enabled: Flow<Boolean> = configurationRepository
         .observe(BiometricConfigurationKey.Enabled)
@@ -46,7 +51,22 @@ internal class DefaultBiometricLockUseCase(
         mutableLockState.value = LockState.Unlocked
     }
 
-    override fun onAppBackgrounded() = Unit
+    override fun onAppBackgrounded() {
+        lastBackgroundedAt = clock.now()
+    }
 
-    override fun onAppForegrounded() = Unit
+    override fun onAppForegrounded() {
+        val backgroundedAt = lastBackgroundedAt
+        val elapsed: Duration? = backgroundedAt?.let { clock.now() - it }
+        if (elapsed == null || elapsed >= INACTIVITY_TIMEOUT) {
+            mutableLockState.value = LockState.Locked
+        }
+        if (mutableLockState.value is LockState.Locked) {
+            mutableAutoPromptRequests.tryEmit(Unit)
+        }
+    }
+
+    companion object {
+        private val INACTIVITY_TIMEOUT: Duration = 30.minutes
+    }
 }
