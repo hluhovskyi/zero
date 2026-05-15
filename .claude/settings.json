@@ -50,6 +50,15 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/guard-adb.sh"
+          }
+        ]
+      },
+      {
         "matcher": "Read",
         "hooks": [
           {
