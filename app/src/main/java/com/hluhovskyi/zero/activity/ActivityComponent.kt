@@ -13,6 +13,7 @@ import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
+import com.hluhovskyi.zero.budget.BulkBudgetSaveUseCase
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -119,6 +120,7 @@ abstract class ActivityComponent :
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val accountsQueryUseCase: AccountsQueryUseCase
         val budgetQueryUseCase: BudgetQueryUseCase
+        val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
 

@@ -38,6 +38,8 @@ abstract class BudgetComponent : AttachableViewComponent {
         val amountFormatter: AmountFormatter
         val dispatcherProvider: DispatcherProvider
         val budgetQueryUseCase: BudgetQueryUseCase
+        val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase
+        val budgetRepository: BudgetRepository
         val clock: Clock
         val zoneProvider: ZoneProvider
     }
