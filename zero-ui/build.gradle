@@ -50,4 +50,6 @@ dependencies {
     implementation deps.android.compose.foundation
     implementation deps.android.compose.material
     implementation deps.android.compose.materialIconsExtended
+
+    testImplementation deps.test.junit
 }

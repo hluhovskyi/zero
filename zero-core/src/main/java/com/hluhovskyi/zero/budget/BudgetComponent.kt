@@ -10,6 +10,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -55,12 +56,16 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
             .dependencies(dependencies)
+            .onCategoryTappedHandler(OnCategoryTappedHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<BudgetComponent> {
 
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun onCategoryTappedHandler(handler: OnCategoryTappedHandler): Builder
     }
 
     @dagger.Module
@@ -78,10 +83,12 @@ abstract class BudgetComponent : AttachableViewComponent {
         internal fun viewModel(
             budgetQueryUseCase: BudgetQueryUseCase,
             periodResolver: PeriodResolver,
+            onCategoryTappedHandler: OnCategoryTappedHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
             budgetQueryUseCase = budgetQueryUseCase,
             periodResolver = periodResolver,
+            onCategoryTappedHandler = onCategoryTappedHandler,
             dispatchers = dispatcherProvider,
         )
 

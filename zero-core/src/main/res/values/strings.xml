@@ -246,4 +246,12 @@
     <string name="budget_copy_count">%1$d budgets last month</string>
     <string name="budget_section_set_limits">Set spending limits</string>
     <string name="budget_set_limit">Set limit</string>
+
+    <string name="budget_edit_title_set">Set Budget</string>
+    <string name="budget_edit_title_edit">Edit Budget</string>
+    <string name="budget_edit_save">Set Budget</string>
+    <string name="budget_edit_update">Update Budget</string>
+    <string name="budget_edit_monthly_label">Monthly Budget</string>
+    <string name="budget_edit_last_month_chip">Last month: %1$s</string>
+    <string name="budget_edit_close_cd">Close</string>
 </resources>
