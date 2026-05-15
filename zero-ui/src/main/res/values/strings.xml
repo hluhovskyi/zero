@@ -8,6 +8,9 @@
     <string name="action_close_description">Close</string>
     <string name="action_clear_description">Clear</string>
 
+    <!-- NumPad -->
+    <string name="numpad_backspace_cd">Delete</string>
+
     <!-- ImportErrorBanner -->
     <string name="import_error_banner_title">Couldn\'t import file</string>
     <string name="import_error_banner_retry">Try Again</string>
