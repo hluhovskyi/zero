@@ -37,7 +37,6 @@ import com.hluhovskyi.zero.categories.picker.CategoryPickerComponent
 import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
-import kotlinx.datetime.LocalDate
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
@@ -69,6 +68,7 @@ import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
 import dagger.multibindings.IntoSet
+import kotlinx.datetime.LocalDate
 import java.io.Closeable
 import javax.inject.Qualifier
 import javax.inject.Scope
@@ -555,10 +555,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
-                .period(BudgetEditPeriod(
-                    from = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)),
-                    to = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)),
-                ))
+                .period(
+                    BudgetEditPeriod(
+                        from = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodStart)),
+                        to = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)),
+                    ),
+                )
                 .onBudgetSavedHandler { _, _ -> }
                 .onBackHandler { navigator.back() }
                 .logging(logger)

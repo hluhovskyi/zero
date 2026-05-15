@@ -12,10 +12,10 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import dagger.BindsInstance
 import dagger.Provides
+import kotlinx.datetime.LocalDate
 import java.io.Closeable
 import javax.inject.Qualifier
 import javax.inject.Scope
-import kotlinx.datetime.LocalDate
 
 @Qualifier
 @Retention(AnnotationRetention.SOURCE)

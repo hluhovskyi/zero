@@ -45,6 +45,7 @@ import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import java.math.BigDecimal
 
 internal class BudgetEditViewProvider(
     private val viewModel: BudgetEditViewModel,
@@ -200,7 +201,7 @@ private fun BudgetEditSheet(
                 .padding(bottom = 32.dp),
         ) {
             val parsedAmount = state.amountText.toBigDecimalOrNull()
-            val enabled = parsedAmount != null && parsedAmount > java.math.BigDecimal.ZERO
+            val enabled = parsedAmount != null && parsedAmount > BigDecimal.ZERO
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -209,8 +210,11 @@ private fun BudgetEditSheet(
                         shape = RoundedCornerShape(12.dp),
                     )
                     .then(
-                        if (enabled) Modifier.clickable { viewModel.perform(BudgetEditViewModel.Action.TapSave) }
-                        else Modifier,
+                        if (enabled) {
+                            Modifier.clickable { viewModel.perform(BudgetEditViewModel.Action.TapSave) }
+                        } else {
+                            Modifier
+                        },
                     )
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center,

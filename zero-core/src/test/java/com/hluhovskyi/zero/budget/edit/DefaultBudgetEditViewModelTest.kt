@@ -26,7 +26,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.argThat
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -38,6 +37,7 @@ import java.math.BigDecimal
 class DefaultBudgetEditViewModelTest {
 
     @Mock private lateinit var categoriesQueryUseCase: CategoriesQueryUseCase
+
     @Mock private lateinit var budgetRepository: BudgetRepository
 
     private val categoryId = Id.Known("cat-1")

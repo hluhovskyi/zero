@@ -27,7 +27,8 @@ internal class DefaultBudgetEditViewModel(
     private val onBudgetSavedHandler: OnBudgetSavedHandler,
     private val onBackHandler: OnBackHandler,
     dispatchers: DispatcherProvider,
-) : BaseViewModel(dispatchers), BudgetEditViewModel {
+) : BaseViewModel(dispatchers),
+    BudgetEditViewModel {
 
     private val mutableState = MutableStateFlow(BudgetEditViewModel.State())
     override val state: Flow<BudgetEditViewModel.State> = mutableState
@@ -101,6 +102,5 @@ internal class DefaultBudgetEditViewModel(
         }
     }
 
-    private fun previousAmountString(): String? =
-        mutableState.value.previousPeriodAmount?.value?.stripTrailingZeros()?.toPlainString()
+    private fun previousAmountString(): String? = mutableState.value.previousPeriodAmount?.value?.stripTrailingZeros()?.toPlainString()
 }
