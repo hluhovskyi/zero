@@ -33,6 +33,11 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 
 - `install-app.sh` — builds `assembleDebug` and installs the APK via `ui/adb install -r`. Use this instead of `./gradlew :app:installDebug`, which installs to every connected device.
 
+## run-android-tests.sh — pinned instrumented tests
+
+- `run-android-tests.sh [gradle args…]` — reads `.emulator-serial`, exports `ANDROID_SERIAL`, then runs `./gradlew :app:connectedDebugAndroidTest "$@"`. Use this instead of `ANDROID_SERIAL=… ./gradlew connectedDebugAndroidTest …` — the env-var prefix bypasses the permission allow-list and prompts on every call. Example:
+  `./scripts/run-android-tests.sh -Pandroid.testInstrumentationRunnerArguments.class=com.hluhovskyi.zero.ZeroE2eTest`
+
 ## github/ — PR helpers
 
 - `github/wait-for-ci.sh <pr_number> [repo]` — block until CI completes. Exits 1 with remediation on BEHIND / DIRTY / BLOCKED.
