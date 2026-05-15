@@ -1,6 +1,8 @@
 package com.hluhovskyi.zero.budget
 
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +19,8 @@ internal class DefaultBudgetViewModel(
     private val periodResolver: PeriodResolver,
     private val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
     private val budgetToastUseCase: BudgetToastUseCase,
-    private val onCategoryTappedHandler: OnCategoryTappedHandler,
+    private val budgetRepository: BudgetRepository,
+    @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
     private val onCreateBudgetHandler: OnCreateBudgetHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
@@ -54,11 +57,75 @@ internal class DefaultBudgetViewModel(
             BudgetViewModel.Action.ToastShown -> {
                 mutableState.update { it.copy(toastMessage = null) }
             }
-            is BudgetViewModel.Action.TapCategory -> scope.launch {
-                val (currentStart, currentEnd) = currentPeriod()
-                onCategoryTappedHandler.onTap(action.categoryId, currentStart, currentEnd)
+            is BudgetViewModel.Action.TapCategory -> {
+                val row = mutableState.value.budgeted.firstOrNull { it.categoryId == action.categoryId }
+                val seedText = if (row != null && row.budgetId != null) {
+                    row.budgeted.value.stripTrailingZeros().toPlainString()
+                } else {
+                    "0"
+                }
+                mutableState.update {
+                    it.copy(
+                        editingCategoryId = action.categoryId,
+                        editingAmountText = seedText,
+                    )
+                }
+            }
+            is BudgetViewModel.Action.ChangeEditAmount -> {
+                mutableState.update { it.copy(editingAmountText = action.text) }
+            }
+            BudgetViewModel.Action.TapPreviousChip -> {
+                val state = mutableState.value
+                val editingId = state.editingCategoryId ?: return
+                val prevRow = state.previousPeriodBudgets.firstOrNull { it.categoryId == editingId && it.budgetId != null }
+                val prevText = prevRow?.budgeted?.value?.stripTrailingZeros()?.toPlainString() ?: "0"
+                mutableState.update { it.copy(editingAmountText = prevText) }
+            }
+            BudgetViewModel.Action.DismissInlineEdit -> {
+                mutableState.update { it.copy(editingCategoryId = null, editingAmountText = "0") }
+            }
+            BudgetViewModel.Action.CommitInlineEdit -> commitInlineEdit()
+        }
+    }
+
+    private fun commitInlineEdit() = scope.launch {
+        val state = mutableState.value
+        val editingId = state.editingCategoryId ?: return@launch
+        val parsed = state.editingAmountText.toBigDecimalOrNull()
+        val amount = if (parsed != null) Amount(parsed) else Amount.zero()
+        if (amount > Amount.zero()) {
+            val (currentStart, currentEnd) = currentPeriod()
+            val existing = state.budgeted.firstOrNull { it.categoryId == editingId }
+            budgetRepository.insert(
+                BudgetRepository.BudgetInsert(
+                    id = existing?.budgetId ?: Id.Unknown,
+                    categoryId = editingId,
+                    type = BudgetType.EXPENSE,
+                    amount = amount,
+                    periodStart = currentStart,
+                    periodEnd = currentEnd,
+                ),
+            )
+        }
+        val nextUnset = nextUnsetCategoryId(state, after = editingId)
+        if (nextUnset != null) {
+            mutableState.update {
+                it.copy(editingCategoryId = nextUnset, editingAmountText = "0")
+            }
+        } else {
+            mutableState.update {
+                it.copy(editingCategoryId = null, editingAmountText = "0")
             }
         }
+    }
+
+    private fun nextUnsetCategoryId(state: BudgetViewModel.State, after: Id.Known): Id.Known? {
+        val rows = state.budgeted
+        val currentIndex = rows.indexOfFirst { it.categoryId == after }
+        if (currentIndex < 0) return null
+        val tail = rows.drop(currentIndex + 1)
+        val head = rows.take(currentIndex)
+        return (tail + head).firstOrNull { it.budgetId == null && it.categoryId != after }?.categoryId
     }
 
     private fun performCopy() = scope.launch {
@@ -78,11 +145,19 @@ internal class DefaultBudgetViewModel(
     }
 
     override fun attachOnMain() {
+        observeToasts()
+        observePeriods()
+    }
+
+    private fun observeToasts() {
         scope.launch {
             budgetToastUseCase.messages.collectLatest { message ->
                 mutableState.update { it.copy(toastMessage = message) }
             }
         }
+    }
+
+    private fun observePeriods() {
         scope.launch {
             monthOffset
                 .flatMapLatest { offset ->

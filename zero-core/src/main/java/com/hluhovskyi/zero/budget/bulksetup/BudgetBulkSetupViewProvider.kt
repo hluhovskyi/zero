@@ -59,6 +59,7 @@ import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import java.math.BigDecimal
 
 internal class BudgetBulkSetupViewProvider(
     private val viewModel: BudgetBulkSetupViewModel,
@@ -503,7 +504,7 @@ private fun AmountDisplay(text: String) {
 @Composable
 private fun CommitButton(text: String, onCommit: () -> Unit) {
     val parsed = text.toBigDecimalOrNull()
-    val hasAmount = parsed != null && parsed > java.math.BigDecimal.ZERO
+    val hasAmount = parsed != null && parsed > BigDecimal.ZERO
     val label = if (hasAmount) stringResource(R.string.budget_bulk_numpad_set, "$$text") else stringResource(R.string.budget_bulk_numpad_skip)
     Box(
         modifier = Modifier

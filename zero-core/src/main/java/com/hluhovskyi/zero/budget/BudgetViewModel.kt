@@ -14,6 +14,10 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         object ConfirmCopy : Action
         object CancelCopy : Action
         object ToastShown : Action
+        data class ChangeEditAmount(val text: String) : Action
+        object TapPreviousChip : Action
+        object CommitInlineEdit : Action
+        object DismissInlineEdit : Action
     }
 
     data class State(
@@ -27,5 +31,7 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val isLoading: Boolean = true,
         val toastMessage: String? = null,
         val copyConfirmVisible: Boolean = false,
+        val editingCategoryId: Id.Known? = null,
+        val editingAmountText: String = "0",
     )
 }
