@@ -1,5 +1,10 @@
 package com.hluhovskyi.zero.budget
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,15 +25,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -37,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
@@ -50,8 +59,13 @@ import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
+import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.Surface
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import kotlinx.coroutines.delay
+
+private const val TOAST_DURATION_MS = 2800L
 
 internal class BudgetViewProvider(
     private val viewModel: BudgetViewModel,
@@ -119,6 +133,19 @@ private fun BudgetView(
                 )
             }
         }
+
+        if (state.copyConfirmVisible) {
+            CopyConfirmDialog(
+                onConfirm = { viewModel.perform(BudgetViewModel.Action.ConfirmCopy) },
+                onCancel = { viewModel.perform(BudgetViewModel.Action.CancelCopy) },
+            )
+        }
+
+        BudgetToast(
+            message = state.toastMessage,
+            onDismiss = { viewModel.perform(BudgetViewModel.Action.ToastShown) },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -390,6 +417,100 @@ private fun UnsetCategoryRow(
                     color = Outline,
                 ),
             )
+        }
+    }
+}
+
+@Composable
+internal fun BudgetToast(
+    message: String?,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LaunchedEffect(message) {
+        if (message != null) {
+            delay(TOAST_DURATION_MS)
+            onDismiss()
+        }
+    }
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 88.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PrimaryContainer, RoundedCornerShape(14.dp))
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = Color(0xFF5DDBA8),
+            )
+            Text(
+                text = message.orEmpty(),
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnPrimary,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CopyConfirmDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Surface, RoundedCornerShape(20.dp))
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.budget_copy_confirm_title),
+                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnSurface),
+            )
+            Text(
+                text = stringResource(R.string.budget_copy_confirm_subtitle),
+                style = TextStyle(fontSize = 13.sp, color = OnSurfaceVariant),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onCancel)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_copy_confirm_cancel),
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .background(Primary, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onConfirm)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_copy_confirm_replace),
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary),
+                    )
+                }
+            }
         }
     }
 }

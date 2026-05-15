@@ -15,7 +15,10 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetQueryUseCase: BudgetQueryUseCase,
     private val periodResolver: PeriodResolver,
+    private val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
+    private val budgetToastUseCase: BudgetToastUseCase,
     private val onCategoryTappedHandler: OnCategoryTappedHandler,
+    private val onCreateBudgetHandler: OnCreateBudgetHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
@@ -29,18 +32,57 @@ internal class DefaultBudgetViewModel(
         when (action) {
             BudgetViewModel.Action.SelectOlderMonth -> monthOffset.update { it - 1 }
             BudgetViewModel.Action.SelectNewerMonth -> monthOffset.update { it + 1 }
-            BudgetViewModel.Action.TapCreateBudget -> Unit
-            BudgetViewModel.Action.TapCopyFromPrevious -> Unit
+            BudgetViewModel.Action.TapCreateBudget -> scope.launch {
+                val (currentStart, currentEnd) = currentPeriod()
+                onCreateBudgetHandler.onCreate(currentStart, currentEnd)
+            }
+            BudgetViewModel.Action.TapCopyFromPrevious -> {
+                val current = mutableState.value
+                if (current.budgeted.none { it.budgetId != null }) {
+                    performCopy()
+                } else {
+                    mutableState.update { it.copy(copyConfirmVisible = true) }
+                }
+            }
+            BudgetViewModel.Action.ConfirmCopy -> {
+                mutableState.update { it.copy(copyConfirmVisible = false) }
+                performCopy()
+            }
+            BudgetViewModel.Action.CancelCopy -> {
+                mutableState.update { it.copy(copyConfirmVisible = false) }
+            }
+            BudgetViewModel.Action.ToastShown -> {
+                mutableState.update { it.copy(toastMessage = null) }
+            }
             is BudgetViewModel.Action.TapCategory -> scope.launch {
-                val offset = monthOffset.value
-                val today = periodResolver.today()
-                val (currentStart, currentEnd) = periodResolver.monthOffsetFrom(today, offset)
+                val (currentStart, currentEnd) = currentPeriod()
                 onCategoryTappedHandler.onTap(action.categoryId, currentStart, currentEnd)
             }
         }
     }
 
+    private fun performCopy() = scope.launch {
+        val state = mutableState.value
+        val (currentStart, currentEnd) = currentPeriod()
+        val entries = state.previousPeriodBudgets
+            .filter { it.budgetId != null }
+            .map { BulkBudgetSaveUseCase.Entry(categoryId = it.categoryId, amount = it.budgeted) }
+        if (entries.isEmpty()) return@launch
+        bulkBudgetSaveUseCase.save(currentStart, currentEnd, BudgetType.EXPENSE, entries)
+        budgetToastUseCase.show("Copied ${entries.size} categories from ${state.previousPeriodLabel}")
+    }
+
+    private fun currentPeriod(): Pair<LocalDate, LocalDate> {
+        val today = periodResolver.today()
+        return periodResolver.monthOffsetFrom(today, monthOffset.value)
+    }
+
     override fun attachOnMain() {
+        scope.launch {
+            budgetToastUseCase.messages.collectLatest { message ->
+                mutableState.update { it.copy(toastMessage = message) }
+            }
+        }
         scope.launch {
             monthOffset
                 .flatMapLatest { offset ->

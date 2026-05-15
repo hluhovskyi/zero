@@ -25,6 +25,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
+import com.hluhovskyi.zero.budget.BudgetToastUseCase
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -134,6 +135,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val budgetComponentBuilder: BudgetComponent.Builder
         val budgetEditComponentBuilder: BudgetEditComponent.Builder
+        val budgetToastUseCase: BudgetToastUseCase
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -549,6 +551,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun budgetEditNavigationEntry(
             componentBuilder: BudgetEditComponent.Builder,
             navigatorScope: NavigatorScope,
+            budgetToastUseCase: BudgetToastUseCase,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Budget.Edit,
@@ -562,7 +565,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                         to = LocalDate.parse(arguments.getValue(Destinations.Budget.Edit.PeriodEnd)),
                     ),
                 )
-                .onBudgetSavedHandler { _, _ -> }
+                .onBudgetSavedHandler { name, _ ->
+                    budgetToastUseCase.show("Budget set for $name")
+                }
                 .onBackHandler { navigator.back() }
                 .logging(logger)
         }

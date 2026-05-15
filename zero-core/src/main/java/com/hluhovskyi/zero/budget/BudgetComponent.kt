@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.budget.bulksetup.DefaultBulkBudgetSaveUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategorySpendingUseCase
 import com.hluhovskyi.zero.common.AmountFormatter
@@ -40,6 +41,7 @@ abstract class BudgetComponent : AttachableViewComponent {
         val budgetQueryUseCase: BudgetQueryUseCase
         val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase
         val budgetRepository: BudgetRepository
+        val budgetToastUseCase: BudgetToastUseCase
         val clock: Clock
         val zoneProvider: ZoneProvider
     }
@@ -56,9 +58,16 @@ abstract class BudgetComponent : AttachableViewComponent {
             categorySpendingUseCase = categorySpendingUseCase,
         )
 
+        fun bulkSaveUseCase(
+            budgetRepository: BudgetRepository,
+        ): BulkBudgetSaveUseCase = DefaultBulkBudgetSaveUseCase(
+            budgetRepository = budgetRepository,
+        )
+
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
             .dependencies(dependencies)
             .onCategoryTappedHandler(OnCategoryTappedHandler.Noop)
+            .onCreateBudgetHandler(OnCreateBudgetHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -68,6 +77,9 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCategoryTappedHandler(handler: OnCategoryTappedHandler): Builder
+
+        @BindsInstance
+        fun onCreateBudgetHandler(handler: OnCreateBudgetHandler): Builder
     }
 
     @dagger.Module
@@ -85,12 +97,18 @@ abstract class BudgetComponent : AttachableViewComponent {
         internal fun viewModel(
             budgetQueryUseCase: BudgetQueryUseCase,
             periodResolver: PeriodResolver,
+            bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
+            budgetToastUseCase: BudgetToastUseCase,
             onCategoryTappedHandler: OnCategoryTappedHandler,
+            onCreateBudgetHandler: OnCreateBudgetHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
             budgetQueryUseCase = budgetQueryUseCase,
             periodResolver = periodResolver,
+            bulkBudgetSaveUseCase = bulkBudgetSaveUseCase,
+            budgetToastUseCase = budgetToastUseCase,
             onCategoryTappedHandler = onCategoryTappedHandler,
+            onCreateBudgetHandler = onCreateBudgetHandler,
             dispatchers = dispatcherProvider,
         )
 

@@ -11,6 +11,9 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         data class TapCategory(val categoryId: Id.Known) : Action
         object TapCreateBudget : Action
         object TapCopyFromPrevious : Action
+        object ConfirmCopy : Action
+        object CancelCopy : Action
+        object ToastShown : Action
     }
 
     data class State(
@@ -22,5 +25,7 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val budgeted: List<BudgetQueryUseCase.Budgeted> = emptyList(),
         val previousPeriodBudgets: List<BudgetQueryUseCase.Budgeted> = emptyList(),
         val isLoading: Boolean = true,
+        val toastMessage: String? = null,
+        val copyConfirmVisible: Boolean = false,
     )
 }

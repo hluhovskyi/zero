@@ -254,4 +254,25 @@
     <string name="budget_edit_monthly_label">Monthly Budget</string>
     <string name="budget_edit_last_month_chip">Last month: %1$s</string>
     <string name="budget_edit_close_cd">Close</string>
+
+    <string name="budget_copy_confirm_title">Replace existing budget?</string>
+    <string name="budget_copy_confirm_subtitle">This will overwrite the budgets you already set for this month.</string>
+    <string name="budget_copy_confirm_replace">Replace</string>
+    <string name="budget_copy_confirm_cancel">Cancel</string>
+
+    <string name="budget_bulk_title">New Budget</string>
+    <string name="budget_bulk_close_cd">Close</string>
+    <string name="budget_bulk_copy_banner_title">Copy from previous month</string>
+    <string name="budget_bulk_copy_banner_subtitle">%1$d categories</string>
+    <string name="budget_bulk_section_label">Categories — tap amount to edit</string>
+    <string name="budget_bulk_cta_empty">Set at least one category</string>
+    <string name="budget_bulk_cta_one">Create budget — 1 category</string>
+    <string name="budget_bulk_cta_many">Create budget — %1$d categories</string>
+    <string name="budget_bulk_chip_set">+ Set</string>
+    <string name="budget_bulk_numpad_done">Done</string>
+    <string name="budget_bulk_numpad_skip">Skip</string>
+    <string name="budget_bulk_numpad_set">Set %1$s</string>
+    <string name="budget_bulk_numpad_set_next">Set %1$s — Next →</string>
+    <string name="budget_bulk_numpad_skip_next">Skip →</string>
+    <string name="budget_bulk_numpad_close">Close</string>
 </resources>

@@ -10,7 +10,6 @@ import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.budget.BulkBudgetSaveUseCase
-import com.hluhovskyi.zero.budget.bulksetup.DefaultBulkBudgetSaveUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -288,7 +287,7 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun bulkBudgetSaveUseCase(
             budgetRepository: BudgetRepository,
-        ): BulkBudgetSaveUseCase = DefaultBulkBudgetSaveUseCase(
+        ): BulkBudgetSaveUseCase = BudgetComponent.bulkSaveUseCase(
             budgetRepository = budgetRepository,
         )
 
