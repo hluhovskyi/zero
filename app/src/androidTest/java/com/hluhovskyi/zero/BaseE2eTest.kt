@@ -7,13 +7,12 @@ import com.hluhovskyi.zero.activity.MainActivity
 import com.hluhovskyi.zero.testbridge.HasTestBridgeContainer
 import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import kotlinx.coroutines.runBlocking
-import org.junit.Before
 import org.junit.Rule
+import org.junit.rules.TestRule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 abstract class BaseE2eTest {
-
-    @get:Rule
-    val composeRule = createAndroidComposeRule<MainActivity>()
 
     private val container: TestBridgeContainer by lazy {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -23,12 +22,19 @@ abstract class BaseE2eTest {
         app.testBridgeContainer
     }
 
-    @Before
-    fun setUp() = runBlocking {
-        container.database.clearData()
-        composeRule.activityRule.scenario.recreate()
-        composeRule.waitForIdle()
+    @get:Rule(order = 0)
+    val clearDataRule: TestRule = object : TestRule {
+        override fun apply(base: Statement, description: Description): Statement =
+            object : Statement() {
+                override fun evaluate() {
+                    runBlocking { container.database.clearData() }
+                    base.evaluate()
+                }
+            }
     }
+
+    @get:Rule(order = 1)
+    val composeRule = createAndroidComposeRule<MainActivity>()
 
     protected fun seedDefaultSetup() = runBlocking { container.database.seedDefaultSetup() }
 }
