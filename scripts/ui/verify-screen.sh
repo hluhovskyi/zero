@@ -5,7 +5,7 @@
 # Refreshes the UI dump and exits 0 if the landmark is found, 1 if not.
 # Use after any navigation action to confirm the expected screen is active.
 
-ADB="$(dirname "$0")/adb.sh"
+ADB="$(dirname "$0")/adb"
 
 LANDMARK="${1:-}"
 if [ -z "$LANDMARK" ]; then

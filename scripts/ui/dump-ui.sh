@@ -4,7 +4,7 @@
 # Pass --raw to get the full XML instead.
 set -uo pipefail
 
-ADB="$(dirname "$0")/adb.sh"
+ADB="$(dirname "$0")/adb"
 
 RAW=false
 for arg in "$@"; do

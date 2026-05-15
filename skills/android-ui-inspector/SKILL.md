@@ -15,9 +15,9 @@ Use this skill **before committing any UI change** — not only when something l
 
 1. **Prerequisites:** Ensure `.emulator-serial` exists in the worktree root — it pins this session to a specific emulator so parallel sessions don't interfere. If it's missing, run:
    ```bash
-   ./scripts/emulator/acquire-emulator.sh
+   ./scripts/emulator/acquire
    ```
-   This claims an unclaimed running emulator, and auto-invokes `./scripts/emulator/start-emulator.sh` to launch a new one (with `-read-only` on a free port) if all running emulators are claimed. Pass `--no-auto-start` to suppress that fallback. Once acquired, confirm the app is installed and running on that emulator.
+   This claims an unclaimed running emulator, and auto-invokes `./scripts/emulator/start` to launch a new one (with `-read-only` on a free port) if all running emulators are claimed. Pass `--no-auto-start` to suppress that fallback. Once acquired, confirm the app is installed and running via `./scripts/install-app.sh` (not `./gradlew installDebug`, which would clobber sibling worktrees — the PreToolUse hook will deny it).
 
 2. **Dump the Screen:** Run the UI dump script to get the current hierarchy:
    ```bash

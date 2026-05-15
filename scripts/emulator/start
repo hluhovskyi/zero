@@ -1,0 +1,130 @@
+#!/usr/bin/env python3
+"""Start an unrun AVD on a free port. Prints the serial on success.
+
+Holds the repo lock during port selection + emulator spawn so concurrent
+sessions don't collide.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+_HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(_HERE.parent))
+from lib.emulator import adb_devices, repo_lock  # noqa: E402
+
+SDK = Path(os.environ.get("ANDROID_HOME") or Path.home() / "Library/Android/sdk")
+EMULATOR_BIN = SDK / "emulator" / "emulator"
+PORT_MIN, PORT_MAX = 5554, 5680
+BOOT_TIMEOUT_SECONDS = 180
+
+
+def list_avds() -> list[str]:
+    out = subprocess.run(
+        [str(EMULATOR_BIN), "-list-avds"], capture_output=True, text=True, check=False
+    ).stdout
+    return [name for name in (line.strip() for line in out.splitlines()) if name]
+
+
+def running_avd_names() -> set[str]:
+    names: set[str] = set()
+    for serial in adb_devices():
+        out = subprocess.run(
+            ["adb", "-s", serial, "emu", "avd", "name"],
+            capture_output=True, text=True, check=False,
+        ).stdout
+        first = (out.splitlines() or [""])[0].strip()
+        if first:
+            names.add(first)
+    return names
+
+
+def pick_avd(preferred: str | None) -> str:
+    available = list_avds()
+    if not available:
+        sys.exit("No AVDs configured. Create one in Android Studio first.")
+    if preferred:
+        if preferred not in available:
+            sys.exit(f"AVD '{preferred}' not found. Available: {available}")
+        return preferred
+    running = running_avd_names()
+    for avd in available:
+        if avd not in running:
+            return avd
+    print(f"All AVDs already running; will start a 2nd -read-only instance of {available[0]}", file=sys.stderr)
+    return available[0]
+
+
+def find_free_port() -> int:
+    for port in range(PORT_MIN, PORT_MAX + 1, 2):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("127.0.0.1", port))
+                return port
+            except OSError:
+                continue
+    sys.exit(f"No free emulator ports between {PORT_MIN} and {PORT_MAX}.")
+
+
+def spawn_emulator(avd: str, port: int) -> str:
+    serial = f"emulator-{port}"
+    log = Path(f"/tmp/{serial}.log")
+    cmd = [
+        str(EMULATOR_BIN), "-avd", avd, "-port", str(port),
+        "-read-only", "-no-snapshot-load", "-no-boot-anim",
+    ]
+    print(f"▶ Starting AVD '{avd}' on {serial} (log: {log})", file=sys.stderr)
+    with open(log, "wb") as f:
+        subprocess.Popen(
+            cmd, stdout=f, stderr=subprocess.STDOUT,
+            start_new_session=True, close_fds=True,
+        )
+    return serial
+
+
+def wait_for_boot(serial: str) -> None:
+    print("  waiting for boot...", file=sys.stderr)
+    deadline = time.time() + BOOT_TIMEOUT_SECONDS
+    while time.time() < deadline:
+        out = subprocess.run(
+            ["adb", "-s", serial, "shell", "getprop", "sys.boot_completed"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+        if out == "1":
+            print(f"  ✓ {serial} booted", file=sys.stderr)
+            return
+        time.sleep(3)
+    sys.exit(f"Timed out waiting for {serial} to boot. Check /tmp/{serial}.log")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("avd", nargs="?", help="AVD name (default: first non-running)")
+    parser.add_argument("--no-lock", action="store_true",
+                        help="Skip the repo lock — only safe if caller holds it")
+    args = parser.parse_args()
+
+    if not EMULATOR_BIN.is_file() or not os.access(EMULATOR_BIN, os.X_OK):
+        sys.exit(f"Emulator binary not found at {EMULATOR_BIN}. Set ANDROID_HOME.")
+
+    def _run() -> None:
+        avd = pick_avd(args.avd)
+        port = find_free_port()
+        serial = spawn_emulator(avd, port)
+        wait_for_boot(serial)
+        print(serial)
+
+    if args.no_lock:
+        _run()
+    else:
+        with repo_lock():
+            _run()
+
+
+if __name__ == "__main__":
+    main()
