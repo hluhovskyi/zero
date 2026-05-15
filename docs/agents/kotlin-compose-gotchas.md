@@ -24,6 +24,23 @@ Column(modifier = Modifier.fillMaxSize().focusTarget()) {
 
 Verify with the view dump, not a screenshot: `grep 'focused="true"' /tmp/ui.xml`.
 
+## Keyboard Dismissal on Demand
+
+**`clearFocus()` alone is unreliable without a `focusTarget()` parent.** When a non-input element (e.g. an icon tile) needs to dismiss the keyboard on tap, `clearFocus()` needs a non-input focusable node in the hierarchy to land on — otherwise behaviour is unpredictable.
+
+Add `focusTarget()` to the root container of any screen that calls `clearFocus()`:
+
+```kotlin
+Box(modifier = Modifier.fillMaxSize().focusTarget()) {
+    IconTile(onClick = {
+        focusManager.clearFocus()   // focus moves to root Box, keyboard hides
+        viewModel.perform(SelectIcon)
+    })
+}
+```
+
+Grep `zero-core/` for `focusTarget` to find canonical usages before implementing.
+
 ## Layout Verification
 
 **Verify layout with a UI dump + screenshot after every layout change** — visual gaps, clipping, and alignment errors are invisible in code. Run `./scripts/ui/dump-ui.sh` and check element bounds. For alignment fixes, verify both x-position *and* vertical gap between related elements — passing one check while ignoring the other is the most common source of "still broken" follow-ups.
