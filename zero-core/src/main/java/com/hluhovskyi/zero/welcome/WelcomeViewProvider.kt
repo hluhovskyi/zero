@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.transactions.OnAddTransactionHandler
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
@@ -47,80 +49,93 @@ import com.hluhovskyi.zero.ui.theme.Surface
 
 internal class WelcomeViewProvider(
     private val viewModel: WelcomeViewModel,
+    private val onAddTransaction: OnAddTransactionHandler,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
-                text = stringResource(R.string.home_title),
-                style = TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Primary,
-                ),
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                WelcomeIllustration()
-                Spacer(Modifier.height(32.dp))
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 Text(
-                    text = stringResource(R.string.welcome_heading),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
+                    text = stringResource(R.string.home_title),
                     style = TextStyle(
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Primary,
-                        letterSpacing = (-0.48).sp,
-                        lineHeight = 28.8.sp,
                     ),
-                    textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    modifier = Modifier.widthIn(max = 260.dp),
-                    text = stringResource(R.string.welcome_subtitle),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        color = OnSurfaceVariant,
-                        lineHeight = 23.sp,
-                    ),
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(28.dp))
-                Row(
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable {
-                            viewModel.perform(WelcomeViewModel.Action.ImportSelected)
-                        }
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.FileDownload,
-                        contentDescription = null,
-                        tint = PrimaryContainer,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
+                    WelcomeIllustration()
+                    Spacer(Modifier.height(32.dp))
                     Text(
-                        text = stringResource(R.string.welcome_import_action),
+                        text = stringResource(R.string.welcome_heading),
                         style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PrimaryContainer,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Primary,
+                            letterSpacing = (-0.48).sp,
+                            lineHeight = 28.8.sp,
                         ),
+                        textAlign = TextAlign.Center,
                     )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        modifier = Modifier.widthIn(max = 260.dp),
+                        text = stringResource(R.string.welcome_subtitle),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            color = OnSurfaceVariant,
+                            lineHeight = 23.sp,
+                        ),
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(28.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable {
+                                viewModel.perform(WelcomeViewModel.Action.ImportSelected)
+                            }
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FileDownload,
+                            contentDescription = null,
+                            tint = PrimaryContainer,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.welcome_import_action),
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryContainer,
+                            ),
+                        )
+                    }
                 }
             }
+            ZeroFab(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 32.dp),
+                onClick = { onAddTransaction.onAddTransaction() },
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.transaction_add),
+                expanded = true,
+                text = stringResource(R.string.transaction_add),
+            )
         }
     }
 }

@@ -303,7 +303,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 component = homeComponentBuilder
                     .welcomeComponentBuilder(
                         welcomeComponentBuilder
-                            .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) },
+                            .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                            .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) },
                     )
                     .transactionComponentBuilder(
                         transactionComponentBuilder
