@@ -42,16 +42,19 @@ branch + worktree only when needed. The branch name should reflect the task (keb
 For Step 0 detection, use `./scripts/detect-worktree.sh` (allowlisted, no prompt) instead of the
 inline compound bash command the skill suggests.
 
-After the worktree is created, acquire a dedicated emulator for this session:
+After the worktree is created, acquire a dedicated emulator for this session **only
+when you reach UI verification** — not at session start. Skipping this for non-UI
+sessions saves RAM:
 
 ```bash
-./scripts/emulator/acquire-emulator.sh
+./scripts/emulator/acquire
 ```
 
 This pins the session to one emulator so parallel sessions don't interfere. If all are claimed it
-auto-starts a new instance via `./scripts/emulator/start-emulator.sh` (pass `--no-auto-start` to
-suppress). The `.emulator-serial` file it writes is read by `scripts/ui/adb.sh` and every other
-UI helper.
+auto-starts a new instance via `./scripts/emulator/start` (pass `--no-auto-start` to
+suppress). The `.emulator-serial` file it writes is read by `scripts/ui/adb` and every other
+UI helper. A PreToolUse hook (`scripts/guard-adb.sh`) denies bare `adb` / `./gradlew installDebug`
+to keep parallel sessions from talking to each other's emulators.
 
 **Never work on master.** If the current branch is master and no worktree is created (e.g. the
 user declined), stop and explain that master must not be modified directly.
