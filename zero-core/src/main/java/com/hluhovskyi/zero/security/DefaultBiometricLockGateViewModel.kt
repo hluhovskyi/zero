@@ -34,21 +34,25 @@ internal class DefaultBiometricLockGateViewModel(
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
-            combine(
-                biometricLockUseCase.enabled,
-                biometricLockUseCase.lockState,
-            ) { enabled, lockState ->
-                enabled && lockState is LockState.Locked
-            }.collect { isLocked ->
-                mutableState.update { it.copy(isLocked = isLocked) }
+    override fun attach(): Closeable = Closeables.merge(
+        Closeables.of {
+            coroutineScope.launch {
+                combine(
+                    biometricLockUseCase.enabled,
+                    biometricLockUseCase.lockState,
+                ) { enabled, lockState ->
+                    enabled && lockState is LockState.Locked
+                }.collect { isLocked ->
+                    mutableState.update { it.copy(isLocked = isLocked) }
+                }
             }
-        }
-        coroutineScope.launch {
-            biometricLockUseCase.autoPromptRequests.collect {
-                mutableState.update { it.copy(promptToken = it.promptToken + 1) }
+        },
+        Closeables.of {
+            coroutineScope.launch {
+                biometricLockUseCase.autoPromptRequests.collect {
+                    mutableState.update { it.copy(promptToken = it.promptToken + 1) }
+                }
             }
-        }
-    }
+        },
+    )
 }
