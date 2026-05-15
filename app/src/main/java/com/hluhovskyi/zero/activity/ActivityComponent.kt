@@ -16,6 +16,7 @@ import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.budget.BudgetToastUseCase
 import com.hluhovskyi.zero.budget.BulkBudgetSaveUseCase
+import com.hluhovskyi.zero.budget.bulksetup.BudgetBulkSetupComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
@@ -85,6 +86,7 @@ abstract class ActivityComponent :
     AccountDetailComponent.Dependencies,
     BudgetComponent.Dependencies,
     BudgetEditComponent.Dependencies,
+    BudgetBulkSetupComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
@@ -200,6 +202,11 @@ abstract class ActivityComponent :
         fun budgetEditComponentBuilder(
             component: ActivityComponent,
         ): BudgetEditComponent.Builder = BudgetEditComponent.builder(component)
+
+        @Provides
+        fun budgetBulkSetupComponentBuilder(
+            component: ActivityComponent,
+        ): BudgetBulkSetupComponent.Builder = BudgetBulkSetupComponent.builder(component)
 
         @Provides
         fun categoryPickerComponentBuilder(
