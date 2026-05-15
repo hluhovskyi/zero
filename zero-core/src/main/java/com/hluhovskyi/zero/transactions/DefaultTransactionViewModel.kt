@@ -127,9 +127,7 @@ internal class DefaultTransactionViewModel(
 
     private fun updateFilter(transform: (TransactionFilter) -> TransactionFilter) {
         mutableState.update { state ->
-            val newFilter = transform(state.activeFilter)
-            transactionFilterUseCase.perform(TransactionFilterUseCase.Action.Apply(newFilter))
-            state.copy(activeFilter = newFilter)
+            state.copy(activeFilter = transform(state.activeFilter))
         }
     }
 
