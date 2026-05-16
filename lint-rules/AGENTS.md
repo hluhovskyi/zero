@@ -66,3 +66,8 @@ context.evaluator.implementsInterface(psiClass, "java.io.Closeable", false)
 **`ULiteralExpression` does not match Kotlin strings.** Use `ConstantEvaluator.evaluateString(context, expr, false)` — works for both Java and Kotlin, handles constant folding. Note: it traces `String` parameter references to their default value, so `foo: String = "x"` evaluates to `"x"` at every internal use site.
 
 **`uastParent` is not set inside lambdas / composable contexts in the test sandbox.** To find the nearest enclosing named function, walk `sourcePsi?.parent` (PSI, not UAST) and cast to `KtNamedFunction`.
+
+## Boundary rules
+
+- **TestBridgeBoundary** — app/src/androidTest/** may only import production code through `com.hluhovskyi.zero.testbridge.*` or `com.hluhovskyi.zero.activity.MainActivity`. Grow `DatabaseTestBridge` (or add a new bridge) instead of poking holes.
+- **TestBridgeProductionPurity** — zero-test-bridge/src/main/** must not import `org.junit.*`, `androidx.test.*`, `androidx.compose.ui.test.*`, `kotlin.test.*`, `org.mockito.*`, or `io.mockk.*` — the module ships in the production APK.
