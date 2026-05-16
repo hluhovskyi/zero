@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -32,6 +33,7 @@ abstract class BiometricLockComponent : Attachable {
     interface Dependencies {
         val context: Context
         val configurationRepository: ConfigurationRepository
+        val clock: Clock
     }
 
     companion object {
@@ -54,8 +56,10 @@ abstract class BiometricLockComponent : Attachable {
         @BiometricLockScope
         fun biometricLockUseCase(
             configurationRepository: ConfigurationRepository,
+            clock: Clock,
         ): BiometricLockUseCase = DefaultBiometricLockUseCase(
             configurationRepository = configurationRepository,
+            clock = clock,
         )
 
         @Provides
