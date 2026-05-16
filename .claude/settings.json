@@ -24,6 +24,8 @@
       "Bash(./scripts/emulator/start *)",
       "Bash(./scripts/ui/adb *)",
       "Bash(./scripts/install-app.sh)",
+      "Bash(./scripts/run-android-tests.sh)",
+      "Bash(./scripts/run-android-tests.sh *)",
       "Bash(./scripts/github/wait-for-ci.sh *)"
     ]
   },

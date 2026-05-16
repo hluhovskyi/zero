@@ -13,7 +13,7 @@ Result: a session in worktree A cannot accidentally talk to or install onto work
 
 ## emulator/ — Capacity management
 
-- `emulator/acquire [--no-auto-start]` — claim an unclaimed running emulator. If all are claimed and `--no-auto-start` is not set, spawn a new one via `emulator/start`. Writes `.emulator-serial`. Run this **explicitly** when entering UI verification, not at session start.
+- `emulator/acquire [--no-auto-start]` — claim an unclaimed running emulator. If all are claimed and `--no-auto-start` is not set, spawn a new one via `emulator/start`. Writes `.emulator-serial`. Run this **explicitly** when entering UI verification, not at session start. Refuses to spawn beyond `ZERO_MAX_EMULATORS` (default 2) — macOS HVF starves existing emulators when too many run concurrently.
 - `emulator/release [--kill]` — delete `.emulator-serial`. With `--kill`, also send `adb emu kill` to terminate the emulator process.
 - `emulator/start [<avd>]` — boot an unrun AVD on a free port with `-read-only` so a 2nd instance of the same AVD is possible. Prints the serial. Holds the repo lock from port selection through boot so concurrent sessions can't race.
 
@@ -32,6 +32,11 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 ## install-app.sh — APK install (replaces `installDebug`)
 
 - `install-app.sh` — builds `assembleDebug` and installs the APK via `ui/adb install -r`. Use this instead of `./gradlew :app:installDebug`, which installs to every connected device.
+
+## run-android-tests.sh — pinned instrumented tests
+
+- `run-android-tests.sh [gradle args…]` — reads `.emulator-serial`, exports `ANDROID_SERIAL`, then runs `./gradlew :app:connectedDebugAndroidTest "$@"`. Use this instead of `ANDROID_SERIAL=… ./gradlew connectedDebugAndroidTest …` — the env-var prefix bypasses the permission allow-list and prompts on every call. Example:
+  `./scripts/run-android-tests.sh -Pandroid.testInstrumentationRunnerArguments.class=com.hluhovskyi.zero.ZeroE2eTest`
 
 ## github/ — PR helpers
 

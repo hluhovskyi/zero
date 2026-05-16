@@ -25,9 +25,16 @@ deny() {
 adb_pattern='(^|[|;&])[[:space:]]*adb([[:space:]]|$)'
 wrapper_pattern='(^|[|;&])[[:space:]]*\./scripts/ui/adb([[:space:]]|$)'
 
+# Explicit pin via `-s <serial>` is always allowed — the user named the target,
+# it's not an accidental default-device hit. Matches `adb -s …` anywhere in the
+# first adb invocation of a segment.
+explicit_serial_pattern='(^|[|;&])[[:space:]]*adb[[:space:]]+(-[^s[:space:]]+[[:space:]]+)*-s[[:space:]]+'
+
 if echo "$cmd" | grep -qE "$adb_pattern"; then
     if echo "$cmd" | grep -qE "$wrapper_pattern"; then
         :  # wrapper path, fine
+    elif echo "$cmd" | grep -qE "$explicit_serial_pattern"; then
+        :  # explicit -s <serial>, fine
     else
         # Pull the first arg after the bare `adb` (best-effort; only used in remediation).
         first_arg=$(echo "$cmd" \
@@ -39,7 +46,7 @@ if echo "$cmd" | grep -qE "$adb_pattern"; then
                 # Allow-listed server-level subcommands: don't need pinning.
                 ;;
             *)
-                deny '"Bare `adb` command would target the default device and can clobber sibling worktrees.\n\nRun via the worktree-pinned wrapper instead:\n  ./scripts/ui/adb '"$first_arg"' …\n\nThe wrapper reads .emulator-serial and pins ANDROID_SERIAL. If no emulator is claimed yet, run ./scripts/emulator/acquire first."'
+                deny '"Bare `adb` command would target the default device and can clobber sibling worktrees.\n\nRun via the worktree-pinned wrapper instead:\n  ./scripts/ui/adb '"$first_arg"' …\n\nThe wrapper reads .emulator-serial and pins ANDROID_SERIAL. If no emulator is claimed yet, run ./scripts/emulator/acquire first.\n(Explicit `adb -s <serial> …` is also allowed if you know which emulator you want.)"'
                 ;;
         esac
     fi
