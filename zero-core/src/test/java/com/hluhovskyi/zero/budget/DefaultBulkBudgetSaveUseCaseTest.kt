@@ -1,9 +1,7 @@
-package com.hluhovskyi.zero.budget.bulksetup
+package com.hluhovskyi.zero.budget
 
-import com.hluhovskyi.zero.budget.BudgetRepository
-import com.hluhovskyi.zero.budget.BudgetType
-import com.hluhovskyi.zero.budget.BulkBudgetSaveUseCase
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -27,8 +25,7 @@ class DefaultBulkBudgetSaveUseCaseTest {
 
     @Mock private lateinit var budgetRepository: BudgetRepository
 
-    private val periodStart = LocalDate(2026, 5, 1)
-    private val periodEnd = LocalDate(2026, 5, 31)
+    private val period = DateRange(LocalDate(2026, 5, 1), LocalDate(2026, 5, 31))
     private val type = BudgetType.EXPENSE
 
     private val catA = Id.Known("cat-a")
@@ -40,20 +37,19 @@ class DefaultBulkBudgetSaveUseCaseTest {
         categoryId = categoryId,
         type = type,
         amount = Amount(amount),
-        periodStart = periodStart,
-        periodEnd = periodEnd,
+        periodStart = period.start,
+        periodEnd = period.end,
     )
 
     private fun useCase() = DefaultBulkBudgetSaveUseCase(budgetRepository = budgetRepository)
 
     @Test
     fun `deletes existing budgets whose category is not in the new entries`() = runTest {
-        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(periodStart, periodEnd, type)))
+        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(period.start, period.end, type)))
             .thenReturn(flowOf(listOf(existing("b-a", catA, BigDecimal("100")), existing("b-b", catB, BigDecimal("50")))))
 
         useCase().save(
-            from = periodStart,
-            to = periodEnd,
+            period = period,
             type = type,
             entries = listOf(BulkBudgetSaveUseCase.Entry(catA, Amount(BigDecimal("120")))),
         )
@@ -64,12 +60,11 @@ class DefaultBulkBudgetSaveUseCaseTest {
 
     @Test
     fun `upserts entries preserving existing ids for surviving categories`() = runTest {
-        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(periodStart, periodEnd, type)))
+        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(period.start, period.end, type)))
             .thenReturn(flowOf(listOf(existing("b-a", catA, BigDecimal("100")))))
 
         useCase().save(
-            from = periodStart,
-            to = periodEnd,
+            period = period,
             type = type,
             entries = listOf(
                 BulkBudgetSaveUseCase.Entry(catA, Amount(BigDecimal("120"))),
@@ -88,10 +83,10 @@ class DefaultBulkBudgetSaveUseCaseTest {
 
     @Test
     fun `empty entries deletes all existing rows for period`() = runTest {
-        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(periodStart, periodEnd, type)))
+        whenever(budgetRepository.query(BudgetRepository.Criteria.ForPeriod(period.start, period.end, type)))
             .thenReturn(flowOf(listOf(existing("b-a", catA, BigDecimal("100")), existing("b-b", catB, BigDecimal("50")))))
 
-        useCase().save(periodStart, periodEnd, type, entries = emptyList())
+        useCase().save(period, type, entries = emptyList())
 
         verify(budgetRepository).delete(Id.Known("b-a"))
         verify(budgetRepository).delete(Id.Known("b-b"))
@@ -106,8 +101,7 @@ class DefaultBulkBudgetSaveUseCaseTest {
             .thenReturn(flowOf(emptyList()))
 
         useCase().save(
-            from = periodStart,
-            to = periodEnd,
+            period = period,
             type = type,
             entries = listOf(BulkBudgetSaveUseCase.Entry(catA, Amount(BigDecimal("10")))),
         )

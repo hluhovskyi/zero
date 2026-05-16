@@ -33,6 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -97,6 +100,7 @@ private fun BudgetView(
     amountFormatter: AmountFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = BudgetViewModel.State())
+    var toastMessage by remember { mutableStateOf<String?>(null) }
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -144,7 +148,12 @@ private fun BudgetView(
 
         if (state.copyConfirmVisible) {
             CopyConfirmDialog(
-                onConfirm = { viewModel.perform(BudgetViewModel.Action.ConfirmCopy) },
+                onConfirm = {
+                    val count = state.previousPeriodBudgets.count { it.budgetId != null }
+                    val label = state.previousPeriodLabel
+                    viewModel.perform(BudgetViewModel.Action.ConfirmCopy)
+                    toastMessage = "Copied $count categories from $label"
+                },
                 onCancel = { viewModel.perform(BudgetViewModel.Action.CancelCopy) },
             )
         }
@@ -157,8 +166,8 @@ private fun BudgetView(
         )
 
         BudgetToast(
-            message = state.toastMessage,
-            onDismiss = { viewModel.perform(BudgetViewModel.Action.ToastShown) },
+            message = toastMessage,
+            onDismiss = { toastMessage = null },
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -179,10 +188,6 @@ private fun InlineNumpadOverlay(
     ) {
         val editingId = state.editingCategoryId ?: return@AnimatedVisibility
         val row = state.budgeted.firstOrNull { it.categoryId == editingId } ?: return@AnimatedVisibility
-        val prevRow = state.previousPeriodBudgets.firstOrNull { it.categoryId == editingId && it.budgetId != null }
-        val prevAmount = prevRow?.budgeted
-        val isPreviousSelected = prevAmount != null &&
-            state.editingAmountText == prevAmount.value.stripTrailingZeros().toPlainString()
 
         Box(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -215,8 +220,8 @@ private fun InlineNumpadOverlay(
                     name = row.categoryName,
                     icon = row.icon,
                     colorScheme = row.colorScheme,
-                    previousAmount = prevAmount,
-                    isPreviousSelected = isPreviousSelected,
+                    previousAmount = state.editingPreviousAmount,
+                    isPreviousSelected = state.isPreviousAmountSelected,
                     imageLoader = imageLoader,
                     amountFormatter = amountFormatter,
                     onPreviousChip = { viewModel.perform(BudgetViewModel.Action.TapPreviousChip) },

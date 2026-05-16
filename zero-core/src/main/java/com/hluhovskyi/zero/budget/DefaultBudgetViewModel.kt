@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -17,9 +18,8 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetQueryUseCase: BudgetQueryUseCase,
     private val periodResolver: PeriodResolver,
+    private val budgetSaveUseCase: BudgetSaveUseCase,
     private val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
-    private val budgetToastUseCase: BudgetToastUseCase,
-    private val budgetRepository: BudgetRepository,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
@@ -49,9 +49,6 @@ internal class DefaultBudgetViewModel(
             BudgetViewModel.Action.CancelCopy -> {
                 mutableState.update { it.copy(copyConfirmVisible = false) }
             }
-            BudgetViewModel.Action.ToastShown -> {
-                mutableState.update { it.copy(toastMessage = null) }
-            }
             is BudgetViewModel.Action.TapCategory -> {
                 val row = mutableState.value.budgeted.firstOrNull { it.categoryId == action.categoryId }
                 val seedText = if (row != null && row.budgetId != null) {
@@ -72,9 +69,7 @@ internal class DefaultBudgetViewModel(
             }
             BudgetViewModel.Action.TapPreviousChip -> {
                 val state = mutableState.value
-                val editingId = state.editingCategoryId ?: return
-                val prevRow = state.previousPeriodBudgets.firstOrNull { it.categoryId == editingId && it.budgetId != null }
-                val prevText = prevRow?.budgeted?.value?.stripTrailingZeros()?.toPlainString() ?: "0"
+                val prevText = state.editingPreviousAmount?.value?.stripTrailingZeros()?.toPlainString() ?: "0"
                 mutableState.update { it.copy(editingAmountText = prevText) }
             }
             BudgetViewModel.Action.DismissInlineEdit -> {
@@ -97,17 +92,13 @@ internal class DefaultBudgetViewModel(
         val amount = if (parsed != null) Amount(parsed) else Amount.zero()
         val saved = amount > Amount.zero()
         if (saved) {
-            val (currentStart, currentEnd) = currentPeriod()
             val existing = state.budgeted.firstOrNull { it.categoryId == editingId }
-            budgetRepository.insert(
-                BudgetRepository.BudgetInsert(
-                    id = existing?.budgetId ?: Id.Unknown,
-                    categoryId = editingId,
-                    type = BudgetType.EXPENSE,
-                    amount = amount,
-                    periodStart = currentStart,
-                    periodEnd = currentEnd,
-                ),
+            budgetSaveUseCase.save(
+                period = currentPeriod(),
+                type = BudgetType.EXPENSE,
+                categoryId = editingId,
+                amount = amount,
+                existingId = existing?.budgetId,
             )
         }
         val skipped = if (saved) state.skippedInSession else state.skippedInSession + editingId
@@ -148,34 +139,20 @@ internal class DefaultBudgetViewModel(
 
     private fun performCopy() = scope.launch {
         val state = mutableState.value
-        val (currentStart, currentEnd) = currentPeriod()
         val entries = state.previousPeriodBudgets
             .filter { it.budgetId != null }
             .map { BulkBudgetSaveUseCase.Entry(categoryId = it.categoryId, amount = it.budgeted) }
         if (entries.isEmpty()) return@launch
-        bulkBudgetSaveUseCase.save(currentStart, currentEnd, BudgetType.EXPENSE, entries)
-        budgetToastUseCase.show("Copied ${entries.size} categories from ${state.previousPeriodLabel}")
+        bulkBudgetSaveUseCase.save(currentPeriod(), BudgetType.EXPENSE, entries)
     }
 
-    private fun currentPeriod(): Pair<LocalDate, LocalDate> {
+    private fun currentPeriod(): DateRange {
         val today = periodResolver.today()
-        return periodResolver.monthOffsetFrom(today, monthOffset.value)
+        val (start, end) = periodResolver.monthOffsetFrom(today, monthOffset.value)
+        return DateRange(start, end)
     }
 
     override fun attachOnMain() {
-        observeToasts()
-        observePeriods()
-    }
-
-    private fun observeToasts() {
-        scope.launch {
-            budgetToastUseCase.messages.collectLatest { message ->
-                mutableState.update { it.copy(toastMessage = message) }
-            }
-        }
-    }
-
-    private fun observePeriods() {
         scope.launch {
             monthOffset
                 .flatMapLatest { offset ->
