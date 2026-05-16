@@ -3,12 +3,10 @@ package com.hluhovskyi.zero.security
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.security.BiometricAuthenticator.AuthReason
 import com.hluhovskyi.zero.security.BiometricAuthenticator.Result
-import com.hluhovskyi.zero.security.BiometricLockUseCase.LockState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -37,12 +35,7 @@ internal class DefaultBiometricLockGateViewModel(
     override fun attach(): Closeable = Closeables.merge(
         Closeables.of {
             coroutineScope.launch {
-                combine(
-                    biometricLockUseCase.enabled,
-                    biometricLockUseCase.lockState,
-                ) { enabled, lockState ->
-                    enabled && lockState is LockState.Locked
-                }.collect { isLocked ->
+                biometricLockUseCase.isLocked.collect { isLocked ->
                     mutableState.update { it.copy(isLocked = isLocked) }
                 }
             }

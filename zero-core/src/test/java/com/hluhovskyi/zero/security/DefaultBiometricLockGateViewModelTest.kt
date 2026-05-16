@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,6 +35,9 @@ class DefaultBiometricLockGateViewModelTest {
 
         override val enabled: Flow<Boolean> = mutableEnabled
         override val lockState: StateFlow<LockState> = mutableLockState
+        override val isLocked: Flow<Boolean> = combine(mutableEnabled, mutableLockState) { e, l ->
+            e && l is LockState.Locked
+        }.distinctUntilChanged()
         override val autoPromptRequests: Flow<Unit> = mutablePromptRequests
 
         override suspend fun setEnabled(value: Boolean) { mutableEnabled.value = value }

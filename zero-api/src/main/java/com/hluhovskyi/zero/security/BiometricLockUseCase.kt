@@ -12,6 +12,8 @@ interface BiometricLockUseCase {
 
     val lockState: StateFlow<LockState>
 
+    val isLocked: Flow<Boolean>
+
     val autoPromptRequests: Flow<Unit>
 
     suspend fun setEnabled(value: Boolean)
@@ -32,6 +34,7 @@ interface BiometricLockUseCase {
     object Noop : BiometricLockUseCase {
         override val enabled: Flow<Boolean> = flowOf(false)
         override val lockState: StateFlow<LockState> = MutableStateFlow(LockState.Unlocked)
+        override val isLocked: Flow<Boolean> = flowOf(false)
         override val autoPromptRequests: Flow<Unit> = emptyFlow()
         override suspend fun setEnabled(value: Boolean) = Unit
         override fun lock() = Unit

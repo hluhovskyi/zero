@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
@@ -33,6 +34,10 @@ internal class DefaultBiometricLockUseCase(
         .distinctUntilChanged()
 
     override val lockState: StateFlow<LockState> = mutableLockState
+
+    override val isLocked: Flow<Boolean> = combine(enabled, mutableLockState) { enabled, lockState ->
+        enabled && lockState is LockState.Locked
+    }.distinctUntilChanged()
 
     override val autoPromptRequests: Flow<Unit> = mutableAutoPromptRequests
 
