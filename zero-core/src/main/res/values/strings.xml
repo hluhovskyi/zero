@@ -254,4 +254,14 @@
     <string name="budget_edit_monthly_label">Monthly Budget</string>
     <string name="budget_edit_last_month_chip">Last month: %1$s</string>
     <string name="budget_edit_close_cd">Close</string>
+
+    <string name="budget_copy_confirm_title">Replace existing budget?</string>
+    <string name="budget_copy_confirm_subtitle">This will overwrite the budgets you already set for this month.</string>
+    <string name="budget_copy_confirm_replace">Replace</string>
+    <string name="budget_copy_confirm_cancel">Cancel</string>
+
+    <string name="budget_numpad_set">Set %1$s</string>
+    <string name="budget_numpad_set_next">Set %1$s — Next →</string>
+    <string name="budget_numpad_skip_next">Skip →</string>
+    <string name="budget_numpad_close">Close</string>
 </resources>

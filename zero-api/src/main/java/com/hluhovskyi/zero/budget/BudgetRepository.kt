@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -15,6 +16,13 @@ interface BudgetRepository {
     suspend fun insert(budgets: List<BudgetInsert>)
 
     suspend fun delete(id: Id.Known)
+
+    /**
+     * Atomic batch replace within [period] and [type]: any budget in that scope whose category
+     * is not present in [inserts] is soft-deleted, and [inserts] are upserted. One round-trip
+     * to the underlying store regardless of how many rows are involved.
+     */
+    suspend fun replace(period: DateRange, type: BudgetType, inserts: List<BudgetInsert>)
 
     sealed interface Criteria<T> {
 
@@ -63,5 +71,6 @@ interface BudgetRepository {
         override suspend fun insert(budget: BudgetInsert) = Unit
         override suspend fun insert(budgets: List<BudgetInsert>) = Unit
         override suspend fun delete(id: Id.Known) = Unit
+        override suspend fun replace(period: DateRange, type: BudgetType, inserts: List<BudgetInsert>) = Unit
     }
 }

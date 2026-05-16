@@ -38,6 +38,7 @@ abstract class BudgetComponent : AttachableViewComponent {
         val amountFormatter: AmountFormatter
         val dispatcherProvider: DispatcherProvider
         val budgetQueryUseCase: BudgetQueryUseCase
+        val budgetRepository: BudgetRepository
         val clock: Clock
         val zoneProvider: ZoneProvider
     }
@@ -80,14 +81,24 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @Provides
         @BudgetScope
-        internal fun viewModel(
+        internal fun budgetUseCase(
+            budgetRepository: BudgetRepository,
             budgetQueryUseCase: BudgetQueryUseCase,
             periodResolver: PeriodResolver,
+        ): BudgetUseCase = DefaultBudgetUseCase(
+            budgetRepository = budgetRepository,
+            budgetQueryUseCase = budgetQueryUseCase,
+            periodResolver = periodResolver,
+        )
+
+        @Provides
+        @BudgetScope
+        internal fun viewModel(
+            budgetUseCase: BudgetUseCase,
             onCategoryTappedHandler: OnCategoryTappedHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
-            budgetQueryUseCase = budgetQueryUseCase,
-            periodResolver = periodResolver,
+            budgetUseCase = budgetUseCase,
             onCategoryTappedHandler = onCategoryTappedHandler,
             dispatchers = dispatcherProvider,
         )
