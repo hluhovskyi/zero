@@ -81,34 +81,24 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @Provides
         @BudgetScope
-        internal fun bulkBudgetSaveUseCase(
+        internal fun budgetUseCase(
             budgetRepository: BudgetRepository,
-        ): BulkBudgetSaveUseCase = DefaultBulkBudgetSaveUseCase(
+            budgetQueryUseCase: BudgetQueryUseCase,
+            periodResolver: PeriodResolver,
+        ): BudgetUseCase = DefaultBudgetUseCase(
             budgetRepository = budgetRepository,
-        )
-
-        @Provides
-        @BudgetScope
-        internal fun budgetSaveUseCase(
-            budgetRepository: BudgetRepository,
-        ): BudgetSaveUseCase = DefaultBudgetSaveUseCase(
-            budgetRepository = budgetRepository,
+            budgetQueryUseCase = budgetQueryUseCase,
+            periodResolver = periodResolver,
         )
 
         @Provides
         @BudgetScope
         internal fun viewModel(
-            budgetQueryUseCase: BudgetQueryUseCase,
-            periodResolver: PeriodResolver,
-            budgetSaveUseCase: BudgetSaveUseCase,
-            bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
+            budgetUseCase: BudgetUseCase,
             onCategoryTappedHandler: OnCategoryTappedHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
-            budgetQueryUseCase = budgetQueryUseCase,
-            periodResolver = periodResolver,
-            budgetSaveUseCase = budgetSaveUseCase,
-            bulkBudgetSaveUseCase = bulkBudgetSaveUseCase,
+            budgetUseCase = budgetUseCase,
             onCategoryTappedHandler = onCategoryTappedHandler,
             dispatchers = dispatcherProvider,
         )

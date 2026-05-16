@@ -2,24 +2,16 @@ package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
-import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 
 internal class DefaultBudgetViewModel(
-    private val budgetQueryUseCase: BudgetQueryUseCase,
-    private val periodResolver: PeriodResolver,
-    private val budgetSaveUseCase: BudgetSaveUseCase,
-    private val bulkBudgetSaveUseCase: BulkBudgetSaveUseCase,
+    private val budgetUseCase: BudgetUseCase,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
@@ -92,13 +84,11 @@ internal class DefaultBudgetViewModel(
         val amount = if (parsed != null) Amount(parsed) else Amount.zero()
         val saved = amount > Amount.zero()
         if (saved) {
-            val existing = state.budgeted.firstOrNull { it.categoryId == editingId }
-            budgetSaveUseCase.save(
-                period = currentPeriod(),
+            budgetUseCase.save(
+                monthOffset = monthOffset.value,
                 type = BudgetType.EXPENSE,
                 categoryId = editingId,
                 amount = amount,
-                existingId = existing?.budgetId,
             )
         }
         val skipped = if (saved) state.skippedInSession else state.skippedInSession + editingId
@@ -138,52 +128,22 @@ internal class DefaultBudgetViewModel(
     }
 
     private fun performCopy() = scope.launch {
-        val state = mutableState.value
-        val entries = state.previousPeriodBudgets
-            .filter { it.budgetId != null }
-            .map { BulkBudgetSaveUseCase.Entry(categoryId = it.categoryId, amount = it.budgeted) }
-        if (entries.isEmpty()) return@launch
-        bulkBudgetSaveUseCase.save(currentPeriod(), BudgetType.EXPENSE, entries)
-    }
-
-    private fun currentPeriod(): DateRange {
-        val today = periodResolver.today()
-        val (start, end) = periodResolver.monthOffsetFrom(today, monthOffset.value)
-        return DateRange(start, end)
+        budgetUseCase.replaceFromPrevious(monthOffset.value, BudgetType.EXPENSE)
     }
 
     override fun attachOnMain() {
         scope.launch {
-            monthOffset
-                .flatMapLatest { offset ->
-                    val today = periodResolver.today()
-                    val (currentStart, currentEnd) = periodResolver.monthOffsetFrom(today, offset)
-                    val (previousStart, previousEnd) = periodResolver.monthOffsetFrom(today, offset - 1)
-                    combine(
-                        budgetQueryUseCase.query(currentStart, currentEnd),
-                        budgetQueryUseCase.query(previousStart, previousEnd),
-                    ) { current, previous ->
-                        Triple(current, previous, Pair(currentStart, previousStart))
-                    }
+            budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { view ->
+                mutableState.update {
+                    it.copy(
+                        displayedPeriodLabel = view.currentPeriodLabel,
+                        previousPeriodLabel = view.previousPeriodLabel,
+                        budgeted = view.current,
+                        previousPeriodBudgets = view.previous,
+                        isLoading = false,
+                    )
                 }
-                .collectLatest { (current, previous, periods) ->
-                    val (currentStart, previousStart) = periods
-                    mutableState.update {
-                        it.copy(
-                            displayedPeriodLabel = label(currentStart),
-                            previousPeriodLabel = label(previousStart),
-                            budgeted = current,
-                            previousPeriodBudgets = previous,
-                            isLoading = false,
-                        )
-                    }
-                }
+            }
         }
     }
-
-    private fun label(date: LocalDate): String = "${monthName(date.month)} ${date.year}"
-
-    private fun monthName(month: Month): String = month.name
-        .lowercase()
-        .replaceFirstChar { it.uppercase() }
 }
