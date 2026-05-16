@@ -31,6 +31,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          FEEDBACK_ENDPOINT: ${{ vars.FEEDBACK_ENDPOINT }}
+          FEEDBACK_INTEGRITY_PROJECT: ${{ vars.FEEDBACK_INTEGRITY_PROJECT }}
         run: ./gradlew bundleRelease
 
       - name: Install Play Store upload dependencies
