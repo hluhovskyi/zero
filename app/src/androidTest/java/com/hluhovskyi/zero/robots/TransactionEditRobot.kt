@@ -13,22 +13,24 @@ import androidx.compose.ui.test.performTextReplacement
 class TransactionEditRobot(private val composeRule: ComposeTestRule) {
 
     fun fillExpense(amount: String, category: String, account: String): TransactionEditRobot {
-        composeRule.onNodeWithTag("TransactionEdit.amountField")
-            .performClick()
-            .performTextReplacement(amount)
-        composeRule.onNodeWithText(category).performClick()
-        composeRule.onNodeWithText("ACCOUNT").performClick()
-        composeRule.onAllNodesWithText(account).onLast().performClick()
+        composeRule.apply {
+            onNodeWithTag("TransactionEdit.amountField")
+                .performClick()
+                .performTextReplacement(amount)
+            onNodeWithText(category).performClick()
+            onNodeWithText("ACCOUNT").performClick()
+            onAllNodesWithText(account).onLast().performClick()
+        }
         return this
     }
 
     fun save(): TransactionsRobot {
-        composeRule.onNodeWithContentDescription("Save Transaction").performClick()
-        // Wait for the edit screen to be dismissed (save is async on IO; navigation
-        // on Main fires only after the DB write completes).
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithContentDescription("Save Transaction")
-                .fetchSemanticsNodes().isEmpty()
+        composeRule.apply {
+            onNodeWithContentDescription("Save Transaction").performClick()
+            waitUntil(timeoutMillis = 10_000) {
+                onAllNodesWithContentDescription("Save Transaction")
+                    .fetchSemanticsNodes().isEmpty()
+            }
         }
         return TransactionsRobot(composeRule)
     }

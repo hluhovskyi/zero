@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.hluhovskyi.zero.robots.TransactionsRobot
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -22,6 +21,4 @@ class ZeroE2eTest : BaseE2eTest() {
             .save()
             .assertHasExpense(amount = "42")
     }
-
-    private fun onTransactions() = TransactionsRobot(composeRule)
 }

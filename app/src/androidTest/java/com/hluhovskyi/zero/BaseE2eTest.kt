@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.hluhovskyi.zero.activity.MainActivity
+import com.hluhovskyi.zero.robots.TransactionsRobot
 import com.hluhovskyi.zero.testbridge.HasTestBridgeContainer
 import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import kotlinx.coroutines.runBlocking
@@ -37,4 +38,6 @@ abstract class BaseE2eTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     protected fun seedDefaultSetup() = runBlocking { container.database.seedDefaultSetup() }
+
+    protected fun onTransactions() = TransactionsRobot(composeRule)
 }

@@ -16,20 +16,24 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
     }
 
     fun tapAddTransaction(): TransactionEditRobot {
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithContentDescription("Add transaction")
-                .fetchSemanticsNodes().isNotEmpty()
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Add transaction")
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithContentDescription("Add transaction").performClick()
         }
-        composeRule.onNodeWithContentDescription("Add transaction").performClick()
         return TransactionEditRobot(composeRule)
     }
 
     fun assertHasExpense(amount: String): TransactionsRobot {
-        composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodesWithText(amount, substring = true)
-                .fetchSemanticsNodes().isNotEmpty()
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(amount, substring = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText(amount, substring = true)[0].assertIsDisplayed()
         }
-        composeRule.onAllNodesWithText(amount, substring = true)[0].assertIsDisplayed()
         return this
     }
 }
