@@ -46,7 +46,7 @@ class DefaultDatabaseTestBridge(
                 colorId = colorId,
                 initialBalance = Amount(BigDecimal.ZERO),
                 category = AccountCategory.CASH,
-            )
+            ),
         )
 
         categoryRepository.insert(
@@ -57,7 +57,7 @@ class DefaultDatabaseTestBridge(
                 iconId = iconId,
                 colorId = colorId,
                 type = CategoryType.EXPENSE,
-            )
+            ),
         )
 
         transactionRepository.insert(
@@ -70,7 +70,7 @@ class DefaultDatabaseTestBridge(
                 updatedDateTime = epoch,
                 categoryId = categoryId,
                 rate = Rate.Same,
-            )
+            ),
         )
     }
 }

@@ -25,13 +25,12 @@ abstract class BaseE2eTest {
 
     @get:Rule(order = 0)
     val clearDataRule: TestRule = object : TestRule {
-        override fun apply(base: Statement, description: Description): Statement =
-            object : Statement() {
-                override fun evaluate() {
-                    runBlocking { container.database.clearData() }
-                    base.evaluate()
-                }
+        override fun apply(base: Statement, description: Description): Statement = object : Statement() {
+            override fun evaluate() {
+                runBlocking { container.database.clearData() }
+                base.evaluate()
             }
+        }
     }
 
     @get:Rule(order = 1)
