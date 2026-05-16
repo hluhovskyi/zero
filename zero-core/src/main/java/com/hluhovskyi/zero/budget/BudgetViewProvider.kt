@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -194,7 +195,8 @@ private fun InlineNumpadOverlay(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x40000000))
-                    .clickable { viewModel.perform(BudgetViewModel.Action.DismissInlineEdit) },
+                    .clickable { viewModel.perform(BudgetViewModel.Action.DismissInlineEdit) }
+                    .testTag("Budget.inlineNumpad.scrim"),
             )
             Column(
                 modifier = Modifier
@@ -360,6 +362,7 @@ private fun InlineCommitButton(text: String, hasNextUnset: Boolean, onCommit: ()
                 .fillMaxWidth()
                 .background(PrimaryContainer, RoundedCornerShape(14.dp))
                 .clickable(onClick = onCommit)
+                .testTag("Budget.inlineNumpad.commit")
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
