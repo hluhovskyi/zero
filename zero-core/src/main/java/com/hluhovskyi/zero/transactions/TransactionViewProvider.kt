@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +66,7 @@ import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import kotlinx.coroutines.flow.drop
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -118,9 +120,16 @@ private fun TransactionView(
         }
     }
 
-    val fabExpanded = state.transactions.isEmpty() &&
-        state.searchQuery.isBlank() &&
-        !state.activeFilter.isActive
+    var fabExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            state.transactions.isEmpty() &&
+                state.searchQuery.isBlank() &&
+                !state.activeFilter.isActive
+        }
+            .drop(1)
+            .collect { fabExpanded = it }
+    }
 
     Box(modifier = Modifier.fillMaxSize().focusTarget()) {
         Column(modifier = Modifier.fillMaxSize()) {
