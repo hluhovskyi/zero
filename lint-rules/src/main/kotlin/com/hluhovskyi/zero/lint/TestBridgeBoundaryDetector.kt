@@ -33,13 +33,19 @@ class TestBridgeBoundaryDetector :
 
     private fun checkImport(context: JavaContext, node: UImportStatement) {
         val resolved = node.resolve() as? PsiClass ?: return
-        val containingPath = resolved.containingFile
-            ?.virtualFile?.path?.replace('\\', '/') ?: return
-
-        if ("/src/main/" !in containingPath) return
-
         val fqn = resolved.qualifiedName ?: return
+
+        // Fast-path: only our project's classes can be production internals.
+        // Third-party deps (AndroidX, JUnit, kotlin stdlib, etc.) are unrestricted.
+        if (!fqn.startsWith(PROJECT_PACKAGE)) return
+
         if (isAllowed(fqn)) return
+
+        // Allow siblings inside androidTest — robots importing other robots, etc.
+        // Use the resolved class's containing virtual file path: project source files
+        // resolve to /src/androidTest/... paths; JAR/build-output resolutions never do.
+        val containingPath = resolved.containingFile?.virtualFile?.path?.replace('\\', '/')
+        if (containingPath != null && "/src/androidTest/" in containingPath) return
 
         context.report(
             ISSUE,
@@ -55,6 +61,8 @@ class TestBridgeBoundaryDetector :
             fqn == "com.hluhovskyi.zero.activity.MainActivity"
 
     companion object {
+        private const val PROJECT_PACKAGE = "com.hluhovskyi.zero."
+
         val ISSUE: Issue = Issue.create(
             id = "TestBridgeBoundary",
             briefDescription = "androidTest may not import production internals",
