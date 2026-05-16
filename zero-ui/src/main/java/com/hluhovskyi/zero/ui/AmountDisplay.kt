@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -123,7 +124,8 @@ fun AmountDisplay(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 70.dp)
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .testTag("TransactionEdit.amountField"),
                 textStyle = TextStyle(
                     fontSize = 56.sp,
                     fontWeight = FontWeight.ExtraBold,

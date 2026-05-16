@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk versions.compileSdk
+    namespace 'com.hluhovskyi.zero.testbridge'
+
+    defaultConfig {
+        minSdk versions.minSdk
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring deps.android.tools.desugar
+    implementation deps.kotlinxDatetime
+    implementation deps.kotlin.coroutines
+    implementation project(':zero-api')
+    implementation project(':zero-database')
+}
