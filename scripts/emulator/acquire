@@ -88,11 +88,15 @@ def main() -> None:
                 f"Concurrent emulator cap reached ({running_count}/{MAX_CONCURRENT}).\n"
                 f"Starting another would make existing emulators unresponsive on macOS.\n"
                 f"\n"
-                f"Free up a slot first — in another worktree run:\n"
-                f"  ./scripts/emulator/release --kill\n"
+                f"STOP — do not run `release --kill` anywhere as a workaround.\n"
+                f"The other running emulators belong to sibling sessions and may be\n"
+                f"in active use; killing them silently breaks their work.\n"
                 f"\n"
-                f"Or raise the cap for this invocation:\n"
-                f"  ZERO_MAX_EMULATORS={running_count + 1} ./scripts/emulator/acquire"
+                f"Ask the user how to proceed. Options the user may choose:\n"
+                f"  - free a sibling slot themselves (in another worktree:\n"
+                f"    `./scripts/emulator/release --kill`), then re-run acquire here\n"
+                f"  - raise the cap: `ZERO_MAX_EMULATORS={running_count + 1} ./scripts/emulator/acquire`\n"
+                f"  - skip UI verification for this session"
             )
 
         # Spawn a new emulator while holding the lock (--no-lock avoids deadlock).
