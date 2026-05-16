@@ -40,9 +40,15 @@ class DefaultBiometricLockGateViewModelTest {
         }.distinctUntilChanged()
         override val autoPromptRequests: Flow<Unit> = mutablePromptRequests
 
-        override suspend fun setEnabled(value: Boolean) { mutableEnabled.value = value }
-        override fun lock() { mutableLockState.value = LockState.Locked }
-        override fun unlock() { mutableLockState.value = LockState.Unlocked }
+        override suspend fun setEnabled(value: Boolean) {
+            mutableEnabled.value = value
+        }
+        override fun lock() {
+            mutableLockState.value = LockState.Locked
+        }
+        override fun unlock() {
+            mutableLockState.value = LockState.Unlocked
+        }
         override fun onAppBackgrounded() = Unit
         override fun onAppForegrounded() = Unit
     }
