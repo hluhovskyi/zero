@@ -14,22 +14,21 @@ internal class DefaultBudgetUseCase(
     private val periodResolver: PeriodResolver,
 ) : BudgetUseCase {
 
-    override fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType): Flow<BudgetUseCase.State> =
-        monthOffsetFlow.flatMapLatest { offset ->
-            val current = periodFor(offset)
-            val previous = periodFor(offset - 1)
-            combine(
-                budgetQueryUseCase.query(current.start, current.end),
-                budgetQueryUseCase.query(previous.start, previous.end),
-            ) { currentBudgets, previousBudgets ->
-                BudgetUseCase.State(
-                    currentPeriod = current,
-                    previousPeriod = previous,
-                    current = currentBudgets,
-                    previous = previousBudgets,
-                )
-            }
+    override fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType): Flow<BudgetUseCase.State> = monthOffsetFlow.flatMapLatest { offset ->
+        val current = periodFor(offset)
+        val previous = periodFor(offset - 1)
+        combine(
+            budgetQueryUseCase.query(current.start, current.end),
+            budgetQueryUseCase.query(previous.start, previous.end),
+        ) { currentBudgets, previousBudgets ->
+            BudgetUseCase.State(
+                currentPeriod = current,
+                previousPeriod = previous,
+                current = currentBudgets,
+                previous = previousBudgets,
+            )
         }
+    }
 
     override suspend fun save(
         monthOffset: Int,

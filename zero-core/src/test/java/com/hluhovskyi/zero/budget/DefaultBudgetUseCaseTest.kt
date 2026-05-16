@@ -25,6 +25,7 @@ import java.math.BigDecimal
 class DefaultBudgetUseCaseTest {
 
     @Mock private lateinit var budgetRepository: BudgetRepository
+
     @Mock private lateinit var budgetQueryUseCase: BudgetQueryUseCase
 
     private val today = LocalDate(2026, 5, 15)
@@ -41,12 +42,11 @@ class DefaultBudgetUseCaseTest {
     private val periodResolver = object : PeriodResolver {
         override fun today(): LocalDate = today
         override fun currentMonth(): Pair<LocalDate, LocalDate> = currentStart to currentEnd
-        override fun monthOffsetFrom(reference: LocalDate, offsetMonths: Int): Pair<LocalDate, LocalDate> =
-            when (offsetMonths) {
-                0 -> currentStart to currentEnd
-                -1 -> previousStart to previousEnd
-                else -> error("unexpected offset $offsetMonths")
-            }
+        override fun monthOffsetFrom(reference: LocalDate, offsetMonths: Int): Pair<LocalDate, LocalDate> = when (offsetMonths) {
+            0 -> currentStart to currentEnd
+            -1 -> previousStart to previousEnd
+            else -> error("unexpected offset $offsetMonths")
+        }
     }
 
     private fun budget(

@@ -51,7 +51,6 @@ class BudgetInlineNumpadRobot(private val composeRule: ComposeTestRule) {
 }
 
 // Local extension since SemanticsMatcher.not() is not in the public test API on older versions.
-private operator fun androidx.compose.ui.test.SemanticsMatcher.not(): androidx.compose.ui.test.SemanticsMatcher =
-    androidx.compose.ui.test.SemanticsMatcher("not(${this.description})") { node ->
-        !matches(node)
-    }
+private operator fun androidx.compose.ui.test.SemanticsMatcher.not(): androidx.compose.ui.test.SemanticsMatcher = androidx.compose.ui.test.SemanticsMatcher("not(${this.description})") { node ->
+    !matches(node)
+}

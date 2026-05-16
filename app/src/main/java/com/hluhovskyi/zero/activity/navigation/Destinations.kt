@@ -81,7 +81,6 @@ internal object Destinations {
             object PeriodStart : Argument<String> by stringValueOf("periodStart")
             object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
         }
-
     }
 
     object Settings : Destination by destinationOf("settings")
