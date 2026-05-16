@@ -13,13 +13,13 @@ internal class BiometricLockLifecycleObserver(
 ) : Attachable,
     DefaultLifecycleObserver {
 
-    override fun onCreate(owner: LifecycleOwner) {
-        biometricLockUseCase.lock()
+    override fun onStart(owner: LifecycleOwner) {
+        biometricLockUseCase.onAppForegrounded()
     }
 
     override fun onStop(owner: LifecycleOwner) {
         if (!activity.isFinishing) {
-            biometricLockUseCase.lock()
+            biometricLockUseCase.onAppBackgrounded()
         }
     }
 
