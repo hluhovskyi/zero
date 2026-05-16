@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 internal class DefaultBudgetViewModel(
     private val budgetUseCase: BudgetUseCase,
@@ -42,16 +44,15 @@ internal class DefaultBudgetViewModel(
                 mutableState.update { it.copy(copyConfirmVisible = false) }
             }
             is BudgetViewModel.Action.TapCategory -> {
-                val row = mutableState.value.budgeted.firstOrNull { it.categoryId == action.categoryId }
-                val seedText = if (row != null && row.budgetId != null) {
-                    row.budgeted.value.stripTrailingZeros().toPlainString()
-                } else {
-                    "0"
-                }
-                mutableState.update {
-                    it.copy(
+                mutableState.update { state ->
+                    val row = state.budgeted.firstOrNull { it.categoryId == action.categoryId }
+                    state.copy(
                         editingCategoryId = action.categoryId,
-                        editingAmountText = seedText,
+                        editingAmountText = if (row != null && row.budgetId != null) {
+                            row.budgeted.value.stripTrailingZeros().toPlainString()
+                        } else {
+                            "0"
+                        },
                         skippedInSession = emptySet(),
                     )
                 }
@@ -60,9 +61,14 @@ internal class DefaultBudgetViewModel(
                 mutableState.update { it.copy(editingAmountText = action.text) }
             }
             BudgetViewModel.Action.TapPreviousChip -> {
-                val state = mutableState.value
-                val prevText = state.editingPreviousAmount?.value?.stripTrailingZeros()?.toPlainString() ?: "0"
-                mutableState.update { it.copy(editingAmountText = prevText) }
+                mutableState.update { state ->
+                    state.copy(
+                        editingAmountText = state.editingPreviousAmount
+                            ?.value
+                            ?.stripTrailingZeros()
+                            ?.toPlainString() ?: "0",
+                    )
+                }
             }
             BudgetViewModel.Action.DismissInlineEdit -> {
                 mutableState.update {
@@ -93,17 +99,19 @@ internal class DefaultBudgetViewModel(
         }
         val skipped = if (saved) state.skippedInSession else state.skippedInSession + editingId
         val nextUnset = nextUnsetCategoryId(state, after = editingId, skipped = skipped)
-        if (nextUnset != null) {
-            mutableState.update {
-                it.copy(
+        // Respect a concurrent DismissInlineEdit: if the user already closed the numpad or
+        // moved to a different category while save was suspending, don't stomp their action.
+        mutableState.update { current ->
+            if (current.editingCategoryId != editingId) {
+                current
+            } else if (nextUnset != null) {
+                current.copy(
                     editingCategoryId = nextUnset,
                     editingAmountText = "0",
                     skippedInSession = skipped,
                 )
-            }
-        } else {
-            mutableState.update {
-                it.copy(
+            } else {
+                current.copy(
                     editingCategoryId = null,
                     editingAmountText = "0",
                     skippedInSession = emptySet(),
@@ -133,17 +141,23 @@ internal class DefaultBudgetViewModel(
 
     override fun attachOnMain() {
         scope.launch {
-            budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { view ->
+            budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { state ->
                 mutableState.update {
                     it.copy(
-                        displayedPeriodLabel = view.currentPeriodLabel,
-                        previousPeriodLabel = view.previousPeriodLabel,
-                        budgeted = view.current,
-                        previousPeriodBudgets = view.previous,
+                        displayedPeriodLabel = label(state.currentPeriod.start),
+                        previousPeriodLabel = label(state.previousPeriod.start),
+                        budgeted = state.current,
+                        previousPeriodBudgets = state.previous,
                         isLoading = false,
                     )
                 }
             }
         }
     }
+
+    private fun label(date: LocalDate): String = "${monthName(date.month)} ${date.year}"
+
+    private fun monthName(month: Month): String = month.name
+        .lowercase()
+        .replaceFirstChar { it.uppercase() }
 }

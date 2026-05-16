@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -13,6 +14,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -115,40 +117,11 @@ class DefaultBudgetUseCaseTest {
 
         useCase().replaceFromPrevious(monthOffset = 0, type = type)
 
-        verify(budgetRepository, never()).delete(any())
-        verify(budgetRepository, never()).insert(any<List<BudgetRepository.BudgetInsert>>())
+        verify(budgetRepository, never()).replace(any(), any(), any())
     }
 
     @Test
-    fun `replaceFromPrevious deletes current rows whose category isn't in source`() = runTest {
-        whenever(
-            budgetRepository.query(
-                BudgetRepository.Criteria.ForPeriod(previousStart, previousEnd, type),
-            ),
-        ).thenReturn(
-            flowOf(listOf(budget("prev-a", catA, BigDecimal("100"), previousStart, previousEnd))),
-        )
-        whenever(
-            budgetRepository.query(
-                BudgetRepository.Criteria.ForPeriod(currentStart, currentEnd, type),
-            ),
-        ).thenReturn(
-            flowOf(
-                listOf(
-                    budget("cur-a", catA, BigDecimal("80")),
-                    budget("cur-b", catB, BigDecimal("50")),
-                ),
-            ),
-        )
-
-        useCase().replaceFromPrevious(monthOffset = 0, type = type)
-
-        verify(budgetRepository).delete(Id.Known("cur-b"))
-        verify(budgetRepository, never()).delete(Id.Known("cur-a"))
-    }
-
-    @Test
-    fun `replaceFromPrevious upserts source amounts preserving current ids for overlapping categories`() = runTest {
+    fun `replaceFromPrevious calls repository replace with source amounts preserving current ids`() = runTest {
         whenever(
             budgetRepository.query(
                 BudgetRepository.Criteria.ForPeriod(previousStart, previousEnd, type),
@@ -169,12 +142,16 @@ class DefaultBudgetUseCaseTest {
 
         useCase().replaceFromPrevious(monthOffset = 0, type = type)
 
-        val captor = argumentCaptor<List<BudgetRepository.BudgetInsert>>()
-        verify(budgetRepository).insert(captor.capture())
-        val inserts = captor.firstValue.associateBy { it.categoryId }
+        val periodCaptor = argumentCaptor<DateRange>()
+        val insertsCaptor = argumentCaptor<List<BudgetRepository.BudgetInsert>>()
+        verify(budgetRepository).replace(periodCaptor.capture(), eq(type), insertsCaptor.capture())
+        assertEquals(currentStart, periodCaptor.firstValue.start)
+        assertEquals(currentEnd, periodCaptor.firstValue.end)
+        val inserts = insertsCaptor.firstValue.associateBy { it.categoryId }
         assertEquals(Id.Known("cur-a"), inserts.getValue(catA).id)
         assertEquals(0, inserts.getValue(catA).amount.value.compareTo(BigDecimal("100")))
         assertEquals(Id.Unknown, inserts.getValue(catC).id)
         assertEquals(0, inserts.getValue(catC).amount.value.compareTo(BigDecimal("75")))
+        // cur-b (not in source) gets handled by the repository's atomic replace — no individual delete.
     }
 }
