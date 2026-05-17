@@ -265,6 +265,7 @@
     <string name="budget_numpad_skip_next">Skip →</string>
     <string name="budget_numpad_close">Close</string>
 
+    <string name="budget_section_categories">Categories</string>
     <string name="budget_summary_used">Used</string>
     <string name="budget_summary_spent">Spent</string>
     <string name="budget_summary_remaining">Remaining</string>
