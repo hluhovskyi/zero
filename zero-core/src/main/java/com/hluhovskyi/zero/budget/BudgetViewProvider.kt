@@ -117,12 +117,20 @@ private fun BudgetView(
                     onNewer = { viewModel.perform(BudgetViewModel.Action.SelectNewerMonth) },
                 )
             }
-            if (state.budgeted.none { it.budgetId != null }) {
+            val hasAnyBudget = state.budgeted.any { it.budgetId != null }
+            if (!hasAnyBudget) {
                 item {
                     EmptyBudgetCallout(
                         periodLabel = state.displayedPeriodLabel,
                         totalCategories = state.budgeted.size,
                         previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                    )
+                }
+            } else {
+                item {
+                    SummaryBar(
+                        summary = state.budgeted.toSummary(),
+                        amountFormatter = amountFormatter,
                     )
                 }
             }
@@ -135,15 +143,34 @@ private fun BudgetView(
                     )
                 }
             }
-            item { SectionLabel(stringResource(R.string.budget_section_set_limits)) }
-            items(state.budgeted, key = { it.categoryId.value }) { row ->
-                UnsetCategoryRow(
-                    name = row.categoryName,
-                    colorScheme = row.colorScheme,
-                    icon = row.icon,
-                    imageLoader = imageLoader,
-                    onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+            item {
+                SectionLabel(
+                    stringResource(
+                        if (hasAnyBudget) {
+                            R.string.budget_section_categories
+                        } else {
+                            R.string.budget_section_set_limits
+                        },
+                    ),
                 )
+            }
+            items(state.budgeted, key = { it.categoryId.value }) { row ->
+                if (row.budgetId != null) {
+                    BudgetCard(
+                        row = row,
+                        onTap = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                    )
+                } else {
+                    UnsetCategoryRow(
+                        name = row.categoryName,
+                        colorScheme = row.colorScheme,
+                        icon = row.icon,
+                        imageLoader = imageLoader,
+                        onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                    )
+                }
             }
         }
 
