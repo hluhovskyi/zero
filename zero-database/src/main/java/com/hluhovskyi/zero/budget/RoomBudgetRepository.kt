@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -69,6 +70,24 @@ internal class RoomBudgetRepository(
     override suspend fun delete(id: Id.Known) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
             budgetRoom().softDelete(id, userId, zonedClock.localDateTime())
+        }
+    }
+
+    override suspend fun replace(
+        period: DateRange,
+        type: BudgetType,
+        inserts: List<BudgetRepository.BudgetInsert>,
+    ) {
+        incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
+            budgetRoom().replace(
+                userId = userId,
+                from = period.start,
+                to = period.end,
+                type = type.name,
+                keepCategoryIds = inserts.map { it.categoryId },
+                updatedDateTime = zonedClock.localDateTime(),
+                entities = inserts.map { it.toEntity(userId) },
+            )
         }
     }
 

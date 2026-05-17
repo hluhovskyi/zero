@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Assign an unclaimed running emulator to this worktree.
+
+Scans all worktrees for .emulator-serial to build the claimed set, picks the
+first running emulator not in that set, writes .emulator-serial in this
+worktree. If all are claimed, auto-invokes scripts/emulator/start (suppress
+with --no-auto-start).
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+# Hard cap on simultaneously-running emulators. macOS HVF starves existing
+# VMs when another boots — three concurrent Pixel-class AVDs on a 16 GB
+# machine push the system into swap and the older emulators become
+# unresponsive. Override at the shell with ZERO_MAX_EMULATORS=<N>.
+MAX_CONCURRENT = int(os.environ.get("ZERO_MAX_EMULATORS", "2"))
+
+_HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(_HERE.parent))
+from lib.emulator import (  # noqa: E402
+    adb_devices,
+    git_worktrees,
+    read_serial_file,
+    remove_serial_file,
+    repo_lock,
+    worktree_root,
+    write_serial_file,
+)
+
+
+def claim_unused(this_worktree: Path) -> str | None:
+    """Return a serial to claim, or None if all running are claimed."""
+    running = adb_devices()
+    if not running:
+        return None
+
+    claimed: set[str] = set()
+    for wt in git_worktrees():
+        serial = read_serial_file(wt)
+        if not serial:
+            continue
+        if serial in running:
+            claimed.add(serial)
+        else:
+            remove_serial_file(wt)
+            print(
+                f"  Pruned stale claim: {serial} from {wt.name} (emulator not running)",
+                file=sys.stderr,
+            )
+
+    for serial in running:
+        if serial not in claimed:
+            write_serial_file(this_worktree, serial)
+            return serial
+    return "__ALL_CLAIMED__"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--no-auto-start", action="store_true",
+                        help="Don't spawn a new emulator if all running are claimed")
+    args = parser.parse_args()
+
+    this = worktree_root()
+    with repo_lock():
+        result = claim_unused(this)
+
+        if result and result != "__ALL_CLAIMED__":
+            print(f"Assigned {result} to this worktree")
+            return
+
+        if args.no_auto_start:
+            if result is None:
+                sys.exit("No running emulators. Run: ./scripts/emulator/start")
+            sys.exit("All running emulators are claimed by other worktrees. "
+                     "Run: ./scripts/emulator/start")
+
+        # Cap on concurrent emulators. We're about to spawn a new one — refuse
+        # if we'd exceed the cap, since macOS HVF can't run that many smoothly.
+        running_count = len(adb_devices())
+        if running_count >= MAX_CONCURRENT:
+            sys.exit(
+                f"Concurrent emulator cap reached ({running_count}/{MAX_CONCURRENT}).\n"
+                f"Starting another would make existing emulators unresponsive on macOS.\n"
+                f"\n"
+                f"STOP — do not run `release --kill` anywhere as a workaround.\n"
+                f"The other running emulators belong to sibling sessions and may be\n"
+                f"in active use; killing them silently breaks their work.\n"
+                f"\n"
+                f"Ask the user how to proceed. Options the user may choose:\n"
+                f"  - free a sibling slot themselves (in another worktree:\n"
+                f"    `./scripts/emulator/release --kill`), then re-run acquire here\n"
+                f"  - raise the cap: `ZERO_MAX_EMULATORS={running_count + 1} ./scripts/emulator/acquire`\n"
+                f"  - skip UI verification for this session"
+            )
+
+        # Spawn a new emulator while holding the lock (--no-lock avoids deadlock).
+        print("No free running emulator — starting a new one "
+              "(use --no-auto-start to disable)...", file=sys.stderr)
+        start_script = _HERE / "start"
+        proc = subprocess.run(
+            [str(start_script), "--no-lock"], capture_output=True, text=True, check=False,
+        )
+        sys.stderr.write(proc.stderr)
+        if proc.returncode != 0:
+            sys.exit(f"scripts/emulator/start failed (exit {proc.returncode})")
+        serial = proc.stdout.strip().splitlines()[-1]
+        if not serial.startswith("emulator-"):
+            sys.exit(f"start did not print a serial. Got: {serial!r}")
+        write_serial_file(this, serial)
+        print(f"Started and assigned {serial} to this worktree")
+
+
+if __name__ == "__main__":
+    main()

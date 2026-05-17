@@ -88,6 +88,7 @@ abstract class ApplicationComponent :
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val logger: Logger
+    abstract val databaseComponent: DatabaseComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
 

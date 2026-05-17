@@ -101,4 +101,55 @@ internal interface BudgetRoom {
     """,
     )
     suspend fun softDelete(id: String, userId: String, updatedDateTime: String)
+
+    suspend fun softDeleteExcept(
+        userId: Id.Known,
+        from: LocalDate,
+        to: LocalDate,
+        type: String,
+        keepCategoryIds: List<Id.Known>,
+        updatedDateTime: LocalDateTime,
+    ) = softDeleteExcept(
+        userId.value,
+        from.toString(),
+        to.toString(),
+        type,
+        keepCategoryIds.map { it.value },
+        updatedDateTime.toString(),
+    )
+
+    @Query(
+        """
+        UPDATE BudgetEntity
+        SET deletedAt = :updatedDateTime, updatedDateTime = :updatedDateTime
+        WHERE userId = :userId
+          AND periodStart = :from
+          AND periodEnd = :to
+          AND type = :type
+          AND deletedAt IS NULL
+          AND categoryId NOT IN (:keepCategoryIds)
+    """,
+    )
+    suspend fun softDeleteExcept(
+        userId: String,
+        from: String,
+        to: String,
+        type: String,
+        keepCategoryIds: List<String>,
+        updatedDateTime: String,
+    )
+
+    @Transaction
+    suspend fun replace(
+        userId: Id.Known,
+        from: LocalDate,
+        to: LocalDate,
+        type: String,
+        keepCategoryIds: List<Id.Known>,
+        updatedDateTime: LocalDateTime,
+        entities: List<BudgetEntity>,
+    ) {
+        softDeleteExcept(userId, from, to, type, keepCategoryIds, updatedDateTime)
+        entities.forEach { insert(it) }
+    }
 }
