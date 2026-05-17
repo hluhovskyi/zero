@@ -17,8 +17,7 @@ class TestBridgeProductionPurityDetector :
     Detector(),
     Detector.UastScanner {
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> =
-        listOf(UFile::class.java)
+    override fun getApplicableUastTypes(): List<Class<out UElement>> = listOf(UFile::class.java)
 
     override fun createUastHandler(context: JavaContext) = object : UElementHandler() {
         override fun visitFile(node: UFile) {

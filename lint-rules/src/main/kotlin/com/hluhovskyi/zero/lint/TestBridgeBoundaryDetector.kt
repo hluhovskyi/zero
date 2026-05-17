@@ -18,8 +18,7 @@ class TestBridgeBoundaryDetector :
     Detector(),
     Detector.UastScanner {
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> =
-        listOf(UFile::class.java)
+    override fun getApplicableUastTypes(): List<Class<out UElement>> = listOf(UFile::class.java)
 
     override fun createUastHandler(context: JavaContext) = object : UElementHandler() {
         override fun visitFile(node: UFile) {
@@ -56,9 +55,8 @@ class TestBridgeBoundaryDetector :
         )
     }
 
-    private fun isAllowed(fqn: String): Boolean =
-        fqn.startsWith("com.hluhovskyi.zero.testbridge.") ||
-            fqn == "com.hluhovskyi.zero.activity.MainActivity"
+    private fun isAllowed(fqn: String): Boolean = fqn.startsWith("com.hluhovskyi.zero.testbridge.") ||
+        fqn == "com.hluhovskyi.zero.activity.MainActivity"
 
     companion object {
         private const val PROJECT_PACKAGE = "com.hluhovskyi.zero."
