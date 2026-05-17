@@ -15,6 +15,11 @@ fun <T> castingFlowOf(value: Any): Flow<T> = flowOf(value as T)
 @Suppress("unchecked_cast")
 fun <T> castingFlowOfNonNull(value: Any?): Flow<T> = value?.let { flowOf(it as T) } ?: emptyFlow()
 
+/**
+ * Prepends a synthetic empty-list emission so downstream `combine` operators don't stall waiting
+ * for this flow's first real emission. Downstream code that distinguishes "loading" from "loaded
+ * and empty" cannot rely on `list.isEmpty()` alone — the synthetic emission satisfies it too.
+ */
 fun <T> Flow<List<T>>.onStartWithEmptyList(): Flow<List<T>> = onStart { emit(emptyList()) }
 
 fun <T> Flow<List<T>>.onEmptyReturnEmptyList(): Flow<List<T>> = onEmpty { emit(emptyList()) }

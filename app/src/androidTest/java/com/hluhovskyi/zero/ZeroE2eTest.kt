@@ -21,4 +21,19 @@ class ZeroE2eTest : BaseE2eTest() {
             .save()
             .assertHasExpense(amount = "42")
     }
+
+    @Test
+    fun setBudgetForCategoryPersistsAndHidesEmptyCallout() {
+        seedDefaultSetup()
+        onBudget()
+            .assertEmptyCalloutVisible()
+            .tapCategory("Food")
+            .typeDigits("100")
+            .assertAmountShown("100")
+            .tapCommit()
+            .dismiss()
+            .assertEmptyCalloutHidden()
+            .tapCategory("Food")
+            .assertAmountShown("100")
+    }
 }
