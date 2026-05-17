@@ -264,4 +264,14 @@
     <string name="budget_numpad_set_next">Set %1$s — Next →</string>
     <string name="budget_numpad_skip_next">Skip →</string>
     <string name="budget_numpad_close">Close</string>
+
+    <string name="budget_summary_used">Used</string>
+    <string name="budget_summary_spent">Spent</string>
+    <string name="budget_summary_remaining">Remaining</string>
+    <string name="budget_summary_budget">Budget</string>
+    <string name="budget_summary_on_track">On track this month</string>
+    <plurals name="budget_summary_over_budget">
+        <item quantity="one">%1$d category over budget</item>
+        <item quantity="other">%1$d categories over budget</item>
+    </plurals>
 </resources>
