@@ -11,7 +11,18 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 - **Host-side scroll coordination** — if the host screen needs to react to a sub-component's internal scroll (e.g. collapsing a hero card as the sub-component's list scrolls), use `NestedScrollConnection` on the host's wrapping `Box`. Never add a header slot, content lambda, or layout parameter to the sub-component's `Builder` or `ViewProvider` to satisfy the host's layout needs — sub-components are black boxes; scroll events propagate up through the nested scroll system automatically.
 - **`Buildable<T>` on Builder** — `NavigatorScope.buildable()` rebuilds the component on every navigation, so each screen visit gets fresh state.
 - **Handler callbacks, not shared state** — screens communicate through `fun interface OnXxxHandler` passed via `@BindsInstance`. Handlers that trigger navigation must dispatch on `Dispatchers.Main`.
-- **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types).
+- **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types). See [When to introduce a UseCase](#when-to-introduce-a-usecase).
+
+## When to introduce a UseCase
+
+**Default to no UseCase.** The VM calls the repository directly; build the interface only when one of these triggers fires today:
+
+- **2+ callers** — the same operation is invoked from two ViewModels, components, or call sites. Anticipated future callers don't count.
+- **Crosses a Dagger scope** — the operation is shared between, say, an `@ActivityScope` consumer and a `@<Feature>Scope` consumer, so they must see the same instance.
+- **Non-trivial logic > ~300–400 LOC of mixed UI/state and business logic in one VM** — once a single VM file mixes a few hundred lines of state plumbing with branching domain logic, extract the domain logic to a UseCase and let the VM become a thin projection over its state. `DefaultBudgetUseCase` (period math + query observation + save + period replace) is the canonical example.
+- **Documented module contract** — the interface is a published seam other modules consume; mark it explicitly (e.g. file-level comment) so the lint rule can be suppressed.
+
+**Don't pre-declare UseCases in plans.** Plans describe data flow + acceptance criteria; the implementer decides extractions from observed concrete need. The `SpeculativeUseCase` lint rule (warning) flags single-method `*UseCase` interfaces that don't meet any of the triggers above. Suppress with `@Suppress("SpeculativeUseCase")` on the interface declaration when one of the triggers does apply but the rule can't see it (e.g. consumers in another module).
 
 ## UseCase State Ownership
 
