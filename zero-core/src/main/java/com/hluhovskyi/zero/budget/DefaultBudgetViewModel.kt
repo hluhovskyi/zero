@@ -146,26 +146,15 @@ internal class DefaultBudgetViewModel(
                     it.copy(
                         displayedPeriodLabel = label(state.currentPeriod.start),
                         previousPeriodLabel = label(state.previousPeriod.start),
-                        budgeted = sortForDisplay(state.current),
+                        budgeted = state.current,
                         previousPeriodBudgets = state.previous,
+                        summary = state.summary,
+                        hasAnyBudget = state.hasAnyBudget,
                         isLoading = false,
                     )
                 }
             }
         }
-    }
-
-    private fun sortForDisplay(
-        rows: List<BudgetQueryUseCase.Budgeted>,
-    ): List<BudgetQueryUseCase.Budgeted> {
-        val active = rows.filter { it.budgetId != null }
-        val unset = rows.filter { it.budgetId == null }
-        val over = active.filter { it.spent > it.budgeted }
-        val inProgress = active.filter { it.spent <= it.budgeted }
-            .sortedByDescending { row ->
-                if (row.budgeted > Amount.zero()) row.spent / row.budgeted else 0.0
-            }
-        return over + inProgress + unset
     }
 
     private fun label(date: LocalDate): String = "${monthName(date.month)} ${date.year}"

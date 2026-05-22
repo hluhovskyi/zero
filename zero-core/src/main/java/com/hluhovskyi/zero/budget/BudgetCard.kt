@@ -115,7 +115,7 @@ internal fun BudgetCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = amountFormatter.format(row.spent, currencySymbol = "$"),
+                        text = amountFormatter.format(row.spent),
                         style = TextStyle(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -140,7 +140,7 @@ internal fun BudgetCard(
                     Text(
                         text = stringResource(
                             R.string.budget_card_of,
-                            amountFormatter.format(row.budgeted, currencySymbol = "$"),
+                            amountFormatter.format(row.budgeted),
                         ),
                         style = TextStyle(
                             fontSize = 12.sp,
@@ -217,7 +217,7 @@ private fun statusText(
     amountFormatter: AmountFormatter,
 ): String {
     val diff = if (isOver) row.spent - row.budgeted else row.budgeted - row.spent
-    val formatted = amountFormatter.format(diff, currencySymbol = "$")
+    val formatted = amountFormatter.format(diff)
     return when {
         isOver -> stringResource(R.string.budget_card_over_limit, formatted)
         pct > 0.85f -> stringResource(R.string.budget_card_almost_there, formatted)

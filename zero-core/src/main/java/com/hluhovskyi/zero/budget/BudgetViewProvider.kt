@@ -117,8 +117,7 @@ private fun BudgetView(
                     onNewer = { viewModel.perform(BudgetViewModel.Action.SelectNewerMonth) },
                 )
             }
-            val hasAnyBudget = state.budgeted.any { it.budgetId != null }
-            if (!hasAnyBudget) {
+            if (!state.hasAnyBudget) {
                 item {
                     EmptyBudgetCallout(
                         periodLabel = state.displayedPeriodLabel,
@@ -129,7 +128,7 @@ private fun BudgetView(
             } else {
                 item {
                     SummaryBar(
-                        summary = state.budgeted.toSummary(),
+                        summary = state.summary,
                         amountFormatter = amountFormatter,
                     )
                 }
@@ -146,7 +145,7 @@ private fun BudgetView(
             item {
                 SectionLabel(
                     stringResource(
-                        if (hasAnyBudget) {
+                        if (state.hasAnyBudget) {
                             R.string.budget_section_categories
                         } else {
                             R.string.budget_section_set_limits

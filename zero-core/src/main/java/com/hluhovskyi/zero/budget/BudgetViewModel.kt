@@ -27,6 +27,8 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val hasNext: Boolean = true,
         val budgeted: List<BudgetQueryUseCase.Budgeted> = emptyList(),
         val previousPeriodBudgets: List<BudgetQueryUseCase.Budgeted> = emptyList(),
+        val summary: BudgetUseCase.Summary = BudgetUseCase.Summary.empty,
+        val hasAnyBudget: Boolean = false,
         val isLoading: Boolean = true,
         val copyConfirmVisible: Boolean = false,
         val editingCategoryId: Id.Known? = null,

@@ -38,7 +38,32 @@ interface BudgetUseCase {
         val previousPeriod: DateRange,
         val current: List<BudgetQueryUseCase.Budgeted>,
         val previous: List<BudgetQueryUseCase.Budgeted>,
+        val summary: Summary,
+        val hasAnyBudget: Boolean,
     )
+
+    /**
+     * Aggregate totals for the active (budget-set) rows in the current period.
+     * Derived once in the use case so the view layer is a pure consumer.
+     */
+    data class Summary(
+        val totalBudgeted: Amount,
+        val totalSpent: Amount,
+        val overCount: Int,
+        val overallPct: Float,
+        val isOver: Boolean,
+    ) {
+        companion object {
+
+            val empty: Summary = Summary(
+                totalBudgeted = Amount.zero(),
+                totalSpent = Amount.zero(),
+                overCount = 0,
+                overallPct = 0f,
+                isOver = false,
+            )
+        }
+    }
 
     object Noop : BudgetUseCase {
         override fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType): Flow<State> = emptyFlow()

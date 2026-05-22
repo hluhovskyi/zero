@@ -46,7 +46,7 @@ private val OnTrackPillBg = Color(0x265DDBA8)
 
 @Composable
 internal fun SummaryBar(
-    summary: BudgetSummary,
+    summary: BudgetUseCase.Summary,
     amountFormatter: AmountFormatter,
     modifier: Modifier = Modifier,
 ) {
@@ -61,9 +61,9 @@ internal fun SummaryBar(
         summary.totalBudgeted - summary.totalSpent
     }
     val remainingDisplay = if (summary.isOver) {
-        "-${amountFormatter.format(diff, currencySymbol = "$")}"
+        "-${amountFormatter.format(diff)}"
     } else {
-        amountFormatter.format(diff, currencySymbol = "$")
+        amountFormatter.format(diff)
     }
     val remainingColor = if (summary.isOver) RedAccent else GreenAccent
 
@@ -84,7 +84,7 @@ internal fun SummaryBar(
             ) {
                 LabeledNumber(
                     label = stringResource(R.string.budget_summary_spent),
-                    value = amountFormatter.format(summary.totalSpent, currencySymbol = "$"),
+                    value = amountFormatter.format(summary.totalSpent),
                     valueColor = SummaryTextStrong,
                     horizontalAlignment = Alignment.Start,
                 )
@@ -96,7 +96,7 @@ internal fun SummaryBar(
                 )
                 LabeledNumber(
                     label = stringResource(R.string.budget_summary_budget),
-                    value = amountFormatter.format(summary.totalBudgeted, currencySymbol = "$"),
+                    value = amountFormatter.format(summary.totalBudgeted),
                     valueColor = SummaryTextDim,
                     valueWeight = FontWeight.Bold,
                     horizontalAlignment = Alignment.End,
