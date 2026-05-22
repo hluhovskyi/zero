@@ -41,7 +41,7 @@ interface Amount {
     }
 }
 
-private class ValueAmount(override val value: BigDecimal) : Amount {
+private data class ValueAmount(override val value: BigDecimal) : Amount {
 
     override fun withRate(rate: Rate): Amount = ValueAmount(value.multiply(rate.value))
 
