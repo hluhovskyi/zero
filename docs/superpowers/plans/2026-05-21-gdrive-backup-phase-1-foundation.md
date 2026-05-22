@@ -169,19 +169,17 @@ interface BackupClient {
 }
 ```
 
-- [ ] **Step 5: `BackupUseCase.kt`** — the orchestrator interface. Follows the `ImportUseCase` shape with `state: Flow<State>` and `perform(Action)`.
+- [ ] **Step 5: `BackupUseCase.kt`** — the orchestrator interface. Exposes `state: Flow<State>` and `perform(Action)`. **No `attach()`** — this is an app-scoped service. Its background work runs in its constructor `CoroutineScope` and lives for the process lifetime. Consumers (settings ViewModel, WorkManager worker, notification presenter) observe the flow; none own the use case's lifecycle.
 
 ```kotlin
 package com.hluhovskyi.zero.backup
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDateTime
-import java.io.Closeable
 
 interface BackupUseCase {
     val state: Flow<State>
     fun perform(action: Action)
-    fun attach(): Closeable
 
     data class State(
         val phase: Phase = Phase.Idle,
@@ -463,7 +461,6 @@ Required behavior (no full code in plan — let the implementing engineer compos
   - On `Success`: update `phase = Idle`, `lastSuccessAt = now`, `consecutiveFailures = 0`, `lastError = null`.
   - On `Failure`: update `phase = Failed(error)`, `consecutiveFailures += 1`, `lastError = error`.
 - `perform(RestoreLatest(callback))` similarly: phase → `Restoring`, call `client.latest()` then `download`, deserialize via `BackupEnvelopeSerializer`, invoke callback, return to `Idle`.
-- `attach(): Closeable` returns a no-op `Closeables.empty()` (no long-running flows to cancel).
 
 - [ ] **Step 5: Re-run tests**
 

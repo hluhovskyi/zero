@@ -43,7 +43,8 @@ zero-api                              (pure Kotlin — interfaces & DTOs)
     BackupClient.kt                   ← interface: upload, latest, download, delete
     BackupEnvelope.kt                 ← @Serializable { format, snapshot }
     BackupMetadata.kt                 ← @Serializable { backupId, createdAt, byteSize, deviceLabel }
-    BackupUseCase.kt                  ← interface: state: Flow<State>, perform(Action), attach
+    BackupUseCase.kt                  ← interface: state: Flow<State>, perform(Action)
+                                         (app-scoped; no attach — consumers observe, don't own)
     BackupError.kt                    ← sealed taxonomy of failure modes
   auth/
     OAuthTokenProvider.kt             ← interface: getAccessToken, signIn, revoke — generic
