@@ -110,6 +110,7 @@ dependencies {
     implementation(project(":zero-database"))
     implementation(project(":zero-sync"))
     implementation(project(":zero-core"))
+    implementation(project(":zero-crash"))
     implementation(project(":zero-image-loading"))
     implementation(project(":zero-remote"))
 
