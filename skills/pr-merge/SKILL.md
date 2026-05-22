@@ -38,16 +38,12 @@ Otherwise run in order — stop and report on first failure, do not continue to 
 ./gradlew assembleDebug
 ```
 
-Then run the E2E suite (CI does not yet gate on this — pr-merge is the only gate):
+Then run the E2E suite — pr-merge is the only gate, CI doesn't run it:
 
 ```bash
-./scripts/emulator/acquire                          # ensures .emulator-serial is set
-ANDROID_SERIAL=$(cat .emulator-serial) ./gradlew :app:connectedDebugAndroidTest
+./scripts/emulator/acquire
+./scripts/run-android-tests.sh
 ```
-
-`ANDROID_SERIAL` pins the run to the acquired emulator so concurrent
-sessions / sibling worktrees don't fight over the device pool. If
-`:app:connectedDebugAndroidTest` reports failures, stop — do not merge.
 
 If all pass: `✓ Tests, lint, build, and E2E passed — proceeding with merge.`
 
