@@ -54,6 +54,17 @@ Without this setup, debug installs receive a `null` token and `FeedbackService.s
 
 Phase 2 callers should append `"debug"` to `report.labels` when `BuildConfig.DEBUG` so the issue tracker is filterable. Phase 1 only documents the convention; no debug-detection code in the submitter itself.
 
+## Crash reporting config
+
+Adjacent to feedback but a separate pipe. See [docs/superpowers/specs/2026-05-16-crash-analytics-design.md](../superpowers/specs/2026-05-16-crash-analytics-design.md). Sentry DSN flows the same way as `FEEDBACK_ENDPOINT` but is **read by `zero-crash/build.gradle`**, not `app/build.gradle`.
+
+| Where | `SENTRY_DSN` |
+|---|---|
+| Local dev | `local.gradle.properties` → `sentryDsn=https://...` (gitignored, read by `zero-crash/build.gradle`) |
+| CD release builds | `${{ vars.SENTRY_DSN }}` in `.github/workflows/cd.yml` — GitHub Variable, not Secret (DSN ships in the AAB anyway) |
+
+No Cloud Function involvement. No `SENTRY_AUTH_TOKEN` needed in v1 because the app currently ships `minifyEnabled false`; if mapping upload is ever required, that adds the Sentry Gradle plugin + an auth-token secret.
+
 ## Verifying changes
 
 - Unit tests: `./gradlew :zero-remote:testDebugUnitTest`

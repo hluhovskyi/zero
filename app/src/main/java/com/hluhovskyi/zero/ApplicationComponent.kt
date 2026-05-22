@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import com.hluhovskyi.zero.accounts.AccountComponent
@@ -16,6 +17,7 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.PredefinedMaterialColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
+import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.CrashingIncorrectStateDetector
 import com.hluhovskyi.zero.common.DateFormatter
@@ -80,6 +82,7 @@ private annotation class ApplicationScope
 )
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
+    CrashComponent.Dependencies,
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
     ResourceResolverComponent.Dependencies,
@@ -87,6 +90,7 @@ abstract class ApplicationComponent :
     ImportComponent.Dependencies {
 
     abstract val activityComponentBuilder: ActivityComponent.Builder
+    abstract val attachable: Attachable
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
     abstract override val feedbackService: FeedbackService
@@ -95,6 +99,7 @@ abstract class ApplicationComponent :
     interface Dependencies {
 
         val context: Context
+        val application: Application
     }
 
     companion object {
@@ -111,6 +116,7 @@ abstract class ApplicationComponent :
 
     @dagger.Module(
         includes = [
+            CrashModule::class,
             DatabaseModule::class,
             RemoteModule::class,
         ],
@@ -479,4 +485,22 @@ internal object RemoteModule {
     fun feedbackService(
         remoteComponent: RemoteComponent,
     ): FeedbackService = remoteComponent.feedbackService
+}
+
+@dagger.Module
+internal object CrashModule {
+
+    @Provides
+    @ApplicationScope
+    fun crashComponent(
+        component: ApplicationComponent,
+    ): CrashComponent = CrashComponent.builder(component)
+        .versionName(BuildConfig.VERSION_NAME)
+        .build()
+
+    @Provides
+    @ApplicationScope
+    fun attachable(
+        crashComponent: CrashComponent,
+    ): Attachable = AttachApplicationComponent(crashComponent)
 }

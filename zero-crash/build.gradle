@@ -1,0 +1,56 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.devtools.ksp'
+}
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.gradle.properties")
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+
+android {
+    compileSdk versions.compileSdk
+
+    defaultConfig {
+        minSdk versions.minSdk
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+
+        buildConfigField "String", "SENTRY_DSN",
+            "\"${System.getenv("SENTRY_DSN") ?: localProps['sentryDsn'] ?: ""}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    buildFeatures {
+        buildConfig = true
+    }
+    namespace 'com.hluhovskyi.zero.crash'
+    lint {
+        targetSdk versions.targetSdk
+    }
+    testOptions {
+        targetSdk versions.targetSdk
+    }
+}
+
+dependencies {
+    lintChecks project(":lint-rules")
+
+    implementation(project(":zero-api"))
+
+    implementation deps.dagger.runtime
+    ksp deps.dagger.compiler
+
+    implementation deps.javax.inject
+
+    implementation deps.sentry
+}
