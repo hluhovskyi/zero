@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.budget
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,13 +10,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -23,7 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -33,14 +36,13 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
-import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.common.toUi
+import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.theme.Error
 import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
@@ -66,162 +68,187 @@ internal fun BudgetCard(
 
     val cardBg = if (isOver) OverBg else SurfaceContainerLowest
     val borderModifier = if (isOver) {
-        Modifier.border(1.5.dp, Error.copy(alpha = 0.2f), RoundedCornerShape(18.dp))
+        Modifier.border(1.5.dp, Error.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     } else {
         Modifier
     }
 
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .background(cardBg, RoundedCornerShape(18.dp))
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .background(cardBg, RoundedCornerShape(16.dp))
             .then(borderModifier)
             .clickable(onClick = onTap)
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CategoryIconView(
-                colorScheme = row.colorScheme.toUi(),
-                size = 34.dp,
-                contentPadding = 7.dp,
-            ) { tint ->
-                imageLoader.View(
-                    modifier = Modifier.size(20.dp),
-                    image = row.icon,
-                    tint = tint,
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    Text(
-                        text = row.categoryName,
-                        modifier = Modifier.weight(1f),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnSurface,
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = amountFormatter.format(row.spent),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (isOver) Error else Primary,
-                        ),
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = statusText(row, isOver, pct, amountFormatter),
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = statusColor(isOver, pct),
-                        ),
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.budget_card_of,
-                            amountFormatter.format(row.budgeted),
-                        ),
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = OnSurfaceVariant,
-                        ),
-                    )
-                }
-            }
-        }
-
-        ProgressBar(pct = pct, isOver = isOver, cardBg = cardBg)
+        IconWithRing(
+            row = row,
+            pct = pct,
+            isOver = isOver,
+            imageLoader = imageLoader,
+        )
+        TextBlock(
+            row = row,
+            isOver = isOver,
+            pct = pct,
+            amountFormatter = amountFormatter,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
 @Composable
-private fun ProgressBar(pct: Float, isOver: Boolean, cardBg: Color) {
+private fun IconWithRing(
+    row: BudgetQueryUseCase.Budgeted,
+    pct: Float,
+    isOver: Boolean,
+    imageLoader: ImageLoader,
+) {
+    val bg = row.colorScheme.background.value.toCompose()
+    val primary = row.colorScheme.primary.value.toCompose()
+    val ringColor = ringColor(isOver = isOver, pct = pct, scheme = row.colorScheme)
     val animated by animateFloatAsState(
         targetValue = pct.coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 600),
-        label = "barGrow",
+        label = "ringGrow",
     )
-    val barColor = when {
-        isOver -> Error
-        pct > 0.85f -> OrangeWarn
-        pct > 0.65f -> YellowWarn
-        else -> Primary
-    }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(8.dp),
-        contentAlignment = Alignment.CenterStart,
+        modifier = Modifier.size(52.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .background(SurfaceContainer, RoundedCornerShape(4.dp)),
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(animated)
-                .background(barColor, RoundedCornerShape(4.dp)),
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            if (isOver) {
-                Box(
-                    modifier = Modifier
-                        .offset(x = 2.dp)
-                        .size(12.dp)
-                        .background(cardBg, CircleShape)
-                        .padding(2.dp)
-                        .background(Error, CircleShape),
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokePx = 3.dp.toPx()
+            val diameter = 48.dp.toPx()
+            val topLeft = Offset(
+                x = (size.width - diameter) / 2f,
+                y = (size.height - diameter) / 2f,
+            )
+            val arcSize = Size(diameter, diameter)
+            drawArc(
+                color = SurfaceContainer,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokePx),
+            )
+            if (animated > 0f) {
+                drawArc(
+                    color = ringColor,
+                    startAngle = -90f,
+                    sweepAngle = 360f * animated,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokePx, cap = StrokeCap.Round),
                 )
             }
         }
         Box(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .width(2.dp)
-                .height(14.dp)
-                .background(OutlineVariant, RoundedCornerShape(1.dp)),
-        )
+                .size(40.dp)
+                .background(bg, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            imageLoader.View(
+                modifier = Modifier.size(22.dp),
+                image = row.icon,
+                tint = primary,
+            )
+        }
     }
+}
+
+@Composable
+private fun TextBlock(
+    row: BudgetQueryUseCase.Budgeted,
+    isOver: Boolean,
+    pct: Float,
+    amountFormatter: AmountFormatter,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = row.categoryName,
+                modifier = Modifier.weight(1f),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurface,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = amountFormatter.format(row.spent),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (isOver) Error else Primary,
+                ),
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = statusText(row, isOver, amountFormatter),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = statusColor(isOver, pct),
+                ),
+            )
+            Text(
+                text = stringResource(
+                    R.string.budget_card_of,
+                    amountFormatter.format(row.budgeted),
+                ),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = OnSurfaceVariant,
+                ),
+            )
+        }
+    }
+}
+
+private fun ringColor(isOver: Boolean, pct: Float, scheme: ColorScheme): Color = when {
+    isOver -> Error
+    pct > 0.85f -> OrangeWarn
+    pct > 0.65f -> YellowWarn
+    else -> lerp(
+        scheme.background.value.toCompose(),
+        scheme.primary.value.toCompose(),
+        0.3f,
+    )
 }
 
 @Composable
 private fun statusText(
     row: BudgetQueryUseCase.Budgeted,
     isOver: Boolean,
-    pct: Float,
     amountFormatter: AmountFormatter,
 ): String {
     val diff = if (isOver) row.spent - row.budgeted else row.budgeted - row.spent
     val formatted = amountFormatter.format(diff)
-    return when {
-        isOver -> stringResource(R.string.budget_card_over_limit, formatted)
-        pct > 0.85f -> stringResource(R.string.budget_card_almost_there, formatted)
-        else -> stringResource(R.string.budget_card_remaining, formatted)
+    return if (isOver) {
+        stringResource(R.string.budget_card_over, formatted)
+    } else {
+        stringResource(R.string.budget_card_left, formatted)
     }
 }
 

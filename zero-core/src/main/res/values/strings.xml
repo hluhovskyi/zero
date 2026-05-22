@@ -275,8 +275,7 @@
         <item quantity="one">%1$d category over budget</item>
         <item quantity="other">%1$d categories over budget</item>
     </plurals>
-    <string name="budget_card_remaining">%1$s remaining</string>
-    <string name="budget_card_almost_there">%1$s left — almost there</string>
-    <string name="budget_card_over_limit">%1$s over limit</string>
+    <string name="budget_card_left">%1$s left</string>
+    <string name="budget_card_over">%1$s over</string>
     <string name="budget_card_of">of %1$s</string>
 </resources>
