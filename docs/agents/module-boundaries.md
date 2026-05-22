@@ -6,6 +6,7 @@ app
       └── zero-ui   (Design System, Composables: CategoryIconView, etc.)
       └── zero-api  (Domain interfaces: ColorRepository, ColorScheme, Id, etc.)
 zero-image-loading  (ImageLoader interface + Coil impl)
+zero-crash          (CrashComponent — Sentry crash reporting, attach-only)
 ```
 
 - `zero-core` cannot import from `app` — no `Navigator`, no navigation types.

@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.robots
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -33,6 +34,39 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
                     .fetchSemanticsNodes().isNotEmpty()
             }
             onAllNodesWithText(amount, substring = true)[0].assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun openFilter(): TransactionFilterRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Filter").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithContentDescription("Filter").performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Apply filters").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        return TransactionFilterRobot(composeRule)
+    }
+
+    fun assertFilterChipVisible(label: String): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText(label).assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertCategoryNotVisible(name: String): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(name).fetchSemanticsNodes().isEmpty()
+            }
+            onAllNodesWithText(name).assertCountEquals(0)
         }
         return this
     }

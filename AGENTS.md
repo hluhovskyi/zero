@@ -50,6 +50,7 @@ zero-ui              → Design System, shared Compose components
 zero-api             → Domain interfaces and types (pure Kotlin)
 zero-database        → Room DAOs, Entities, Repository implementations
 zero-image-loading   → ImageLoader interface + Coil impl
+zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
 zero-zenmoney        → ZenMoney CSV import
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 zero-remote          → Server-side HTTP calls
@@ -84,6 +85,7 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [ImageLoader](docs/agents/image-loading.md) — Interface design, tint handling
 - [ColorScheme](docs/agents/color-scheme.md) — ColorScheme, ColorValue, colorRepository
 - [Testing](docs/agents/testing.md) — JUnit/Mockito, Flow type inference, coroutines testing
+- [E2E / Instrumented tests](app/src/androidTest/AGENTS.md) — Robots, Orchestrator, flake-handling rule
 - [Kotlin / Compose Gotchas](docs/agents/kotlin-compose-gotchas.md) — DefaultImpls dispatch bug, ComposeColor pitfall
 - [Branch Management](docs/agents/branch-management.md) — Protected master, PR workflow
 - [Code Style](docs/agents/code-style.md) — Conventions to keep code consistent across the codebase
