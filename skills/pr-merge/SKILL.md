@@ -38,7 +38,7 @@ Otherwise run in order — stop and report on first failure, do not continue to 
 ./gradlew assembleDebug
 ```
 
-Then run the E2E suite — pr-merge is the only gate, CI doesn't run it:
+Then run the E2E suite (CI doesn't):
 
 ```bash
 ./scripts/emulator/acquire

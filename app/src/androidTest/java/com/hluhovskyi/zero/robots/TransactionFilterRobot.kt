@@ -16,7 +16,6 @@ class TransactionFilterRobot(private val composeRule: ComposeTestRule) {
     fun apply(): TransactionsRobot {
         composeRule.apply {
             onNodeWithText("Apply filters").performClick()
-            // Wait for filter sheet to dismiss (filter icon back on home).
             waitUntil(timeoutMillis = 5_000) {
                 onAllNodesWithContentDescription("Filter").fetchSemanticsNodes().isNotEmpty() &&
                     onAllNodesWithText("Apply filters").fetchSemanticsNodes().isEmpty()

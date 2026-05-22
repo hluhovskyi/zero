@@ -24,10 +24,6 @@ class ZeroE2eTest : BaseE2eTest() {
 
     @Test
     fun applyTypeFilterUpdatesListAcrossNavigation() {
-        // Regression for #229: the filter Apply event was being dropped because the
-        // home screen's collector was Compose-bound and got cancelled while the
-        // FullyVisible filter screen was open. Seeded data is one expense ("Food");
-        // applying the Income type filter must hide it and show the chip.
         seedDefaultSetup()
         onTransactions()
             .openFilter()
