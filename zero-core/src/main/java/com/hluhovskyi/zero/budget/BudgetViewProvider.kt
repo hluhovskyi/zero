@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +22,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -38,8 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -62,6 +65,7 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.budget.NumPad
+import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnPrimary
 import com.hluhovskyi.zero.ui.theme.OnPrimaryContainer
@@ -72,7 +76,9 @@ import com.hluhovskyi.zero.ui.theme.OutlineVariant
 import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
 import com.hluhovskyi.zero.ui.theme.Surface
+import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
 
@@ -117,12 +123,19 @@ private fun BudgetView(
                     onNewer = { viewModel.perform(BudgetViewModel.Action.SelectNewerMonth) },
                 )
             }
-            if (state.budgeted.none { it.budgetId != null }) {
+            if (!state.hasAnyBudget) {
                 item {
                     EmptyBudgetCallout(
                         periodLabel = state.displayedPeriodLabel,
                         totalCategories = state.budgeted.size,
                         previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                    )
+                }
+            } else {
+                item {
+                    SummaryBar(
+                        summary = state.summary,
+                        amountFormatter = amountFormatter,
                     )
                 }
             }
@@ -135,15 +148,36 @@ private fun BudgetView(
                     )
                 }
             }
-            item { SectionLabel(stringResource(R.string.budget_section_set_limits)) }
-            items(state.budgeted, key = { it.categoryId.value }) { row ->
-                UnsetCategoryRow(
-                    name = row.categoryName,
-                    colorScheme = row.colorScheme,
-                    icon = row.icon,
-                    imageLoader = imageLoader,
-                    onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+            item {
+                SectionLabel(
+                    stringResource(
+                        if (state.hasAnyBudget) {
+                            R.string.budget_section_categories
+                        } else {
+                            R.string.budget_section_set_limits
+                        },
+                    ),
                 )
+            }
+            items(state.budgeted, key = { it.categoryId.value }) { row ->
+                if (row.budgetId != null) {
+                    BudgetCard(
+                        row = row,
+                        onTap = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                    )
+                } else {
+                    UnsetCategoryRow(
+                        row = row,
+                        previousAmount = state.previousPeriodBudgets
+                            .firstOrNull { it.categoryId == row.categoryId && it.budgetId != null }
+                            ?.budgeted,
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                        onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                    )
+                }
             }
         }
 
@@ -561,65 +595,133 @@ private fun SectionLabel(label: String) {
 
 @Composable
 private fun UnsetCategoryRow(
-    name: String,
-    colorScheme: ColorScheme,
-    icon: Image,
+    row: BudgetQueryUseCase.Budgeted,
+    previousAmount: Amount?,
     imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .drawBehind {
-                drawRoundRect(
-                    color = OutlineVariant,
-                    cornerRadius = CornerRadius(16.dp.toPx()),
-                    style = Stroke(
-                        width = 1.5.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)),
+            .background(SurfaceContainerLowest, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        UnsetIconWithRing(row = row, imageLoader = imageLoader)
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = row.categoryName,
+                    modifier = Modifier.weight(1f),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurface,
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = amountFormatter.format(Amount.zero()),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Outline,
                     ),
                 )
             }
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = PrimaryContainer,
+                    )
+                    Text(
+                        text = stringResource(R.string.budget_set_limit),
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryContainer,
+                        ),
+                    )
+                }
+                Text(
+                    text = if (previousAmount != null) {
+                        stringResource(R.string.budget_card_last, amountFormatter.format(previousAmount))
+                    } else {
+                        stringResource(R.string.budget_card_no_limit)
+                    },
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        color = OnSurfaceVariant,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UnsetIconWithRing(
+    row: BudgetQueryUseCase.Budgeted,
+    imageLoader: ImageLoader,
+) {
+    val bg = row.colorScheme.background.value.toCompose()
+    val primary = row.colorScheme.primary.value.toCompose()
+    Box(
+        modifier = Modifier.size(52.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        CategoryIconView(
-            colorScheme = colorScheme.toUi(),
-            size = 36.dp,
-            contentPadding = 8.dp,
-        ) { tint ->
-            imageLoader.View(
-                modifier = Modifier.size(20.dp),
-                image = icon,
-                tint = tint,
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokePx = 3.dp.toPx()
+            val diameter = 48.dp.toPx()
+            val topLeft = Offset(
+                x = (size.width - diameter) / 2f,
+                y = (size.height - diameter) / 2f,
+            )
+            val arcSize = Size(diameter, diameter)
+            drawArc(
+                color = SurfaceContainer,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(
+                    width = strokePx,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 4.dp.toPx())),
+                ),
             )
         }
-        Text(
-            text = name,
-            modifier = Modifier.weight(1f),
-            style = TextStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
         Box(
             modifier = Modifier
-                .background(SurfaceContainerLow, RoundedCornerShape(10.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .size(40.dp)
+                .background(bg, CircleShape),
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = stringResource(R.string.budget_set_limit),
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Outline,
-                ),
+            imageLoader.View(
+                modifier = Modifier.size(22.dp),
+                image = row.icon,
+                tint = primary,
             )
         }
     }
