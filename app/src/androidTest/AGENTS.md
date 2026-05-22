@@ -9,7 +9,3 @@ End-to-end instrumented tests. Activity launches via `createAndroidComposeRule<M
 3. **AndroidX Test Orchestrator is required for process isolation** — Application singletons (Room flows, scoped coroutines) leak across tests in the same process and cause cross-test flakes. Don't add `clearPackageData: true` on top — it `pm clear`s before the first test and races the Activity's `setContent`, breaking the first test on slower devices.
 4. **Robot per screen, fluent return type** — `TransactionsRobot.tapAddTransaction()` returns `TransactionEditRobot`; `apply()` returns back to `TransactionsRobot`. Don't reach into composeRule directly from a test — extend the robot.
 5. **Wait on what you assert, not what you tap** — robots wait for the target element via `composeRule.waitUntil { onAllNodesWithText(...).isNotEmpty() }` before clicking. Bare `onNodeWithText(...).performClick()` will throw on a frame where the node hasn't entered composition yet.
-
-## Espresso / Android 16
-
-Espresso 3.7.0+ is required — earlier versions (≤3.6.1) reflect against `InputManager.getInstance`, which was removed on API 36, crashing every test with `NoSuchMethodException` before `setContent` runs.
