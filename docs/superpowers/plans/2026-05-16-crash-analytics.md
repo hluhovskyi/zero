@@ -2,15 +2,16 @@
 
 Spec: [docs/superpowers/specs/2026-05-16-crash-analytics-design.md](../specs/2026-05-16-crash-analytics-design.md)
 
-Implements Sentry crash reporting in a new `zero-crash` Gradle module, exposed to the rest of the codebase as a Dagger `CrashComponent` that the `ApplicationComponent` builds and accesses.
+Implements Sentry crash reporting in a new `zero-crash` Gradle module. The crash module owns its DSN (in its own `BuildConfig`), exposes a Dagger `CrashComponent` whose only surface is `attachable: Attachable`, and the app drives init through the project's `Attachable` lifecycle — `MainApplication.onCreate` calls `applicationComponent.attachable.attach()` which composes `CrashComponent.attachable.attach()` which calls `SentryAndroid.init`.
 
-**Structural analogs (these names must be opened side-by-side while implementing — every new file copies its analog's structure, naming, and surface conventions):**
+**Structural analogs (open side-by-side while implementing — every new file copies its analog's structure, naming, and surface conventions):**
 
-- Module skeleton (`build.gradle`, `.gitignore`, manifest, proguard files, `AGENTS.md`) → [`zero-image-loading/`](../../../zero-image-loading).
-- Module skeleton with Dagger + KSP (for the `build.gradle` plugins block and `dagger.runtime` + `ksp dagger.compiler` lines) → [`zero-remote/build.gradle`](../../../zero-remote/build.gradle).
-- Dagger component shape — file-private `@Scope`, file-private `@Qualifier`s, `Dependencies` interface, `@Component.Builder` with `@BindsInstance`, companion `builder(deps)` that pre-sets defaults → [`zero-remote/.../RemoteComponent.kt`](../../../zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt).
-- App-side wiring (`@Provides` for the child component + a second `@Provides` extracting the exposed service) → the `RemoteModule` block at the bottom of [`app/.../ApplicationComponent.kt`](../../../app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt) (lines 466-482).
-- BuildConfig field fed by env+localProps → existing `FEEDBACK_ENDPOINT` block in `app/build.gradle:51-54`.
+- Module skeleton (`.gitignore`, manifest, proguard files, `AGENTS.md`) → [`zero-image-loading/`](../../../zero-image-loading).
+- Module `build.gradle` with Dagger + KSP → [`zero-remote/build.gradle`](../../../zero-remote/build.gradle).
+- `localProps` boilerplate for the `SENTRY_DSN` BuildConfig field → top of [`app/build.gradle`](../../../app/build.gradle) (lines 10-12).
+- Component shape — `Attachable`-only surface, file-private `@Scope`, `Dependencies`, `Buildable<T>` Builder, companion `builder(deps)` pre-setting defaults, `@Provides` returning `Attachable.Noop` for the disabled path, private `*Attachable` class doing the side-effect work → [`zero-core/.../PresetsComponent.kt`](../../../zero-core/src/main/java/com/hluhovskyi/zero/presets/PresetsComponent.kt).
+- App-level composer class that merges child `Attachable`s → [`app/.../activity/AttachActivityComponent.kt`](../../../app/src/main/java/com/hluhovskyi/zero/activity/AttachActivityComponent.kt).
+- App-module `@Provides` wiring for the new child component + its exposed `Attachable` → the `RemoteModule` block at the bottom of [`app/.../ApplicationComponent.kt`](../../../app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt) (lines 466-482).
 - Env-injected variable in CD → existing `FEEDBACK_ENDPOINT: ${{ vars.FEEDBACK_ENDPOINT }}` line in `.github/workflows/cd.yml`.
 
 ---
@@ -22,7 +23,7 @@ Implements Sentry crash reporting in a new `zero-crash` Gradle module, exposed t
 - `zero-crash/.gitignore` — single line `/build` (required by [Module Boundaries](../../agents/module-boundaries.md#new-module-scaffolding); copy from `zero-image-loading/.gitignore`).
 - `zero-crash/consumer-rules.pro` — empty (copy from `zero-image-loading/consumer-rules.pro`).
 - `zero-crash/proguard-rules.pro` — copy verbatim from `zero-image-loading/proguard-rules.pro`.
-- `zero-crash/src/main/AndroidManifest.xml` — `<manifest>` shell containing an `<application>` element with one `<meta-data>` child to disable Sentry's auto-init (see Task 4 for the exact element).
+- `zero-crash/src/main/AndroidManifest.xml` — `<manifest>` shell containing an `<application>` element with one `<meta-data>` child to disable Sentry's auto-init (exact element in Task 4).
 
 **Modified files:**
 
@@ -32,87 +33,121 @@ Implements Sentry crash reporting in a new `zero-crash` Gradle module, exposed t
 
 ## Task 2 — `zero-crash/build.gradle`
 
-**New file.** Use `zero-remote/build.gradle` as the structural template (because we need Dagger + KSP, which image-loading doesn't have).
+**New file.** Use `zero-remote/build.gradle` as the structural template.
 
-- Plugins: `com.android.library`, `com.google.devtools.ksp`. No Compose, no serialization, no desugaring (Sentry SDK is 21+ compatible without desugar — verify during Task 11 verification; if a desugar warning appears, add `coreLibraryDesugaringEnabled true` + the desugar dep).
+- Plugins: `com.android.library`, `com.google.devtools.ksp`. No Compose, no serialization, no desugaring.
 - Namespace: `com.hluhovskyi.zero.crash`.
-- Dependencies: drop everything zero-remote pulls that we don't need. Final list:
+- **At the top of the file (above the `android` block)**, copy the `localProps` boilerplate from `app/build.gradle:10-12`:
+
+   ```groovy
+   def localProps = new Properties()
+   def localPropsFile = rootProject.file("local.gradle.properties")
+   if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+   ```
+
+- Inside `defaultConfig`, add the SENTRY_DSN BuildConfig field (analog: `app/build.gradle:51-54`):
+
+   ```groovy
+   buildConfigField "String", "SENTRY_DSN",
+       "\"${System.getenv("SENTRY_DSN") ?: localProps['sentryDsn'] ?: ""}\""
+   ```
+
+- Inside `android`, add `buildFeatures { buildConfig = true }` (otherwise `buildConfigField` produces nothing).
+- Dependencies:
   - `lintChecks project(":lint-rules")`
+  - `implementation(project(":zero-api"))` — needed for `Attachable`, `Closeables`, `Buildable` from `com.hluhovskyi.zero.common`.
   - `implementation deps.dagger.runtime` + `ksp deps.dagger.compiler`
   - `implementation deps.javax.inject`
-  - `implementation deps.sentry` (added in Task 7)
+  - `implementation deps.sentry` (added in Task 6)
 
-Result should be ~25 lines. **Do not add zero-api** — we are not using `Buildable` (matches RemoteComponent, which also doesn't). The module is truly standalone in zero-* terms.
-
----
-
-## Task 3 — `CrashReporter` interface + impls
-
-**New file:** `zero-crash/src/main/java/com/hluhovskyi/zero/CrashReporter.kt`.
-
-```kotlin
-package com.hluhovskyi.zero
-
-interface CrashReporter
-```
-
-Marker interface in v1. No methods.
-
-**New file:** `zero-crash/src/main/java/com/hluhovskyi/zero/SentryCrashReporter.kt`.
-
-```kotlin
-package com.hluhovskyi.zero
-
-internal object SentryCrashReporter : CrashReporter
-```
-
-**New file:** `zero-crash/src/main/java/com/hluhovskyi/zero/NoopCrashReporter.kt`.
-
-```kotlin
-package com.hluhovskyi.zero
-
-internal object NoopCrashReporter : CrashReporter
-```
-
-Both `internal`. The init side effect lives in `CrashComponent.Module` — not here — because Sentry doesn't expose a per-instance state we can encapsulate; `SentryAndroid.init` mutates global SDK state, so calling it from a `@Provides` is the truthful representation.
+Result should be ~30 lines.
 
 ---
 
-## Task 4 — `CrashComponent`
+## Task 3 — `zero-crash/AGENTS.md`
+
+**New file.** Copy `zero-image-loading/AGENTS.md`'s structure and density. Content:
+
+- Only one zero-* dep — `zero-api` — solely for `Attachable`/`Closeables`/`Buildable`.
+- Surface: `CrashComponent` with `abstract val attachable: Attachable`. No other public types in v1.
+- Why a Dagger component for one SDK init: matches the project's component-per-feature convention; the `Attachable` returned by the component is composed into `AttachApplicationComponent` so init is driven by the same lifecycle hook as `PresetsComponent` / `BiometricLockComponent`.
+- DSN lives in **this module's** `BuildConfig` — not `app`'s — read inside the `@Provides`. Do not pass DSN through the Builder.
+- The SDK auto-init is disabled in the module manifest — don't move it.
+
+Aim for ~25 lines.
+
+---
+
+## Task 4 — `CrashComponent` + `CrashAttachable`
 
 **New file:** `zero-crash/src/main/java/com/hluhovskyi/zero/CrashComponent.kt`.
 
-Mirror `RemoteComponent.kt`'s shape one-for-one. Specifically:
+Mirror `PresetsComponent.kt` one-for-one (file structure, scope declaration, companion factories, Builder shape):
 
-- File-private annotations declared at file top (above the `interface CrashComponent` block):
-  - `@Scope @Retention(AnnotationRetention.SOURCE) private annotation class CrashScope`
-  - `@Qualifier @Retention(AnnotationRetention.SOURCE) private annotation class Dsn`
-  - `@Qualifier @Retention(AnnotationRetention.SOURCE) private annotation class VersionName`
-- `interface CrashComponent` (interface, not abstract class — matches RemoteComponent).
-- `@CrashScope @dagger.Component(modules = [Module::class], dependencies = [Dependencies::class])`.
-- Surface: `val crashReporter: CrashReporter`.
+- File-private scope at file top: `@Scope @Retention(AnnotationRetention.SOURCE) private annotation class CrashScope`.
+- `abstract class CrashComponent` with `@CrashScope @dagger.Component(modules = [Module::class], dependencies = [Dependencies::class])`.
+- Surface: `abstract val attachable: Attachable`. **No `CrashReporter`, no `crashReporter` getter** — `attachable` is the only thing the component exposes.
 - `interface Dependencies { val application: Application }`.
-- `companion object { fun builder(dependencies: Dependencies): Builder = DaggerCrashComponent.builder().dependencies(dependencies).dsn("").versionName("").debug(true) }`.
-- `@dagger.Component.Builder interface Builder { fun dependencies(...); @BindsInstance fun dsn(@Dsn ...); @BindsInstance fun versionName(@VersionName ...); @BindsInstance fun debug(...): Builder; fun build(): CrashComponent }`.
-- `@dagger.Module object Module` with one `@Provides @CrashScope internal fun crashReporter(application, @Dsn dsn, @VersionName versionName, debug): CrashReporter` that returns `NoopCrashReporter` if `debug || dsn.isBlank()`, otherwise calls `SentryAndroid.init(application) { options -> options.dsn = dsn; options.release = versionName; options.environment = "production" }` and returns `SentryCrashReporter`.
+- `companion object { fun builder(dependencies: Dependencies): Builder = DaggerCrashComponent.builder().dependencies(dependencies).versionName("") }`.
+- `@dagger.Component.Builder interface Builder : Buildable<CrashComponent> { fun dependencies(...): Builder; @BindsInstance fun versionName(versionName: String): Builder }`. **No `.dsn(...)` setter, no `.debug(...)` setter.**
+- `@dagger.Module object Module` with one `@Provides @CrashScope internal fun attachable(application: Application, versionName: String): Attachable` that:
+  - Returns `Attachable.Noop` if `BuildConfig.DEBUG || BuildConfig.SENTRY_DSN.isBlank()`.
+  - Otherwise returns `CrashAttachable(application, BuildConfig.SENTRY_DSN, versionName)`.
 
-**Manifest gate** (`zero-crash/src/main/AndroidManifest.xml` created in Task 1): inside `<application>`, add `<meta-data android:name="io.sentry.auto-init" android:value="false" />`. This stops Sentry's `SentryInitProvider` from initializing on app start so init is driven by the `@Provides` above.
+Then a private class in the same file (mirrors `PresetsAttachable` at the bottom of `PresetsComponent.kt`):
 
-`debug` Boolean has no qualifier — only one Boolean binding in the graph, no collision.
+```kotlin
+private class CrashAttachable(
+    private val application: Application,
+    private val dsn: String,
+    private val versionName: String,
+) : Attachable {
+
+    override fun attach(): Closeable {
+        SentryAndroid.init(application) { options ->
+            options.dsn = dsn
+            options.release = versionName
+            options.environment = "production"
+        }
+        return Closeables.empty()
+    }
+}
+```
+
+`Closeables.empty()` because `SentryAndroid.init` mutates global SDK state; there's no per-attach handle to tear down.
+
+**Manifest gate** (`zero-crash/src/main/AndroidManifest.xml` created in Task 1): inside `<application>`, add:
+
+```xml
+<meta-data android:name="io.sentry.auto-init" android:value="false" />
+```
 
 ---
 
-## Task 5 — `zero-crash/AGENTS.md`
+## Task 5 — `AttachApplicationComponent`
 
-**New file.** Copy `zero-image-loading/AGENTS.md`'s structure and density. Content to cover:
+**New file:** `app/src/main/java/com/hluhovskyi/zero/AttachApplicationComponent.kt`.
 
-- Standalone module (no zero-* deps; depends only on Sentry SDK + Dagger).
-- Surface: `CrashReporter` (marker interface in v1) + `CrashComponent` (Dagger component built once at the app layer).
-- Why a Dagger component for a single SDK init: matches the project's component-per-feature convention (`RemoteComponent`, `SettingsComponent`, etc.); init runs inside `@Provides` so binding lookup *is* startup.
-- Note that the SDK auto-init is disabled in the module manifest — don't move it.
-- Note `MainApplication.onCreate` must touch `applicationComponent.crashReporter` to force init (Dagger lazy-resolves scoped bindings).
+One-for-one copy of `app/.../activity/AttachActivityComponent.kt`'s shape, just at the application layer:
 
-Aim for ~25–30 lines.
+```kotlin
+package com.hluhovskyi.zero
+
+import com.hluhovskyi.zero.common.Attachable
+import com.hluhovskyi.zero.common.Closeables
+import java.io.Closeable
+
+class AttachApplicationComponent(
+    private val crashComponent: CrashComponent,
+) : Attachable {
+
+    override fun attach(): Closeable = Closeables.merge(
+        crashComponent.attachable.attach(),
+    )
+}
+```
+
+`Closeables.merge(...)` with one arg is intentional — it leaves room for future application-level `Attachable`s to be added as siblings without restructuring.
 
 ---
 
@@ -126,20 +161,13 @@ In the `deps` map, add (alphabetical position near `playIntegrity`):
 sentry: "io.sentry:sentry-android:7.18.1",
 ```
 
-Verify `7.18.1` is the latest stable on Maven Central before committing; bump if there's a newer 7.x. The dep is consumed by `zero-crash`, not `app`.
+Verify `7.18.1` is the latest stable on Maven Central before committing; bump if there's a newer 7.x. The dep is consumed by `zero-crash` only.
 
 ---
 
-## Task 7 — Add `SENTRY_DSN` BuildConfig field + module dep to `app`
+## Task 7 — Add module dep to `app/build.gradle`
 
 **File:** `app/build.gradle`.
-
-Following the analog at lines 51-54 (`FEEDBACK_ENDPOINT`), inside `defaultConfig`, add after the `FEEDBACK_INTEGRITY_PROJECT` block:
-
-```groovy
-buildConfigField "String", "SENTRY_DSN",
-    "\"${System.getenv("SENTRY_DSN") ?: localProps['sentryDsn'] ?: ""}\""
-```
 
 In the `dependencies` block, add (alphabetical position among `project(":zero-*")` lines):
 
@@ -147,13 +175,15 @@ In the `dependencies` block, add (alphabetical position among `project(":zero-*"
 implementation(project(":zero-crash"))
 ```
 
+**Do not add a `SENTRY_DSN` `buildConfigField`** to `app/build.gradle`. The DSN belongs to `zero-crash` per the spec.
+
 ---
 
-## Task 8 — Wire `ApplicationComponent` to build `CrashComponent`
+## Task 8 — Wire `ApplicationComponent` to build `CrashComponent` and expose its `Attachable`
 
 **File:** `app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt`.
 
-Three edits:
+Four edits:
 
 1. **Extend `Dependencies`** (current declaration around line 95):
 
@@ -166,7 +196,7 @@ Three edits:
 
    Add `import android.app.Application` at the top.
 
-2. **Add `CrashComponent.Dependencies` to superinterfaces** (current list at lines 82-87) and **expose `crashReporter`**:
+2. **Add `CrashComponent.Dependencies` to superinterfaces** and **expose `attachable`**:
 
    ```kotlin
    abstract class ApplicationComponent :
@@ -179,18 +209,18 @@ Three edits:
        ImportComponent.Dependencies {
 
        abstract val activityComponentBuilder: ActivityComponent.Builder
+       abstract val attachable: Attachable
        abstract val logger: Logger
        abstract val databaseComponent: DatabaseComponent
-       abstract val crashReporter: CrashReporter
        abstract override val feedbackService: FeedbackService
        abstract override val deviceInfo: DeviceInfo
        // ...
    }
    ```
 
-   Order matches the alphabetical convention already in use. Add `import com.hluhovskyi.zero.CrashComponent` and `import com.hluhovskyi.zero.CrashReporter` at the top.
+   Order alphabetical within the abstract-val block (already the convention). Add imports for `com.hluhovskyi.zero.CrashComponent`, `com.hluhovskyi.zero.common.Attachable`.
 
-3. **Add a new `CrashModule`** at the bottom of the file, **mirroring `RemoteModule`** (lines 466-482):
+3. **Add a new `CrashModule`** at the bottom of the file, mirroring `RemoteModule` (lines 466-482):
 
    ```kotlin
    @dagger.Module
@@ -201,20 +231,18 @@ Three edits:
        fun crashComponent(
            component: ApplicationComponent,
        ): CrashComponent = CrashComponent.builder(component)
-           .dsn(BuildConfig.SENTRY_DSN)
            .versionName(BuildConfig.VERSION_NAME)
-           .debug(BuildConfig.DEBUG)
            .build()
 
        @Provides
        @ApplicationScope
-       fun crashReporter(
+       fun attachable(
            crashComponent: CrashComponent,
-       ): CrashReporter = crashComponent.crashReporter
+       ): Attachable = AttachApplicationComponent(crashComponent)
    }
    ```
 
-   Add `CrashModule::class` to the `includes` list of `ApplicationComponent.Module`'s `@dagger.Module` annotation (currently includes `DatabaseModule::class` and `RemoteModule::class`).
+4. **Include `CrashModule::class`** in the `includes` list of `ApplicationComponent.Module`'s `@dagger.Module` annotation (currently includes `DatabaseModule::class` and `RemoteModule::class`).
 
 ---
 
@@ -222,7 +250,7 @@ Three edits:
 
 **File:** `app/src/main/java/com/hluhovskyi/zero/MainApplication.kt`.
 
-Two edits to existing code:
+Two edits:
 
 1. **Provide `application` in the Dependencies object** (current block at lines 16-18):
 
@@ -236,9 +264,9 @@ Two edits to existing code:
    }
    ```
 
-   Add `import android.app.Application` if not already present (it isn't — only `Application` from the class header).
+   `Application` import already present (the class extends it).
 
-2. **Touch `crashReporter` in `onCreate`** (after the existing Timber.plant block):
+2. **Trigger attach in `onCreate`** (after the existing Timber.plant block):
 
    ```kotlin
    override fun onCreate() {
@@ -248,11 +276,11 @@ Two edits to existing code:
            Timber.plant(Timber.DebugTree())
        }
 
-       applicationComponent.crashReporter
+       applicationComponent.attachable.attach()
    }
    ```
 
-   The bare expression `applicationComponent.crashReporter` is intentional — it forces Dagger to materialize the binding, which runs `SentryAndroid.init` inside the `@Provides`. Add a `// Forces SentryAndroid.init via the CrashComponent @Provides — see zero-crash/AGENTS.md.` comment on that line; this is the rare case where the *why* is non-obvious from the code.
+   The returned `Closeable` is intentionally discarded — the process lives until killed, and `SentryAndroid.init` is a one-way global mutation. Matches how `AttachActivityComponent` is *not* discarded at the activity level either — there the `AttachWithView` Compose effect closes on view destruction; at the app level there's nothing analogous to honor.
 
 ---
 
@@ -276,8 +304,8 @@ CI workflow (`ci.yml`) is unchanged — debug builds skip Sentry, so unit tests 
 
 **File:** `docs/agents/feedback-infra.md` — extend the "Secrets matrix" section (or add a sibling "Crash reporting config" subsection) capturing:
 
-- Local dev: `local.gradle.properties` → `sentryDsn=https://...`
-- CD release builds: `${{ vars.SENTRY_DSN }}` (Variable, not Secret — DSN ships in the AAB anyway)
+- Local dev: `local.gradle.properties` → `sentryDsn=https://...` (read by **`zero-crash/build.gradle`**, not `app/build.gradle`).
+- CD release builds: `${{ vars.SENTRY_DSN }}` (Variable, not Secret — DSN ships in the AAB anyway).
 - No Cloud Function involvement.
 
 Cross-reference the spec at `docs/superpowers/specs/2026-05-16-crash-analytics-design.md`.
@@ -285,7 +313,7 @@ Cross-reference the spec at `docs/superpowers/specs/2026-05-16-crash-analytics-d
 **File:** `AGENTS.md` — add a line to the Module Map for `zero-crash`. Suggested text:
 
 ```
-zero-crash           → CrashReporter + CrashComponent (Sentry impl)
+zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
 ```
 
 **File:** `docs/agents/module-boundaries.md` — add `zero-crash` to the ASCII module map (sibling of `zero-image-loading`).
@@ -316,7 +344,7 @@ No new test files added — there's nothing meaningful to unit-test on a Dagger-
 ./gradlew lintDebug
 ```
 
-No new errors. The `:lint-rules` module enforces invariants like `ScopedComponentBuilder` and `Default*` visibility — `CrashScope` annotation on `Module.crashReporter` (not on a Builder provider) must satisfy `ScopedComponentBuilder`; `NoopCrashReporter` / `SentryCrashReporter` are objects with `internal` visibility, satisfying `DefaultImplMustBeInternal` if it applies.
+No new errors. The `:lint-rules` module enforces invariants like `ScopedComponentBuilder` — `@CrashScope` is on the `Module.attachable` `@Provides`, not on a Builder provider, so it must satisfy `ScopedComponentBuilder`.
 
 ### 4. Manual smoke (release build)
 
@@ -339,7 +367,7 @@ Verify within ~1 minute:
 ./scripts/ui/adb.sh shell am crash com.hluhovskyi.zero
 ```
 
-Confirm the dashboard receives **nothing** new. The debug gate (`debug = true` → `NoopCrashReporter`) must hold.
+Confirm the dashboard receives **nothing** new. The debug gate (`BuildConfig.DEBUG = true` inside `zero-crash` → `Attachable.Noop`) must hold.
 
 ### UI inspection
 
@@ -352,6 +380,6 @@ Not applicable — this PR touches no UI.
 - `sentry-android-timber` integration for breadcrumbs.
 - ANR detection.
 - ProGuard mapping upload (only relevant once `minifyEnabled true`).
-- `captureException` / `addBreadcrumb` methods on the `CrashReporter` interface — add when a caller actually needs them.
+- A public `CrashReporter` interface with `captureException` / `addBreadcrumb` — add when a caller actually needs them; design will mirror `ImageLoader` (interface in zero-crash, exposed via `CrashComponent.crashReporter`).
 - GitHub auto-issue integration — configured in the Sentry web UI post-merge.
 - User-facing opt-in/out toggle.

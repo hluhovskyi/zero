@@ -10,7 +10,8 @@ The app currently has no automatic crash reporting. Crashes in production are in
 - Tag reports with `versionName` so regressions can be tied to a specific release.
 - Zero impact on debug builds (no telemetry during development).
 - Zero new permissions; zero new user-facing UI.
-- Encapsulate the Sentry SDK behind a Dagger component so the rest of the codebase has no compile-time knowledge of the vendor, and so init is driven by the DI graph, not by an ad-hoc call in `MainApplication.onCreate`.
+- Encapsulate the Sentry SDK behind a Dagger component **and** drive init through the project's existing `Attachable` lifecycle, not through `MainApplication.onCreate` poking the DI graph.
+- Keep the DSN inside the crash module — `app` shouldn't know it exists.
 
 ## Non-Goals
 
@@ -20,7 +21,7 @@ The app currently has no automatic crash reporting. Crashes in production are in
 - Timber → breadcrumbs bridge (`sentry-android-timber`) — deferred. Possible follow-up once we have a release crash to debug.
 - User-facing opt-in/out toggle in Settings. The app is a personal-finance tool with a small audience; "always on for release builds" is the chosen posture.
 - GitHub auto-issue integration. Configured in the Sentry web UI post-merge; no code change required.
-- Capture/breadcrumb call sites in feature code. v1 only handles uncaught exceptions; `captureException`/`addBreadcrumb` can be added to the `CrashReporter` interface later when a caller needs them.
+- A public `CrashReporter` interface in v1. No caller needs `captureException` / `addBreadcrumb` yet; the component exposes only `attachable: Attachable`. Add a `CrashReporter` interface when v2 has a real consumer for it.
 
 ## Choice — Why Sentry
 
@@ -34,23 +35,20 @@ Picked over Firebase Crashlytics and Bugsnag:
 
 ## Architecture
 
-**New Gradle module: `zero-crash`.** Structural shape borrows from two places:
-- Module skeleton (`build.gradle`, manifest, proguard files, AGENTS.md) → `zero-image-loading`.
-- Dagger surface (file-private `@Scope` and `@Qualifier` annotations, `Dependencies` interface, `@Component.Builder` with `@BindsInstance` setters, companion `builder(deps)` factory pre-setting defaults) → [`zero-remote/.../RemoteComponent.kt`](../../../zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt). RemoteComponent is the closest analog because both components are built once at the application layer, take a parent `Dependencies`, and receive runtime config (URLs, flags) via `@BindsInstance`.
+**New Gradle module: `zero-crash`.** Structural shape borrows from three places:
 
-Module surface (all in package `com.hluhovskyi.zero`, namespace `com.hluhovskyi.zero.crash`):
+- Module skeleton (`.gitignore`, manifest, proguard files, `AGENTS.md`) → `zero-image-loading`.
+- `build.gradle` plugins/deps (Dagger + KSP, plus `localProps` boilerplate for the DSN field) → `zero-remote` + the `localProps` block at the top of `app/build.gradle`.
+- Dagger component shape (file-private `@Scope`, `Dependencies` interface, `@Component.Builder` with `@BindsInstance`, companion `builder(deps)` pre-setting defaults, **`abstract val attachable: Attachable` as the only surface**, private `*Attachable` class that does the side-effect work) → [`zero-core/.../PresetsComponent.kt`](../../../zero-core/src/main/java/com/hluhovskyi/zero/presets/PresetsComponent.kt). PresetsComponent is the canonical attach-only-component analog called out in [docs/agents/dependency-injection.md](../../agents/dependency-injection.md).
+- App-level composition (`AttachApplicationComponent : Attachable` that merges children's `attachable.attach()` Closeables) → [`app/.../activity/AttachActivityComponent.kt`](../../../app/src/main/java/com/hluhovskyi/zero/activity/AttachActivityComponent.kt). One-for-one analog, just at the application layer instead of the activity layer.
 
-```
-zero-crash/
-  src/main/AndroidManifest.xml          // disables Sentry's auto-init ContentProvider
-  src/main/java/com/hluhovskyi/zero/
-    CrashReporter.kt                    // marker interface
-    SentryCrashReporter.kt              // internal object; Sentry impl
-    NoopCrashReporter.kt                // internal object; debug-build impl
-    CrashComponent.kt                   // Dagger component + Module + Builder
-```
+**DSN flows entirely inside `zero-crash`.** `zero-crash/build.gradle` gets its own `buildConfigField "String", "SENTRY_DSN", ...` block reading from `System.getenv("SENTRY_DSN") ?: localProps['sentryDsn']`. The crash module reads `BuildConfig.SENTRY_DSN` from its own generated `BuildConfig` class inside the `@Provides`. The `app` module does **not** get a `SENTRY_DSN` field, does not call `.dsn(...)` on the Builder, and has no compile-time reference to the DSN string.
 
-**Component shape (mirrors `RemoteComponent`):**
+**Debug gate also reads from `zero-crash`'s own `BuildConfig.DEBUG`.** AGP builds library variants matching the consuming app's variant, so `zero-crash.BuildConfig.DEBUG` is `true` when the app is built debug and `false` when release. No need to thread `BuildConfig.DEBUG` through the Builder either.
+
+**The only Builder param is `versionName`** — that's genuinely the app's identity (set from `version.properties` → AGP → `app/.../BuildConfig.VERSION_NAME`), not a crash-module concern, so it remains a `@BindsInstance` set by the caller.
+
+**Component surface:**
 
 ```kotlin
 @CrashScope
@@ -58,9 +56,9 @@ zero-crash/
     modules = [CrashComponent.Module::class],
     dependencies = [CrashComponent.Dependencies::class],
 )
-interface CrashComponent {
+abstract class CrashComponent {
 
-    val crashReporter: CrashReporter
+    abstract val attachable: Attachable
 
     interface Dependencies {
         val application: Application
@@ -69,85 +67,104 @@ interface CrashComponent {
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerCrashComponent.builder()
             .dependencies(dependencies)
-            .dsn("")
             .versionName("")
-            .debug(true)
     }
 
     @dagger.Component.Builder
-    interface Builder {
+    interface Builder : Buildable<CrashComponent> {
         fun dependencies(dependencies: Dependencies): Builder
-        @BindsInstance fun dsn(@Dsn dsn: String): Builder
-        @BindsInstance fun versionName(@VersionName versionName: String): Builder
-        @BindsInstance fun debug(debug: Boolean): Builder
-        fun build(): CrashComponent
+        @BindsInstance fun versionName(versionName: String): Builder
     }
 
     @dagger.Module
     object Module {
         @Provides
         @CrashScope
-        internal fun crashReporter(
+        internal fun attachable(
             application: Application,
-            @Dsn dsn: String,
-            @VersionName versionName: String,
-            debug: Boolean,
-        ): CrashReporter {
-            if (debug || dsn.isBlank()) {
-                return NoopCrashReporter
+            versionName: String,
+        ): Attachable {
+            if (BuildConfig.DEBUG || BuildConfig.SENTRY_DSN.isBlank()) {
+                return Attachable.Noop
             }
-            SentryAndroid.init(application) { options ->
-                options.dsn = dsn
-                options.release = versionName
-                options.environment = "production"
-            }
-            return SentryCrashReporter
+            return CrashAttachable(application, BuildConfig.SENTRY_DSN, versionName)
         }
+    }
+}
+
+private class CrashAttachable(
+    private val application: Application,
+    private val dsn: String,
+    private val versionName: String,
+) : Attachable {
+
+    override fun attach(): Closeable {
+        SentryAndroid.init(application) { options ->
+            options.dsn = dsn
+            options.release = versionName
+            options.environment = "production"
+        }
+        return Closeables.empty()
     }
 }
 ```
 
-`@CrashScope`, `@Dsn`, `@VersionName` declared `private` at file scope (matches RemoteComponent). No `@Qualifier` is needed for `Boolean` (only one Boolean binding in the graph). The Builder pre-sets defaults so that any consumer who forgets a setter still builds — the `debug = true` default falls through to `NoopCrashReporter`, which is the safe choice.
+`Buildable<CrashComponent>` reused for consistency with PresetsComponent (which uses `Buildable<PresetsComponent>`). `Buildable` lives in `zero-api`, so `zero-crash` declares `implementation(project(":zero-api"))` — accepted for the `Attachable`/`Closeables`/`Buildable` types from `com.hluhovskyi.zero.common`.
 
-`CrashReporter` itself is a **marker interface** in v1 — no methods. The init side effect happens inside the `@Provides` function, not via a method on the interface. Once v2 needs `captureException(t: Throwable)` or `addBreadcrumb(...)`, those methods land on `CrashReporter` and both impls implement them.
+**App-side wiring:**
 
-**App-side wiring (in `ApplicationComponent`):**
-
-Two changes to the existing `ApplicationComponent`:
+Two changes to `ApplicationComponent`:
 
 1. Add `val application: Application` to `ApplicationComponent.Dependencies` (sibling of the existing `val context: Context`). The Application instance is the same object — `context` stays because other modules (`imageLoader`, `androidUriResourceFactory`, `exportWriter`) already wire against `Context` and changing them is out of scope.
-2. Add `CrashComponent.Dependencies` to `ApplicationComponent`'s superinterfaces and `abstract val crashReporter: CrashReporter` to its abstract surface.
+2. Add `CrashComponent.Dependencies` to `ApplicationComponent`'s superinterfaces and `abstract val attachable: Attachable` to its abstract surface.
 
-Then in `ApplicationComponent.Module`, two new `@Provides` functions mirroring the existing `remoteComponent` / `feedbackService` pair:
+A new `AttachApplicationComponent` class (analog of `AttachActivityComponent`) composes children, currently just `CrashComponent`:
+
+```kotlin
+class AttachApplicationComponent(
+    private val crashComponent: CrashComponent,
+) : Attachable {
+
+    override fun attach(): Closeable = Closeables.merge(
+        crashComponent.attachable.attach(),
+    )
+}
+```
+
+`ApplicationComponent.Module` gets two new `@Provides` (in a new `CrashModule` block at the bottom of the file, mirroring `RemoteModule`):
 
 ```kotlin
 @Provides @ApplicationScope
 fun crashComponent(component: ApplicationComponent): CrashComponent =
     CrashComponent.builder(component)
-        .dsn(BuildConfig.SENTRY_DSN)
         .versionName(BuildConfig.VERSION_NAME)
-        .debug(BuildConfig.DEBUG)
         .build()
 
 @Provides @ApplicationScope
-fun crashReporter(crashComponent: CrashComponent): CrashReporter =
-    crashComponent.crashReporter
+fun attachable(crashComponent: CrashComponent): Attachable =
+    AttachApplicationComponent(crashComponent)
 ```
 
-**Bootstrapping in `MainApplication.onCreate`:** Dagger lazy-initializes scoped bindings on first access, so the side effect inside the `@Provides` doesn't fire until something touches `crashReporter`. To force init at app startup, `MainApplication.onCreate` accesses `applicationComponent.crashReporter` once — the value is discarded, but the access materializes the binding and runs `SentryAndroid.init`. Same one-line cost as the previous design, but the call site no longer knows about Sentry, debug flags, or DSN strings.
+**Bootstrapping in `MainApplication.onCreate`:**
+
+```kotlin
+applicationComponent.attachable.attach()
+```
+
+The returned `Closeable` is intentionally discarded — the process lives until killed, and `SentryAndroid.init` mutates global SDK state that we don't unwind. This is the same shape as `MainActivity.AttachWithView()` at the activity level (which DOES dispose on view destruction) — at the application level there's no destruction signal to honor.
 
 **SDK auto-init disabled** via `<meta-data android:name="io.sentry.auto-init" android:value="false"/>` in `zero-crash`'s own `AndroidManifest.xml` (merged into the app manifest at build time). The module is self-contained — any consumer that adds `zero-crash` inherits the gate.
 
 ## Configuration & Secrets
 
-DSN flows exactly like `FEEDBACK_ENDPOINT` (see `docs/agents/feedback-infra.md`):
+DSN flows like `FEEDBACK_ENDPOINT` (see `docs/agents/feedback-infra.md`) **but the BuildConfig field lives in `zero-crash`, not `app`**:
 
 | Where | Source |
 |---|---|
-| Local dev | `local.gradle.properties` → `sentryDsn=https://...` (gitignored) |
+| Local dev | `local.gradle.properties` → `sentryDsn=https://...` (gitignored, read by `zero-crash/build.gradle`) |
 | CD release builds | `${{ vars.SENTRY_DSN }}` in `.github/workflows/cd.yml` (GitHub Variable, not Secret — DSNs ship in the AAB) |
 
-Exposed to code via a new `BuildConfig.SENTRY_DSN` field in `app/build.gradle`, fed by `System.getenv("SENTRY_DSN") ?: localProps['sentryDsn']`. The field stays in the **app** module (not `zero-crash`) because the env/localProps plumbing is already there for `FEEDBACK_ENDPOINT`; `zero-crash` takes the DSN as a `@BindsInstance` parameter and has no opinion on where it came from.
+`zero-crash/build.gradle` carries the `localProps` boilerplate (a copy of the block at `app/build.gradle:10-12`) and the matching `buildConfigField` line.
 
 No new secret is needed (no Sentry Gradle plugin → no `SENTRY_AUTH_TOKEN`). If mapping upload is ever required (i.e. when minification is enabled), that adds the plugin + the auth token; out of scope here.
 
@@ -158,7 +175,7 @@ Only `cd.yml` changes: one new line in the `env:` block of `Build release AAB`. 
 ## Risk / Mitigation
 
 - **Crash loop burning quota.** Sentry's free tier caps at 5k errors/month. A release with a startup crash could exhaust this in hours. Mitigation: the SDK includes a default session-rate-limit; we accept the residual risk for v1 and add a quota alert in the Sentry UI post-merge.
-- **Vendor lock-in.** The `CrashReporter` interface plus the `CrashComponent` boundary localize all Sentry knowledge to one module. Swapping vendors means a new impl + a swap inside the `@Provides`; no changes elsewhere.
+- **Vendor lock-in.** All Sentry knowledge is inside `zero-crash`. Swapping vendors means a new `*Attachable` impl in the same module; nothing else changes.
 - **PII in stack traces.** Stack traces don't carry transaction data unless an exception is thrown from inside a code path operating on user money. Defaults are sufficient; we won't enable `attachStackTrace` for non-exception events.
 
 ## Verification (test plan)
