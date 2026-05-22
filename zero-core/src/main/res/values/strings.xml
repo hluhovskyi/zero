@@ -278,4 +278,6 @@
     <string name="budget_card_left">%1$s left</string>
     <string name="budget_card_over">%1$s over</string>
     <string name="budget_card_of">of %1$s</string>
+    <string name="budget_card_last">last: %1$s</string>
+    <string name="budget_card_no_limit">no limit</string>
 </resources>
