@@ -4,31 +4,106 @@
 
 **Goal:** Replace Phase 1's `NoopBackupClient` with a real Drive REST implementation backed by Credential Manager OAuth, OkHttp transport, and EncryptedSharedPreferences. End-to-end against a real Google account by the end of the phase. Still no UI — exercised via a temporary developer entry point.
 
-**Architecture:** Three new Android-side implementations of `zero-api` interfaces:
-- `OkHttpHttpExecutor` and `DriveOAuthTokenProvider` — `internal` to `zero-remote`, provided via `RemoteComponent`.
-- `AndroidSecureKeyValueStore` — lives in `app/`, provided directly from `ApplicationComponent` (not networked, so it doesn't belong in `zero-remote`). `DriveOAuthTokenProvider` receives it via an expanded `RemoteComponent.Dependencies`.
+**Architecture:** Four new Android-side implementations of `zero-api` interfaces, split across three modules by responsibility:
 
-`DriveBackupClient` (pure Kotlin in `zero-backup`) composes them. `ApplicationComponent` wires it all and replaces the noop.
+- **New `zero-auth` module** — `AuthComponent` + `GoogleOAuthTokenProvider` (generic Google OAuth, scope-parameterized). Owns the Credential Manager flow + token-exchange/refresh/revoke against `https://oauth2.googleapis.com`.
+- **`zero-remote`** — `OkHttpHttpExecutor` (generic HTTP transport, internal). Provided via `RemoteComponent`.
+- **`app`** — `AndroidSecureKeyValueStore` (EncryptedSharedPreferences). Provided directly from `ApplicationComponent`.
+- **`zero-backup`** — `DriveBackupClient` (pure Kotlin Drive REST contract). Composes `HttpExecutor` + `OAuthTokenProvider` + `BackupEnvelopeSerializer`.
 
-**Tech Stack:** OkHttp (existing), kotlinx-serialization (existing), `androidx.credentials` (new), `com.google.android.libraries.identity.googleid` (new), `androidx.security:security-crypto` (new for EncryptedSharedPreferences).
+`ApplicationComponent` wires it all and replaces the noop. Dep flow: `AuthComponent` takes `HttpExecutor` (from `RemoteComponent`) + `SecureKeyValueStore` (from `app`) + activity provider + OAuth client ID. `DriveBackupClient` constructed inline in `ApplicationComponent` from `HttpExecutor` (`RemoteComponent`) + `OAuthTokenProvider` (`AuthComponent`).
 
-**Spec:** [Spec §Drive Integration](../specs/2026-05-21-gdrive-backup-design.md#drive-integration) and [§Security Model](../specs/2026-05-21-gdrive-backup-design.md#security-model)
+**Tech Stack:**
+- `androidx.credentials`, `googleid` → `zero-auth/build.gradle` (new)
+- `androidx.security:security-crypto` → `app/build.gradle` (new)
+- OkHttp, kotlinx-serialization → already in `zero-remote`
+
+**Spec:** [Spec §Drive Integration](../specs/2026-05-21-gdrive-backup-design.md#drive-integration), [§Auth](../specs/2026-05-21-gdrive-backup-design.md#auth-zero-auth-module), and [§Security Model](../specs/2026-05-21-gdrive-backup-design.md#security-model)
 
 **Structural analogs:**
-- `PlayIntegrityTokenProvider.kt` → `DriveOAuthTokenProvider.kt`
+- `zero-sync/build.gradle` + `zero-sync/AGENTS.md` → `zero-auth/build.gradle` + `zero-auth/AGENTS.md` (module shape; zero-auth IS Android though, not pure Kotlin — so model the `build.gradle` after `zero-remote` instead).
+- `PlayIntegrityTokenProvider.kt` → `GoogleOAuthTokenProvider.kt`
 - `OkHttpFeedbackService.kt` → `OkHttpHttpExecutor.kt` + `DriveBackupClient.kt`
-- `RemoteComponent.kt` (Builder + `@BindsInstance` + qualifiers) → additions to `RemoteComponent.kt`
+- `RemoteComponent.kt` (Builder + `@BindsInstance` + qualifiers) → `AuthComponent.kt` (same shape) + small additions to `RemoteComponent.kt` (HttpExecutor only)
 
 ---
 
-### Task 1: Add dependencies
+### Task 1: Create `zero-auth` module
+
+**Files:**
+- Modify: `settings.gradle`
+- Create: `zero-auth/build.gradle`
+- Create: `zero-auth/AGENTS.md`
+- Create: `zero-auth/.gitignore`
+
+Model after `zero-remote` (Android library module — not pure Kotlin, since Credential Manager is Android-only).
+
+- [ ] **Step 1: Add to `settings.gradle`:** `include ':zero-auth'`.
+
+- [ ] **Step 2: Create `zero-auth/build.gradle`** modeled on `zero-remote/build.gradle`. Android library; depends on `:zero-api`, kotlinx-coroutines-android, dagger runtime + ksp, kotlinx-serialization (for token-exchange request bodies), timber. Test deps mirror `zero-remote`. Namespace `com.hluhovskyi.zero`.
+
+- [ ] **Step 3: Create `zero-auth/.gitignore` with `/build`** — per the AGENTS.md rule "New module: add a per-module `.gitignore` with `/build`."
+
+- [ ] **Step 4: Create `zero-auth/AGENTS.md`:**
+
+```markdown
+# zero-auth — Module Guide
+
+Google sign-in / OAuth flow. Holds the Android-side implementation of `OAuthTokenProvider`
+(in `zero-api/auth/`). Generic over Google scopes — Drive backup is one consumer; future
+integrations (Calendar, Sheets, ...) can build their own `AuthComponent` with different scopes
+without changing this module.
+
+## Responsibility
+
+- Implement `OAuthTokenProvider` against Android Credential Manager + Google ID + the OAuth 2.0
+  token endpoint.
+- Persist refresh tokens via `SecureKeyValueStore` (interface from `zero-api/security/`).
+- Use `HttpExecutor` (interface from `zero-api/http/`) for token exchange and revoke calls —
+  do not import OkHttp directly.
+
+## Encapsulation
+
+- **No networking concerns** (those live in `zero-remote`). This module never imports OkHttp.
+- **No UI** — token UI (sign-in CTA, status row) lives in `zero-core`.
+- All implementation classes are `internal`; the public surface is `AuthComponent`.
+
+## Key Invariants
+
+- Refresh tokens are written through `SecureKeyValueStore`, never to plain SharedPreferences.
+- Access tokens live in memory only — never persist them.
+- Scope is set at component build time via `@BindsInstance`. Don't accept arbitrary scopes
+  at call time; each consumer builds its own component.
+```
+
+- [ ] **Step 5: Update root `AGENTS.md`** module map to add `zero-auth`. Locate the existing module list and append:
+
+```
+zero-auth            → Google OAuth (Credential Manager + token exchange)
+```
+
+- [ ] **Step 6: Build to verify Gradle setup**
+
+Run: `./gradlew :zero-auth:assemble 2>&1 | tail -10`
+Expected: BUILD SUCCESSFUL with no sources yet.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add settings.gradle zero-auth/ AGENTS.md
+git commit -m "backup(auth): add zero-auth module skeleton"
+```
+
+---
+
+### Task 2: Add dependencies
 
 **Files:**
 - Modify: `build.gradle` (root, the `deps` map and `versions` map)
-- Modify: `zero-remote/build.gradle`
+- Modify: `zero-auth/build.gradle`
 - Modify: `app/build.gradle`
 
-Credential Manager + googleid are sign-in concerns (used by `DriveOAuthTokenProvider` in `zero-remote`) → go into `zero-remote`. `security-crypto` is the EncryptedSharedPreferences lib, used by `AndroidSecureKeyValueStore` which lives in `app` → goes into `app`.
+Credential Manager + googleid are sign-in concerns used by `GoogleOAuthTokenProvider` in `zero-auth` → go into `zero-auth`. `security-crypto` is the EncryptedSharedPreferences lib used by `AndroidSecureKeyValueStore` which lives in `app` → goes into `app`. `zero-remote` gains **no new deps** in Phase 2 — its OkHttp is reused for `OkHttpHttpExecutor`.
 
 - [ ] **Step 1: Append to the root `deps` map**
 
@@ -39,13 +114,15 @@ googleId                   : "com.google.android.libraries.identity.googleid:goo
 securityCrypto             : "androidx.security:security-crypto:1.1.0-alpha06",
 ```
 
-- [ ] **Step 2: Add to `zero-remote/build.gradle` dependencies block**
+- [ ] **Step 2: Add to `zero-auth/build.gradle` dependencies block**
 
 ```
 implementation deps.credentials
-implementation deps.credentialsPlayServicesAuth
+runtimeOnly    deps.credentialsPlayServicesAuth
 implementation deps.googleId
 ```
+
+`credentialsPlayServicesAuth` is the runtime Play Services adapter for Credential Manager — no code references it at compile time; it registers via manifest merger. `runtimeOnly` makes this explicit.
 
 - [ ] **Step 3: Add to `app/build.gradle` dependencies block**
 
@@ -61,17 +138,19 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add build.gradle zero-remote/build.gradle app/build.gradle
-git commit -m "backup: add Credential Manager (zero-remote) + EncryptedSharedPreferences (app) deps"
+git add build.gradle zero-auth/build.gradle app/build.gradle
+git commit -m "backup: add Credential Manager (zero-auth) + EncryptedSharedPreferences (app) deps"
 ```
 
 ---
 
-### Task 2: `OkHttpHttpExecutor` (transport adapter)
+### Task 3: `OkHttpHttpExecutor` (transport adapter)
 
 **Files:**
-- Create: `zero-remote/src/main/java/com/hluhovskyi/zero/drive/OkHttpHttpExecutor.kt`
-- Create: `zero-remote/src/test/java/com/hluhovskyi/zero/drive/OkHttpHttpExecutorTest.kt`
+- Create: `zero-remote/src/main/java/com/hluhovskyi/zero/http/OkHttpHttpExecutor.kt`
+- Create: `zero-remote/src/test/java/com/hluhovskyi/zero/http/OkHttpHttpExecutorTest.kt`
+
+`HttpExecutor` is a generic primitive (not Drive-specific, not OAuth-specific), so the impl lives at `zero-remote/http/` — top-level for the module, no `drive/` subpackage.
 
 Internal class implementing `HttpExecutor` from `zero-api`. Read `OkHttpFeedbackService.kt` first — copy its `withContext(Dispatchers.IO)` pattern, its `Request.Builder` shape, and its error handling.
 
@@ -107,17 +186,17 @@ Modify `zero-remote/.../RemoteComponent.kt`:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add zero-remote/src/main/java/com/hluhovskyi/zero/drive/OkHttpHttpExecutor.kt \
-        zero-remote/src/test/java/com/hluhovskyi/zero/drive/OkHttpHttpExecutorTest.kt \
+git add zero-remote/src/main/java/com/hluhovskyi/zero/http/OkHttpHttpExecutor.kt \
+        zero-remote/src/test/java/com/hluhovskyi/zero/http/OkHttpHttpExecutorTest.kt \
         zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt
 git commit -m "backup(remote): add OkHttpHttpExecutor + RemoteComponent provide"
 ```
 
 ---
 
-### Task 3: `AndroidSecureKeyValueStore` + Auto Backup exclusion
+### Task 4: `AndroidSecureKeyValueStore` + Auto Backup exclusion
 
-`AndroidSecureKeyValueStore` lives in `app/` (not `zero-remote`) because EncryptedSharedPreferences is not a networked concern. It's provided directly from `ApplicationComponent`, like `ImageLoader` or `idGenerator` are today. `DriveOAuthTokenProvider` (in `zero-remote`) receives it via `RemoteComponent.Dependencies` — see Task 4.
+`AndroidSecureKeyValueStore` lives in `app/` because EncryptedSharedPreferences is not a networked concern and isn't auth-specific either — it's a generic Android secure-storage primitive. It's provided directly from `ApplicationComponent`, like `ImageLoader` or `idGenerator` are today. `GoogleOAuthTokenProvider` (in `zero-auth`) receives it via `AuthComponent.Dependencies` — see Task 5.
 
 **Files:**
 - Create: `app/src/main/java/com/hluhovskyi/zero/security/AndroidSecureKeyValueStore.kt`
@@ -149,7 +228,7 @@ git commit -m "backup(remote): add OkHttpHttpExecutor + RemoteComponent provide"
 Run: `./gradlew :app:assembleDebug 2>&1 | tail -10`
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 5: Skip instrumented test for v1** — EncryptedSharedPreferences requires an actual device/emulator. Unit-test coverage for this is impractical. Verification is end-to-end in Task 7.
+- [ ] **Step 5: Skip instrumented test for v1** — EncryptedSharedPreferences requires an actual device/emulator. Unit-test coverage for this is impractical. Verification is end-to-end in Task 8.
 
 - [ ] **Step 6: Commit**
 
@@ -163,21 +242,26 @@ git commit -m "backup(app): AndroidSecureKeyValueStore + exclude zero_secure_pre
 
 ---
 
-### Task 4: `DriveOAuthTokenProvider`
+### Task 5: `GoogleOAuthTokenProvider` + `AuthComponent` (in `zero-auth`)
 
 **Files:**
-- Create: `zero-remote/src/main/java/com/hluhovskyi/zero/drive/DriveOAuthTokenProvider.kt`
+- Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/GoogleOAuthTokenProvider.kt`
+- Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/AuthComponent.kt`
 
-This is the most platform-specific class in the phase. Read `PlayIntegrityTokenProvider.kt` for the broad shape, but the API surface is different.
+`AuthComponent` is the DI root for `zero-auth`. Model after `RemoteComponent.kt` — same Dagger-with-Builder shape, `@BindsInstance` for the OAuth client ID + scopes + activity provider, internal impl class, public interface.
 
-**DI shape:** `AndroidSecureKeyValueStore` lives in `app` (Task 3) and is provided by `ApplicationComponent`. `DriveOAuthTokenProvider` lives in `zero-remote` and needs `SecureKeyValueStore`. So `RemoteComponent.Dependencies` gains a new field `val secureKeyValueStore: SecureKeyValueStore` — `ApplicationComponent` satisfies this from its own provider. `HttpExecutor` remains internal to `RemoteComponent` (no cross-component dependency needed for it).
+**DI shape:**
+- `AuthComponent.Dependencies` takes `httpExecutor: HttpExecutor` (provided by `RemoteComponent`) + `secureKeyValueStore: SecureKeyValueStore` (provided by `ApplicationComponent`).
+- `AuthComponent.Builder` takes `@BindsInstance` for: OAuth Web client ID, list of OAuth scopes (`listOf("https://www.googleapis.com/auth/drive.appdata")` for the backup case), and a `currentActivity: () -> Activity?` provider (from `ActivityComponent`).
+- `AuthComponent.googleOAuthTokenProvider: OAuthTokenProvider` is the public surface.
+- `GoogleOAuthTokenProvider` is `internal` to `zero-auth`. Lint encapsulation rule (existing `DefaultImplMustBeInternal`) enforces this.
 
-Behaviour spec:
+Read `PlayIntegrityTokenProvider.kt` for the broad shape — the API surface is different, but the construction pattern and try/catch boundary apply. Behaviour spec:
 
-- Constructor takes `Context`, `SecureKeyValueStore`, `HttpExecutor`, and the OAuth client ID (`@BindsInstance` qualifier, see Task 6).
+- Constructor takes `SecureKeyValueStore`, `HttpExecutor`, the OAuth client ID (Web client ID, `@BindsInstance`), the scopes list (`@BindsInstance`), and the activity provider (`@BindsInstance`).
 - `signIn()`:
   1. Build `GetGoogleIdOption` with `setServerClientId(clientId)` and `setFilterByAuthorizedAccounts(false)`.
-  2. Call `CredentialManager.create(context).getCredential(...)` against the activity context. **Note:** Credential Manager needs an `Activity` context, not the application context. We resolve this by deferring construction — see Task 6 wiring.
+  2. Call `CredentialManager.create(context).getCredential(...)` against the activity context. **Note:** Credential Manager needs an `Activity` context, not the application context. We resolve this by deferring construction — see Task 7 wiring.
   3. Parse the resulting `GoogleIdTokenCredential` to extract the Google account email + an authorization grant.
   4. Use the grant to call Google's OAuth token endpoint via `httpExecutor` with `grant_type=authorization_code`, `code=<grant>`, `client_id=<clientId>`, `redirect_uri=` (PKCE flow for installed apps).
   5. Store the refresh token in `secureKeyValueStore` under key `"drive.refresh_token"`. Store the account label under `"drive.account_label"`.
@@ -198,42 +282,80 @@ Behaviour spec:
 Required scope string (constant in this file): `"https://www.googleapis.com/auth/drive.appdata"`.
 
 **Activity vs Application context:** Credential Manager `getCredential` requires an Activity context. We solve this by:
-- `DriveOAuthTokenProvider` doesn't hold a `Context` directly. Instead it takes a `currentActivity: () -> Activity?` lambda.
+- `GoogleOAuthTokenProvider` doesn't hold a `Context` directly. Instead it takes a `currentActivity: () -> Activity?` lambda.
 - That lambda is provided from `ActivityComponent` and bound via `@BindsInstance`. `MainActivity` populates a static-or-coroutine-state `WeakReference<Activity>` on `onResume` / clears on `onPause` — same pattern as `AndroidBiometricAuthenticator` uses today (read it first).
 - If lambda returns null when `signIn()` is called, return `Result.Failure(BackupError.Unknown("Sign-in requires foreground activity"))`.
 
 - [ ] **Step 1: Implement** the class per the spec above. ~200 LOC.
 
-- [ ] **Step 2: Provide via `RemoteComponent`**
-
-  Expand `RemoteComponent.Dependencies` to include:
-
-  ```kotlin
-  val secureKeyValueStore: SecureKeyValueStore
-  ```
-
-  Add `val oauthTokenProvider: OAuthTokenProvider` to the public interface; add an `@RemoteScope @Provides internal` factory in the module. Also add a new `@BindsInstance` slot on the Builder for the OAuth client ID:
+- [ ] **Step 2: Define `AuthComponent`**
 
 ```kotlin
-@Qualifier @Retention(AnnotationRetention.SOURCE) private annotation class DriveOAuthClientId
-// ...
-@BindsInstance fun driveOauthClientId(@DriveOAuthClientId clientId: String): Builder
-@BindsInstance fun driveActivityProvider(@DriveActivity provider: () -> android.app.Activity?): Builder
+@AuthScope
+@dagger.Component(
+    modules = [AuthComponent.Module::class],
+    dependencies = [AuthComponent.Dependencies::class],
+)
+interface AuthComponent {
+
+    val googleOAuthTokenProvider: com.hluhovskyi.zero.auth.OAuthTokenProvider
+
+    interface Dependencies {
+        val httpExecutor: com.hluhovskyi.zero.http.HttpExecutor
+        val secureKeyValueStore: com.hluhovskyi.zero.security.SecureKeyValueStore
+    }
+
+    @dagger.Component.Builder
+    interface Builder {
+        fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun googleOauthClientId(@GoogleOAuthClientId clientId: String): Builder
+
+        @BindsInstance
+        fun googleOauthScopes(@GoogleOAuthScopes scopes: List<String>): Builder
+
+        @BindsInstance
+        fun currentActivityProvider(@CurrentActivity provider: () -> android.app.Activity?): Builder
+
+        fun build(): AuthComponent
+    }
+
+    @dagger.Module
+    object Module {
+        @Provides
+        @AuthScope
+        internal fun googleOAuthTokenProvider(
+            secureKeyValueStore: SecureKeyValueStore,
+            httpExecutor: HttpExecutor,
+            @GoogleOAuthClientId clientId: String,
+            @GoogleOAuthScopes scopes: List<String>,
+            @CurrentActivity currentActivity: () -> android.app.Activity?,
+        ): OAuthTokenProvider = GoogleOAuthTokenProvider(
+            secureKeyValueStore = secureKeyValueStore,
+            httpExecutor = httpExecutor,
+            clientId = clientId,
+            scopes = scopes,
+            currentActivity = currentActivity,
+        )
+    }
+}
 ```
 
-- [ ] **Step 3: Update `RemoteComponent` lint encapsulation rule** if necessary — `OAuthTokenProvider` is already a `zero-api` interface, so this should be safe. Run `./gradlew :lint-rules:test` and `./gradlew :zero-remote:lint` to confirm.
+Three new `@Qualifier` annotations (`GoogleOAuthClientId`, `GoogleOAuthScopes`, `CurrentActivity`) and one `@Scope` (`AuthScope`) — all in the same file (mirroring how `RemoteComponent` colocates its qualifiers).
+
+- [ ] **Step 3: Lint encapsulation** — `OAuthTokenProvider` is already a `zero-api` interface; no Android types leak through the `AuthComponent` public surface. Consider adding an `AuthComponentEncapsulation` lint rule analogous to `RemoteComponentEncapsulation` to enforce this going forward (out of scope for v1 but worth a tracking note).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add zero-remote/src/main/java/com/hluhovskyi/zero/drive/DriveOAuthTokenProvider.kt \
-        zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt
-git commit -m "backup(remote): add DriveOAuthTokenProvider with Credential Manager sign-in + token refresh"
+git add zero-auth/src/main/java/com/hluhovskyi/zero/auth/
+git commit -m "backup(auth): GoogleOAuthTokenProvider + AuthComponent with Credential Manager sign-in"
 ```
 
 ---
 
-### Task 5: `DriveBackupClient`
+### Task 6: `DriveBackupClient`
 
 **Files:**
 - Create: `zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveBackupClient.kt`
@@ -281,7 +403,7 @@ git commit -m "backup: add DriveBackupClient with multipart upload + REST contra
 
 ---
 
-### Task 6: Wire DriveBackupClient into `ApplicationComponent` (replace `NoopBackupClient`)
+### Task 7: Wire AuthComponent + DriveBackupClient into `ApplicationComponent` (replace `NoopBackupClient`)
 
 **Files:**
 - Modify: `app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt`
@@ -305,21 +427,57 @@ Document in `local.gradle.properties` example (in `feedback-infra.md` and a new 
 
 In `ActivityComponent`, add a `WeakReference<Activity>` field updated by `MainActivity.onResume` (set) / `onPause` (clear if pointing to this activity). Expose `fun currentActivity(): Activity?`. Inject this into `ApplicationComponent` via `Dependencies` is awkward — instead, expose it via `ActivityComponent` and pull it from there. **Read `AndroidBiometricAuthenticator.kt` first to see how the existing Activity-aware injection pattern works** — replicate it; do not invent a new approach.
 
-- [ ] **Step 3: In `ApplicationComponent.Module`**, replace the `@Provides` for `BackupClient`:
+- [ ] **Step 3: Build `AuthComponent` in `ApplicationComponent.Module`**
 
-  - Remove the `NoopBackupClient` provider.
-  - Provide `DriveBackupClient` from `zero-backup`, composing `RemoteComponent.httpExecutor` and `RemoteComponent.oauthTokenProvider` (also exposed via the existing `Dependencies` linkage).
-
-- [ ] **Step 4: In `RemoteModule`**, the `remoteComponent` provider gains two more builder calls:
+  Add a new `AuthModule` (mirroring the existing `RemoteModule`) with:
 
 ```kotlin
-.driveOauthClientId(BuildConfig.DRIVE_OAUTH_CLIENT_ID)
-.driveActivityProvider { activityComponent.currentActivity() }
+@dagger.Module
+internal object AuthModule {
+
+    private const val DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
+
+    @Provides
+    @ApplicationScope
+    fun authComponent(
+        component: ApplicationComponent,        // satisfies AuthComponent.Dependencies
+        activityComponent: ActivityComponent,    // for currentActivity provider
+    ): AuthComponent = AuthComponent.builder()
+        .dependencies(component)
+        .googleOauthClientId(BuildConfig.DRIVE_OAUTH_CLIENT_ID)
+        .googleOauthScopes(listOf(DRIVE_APPDATA_SCOPE))
+        .currentActivityProvider { activityComponent.currentActivity() }
+        .build()
+
+    @Provides
+    fun googleOAuthTokenProvider(
+        authComponent: AuthComponent,
+    ): OAuthTokenProvider = authComponent.googleOAuthTokenProvider
+}
 ```
 
-The activity provider needs `ActivityComponent` in scope — this is the trickiest part. **Read how `BiometricAuthenticator` is currently injected and replicate the exact pattern**; do not invent a new injection path.
+`ApplicationComponent` must now implement `AuthComponent.Dependencies` — which requires it to expose `httpExecutor: HttpExecutor` (from `RemoteComponent`) and `secureKeyValueStore: SecureKeyValueStore` (already provided in Task 4). Add `httpExecutor` to `ApplicationComponent`'s abstract overrides similarly to how `feedbackService` is currently exposed.
 
-`ApplicationComponent` already implements `RemoteComponent.Dependencies`. Because Task 3 added `SecureKeyValueStore` to `ApplicationComponent.Module`, the new `secureKeyValueStore: SecureKeyValueStore` field on `RemoteComponent.Dependencies` is satisfied automatically — Dagger picks it up via the existing dependencies bridge. No extra wiring required.
+- [ ] **Step 4: Replace the `BackupClient` provider in `ApplicationComponent.Module`**
+
+  - Remove the `NoopBackupClient` provider.
+  - Add a `@Provides BackupClient` that constructs `DriveBackupClient` inline:
+
+```kotlin
+@Provides
+@ApplicationScope
+fun backupClient(
+    httpExecutor: HttpExecutor,                    // from RemoteComponent
+    oauthTokenProvider: OAuthTokenProvider,         // from AuthComponent
+    envelopeSerializer: BackupEnvelopeSerializer,   // from BackupComponent
+): BackupClient = DriveBackupClient(
+    httpExecutor = httpExecutor,
+    oauthTokenProvider = oauthTokenProvider,
+    envelopeSerializer = envelopeSerializer,
+)
+```
+
+This is where the cross-component composition happens. `BackupComponent` is downstream — it receives the resulting `BackupClient` via its existing `Dependencies` interface (from Phase 1 Task 5).
 
 - [ ] **Step 5: Delete `NoopBackupClient.kt`**
 
@@ -333,12 +491,12 @@ Expected: BUILD SUCCESSFUL.
 ```bash
 git add app/
 git rm app/src/main/java/com/hluhovskyi/zero/backup/NoopBackupClient.kt
-git commit -m "backup(app): wire DriveBackupClient + OAuth client ID buildConfigField"
+git commit -m "backup(app): wire AuthComponent + DriveBackupClient, drop NoopBackupClient"
 ```
 
 ---
 
-### Task 7: Manual end-to-end smoke test
+### Task 8: Manual end-to-end smoke test
 
 Read [`docs/agents/feedback-infra.md`](../../agents/feedback-infra.md) §"Debug builds" and §"Verifying changes" — the same dev-device setup applies, with adjustments below.
 
@@ -388,7 +546,7 @@ git commit --allow-empty -m "backup: manual smoke test of Drive upload verified 
 ./gradlew :app:assembleDebug 2>&1 | tail -5
 ```
 
-All four MUST pass. The Phase 2 PR also requires manual confirmation of the smoke test above (Task 7) — note this in the PR body, with a screenshot of the logcat transitions if practical.
+All four MUST pass. The Phase 2 PR also requires manual confirmation of the smoke test above (Task 8) — note this in the PR body, with a screenshot of the logcat transitions if practical.
 
 ## Out of Scope
 

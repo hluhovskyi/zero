@@ -44,21 +44,30 @@ zero-api                              (pure Kotlin — interfaces & DTOs)
     BackupEnvelope.kt                 ← @Serializable { format, snapshot }
     BackupMetadata.kt                 ← @Serializable { backupId, createdAt, byteSize, deviceLabel }
     BackupUseCase.kt                  ← interface: state: Flow<State>, perform(Action), attach
-    OAuthTokenProvider.kt             ← interface: getAccessToken, signIn, revoke
-    SecureKeyValueStore.kt            ← interface: get/put/remove String
-    HttpExecutor.kt                   ← thin interface — no OkHttp leak
+    BackupError.kt                    ← sealed taxonomy of failure modes
+  auth/
+    OAuthTokenProvider.kt             ← interface: getAccessToken, signIn, revoke — generic
+                                         over any OAuth flow; scope set at construction
+  http/
+    HttpExecutor.kt                   ← thin generic interface — no OkHttp leak
+  security/
+    SecureKeyValueStore.kt            ← interface: get/put/remove String — generic primitive
 
 zero-backup                           (NEW, pure Kotlin JVM — mirrors zero-sync)
   DefaultBackupUseCase.kt             ← state machine; uses SyncEngine + BackupClient
-  DriveBackupClient.kt                ← Drive REST contract, uses HttpExecutor + OAuthTokenProvider
+  DriveBackupClient.kt                ← Drive REST contract; uses HttpExecutor + OAuthTokenProvider
   BackupEnvelopeSerializer.kt         ← envelope JSON round-trip
   BackupComponent.kt                  ← DI factory with Dependencies interface
   AGENTS.md                           ← rules: no Android, no OkHttp imports
 
-zero-remote                           (Android — additions)
-  drive/
-    DriveOAuthTokenProvider.kt        ← Credential Manager + googleid + token exchange
-                                         (provided via RemoteComponent)
+zero-auth                             (NEW Android module — Google sign-in flow)
+  AuthComponent.kt                    ← DI root: exposes googleOAuthTokenProvider
+  GoogleOAuthTokenProvider.kt         ← Credential Manager + googleid + token exchange
+                                         (internal — implements OAuthTokenProvider; scope-parameterized)
+  AGENTS.md                           ← rules: only OAuth concerns; no networking, no UI
+
+zero-remote                           (Android — additions, narrowed)
+  http/
     OkHttpHttpExecutor.kt             ← wraps existing OkHttpClient, implements HttpExecutor
                                          (provided via RemoteComponent)
 
@@ -111,12 +120,15 @@ app/src/main/res/xml/                 ← Android Auto Backup rules (Phase 0)
 
 The OAuth scope `https://www.googleapis.com/auth/drive.appdata` grants access to a hidden per-app folder (`appDataFolder`). Files there are invisible in `drive.google.com`'s UI and cannot be accessed by any other app. Consent prompt wording is the gentlest Drive offers: *"see, edit, create, and delete its own configuration data in your Google Drive."*
 
-### Auth
+### Auth (`zero-auth` module)
 
-- **Sign in:** Android's `androidx.credentials.CredentialManager` + `com.google.android.libraries.identity.googleid` (`GoogleIdTokenCredential`). User picks an account, grants `drive.appdata` scope. We receive an OAuth ID token + a Google authorization grant.
-- **Token exchange:** the authorization grant is exchanged for an access + refresh token via the standard OAuth 2.0 token endpoint `https://oauth2.googleapis.com/token`. We use OkHttp directly here — no Google client lib.
-- **Storage:** access token is held in memory only. Refresh token is stored in `EncryptedSharedPreferences` (Keystore-wrapped). On every Drive call, if the access token is missing or returns 401, we refresh.
+Owned by `GoogleOAuthTokenProvider` in the new `zero-auth` module. The provider is generic over Google OAuth — scope (`drive.appdata` for the backup use case) is configured at construction. Future integrations that need Google sign-in (Calendar, Sheets, etc.) reuse this provider with different scopes.
+
+- **Sign in:** Android's `androidx.credentials.CredentialManager` + `com.google.android.libraries.identity.googleid` (`GoogleIdTokenCredential`). User picks an account, grants the configured scope. We receive an OAuth ID token + a Google authorization grant.
+- **Token exchange:** the authorization grant is exchanged for an access + refresh token via the standard OAuth 2.0 token endpoint `https://oauth2.googleapis.com/token`. We use `HttpExecutor` (the same one `RemoteComponent` provides for Drive REST calls) — no Google client lib.
+- **Storage:** access token is held in memory only. Refresh token is stored in `EncryptedSharedPreferences` (Keystore-wrapped) via `SecureKeyValueStore`. On every authenticated call, if the access token is missing or returns 401, we refresh.
 - **Revoke:** `https://oauth2.googleapis.com/revoke?token=<refresh_token>` clears the grant server-side. On disconnect we revoke, then clear the local refresh token.
+- **Dependencies:** `AuthComponent.Dependencies` takes `httpExecutor: HttpExecutor` (from `RemoteComponent`), `secureKeyValueStore: SecureKeyValueStore` (from `ApplicationComponent`), `currentActivity: () -> Activity?` (from `ActivityComponent`), and the OAuth client ID via `@BindsInstance`.
 
 ### Transport (OkHttp behind `HttpExecutor`)
 

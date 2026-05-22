@@ -75,7 +75,14 @@ git commit -m "backup: add zero-backup module skeleton"
 
 ---
 
-### Task 2: Add `zero-api` backup interfaces
+### Task 2: Add `zero-api` interfaces
+
+Interfaces are subpackaged by responsibility, not by feature, so they're reusable beyond backup:
+
+- `backup/` — backup-specific (BackupClient, BackupEnvelope, BackupMetadata, BackupUseCase, BackupError)
+- `auth/` — generic OAuth (OAuthTokenProvider) — reusable by future Google integrations (Calendar, Sheets, ...)
+- `http/` — generic HTTP transport (HttpExecutor)
+- `security/` — generic secure local storage (SecureKeyValueStore)
 
 **Files:**
 - Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupEnvelope.kt`
@@ -83,9 +90,9 @@ git commit -m "backup: add zero-backup module skeleton"
 - Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupClient.kt`
 - Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupUseCase.kt`
 - Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupError.kt`
-- Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/OAuthTokenProvider.kt`
-- Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/SecureKeyValueStore.kt`
-- Create: `zero-api/src/main/java/com/hluhovskyi/zero/backup/HttpExecutor.kt`
+- Create: `zero-api/src/main/java/com/hluhovskyi/zero/auth/OAuthTokenProvider.kt`
+- Create: `zero-api/src/main/java/com/hluhovskyi/zero/security/SecureKeyValueStore.kt`
+- Create: `zero-api/src/main/java/com/hluhovskyi/zero/http/HttpExecutor.kt`
 
 Model after `zero-api/src/main/java/com/hluhovskyi/zero/sync/SyncEngine.kt` for interface naming, and `zero-api/src/main/java/com/hluhovskyi/zero/sync/SyncSnapshot.kt` for `@Serializable` style. **Every field on `@Serializable` types MUST carry `@SerialName`** (existing lint rule enforces this).
 
@@ -197,10 +204,12 @@ interface BackupUseCase {
 }
 ```
 
-- [ ] **Step 6: `OAuthTokenProvider.kt`** — interface. Implementations: `FakeOAuthTokenProvider` (Phase 1 tests), `DriveOAuthTokenProvider` (Phase 2).
+- [ ] **Step 6: `OAuthTokenProvider.kt`** — generic OAuth interface. Implementations: `FakeOAuthTokenProvider` (Phase 1 tests), `GoogleOAuthTokenProvider` (Phase 2, in `zero-auth`).
 
 ```kotlin
-package com.hluhovskyi.zero.backup
+package com.hluhovskyi.zero.auth
+
+import com.hluhovskyi.zero.backup.BackupError
 
 interface OAuthTokenProvider {
     suspend fun getAccessToken(): String?
@@ -216,10 +225,12 @@ interface OAuthTokenProvider {
 }
 ```
 
+Note: `Result.Failure` carries a `BackupError` for v1 to keep the error taxonomy unified. When/if a non-backup consumer (Calendar etc.) needs distinct error semantics, generalize to a dedicated `AuthError` type — out of scope for v1.
+
 - [ ] **Step 7: `SecureKeyValueStore.kt`**
 
 ```kotlin
-package com.hluhovskyi.zero.backup
+package com.hluhovskyi.zero.security
 
 interface SecureKeyValueStore {
     suspend fun get(key: String): String?
@@ -231,7 +242,7 @@ interface SecureKeyValueStore {
 - [ ] **Step 8: `HttpExecutor.kt`** — minimal HTTP abstraction. Read `OkHttpFeedbackService` first to see the shape of requests/responses it makes, then define an interface that covers those without leaking OkHttp.
 
 ```kotlin
-package com.hluhovskyi.zero.backup
+package com.hluhovskyi.zero.http
 
 interface HttpExecutor {
     suspend fun execute(request: HttpRequest): HttpResponse
@@ -272,8 +283,11 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 10: Commit**
 
 ```bash
-git add zero-api/src/main/java/com/hluhovskyi/zero/backup/
-git commit -m "backup(api): add BackupClient, BackupUseCase, OAuthTokenProvider interfaces"
+git add zero-api/src/main/java/com/hluhovskyi/zero/backup/ \
+        zero-api/src/main/java/com/hluhovskyi/zero/auth/ \
+        zero-api/src/main/java/com/hluhovskyi/zero/security/ \
+        zero-api/src/main/java/com/hluhovskyi/zero/http/
+git commit -m "backup(api): add backup/auth/http/security interfaces"
 ```
 
 ---
