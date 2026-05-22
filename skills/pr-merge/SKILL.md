@@ -45,10 +45,9 @@ Then run the E2E suite (CI does not yet gate on this — pr-merge is the only ga
 ANDROID_SERIAL=$(cat .emulator-serial) ./gradlew :app:connectedDebugAndroidTest
 ```
 
-`ANDROID_SERIAL` pins the run to the acquired emulator so other connected AVDs
-(e.g. an Android 16 Pixel_9a where Espresso's `InputManager.getInstance` reflection
-fails) don't fail the gate. If `:app:connectedDebugAndroidTest` reports failures
-on the pinned emulator, stop — do not merge.
+`ANDROID_SERIAL` pins the run to the acquired emulator so concurrent
+sessions / sibling worktrees don't fight over the device pool. If
+`:app:connectedDebugAndroidTest` reports failures, stop — do not merge.
 
 If all pass: `✓ Tests, lint, build, and E2E passed — proceeding with merge.`
 

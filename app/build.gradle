@@ -44,6 +44,11 @@ android {
         versionName versionProps['versionName']
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // Run each test in a fresh process via AndroidX Test Orchestrator
+        // (configured below). Without process isolation, Application
+        // singletons (DB flows, scoped coroutines) leak across tests and
+        // cause flaky timeouts on slower devices.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
         vectorDrawables {
             useSupportLibrary true
         }
@@ -96,6 +101,10 @@ android {
     }
 
     namespace 'com.hluhovskyi.zero'
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+    }
 }
 
 dependencies {
@@ -141,8 +150,14 @@ dependencies {
     testImplementation deps.test.mockito
     testImplementation deps.test.coroutines
 
-    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.test.ext:junit:1.3.0"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:${versions.compose}"
-    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    // 3.7.0 ships the MotionEvent-based injector that works on Android 16+,
+    // older versions hit NoSuchMethodException on InputManager.getInstance.
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.7.0"
+    // AndroidX Test Orchestrator: runs each test in a fresh process so
+    // Application singletons (DB flows, scoped coroutines) don't leak between
+    // tests. Without it, Pixel_9a hits 5s timeouts on cross-test runs.
+    androidTestUtil "androidx.test:orchestrator:1.5.1"
     debugImplementation "androidx.compose.ui:ui-test-manifest:${versions.compose}"
 }
