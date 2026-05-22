@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+apply from: "$rootDir/gradle/compose-config.gradle"
+
 android {
     compileSdk versions.compileSdk
 
@@ -17,6 +19,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        perf {
+            initWith release
         }
     }
     buildFeatures {
@@ -50,6 +55,7 @@ dependencies {
     implementation deps.android.compose.foundation
     implementation deps.android.compose.material
     implementation deps.android.compose.materialIconsExtended
+    perfImplementation deps.android.compose.tracing
 
     testImplementation deps.test.junit
 }

@@ -4,6 +4,8 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+apply from: "$rootDir/gradle/compose-config.gradle"
+
 def versionProps = new Properties()
 file('../version.properties').withInputStream { versionProps.load(it) }
 
@@ -69,6 +71,12 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        perf {
+            initWith release
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+            profileable true
         }
     }
     compileOptions {
@@ -137,6 +145,7 @@ dependencies {
     implementation deps.biometric
     implementation deps.fragment
     implementation deps.android.compose.uiPreview
+    perfImplementation deps.android.compose.tracing
     debugImplementation deps.android.compose.uiTooling
 
     implementation project(':zero-test-bridge')
