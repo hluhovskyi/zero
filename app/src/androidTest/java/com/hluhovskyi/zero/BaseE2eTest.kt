@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.hluhovskyi.zero.activity.MainActivity
+import com.hluhovskyi.zero.robots.BudgetRobot
 import com.hluhovskyi.zero.robots.TransactionsRobot
 import com.hluhovskyi.zero.testbridge.HasTestBridgeContainer
 import com.hluhovskyi.zero.testbridge.TestBridgeContainer
@@ -39,4 +40,6 @@ abstract class BaseE2eTest {
     protected fun seedDefaultSetup() = runBlocking { container.database.seedDefaultSetup() }
 
     protected fun onTransactions() = TransactionsRobot(composeRule)
+
+    protected fun onBudget() = BudgetRobot(composeRule).open()
 }

@@ -2,11 +2,13 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Uri
 
+@Stable
 interface ImageLoader {
 
     @Composable

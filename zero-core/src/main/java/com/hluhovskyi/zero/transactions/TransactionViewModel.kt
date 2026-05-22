@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
+import androidx.compose.runtime.Stable
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
@@ -8,6 +9,7 @@ import com.hluhovskyi.zero.common.Image
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
+@Stable
 interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
 
     sealed interface Action {
@@ -33,6 +35,7 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         val activeFilter: TransactionFilter = TransactionFilter(),
     )
 
+    @Stable
     sealed interface Item {
 
         data class Summary(
@@ -41,11 +44,13 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
             val currencySymbol: String,
         ) : Item
 
+        @Stable
         sealed interface Transaction : Item {
 
             val id: Id.Known
             val date: LocalDateTime
 
+            @Stable
             data class Expense(
                 override val id: Id.Known,
                 override val date: LocalDateTime,
@@ -61,6 +66,7 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
                 val conversion: Conversion,
             ) : Transaction
 
+            @Stable
             data class Income(
                 override val id: Id.Known,
                 override val date: LocalDateTime,
@@ -76,6 +82,7 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
                 val conversion: Conversion,
             ) : Transaction
 
+            @Stable
             data class Transfer(
                 override val id: Id.Known,
                 override val date: LocalDateTime,

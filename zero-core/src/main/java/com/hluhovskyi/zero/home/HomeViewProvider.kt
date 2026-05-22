@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.invoke
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 
@@ -23,9 +23,9 @@ internal class HomeViewProvider(
 
         Box(modifier = Modifier.fillMaxSize()) {
             if (state.isNewUser) {
-                welcomeComponent.AttachWithView()
+                welcomeComponent.viewProvider()
             } else {
-                transactionComponent.AttachWithView()
+                transactionComponent.viewProvider()
             }
         }
     }

@@ -15,7 +15,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.datetime.LocalDateTime
 import java.math.BigDecimal
 
-class DefaultDatabaseTestBridge(
+fun DatabaseTestBridge(
+    cleanupJob: CleanupJob,
+    currentUserRepository: CurrentUserRepository,
+    accountRepository: AccountRepository,
+    categoryRepository: CategoryRepository,
+    transactionRepository: TransactionRepository,
+): DatabaseTestBridge = DefaultDatabaseTestBridge(
+    cleanupJob = cleanupJob,
+    currentUserRepository = currentUserRepository,
+    accountRepository = accountRepository,
+    categoryRepository = categoryRepository,
+    transactionRepository = transactionRepository,
+)
+
+internal class DefaultDatabaseTestBridge(
     private val cleanupJob: CleanupJob,
     private val currentUserRepository: CurrentUserRepository,
     private val accountRepository: AccountRepository,
