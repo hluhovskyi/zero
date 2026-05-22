@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun DetailTopBar(
@@ -37,7 +37,7 @@ fun DetailTopBar(
             Icon(
                 imageVector = Icons.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.action_back_description),
-                tint = PrimaryContainer,
+                tint = ZeroTheme.colors.primaryContainer,
             )
         }
         Text(
@@ -47,7 +47,7 @@ fun DetailTopBar(
             style = TextStyle(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
             ),
         )
         Box {

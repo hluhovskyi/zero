@@ -22,8 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun ModalHeader(
@@ -44,7 +43,7 @@ fun ModalHeader(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(R.string.action_close_description),
-                tint = PrimaryContainer,
+                tint = ZeroTheme.colors.primaryContainer,
             )
         }
         Column(
@@ -55,7 +54,7 @@ fun ModalHeader(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
                 textAlign = TextAlign.Center,
             )
             if (subtitle != null) {
@@ -64,7 +63,7 @@ fun ModalHeader(
                     text = subtitle,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 0.4.sp,
                     textAlign = TextAlign.Center,
                 )

@@ -28,9 +28,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * Shared header for import flow step screens (categories, accounts, transactions).
@@ -60,27 +58,27 @@ fun ImportStepHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.action_back_description),
-                    tint = PrimaryContainer,
+                    tint = ZeroTheme.colors.primaryContainer,
                 )
             }
             Text(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 text = buildAnnotatedString {
                     append("${step + 1}")
-                    withStyle(SpanStyle(color = OnSurfaceVariant.copy(alpha = 0.5f))) {
+                    withStyle(SpanStyle(color = ZeroTheme.colors.onSurfaceVariant.copy(alpha = 0.5f))) {
                         append(" / $totalSteps")
                     }
                 },
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 modifier = Modifier
                     .width(48.dp)
                     .padding(end = 4.dp),
@@ -100,7 +98,7 @@ fun ImportStepHeader(
                         .weight(1f)
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(if (i < step) PrimaryContainer else OutlineVariant),
+                        .background(if (i < step) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outlineVariant),
                 )
             }
         }
