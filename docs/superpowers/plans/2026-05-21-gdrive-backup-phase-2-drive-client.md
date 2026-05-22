@@ -228,7 +228,7 @@ git commit -m "backup(remote): add OkHttpHttpExecutor + RemoteComponent provide"
 Run: `./gradlew :app:assembleDebug 2>&1 | tail -10`
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 5: Skip instrumented test for v1** — EncryptedSharedPreferences requires an actual device/emulator. Unit-test coverage for this is impractical. Verification is end-to-end in Task 8.
+- [ ] **Step 5: Skip instrumented test for v1** — EncryptedSharedPreferences requires an actual device/emulator. Unit-test coverage for this is impractical. Verification is end-to-end in Task 9.
 
 - [ ] **Step 6: Commit**
 
@@ -346,11 +346,29 @@ Three new `@Qualifier` annotations (`GoogleOAuthClientId`, `GoogleOAuthScopes`, 
 
 - [ ] **Step 3: Lint encapsulation** — `OAuthTokenProvider` is already a `zero-api` interface; no Android types leak through the `AuthComponent` public surface. Consider adding an `AuthComponentEncapsulation` lint rule analogous to `RemoteComponentEncapsulation` to enforce this going forward (out of scope for v1 but worth a tracking note).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Tests against `MockWebServer` + fakes**
+
+`GoogleOAuthTokenProvider` has Credential-Manager-flavored bits that can't be unit-tested (system UI), but the **token-management half** is fully testable. Sign-in itself is exercised in the manual smoke test (Task 9).
+
+Create `zero-auth/src/test/java/com/hluhovskyi/zero/auth/GoogleOAuthTokenProviderTest.kt`. Use `MockWebServer` for the `HttpExecutor` (via a small adapter) + an in-memory `FakeSecureKeyValueStore`. Cover:
+
+1. `getAccessToken()` returns the cached in-memory token if not expired.
+2. `getAccessToken()` reads refresh token from store and calls `oauth2.googleapis.com/token` endpoint when access token missing.
+3. `getAccessToken()` returns `null` if no refresh token is present.
+4. `getAccessToken()` returns `null` and clears in-memory state if refresh endpoint returns 400 `invalid_grant` (signed-out server-side).
+5. `revoke()` calls `oauth2.googleapis.com/revoke`, clears both keys from store, flips `isSignedIn` to false.
+6. `revoke()` clears local state even if the revoke HTTP call fails (we can't leave a dangling local credential).
+7. `isSignedIn` initial value derives from `secureKeyValueStore.get("drive.refresh_token") != null` at construction.
+
+Skipped (manual-only):
+- `signIn()` — Credential Manager bottom sheet is system UI, can't be unit-tested.
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add zero-auth/src/main/java/com/hluhovskyi/zero/auth/
-git commit -m "backup(auth): GoogleOAuthTokenProvider + AuthComponent with Credential Manager sign-in"
+git add zero-auth/src/main/java/com/hluhovskyi/zero/auth/ \
+        zero-auth/src/test/java/com/hluhovskyi/zero/auth/
+git commit -m "backup(auth): GoogleOAuthTokenProvider + AuthComponent + token-mgmt tests"
 ```
 
 ---
@@ -496,7 +514,40 @@ git commit -m "backup(app): wire AuthComponent + DriveBackupClient, drop NoopBac
 
 ---
 
-### Task 8: Manual end-to-end smoke test
+### Task 8: MockWebServer wire-format integration test
+
+The Phase 2 Task 6 unit tests for `DriveBackupClient` use a `FakeHttpExecutor` — they verify the client's logic but not the actual HTTP bytes that go on the wire. This task adds a test that uses the **real** `OkHttpHttpExecutor` against a `MockWebServer` configured to behave like Drive. Catches OkHttp-level bugs (multipart boundary issues, Content-Type setting, Content-Length on ByteArray bodies) and Drive-shape mistakes (wrong query params, wrong response field names) that the fakes mask.
+
+**Files:**
+- Create: `app/src/test/java/com/hluhovskyi/zero/backup/DriveBackupClientWireFormatTest.kt`
+
+Lives in `app/` because `zero-backup` is pure Kotlin and can't pull OkHttp; `app/` already has OkHttp on its classpath via the `zero-remote` dep.
+
+- [ ] **Step 1: Write tests** against `MockWebServer`. Six cases:
+  1. **Upload constructs the right multipart request** — POST, `Authorization: Bearer <token>`, `Content-Type: multipart/related; boundary=...`, two parts (metadata JSON with `{"name":"zero-backup.json","parents":["appDataFolder"]}`, content JSON envelope).
+  2. **Upload parses the response into `BackupMetadata`** — drive's `{id, name, modifiedTime, size}` shape.
+  3. **List endpoint sends the right query** — `q=name='zero-backup.json'&spaces=appDataFolder&fields=files(id,name,modifiedTime,size)`.
+  4. **Download sends `alt=media` and parses raw body as envelope.**
+  5. **401 surfaces as `BackupError.AuthExpired`.**
+  6. **403 with quota body surfaces as `BackupError.QuotaExceeded`.**
+
+Use real `OkHttpClient`, real `OkHttpHttpExecutor`. `OAuthTokenProvider` is faked (returns a static `"test-token"`). The Drive base URL is overridden to `mockWebServer.url("/")` via a constructor parameter on `DriveBackupClient` — add a `baseUrl: String = "https://www.googleapis.com"` constructor default (this is the only production-vs-test difference).
+
+- [ ] **Step 2: Run**
+
+Run: `./gradlew :app:testDebugUnitTest --tests DriveBackupClientWireFormatTest 2>&1 | tail -15`
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/test/java/com/hluhovskyi/zero/backup/DriveBackupClientWireFormatTest.kt \
+        zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveBackupClient.kt
+git commit -m "backup: MockWebServer wire-format test for DriveBackupClient"
+```
+
+---
+
+### Task 9: Manual end-to-end smoke test
 
 Read [`docs/agents/feedback-infra.md`](../../agents/feedback-infra.md) §"Debug builds" and §"Verifying changes" — the same dev-device setup applies, with adjustments below.
 
@@ -546,7 +597,7 @@ git commit --allow-empty -m "backup: manual smoke test of Drive upload verified 
 ./gradlew :app:assembleDebug 2>&1 | tail -5
 ```
 
-All four MUST pass. The Phase 2 PR also requires manual confirmation of the smoke test above (Task 8) — note this in the PR body, with a screenshot of the logcat transitions if practical.
+All four MUST pass. The Phase 2 PR also requires manual confirmation of the smoke test above (Task 9) — note this in the PR body, with a screenshot of the logcat transitions if practical.
 
 ## Out of Scope
 

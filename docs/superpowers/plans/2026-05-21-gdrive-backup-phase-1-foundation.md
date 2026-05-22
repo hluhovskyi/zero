@@ -169,7 +169,7 @@ interface BackupClient {
 }
 ```
 
-- [ ] **Step 5: `BackupUseCase.kt`** — the orchestrator interface. Exposes `state: Flow<State>` and `perform(Action)`. **No `attach()`** — this is an app-scoped service. Its background work runs in its constructor `CoroutineScope` and lives for the process lifetime. Consumers (settings ViewModel, WorkManager worker, notification presenter) observe the flow; none own the use case's lifecycle.
+- [ ] **Step 5: `BackupUseCase.kt`** — the orchestrator interface. Exposes `state: Flow<State>` and `perform(Action)`. **No `attach()`** — the use case is scoped to the `BackupComponent` factory (see Task 5 below), which is itself constructed once at app start. Its background work runs in its constructor `CoroutineScope` and lives for as long as the BackupComponent does (effectively process lifetime). Consumers (the `BackupDetailViewModel` UI screen, `WorkManager` worker, notification presenter) observe the flow; none own the use case's lifecycle. The UI screen has its own separate feature scope (`@BackupDetailScope`), independent of the use case's scope.
 
 ```kotlin
 package com.hluhovskyi.zero.backup
@@ -593,7 +593,37 @@ Goal: prove the foundation compiles into `app` without dragging anything Android
 
 - [ ] **Step 2: Wire `BackupComponent` in `ApplicationComponent.Module`**
 
-Add a `@Provides @ApplicationScope` method that constructs a `BackupComponent` from `syncEngine`, the `NoopBackupClient`, `currentUserRepository`, and a `CoroutineScope(SupervisorJob() + Dispatchers.IO)` named `backupCoroutineScope`. Expose `backupUseCase: BackupUseCase` as an `@Provides`.
+`BackupComponent` is the factory that owns `BackupUseCase`'s lifecycle (lazy val singleton within the factory instance, mirroring how `SyncComponent` owns `SyncEngine`).
+
+`ApplicationComponent.Module` holds a single `BackupComponent` instance at `@ApplicationScope` — same way it holds the `SyncComponent`. The use case's effective scope is the BackupComponent factory's lifetime, not `@ApplicationScope` directly. (This matters when reading the dep graph: `BackupDetailComponent` UI gets `BackupUseCase` via the factory's getter, not as a directly-scoped binding.)
+
+```kotlin
+@Provides
+@ApplicationScope
+fun backupComponent(
+    syncEngine: SyncEngine,
+    backupClient: BackupClient,
+    currentUserRepository: CurrentUserRepository,
+): BackupComponent = BackupComponent.factory(object : BackupComponent.Dependencies {
+    override val syncEngine = syncEngine
+    override val backupClient = backupClient
+    override val currentUserRepository = currentUserRepository
+    override val backupCoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+}).create()
+
+@Provides
+fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
+
+@Provides
+@ApplicationScope
+fun backupEnvelopeSerializer(backupComponent: BackupComponent): BackupEnvelopeSerializer =
+    backupComponent.envelopeSerializer
+```
+
+The `BackupClient` is `NoopBackupClient` in Phase 1; Phase 2 swaps it for the real `DriveBackupClient`.
+
+**Debug-flavor override hook:** Phase 5's instrumented round-trip test needs to substitute `FakeBackupClient` for the real client. Since `BackupClient` is an interface and is provided directly via `@Provides`, swap-in for tests is a one-line change in an `androidTest`-flavor module or via a test-only `ApplicationComponent` builder argument. No additional plumbing here — calling out the testability seam.
 
 - [ ] **Step 3: Confirm app build**
 

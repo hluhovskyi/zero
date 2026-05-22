@@ -135,8 +135,8 @@ git commit -m "backup(import): all-new fast path skips review when no overlap"
 ### Task 4: Wire "Restore" button from Backup settings screen
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupViewModel.kt`
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupComponent.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupDetailViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailComponent.kt`
 
 The `Restore` Action currently logs `Timber.w` (Phase 3 placeholder). Now it should:
 1. Navigate to the Import destination.
@@ -144,7 +144,7 @@ The `Restore` Action currently logs `Timber.w` (Phase 3 placeholder). Now it sho
 
 Two routes:
 
-**Route A** — `OnRestoreSelectedHandler` injected at `BackupComponent.Builder` level. The `app` layer provides the default handler that:
+**Route A** — `OnRestoreSelectedHandler` injected at `BackupDetailComponent.Builder` level. The `app` layer provides the default handler that:
   - Pulls the global `ImportUseCase` (or the `ImportComponent.Builder`).
   - Calls `importUseCase.perform(SelectSource(driveSource))`.
   - Navigates to the Import destination.
@@ -157,11 +157,11 @@ Pick **Route A** — it matches the existing `OnImportSelectedHandler` pattern i
 
 - [ ] **Step 1: Add `OnRestoreSelectedHandler` interface** in `zero-core/.../backup/`.
 
-- [ ] **Step 2: Bind via `BackupComponent.Builder.@BindsInstance`**.
+- [ ] **Step 2: Bind via `BackupDetailComponent.Builder.@BindsInstance`**.
 
-- [ ] **Step 3: Default handler in `app`** at the `BackupComponent.Builder` `@Provides` layer (read how `OnImportSelectedHandler` is defaulted — replicate).
+- [ ] **Step 3: Default handler in `app`** at the `BackupDetailComponent.Builder` `@Provides` layer (read how `OnImportSelectedHandler` is defaulted — replicate).
 
-- [ ] **Step 4: `DefaultBackupViewModel.perform(Restore)` calls handler.onRestoreSelected()`.
+- [ ] **Step 4: `DefaultBackupDetailViewModel.perform(Restore)` calls handler.onRestoreSelected()`.
 
 - [ ] **Step 5: Build + lint + UI inspector verify**
 
@@ -175,7 +175,81 @@ git commit -m "backup(ui): wire Restore button to Import flow with Drive pre-sel
 
 ---
 
-### Task 5: Manual UI verification
+### Task 5: Instrumented backup→restore round-trip test
+
+The unit tests cover the all-new fast path and the parser; this task wires them together with the rest of the pipeline (SyncEngine.export, envelope serialization, BackupComponent state machine, restore parser, DB write-back) and runs the full round trip on a real emulator — without touching real Drive. The `BackupClient` is substituted with a `FakeBackupClient` that just holds the envelope in memory.
+
+This is the **closest thing to an automated E2E test** we can get for this feature. Real-Drive E2E stays manual (Phase 2 Task 9).
+
+**Files:**
+- Create: `app/src/androidTest/java/com/hluhovskyi/zero/backup/BackupRestoreRoundTripTest.kt`
+- Create: `app/src/androidTest/java/com/hluhovskyi/zero/backup/InMemoryBackupClient.kt`
+- Modify: a `androidTest`-flavor `ApplicationComponent` (or test-only entry point) to inject `InMemoryBackupClient` as `BackupClient` — see existing robot test infra (PR #203) for how test DI substitutions are done.
+
+- [ ] **Step 1: Implement `InMemoryBackupClient`** — implements `BackupClient`. Holds the last uploaded envelope. Returns it on `latest()` + `download()`. Returns `NotFound` until the first `upload`. ~40 LOC.
+
+- [ ] **Step 2: Write the round-trip test** using the existing robot DSL:
+
+```kotlin
+@Test
+fun backupAndRestoreRoundTrip() = runRobot {
+    // Seed DB
+    onboarding.completeWithPresets()
+    transactions.add(amount = 12.50, category = "Food")
+    transactions.add(amount = 99.00, category = "Rent")
+    categories.create(name = "Vacation")
+
+    val before = dao.snapshotEntireDb()
+
+    // Trigger backup via the BackupDetail screen (or directly via BackupUseCase
+    // perform(BackupNow) — robot DSL choice).
+    settings.openBackup()
+    backupDetail.tapBackupNow()
+    backupDetail.waitForState(BackupUseCase.Phase.Idle)
+
+    assertEquals(1, fakeBackupClient.uploadedEnvelopes.size)
+
+    // Wipe DB
+    db.clearAllTables()
+
+    // Restore through the import flow (Drive source → all-new fast path)
+    settings.openBackup()
+    backupDetail.tapRestore()
+    importFlow.waitForRestoreSuccess()
+
+    // Verify
+    val after = dao.snapshotEntireDb()
+    assertEquals(before, after)
+}
+```
+
+- [ ] **Step 3: Acquire emulator** (`./scripts/emulator/acquire`) and run
+
+Run: `./gradlew :app:connectedDebugAndroidTest --tests BackupRestoreRoundTripTest 2>&1 | tail -20`
+Expected: PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/androidTest/java/com/hluhovskyi/zero/backup/
+git commit -m "backup: instrumented backup→restore round-trip test with InMemoryBackupClient"
+```
+
+**What this catches:**
+- SyncEngine.export integration bugs
+- Envelope content shape regressions between export and re-import
+- All-new fast path firing correctly on empty DB
+- Restore UI state transitions through `State.RestoreSuccess`
+- Any drift between `BackupUseCase` state and what the UI renders
+
+**What this does NOT catch** (those stay in Tier 4 manual smoke test):
+- Real Drive API contract changes
+- OAuth flow / Credential Manager UI
+- Real network / quota / 401 behaviour
+
+---
+
+### Task 6: Manual UI verification
 
 - [ ] **Step 1: Acquire emulator + install**
 

@@ -4,7 +4,7 @@
 
 **Goal:** Backup runs automatically every 24 hours on Wi-Fi. User can flip a toggle to allow mobile data. Three consecutive failed auto-backups produce a system notification. Manual `Back up now` ignores the network constraint and coalesces with any in-flight run.
 
-**Architecture:** WorkManager `PeriodicWorkRequest` calls `BackupUseCase.perform(BackupNow)` via a `CoroutineWorker`. The work is enqueued/cancelled by `DefaultBackupViewModel` when sign-in toggles. Notification is posted by an Android-side `BackupNotificationPresenter` observing `backupUseCase.state.consecutiveFailures`. Coalescing already lives in `DefaultBackupUseCase` (Phase 1).
+**Architecture:** WorkManager `PeriodicWorkRequest` calls `BackupUseCase.perform(BackupNow)` via a `CoroutineWorker`. The work is enqueued/cancelled by `DefaultBackupDetailViewModel` when sign-in toggles. Notification is posted by an Android-side `BackupNotificationPresenter` observing `backupUseCase.state.consecutiveFailures`. Coalescing already lives in `DefaultBackupUseCase` (Phase 1).
 
 **Tech Stack:** `androidx.work` (existing in zero ecosystem? — confirm in Task 1), `NotificationManagerCompat`.
 
@@ -109,9 +109,10 @@ git commit -m "backup(app): DriveBackupScheduler + Worker with no-op skip"
 ### Task 3: Wire scheduler to sign-in toggle
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupDetailViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailComponent.kt`
 
-`DefaultBackupViewModel` observes `oauthTokenProvider.isSignedIn` and `configurationRepository`-stored `backup.wifiOnly` config. On `isSignedIn` true → `scheduler.enable(wifiOnly)`. On false → `scheduler.disable()`. On `wifiOnly` change while signed-in → re-enqueue.
+`DefaultBackupDetailViewModel` observes `oauthTokenProvider.isSignedIn` and `configurationRepository`-stored `backup.wifiOnly` config. On `isSignedIn` true → `scheduler.enable(wifiOnly)`. On false → `scheduler.disable()`. On `wifiOnly` change while signed-in → re-enqueue.
 
 `DriveBackupScheduler` is not in `zero-core`'s dependency tree directly (it's Android-side / `app`). To keep the ViewModel platform-agnostic-ish, introduce a small interface `BackupScheduler` in `zero-api`:
 
@@ -129,7 +130,7 @@ And rename `DriveBackupScheduler` → `WorkManagerBackupScheduler : BackupSchedu
 
 - [ ] **Step 2: Rename in app + wire as `@Provides BackupScheduler` in `ApplicationComponent`**
 
-- [ ] **Step 3: Inject `BackupScheduler` into `BackupComponent.Dependencies` and through to `DefaultBackupViewModel`**
+- [ ] **Step 3: Inject `BackupScheduler` into `BackupDetailComponent.Dependencies` and through to `DefaultBackupDetailViewModel`**
 
 - [ ] **Step 4: Add `backup.wifiOnly` config key**
 
@@ -141,7 +142,7 @@ Add `ScopedConfigurationKey<Boolean>` to wherever existing backup-ish keys would
 
 - [ ] **Step 6: Add the "Back up over mobile data" toggle**
 
-Extend `BackupViewModel.Action` with `SetWifiOnly(Boolean)`. Toggle writes via `configurationRepository`. The `BackupViewProvider` renders it as a Material `Switch` inside the existing detail screen (next to "Back up now").
+Extend `BackupDetailViewModel.Action` with `SetWifiOnly(Boolean)`. Toggle writes via `configurationRepository`. The `BackupDetailViewProvider` renders it as a Material `Switch` inside the existing detail screen (next to "Back up now").
 
 - [ ] **Step 7: Build + lint**
 

@@ -10,9 +10,12 @@
 
 **Spec:** [Spec §Restore Lifecycle](../specs/2026-05-21-gdrive-backup-design.md#restore-lifecycle) — "First-launch prompt".
 
+**Design reference:** Design archive `Nkx9GtG-6hWj_RKmVm3biQ`. Before starting, run `zero-project:fetch-design` for that hash. Read:
+- `zero-design-system/project/ui_kits/zero/Welcome Restore.html` — defines `RestorePromptScreen` with 5 variant components: `VariantInitial`, `VariantRestoring`, `VariantSuccess`, `VariantNoBackup`, `VariantFailure`. State machine and transitions are encoded in the prototype's `RESTORE_STATES`.
+
 **Structural analogs:**
 - `WelcomeComponent` (or whatever the existing first-install component is — find it via `grep -r "welcome" zero-core/src/main`).
-- Phase 3's `BackupViewProvider` Connect CTA — same sign-in flow.
+- Phase 3's `BackupDetailViewProvider` Connect CTA — same sign-in flow.
 
 ---
 

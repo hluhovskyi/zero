@@ -2,32 +2,44 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the user-visible side of the connect-and-manual-backup loop. New `BACKUP` section in settings root, a dedicated `BackupComponent` detail screen, sign-in CTA, "Back up now" button, status row, disconnect (basic — confirm dialog comes in Phase 7). No WorkManager yet.
+**Goal:** Ship the user-visible side of the connect-and-manual-backup loop. New `BACKUP` section in settings root, a dedicated `BackupDetailComponent` detail screen, sign-in CTA, "Back up now" button, status row, disconnect (basic — confirm dialog comes in Phase 7). No WorkManager yet.
 
-**Architecture:** Standard project pattern — `BackupComponent` / `BackupViewModel` / `BackupViewProvider` triad scaffolded via `zero-project:scaffold-feature`. `BackupViewModel` is a thin projection of `BackupUseCase.state`; per `feedback_viewmodel_no_derivation`, no sort/check/mapping in ViewModel — extend the use case's State if needed. Settings root gets a new section row that navigates to the detail screen.
+**Architecture:** Standard project pattern — `BackupDetailComponent` / `BackupDetailViewModel` / `BackupDetailViewProvider` triad scaffolded via `zero-project:scaffold-feature`. `BackupDetailViewModel` is a thin projection of `BackupUseCase.state`; per `feedback_viewmodel_no_derivation`, no sort/check/mapping in ViewModel — extend the use case's State if needed. Settings root gets a new section row that navigates to the detail screen.
 
 **Tech Stack:** Compose, Dagger, existing project navigation.
 
 **Spec:** [Spec §Settings UX](../specs/2026-05-21-gdrive-backup-design.md#settings-ux)
 
+**Design reference:** Design archive `Nkx9GtG-6hWj_RKmVm3biQ` (Claude Design). Before starting Phase 3, run `zero-project:fetch-design` for that hash. Read:
+- `zero-design-system/project/ui_kits/zero/index.html` — defines `BackupDetailScreen`, `BackupHeroIllustration`, `BackupStatusBlock` and shows all 5 visual states (Disconnected / Idle / Uploading / Failed / Restoring). The Settings root `BACKUP` section + `Cloud Backup` row with state-driven subtitle and status color is also in this file.
+- `zero-design-system/project/colors_and_type.css` — design tokens; map to `zero-ui/.../theme/` tokens, **never hardcode hex**.
+
+**One copy correction at implementation time:** the Disconnected-state body copy in the design reads *"Save an encrypted copy of your data to your Google Drive."* v1 ships plaintext (encryption is the `format: 2` v2 hedge per the spec). Implement the copy as *"Save a copy of your data to your Google Drive. Restore it on any device, anytime."* — drop "encrypted." Bring the word back when `format: 2` ships.
+
 **Structural analogs:**
-- `SettingsComponent.kt` for the detail-screen Component shape (it also lives at the settings root, so naming + scope match).
+- `SettingsComponent.kt` for the detail-screen Component shape (Dagger component with `@<Feature>Scope`, Builder + `@BindsInstance`, internal ViewModel).
 - `SettingsViewProvider.kt` for the row + section composables (reuse `MoreSection` + `MoreRow`).
 - `BiometricLockGateViewModel.kt` for a small state-projection ViewModel.
 
+**Scope annotation:** use `@BackupDetailScope` for the UI Dagger component — distinct from the `BackupComponent` factory in `zero-backup` (which is manual DI, no Dagger scope). The UI scope owns Compose-collector coroutines; the factory scope owns the use case.
+
 ---
 
-### Task 1: Scaffold `BackupComponent` / `BackupViewModel` / `BackupViewProvider`
+### Task 1: Scaffold `BackupDetail` triad
 
-**Files:** Auto-created by skill.
+**Naming note:** the UI component is `BackupDetailComponent`, not `BackupComponent`. The factory in `zero-backup` already owns the `BackupComponent` name (see Phase 1 Task 5) and both would live in the same `com.hluhovskyi.zero.backup` package — Dagger would generate two `DaggerBackupComponent`s and collide. `BackupDetailComponent` matches the screen's purpose (the settings-detail screen for backup configuration) and avoids the collision.
+
+**Files:** Auto-created by skill, then renamed.
 
 - [ ] **Step 1: Run scaffold-feature**
 
 ```
-Run `zero-project:scaffold-feature` for `Backup` in `zero-core/.../backup/`.
+Run `zero-project:scaffold-feature` for `BackupDetail` in `zero-core/.../backup/`.
 ```
 
-Generates: `BackupComponent`, `BackupViewModel`, `DefaultBackupViewModel`, `BackupViewProvider`. They are stubs.
+Generates: `BackupDetailComponent`, `BackupDetailViewModel`, `DefaultBackupDetailViewModel`, `BackupDetailViewProvider` in `zero-core/src/main/java/com/hluhovskyi/zero/backup/`.
+
+If the scaffold-feature skill doesn't accept a multi-word feature name cleanly, run with `Backup` and then rename `Backup*` → `BackupDetail*` across the four generated files before committing.
 
 - [ ] **Step 2: Confirm stubs build**
 
@@ -38,23 +50,23 @@ Expected: BUILD SUCCESSFUL.
 
 ```bash
 git add zero-core/src/main/java/com/hluhovskyi/zero/backup/
-git commit -m "backup(ui): scaffold BackupComponent triad"
+git commit -m "backup(ui): scaffold BackupDetail triad"
 ```
 
 ---
 
-### Task 2: Define `BackupViewModel.State` + `Action` + projection
+### Task 2: Define `BackupDetailViewModel.State` + `Action` + projection
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewModel.kt`
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupDetailViewModel.kt`
 
 Per `feedback_viewmodel_no_derivation`, this ViewModel **does no derivation**. It maps `BackupUseCase.State` 1:1 to a display state plus the in-memory `isSignedIn` flow from `OAuthTokenProvider`.
 
 - [ ] **Step 1: Define the State**
 
 ```kotlin
-sealed interface BackupViewModel {
+sealed interface BackupDetailViewModel {
     val state: kotlinx.coroutines.flow.Flow<State>
     fun perform(action: Action)
     fun attach(): java.io.Closeable
@@ -76,7 +88,7 @@ sealed interface BackupViewModel {
 }
 ```
 
-- [ ] **Step 2: Implement `DefaultBackupViewModel`** with a `combine` of `oauthTokenProvider.isSignedIn` + `backupUseCase.state` + a held `accountLabel` (re-read from `SecureKeyValueStore` once at attach). `perform(Connect)` calls `oauthTokenProvider.signIn()`. `perform(BackupNow)` calls `backupUseCase.perform(BackupNow)`. `perform(Restore)` logs `Timber.w("Restore not wired until Phase 5")`. `perform(Disconnect)` calls `oauthTokenProvider.revoke()` directly (confirm dialog lands in Phase 7).
+- [ ] **Step 2: Implement `DefaultBackupDetailViewModel`** with a `combine` of `oauthTokenProvider.isSignedIn` + `backupUseCase.state` + a held `accountLabel` (re-read from `SecureKeyValueStore` once at attach). `perform(Connect)` calls `oauthTokenProvider.signIn()`. `perform(BackupNow)` calls `backupUseCase.perform(BackupNow)`. `perform(Restore)` logs `Timber.w("Restore not wired until Phase 5")`. `perform(Disconnect)` calls `oauthTokenProvider.revoke()` directly (confirm dialog lands in Phase 7).
 
 - [ ] **Step 3: Compile**
 
@@ -86,15 +98,15 @@ Run: `./gradlew :zero-core:assembleDebug 2>&1 | tail -10`
 
 ```bash
 git add zero-core/src/main/java/com/hluhovskyi/zero/backup/
-git commit -m "backup(ui): BackupViewModel state + projection over BackupUseCase"
+git commit -m "backup(ui): BackupDetailViewModel state + projection over BackupUseCase"
 ```
 
 ---
 
-### Task 3: `BackupViewProvider` Compose UI
+### Task 3: `BackupDetailViewProvider` Compose UI
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewProvider.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewProvider.kt`
 - Add: strings to `zero-core/src/main/res/values/strings.xml`
 
 Use the same `MoreSection` + `MoreRow` building blocks as `SettingsViewProvider`. **Read `SettingsViewProvider.kt` first** to copy the section composable rather than redefining it.
@@ -125,7 +137,7 @@ Layout:
 
 - [ ] **Step 1: Add strings** — backup_section_account, backup_section_actions, backup_section_status, backup_section_danger, backup_connect, backup_now, backup_restore, backup_disconnect, backup_last_at, backup_failed, backup_in_progress, backup_signed_in_as.
 
-- [ ] **Step 2: Implement composable** in `BackupViewProvider.View()`. Use `DateFormatter` for the "X ago" rendering (the same one `MainScreen` uses; pull it from existing usage as a model).
+- [ ] **Step 2: Implement composable** in `BackupDetailViewProvider.View()`. Use `DateFormatter` for the "X ago" rendering (the same one `MainScreen` uses; pull it from existing usage as a model).
 
 - [ ] **Step 3: Wire snackbar messages** for `Result.Cancelled` from sign-in, generic failure, etc. Reuse the existing snackbar host pattern from `SettingsViewProvider`.
 
@@ -134,9 +146,9 @@ Layout:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewProvider.kt \
+git add zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewProvider.kt \
         zero-core/src/main/res/values/strings.xml
-git commit -m "backup(ui): BackupViewProvider Compose layout"
+git commit -m "backup(ui): BackupDetailViewProvider Compose layout"
 ```
 
 ---
@@ -170,7 +182,7 @@ The settings-root row reads `BackupUseCase.state` directly to render its seconda
   - else with `lastSuccessAt` → "Last backed up <X ago>"
   - else → "On"
 
-- [ ] **Step 6: Register the destination** in `ActivityComponent` per [navigation.md](../../agents/navigation.md). Use `accountNavigationEntry` as the structural reference (it's a similar single-screen destination without args). Build it via `NavigatorScope.buildable(BackupDestination) { ... BackupComponent.builder(...) ... }`.
+- [ ] **Step 6: Register the destination** in `ActivityComponent` per [navigation.md](../../agents/navigation.md). Use `accountNavigationEntry` as the structural reference (it's a similar single-screen destination without args). Build it via `NavigatorScope.buildable(BackupDestination) { ... BackupDetailComponent.builder(...) ... }`.
 
 - [ ] **Step 7: Compile + lint**
 

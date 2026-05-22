@@ -4,7 +4,7 @@
 
 **Goal:** Disconnecting from Google Drive shows a confirm dialog that asks "Also delete the existing backup from Google Drive?" with `Delete backup` (default, destructive) and `Keep backup` options. The token is revoked either way. Phase 3's basic disconnect is replaced by this richer flow.
 
-**Architecture:** Two additions: a confirm dialog in `BackupViewProvider` and a new `Action.DisconnectConfirmed(deleteRemote: Boolean)`. The ViewModel orchestrates revoke + optional remote delete via `BackupClient.delete()`.
+**Architecture:** Two additions: a confirm dialog in `BackupDetailViewProvider` and a new `Action.DisconnectConfirmed(deleteRemote: Boolean)`. The ViewModel orchestrates revoke + optional remote delete via `BackupClient.delete()`.
 
 **Tech Stack:** Existing — Compose AlertDialog, `BackupClient`, `OAuthTokenProvider`.
 
@@ -18,10 +18,10 @@
 ### Task 1: Add confirm-dialog state + actions
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewModel.kt`
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupDetailViewModel.kt`
 
-- [ ] **Step 1: Extend `BackupViewModel.State`** with a `confirmDialog: ConfirmDialog? = null` field.
+- [ ] **Step 1: Extend `BackupDetailViewModel.State`** with a `confirmDialog: ConfirmDialog? = null` field.
 
 ```kotlin
 sealed interface ConfirmDialog {
@@ -29,7 +29,7 @@ sealed interface ConfirmDialog {
 }
 ```
 
-- [ ] **Step 2: Extend `BackupViewModel.Action`** with:
+- [ ] **Step 2: Extend `BackupDetailViewModel.Action`** with:
 
 ```kotlin
 object Disconnect : Action          // shows the dialog
@@ -39,7 +39,7 @@ data class DisconnectConfirmed(val deleteRemote: Boolean) : Action
 
 (Replace the Phase 3 `Disconnect` semantics — that one currently revokes directly.)
 
-- [ ] **Step 3: Implement transitions in `DefaultBackupViewModel`**:
+- [ ] **Step 3: Implement transitions in `DefaultBackupDetailViewModel`**:
 
 - `Disconnect` → emit state with `confirmDialog = ConfirmDialog.Disconnect`. Do not call revoke yet.
 - `DisconnectDismiss` → emit state with `confirmDialog = null`. No side effect.
@@ -61,10 +61,10 @@ git commit -m "backup(disconnect): add confirm-dialog state + actions"
 
 ---
 
-### Task 2: Render confirm dialog in `BackupViewProvider`
+### Task 2: Render confirm dialog in `BackupDetailViewProvider`
 
 **Files:**
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewProvider.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewProvider.kt`
 - Add strings.
 
 - [ ] **Step 1: Render the dialog**
@@ -92,7 +92,7 @@ backup_disconnect_title, backup_disconnect_body, backup_disconnect_delete, backu
 - [ ] **Step 5: Commit**
 
 ```bash
-git add zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupViewProvider.kt \
+git add zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailViewProvider.kt \
         zero-core/src/main/res/values/strings.xml
 git commit -m "backup(disconnect): confirm AlertDialog + delete-failed snackbar"
 ```

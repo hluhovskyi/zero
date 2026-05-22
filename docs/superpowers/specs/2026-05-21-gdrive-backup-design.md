@@ -252,7 +252,7 @@ BACKUP
   └──────────────────────────────────────────────────┘
 ```
 
-Tapping the row opens a `BackupComponent` detail screen with:
+Tapping the row opens a `BackupDetailComponent` screen with (note: the screen is reachable from anywhere — settings row, notification deep-link, restore-failure banner — so the name doesn't bake in "settings"):
 
 - Sign-in CTA (when disconnected) — primary button "Connect Google Drive". Tap triggers `OAuthTokenProvider.signIn()` flow.
 - Account row (when connected) — shows the signed-in Google account email.
@@ -262,7 +262,7 @@ Tapping the row opens a `BackupComponent` detail screen with:
 - "Disconnect" destructive action.
 - Status block with last-backup info, last-error info if any.
 
-This screen is a single new `BackupComponent` / `BackupViewModel` / `BackupViewProvider` triad. Standard pattern; no special scaffolding.
+This screen is a single new `BackupDetailComponent` / `BackupDetailViewModel` / `BackupDetailViewProvider` triad. Standard pattern; no special scaffolding. (Renamed from `BackupComponent*` to avoid FQN collision with the `BackupComponent` factory in `zero-backup`. The screen is reachable from settings, notification deep-links, and inline error banners — not coupled to a single launching context.)
 
 ---
 
@@ -324,20 +324,37 @@ Android-type OAuth clients are public clients identified by package name + SHA-1
 
 ## Testing
 
-### Unit tests (per module)
+Tiered, from cheapest/most-coverage to highest-fidelity/least-automatable.
 
-- `zero-backup`: `DefaultBackupUseCaseTest`, `BackupEnvelopeSerializerTest`, `DriveBackupClientTest` (against a fake `HttpExecutor`). No Android, no real Drive.
-- `zero-remote`: `OkHttpHttpExecutorTest` against `MockWebServer` (same pattern as `OkHttpFeedbackServiceTest`). `DriveOAuthTokenProviderTest` against a fake Credential Manager.
+### Tier 1 — Unit tests (per module, run in CI)
+
+- `zero-backup`: `DefaultBackupUseCaseTest` (state machine, coalescing, 3-strike counter), `BackupEnvelopeSerializerTest` (round-trip + v1 fixture + unknown-format rejection), `DriveBackupClientTest` against a fake `HttpExecutor` (URLs, headers, status-code → BackupError mapping). No Android, no real Drive.
+- `zero-auth`: `GoogleOAuthTokenProviderTest` against a fake `HttpExecutor` + in-memory `SecureKeyValueStore` (token caching, refresh, revoke, signed-out-server-side handling). Sign-in itself can't be unit-tested (Credential Manager is system UI).
+- `zero-remote`: `OkHttpHttpExecutorTest` against `MockWebServer` (same pattern as `OkHttpFeedbackServiceTest`).
 - `zero-core`: `DefaultImportUseCaseTest` gains "all-new fast path" cases.
 
-### Integration tests
+### Tier 2 — MockWebServer wire-format test (in CI)
 
-- Round-trip envelope: `Snapshot → envelope → JSON → envelope → Snapshot` equality.
-- Backward-compat fixture: commit a `v1-envelope.json` fixture. Future format changes never modify existing fixtures.
+`DriveBackupClientWireFormatTest` uses the real `OkHttpHttpExecutor` against `MockWebServer` configured to look like Drive. Catches OkHttp-level bugs and Drive-shape mistakes (wrong query params, response-field mismatches) that the Tier 1 fakes mask. Six cases covering upload multipart, list query, download `alt=media`, 401 → AuthExpired, 403 quota → QuotaExceeded. Phase 2 Task 8.
 
-### Manual end-to-end (per phase)
+### Tier 3 — Instrumented backup→restore round-trip (in CI on emulator)
 
-Each phase plan includes its own manual verification step. The cross-phase E2E is: install on Device A → enable backup → back up → install on Device B → restore → diff DB.
+`BackupRestoreRoundTripTest` on an emulator. Wires the full pipeline (DB → SyncEngine.export → envelope → fake upload → fake download → SyncEngine.import → DB) end-to-end. `BackupClient` is substituted with an in-memory `InMemoryBackupClient`. Catches integration bugs across SyncEngine + envelope + use case + restore parser + UI state transitions. Phase 5 Task 5.
+
+### Tier 4 — Real-Drive manual smoke (per phase, gated on PR)
+
+A pre-set dev Google account, manual sign-in through Credential Manager, real upload/download/restore against `appDataFolder`. Can't be automated: Credential Manager UI is system UI, and tying CI to a live Google account is operationally brittle. Phase 2 Task 9 establishes the protocol; subsequent phases re-run it.
+
+### Tier 5 — Internal Testing track canary
+
+v1 ships to Play Internal Testing only (matching `feedback-infra` precedent). Catches real-world issues no test rig simulates: cellular conditions, real Drive quota behaviour, OAuth token expiry under real load, consent-prompt UX. Promote to Production only after a multi-week canary.
+
+### Backward-compatibility fixtures
+
+Committed JSON fixtures in `zero-backup/src/test/resources/fixtures/backup/`:
+- `v1-envelope.json` — added in Phase 1. Round-tripped by every CI run.
+
+When the envelope format changes in a breaking way, add a `v2-*.json` fixture set — **never modify existing ones.** This guarantees historical backups remain readable.
 
 ---
 
