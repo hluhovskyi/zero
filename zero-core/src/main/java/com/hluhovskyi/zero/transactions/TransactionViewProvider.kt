@@ -55,7 +55,6 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
@@ -131,7 +130,11 @@ private fun TransactionView(
             .collect { fabExpanded = it }
     }
 
-    Box(modifier = Modifier.fillMaxSize().focusTarget()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .focusTarget(),
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (displayConfig.showSearchBar || displayConfig.showFilterButton) {
                 Row(
@@ -144,7 +147,13 @@ private fun TransactionView(
                         SearchBar(
                             placeholder = stringResource(R.string.transaction_search_placeholder),
                             query = state.searchQuery,
-                            onQueryChange = { viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery(it)) },
+                            onQueryChange = {
+                                viewModel.perform(
+                                    TransactionViewModel.Action.UpdateSearchQuery(
+                                        it,
+                                    ),
+                                )
+                            },
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -172,7 +181,11 @@ private fun TransactionView(
                 )
             }
 
-            if (state.searchQuery.isNotBlank() && state.transactions.isEmpty()) {
+            val showEmpty by remember {
+                derivedStateOf { state.searchQuery.isNotBlank() && state.transactions.isEmpty() }
+            }
+
+            if (showEmpty) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -191,7 +204,23 @@ private fun TransactionView(
                     state = lazyListState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
                 ) {
-                    items(state.transactions) { transaction ->
+                    items(
+                        items = state.transactions,
+                        contentType = { item ->
+                            when (item) {
+                                is TransactionViewModel.Item.Summary -> "summary"
+                                is TransactionViewModel.Item.Transaction.Expense -> "expense"
+                                is TransactionViewModel.Item.Transaction.Income -> "income"
+                                is TransactionViewModel.Item.Transaction.Transfer -> "transfer"
+                            }
+                        },
+                        key = { item ->
+                            when (item) {
+                                is TransactionViewModel.Item.Summary -> item.date.toEpochDays()
+                                is TransactionViewModel.Item.Transaction -> item.id.value
+                            }
+                        },
+                    ) { transaction ->
                         when (transaction) {
                             is TransactionViewModel.Item.Summary -> {
                                 val isFirst = state.transactions.first() == transaction
@@ -225,143 +254,25 @@ private fun TransactionView(
                                     )
                                 }
                             }
-                            is TransactionViewModel.Item.Transaction -> {
-                                val cardShape = RoundedCornerShape(12.dp)
-                                val contentModifier = Modifier
-                                    .fillMaxWidth()
-                                    .combinedClickable(
-                                        onClick = { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) },
-                                        onLongClick = { expandedItemId = transaction.id },
-                                    )
-                                    .padding(horizontal = 16.dp, vertical = 14.dp)
 
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 12.dp)
-                                        .clip(cardShape)
-                                        .background(Color(0xFFFFFFFF)),
-                                ) {
-                                    when (transaction) {
-                                        is TransactionViewModel.Item.Transaction.Expense ->
-                                            TransactionExpenseView(
-                                                modifier = contentModifier,
-                                                categoryName = transaction.categoryName,
-                                                amount = amountFormatter.format(
-                                                    amount = transaction.amount,
-                                                    currencySymbol = transaction.currencySymbol,
-                                                ),
-                                                accountName = transaction.accountName,
-                                                iconColorScheme = transaction.categoryColorScheme.toUi(),
-                                                accountIcon = {
-                                                    imageLoader.View(
-                                                        image = transaction.accountIcon,
-                                                        modifier = Modifier
-                                                            .padding(end = 6.dp)
-                                                            .size(14.dp),
-                                                        tint = Color(0xFF44464F),
-                                                    )
-                                                },
-                                                convertedAmount = transaction.conversion.format(amountFormatter),
-                                                icon = transaction.categoryIcon.toTintedComposable(
-                                                    imageLoader = imageLoader,
-                                                    modifier = Modifier.size(24.dp),
-                                                ),
-                                            )
-                                        is TransactionViewModel.Item.Transaction.Income -> {
-                                            TransactionIncomeView(
-                                                modifier = contentModifier,
-                                                categoryName = transaction.categoryName,
-                                                amount = amountFormatter.format(
-                                                    amount = transaction.amount,
-                                                    currencySymbol = transaction.currencySymbol,
-                                                ),
-                                                accountName = transaction.accountName,
-                                                iconColorScheme = transaction.categoryColorScheme.toUi(),
-                                                accountIcon = {
-                                                    imageLoader.View(
-                                                        image = transaction.accountIcon,
-                                                        modifier = Modifier
-                                                            .padding(end = 6.dp)
-                                                            .size(14.dp),
-                                                        tint = Color(0xFF44464F),
-                                                    )
-                                                },
-                                                convertedAmount = transaction.conversion.format(amountFormatter),
-                                                icon = transaction.categoryIcon.toTintedComposable(
-                                                    imageLoader = imageLoader,
-                                                    modifier = Modifier.size(24.dp),
-                                                ),
-                                            )
-                                        }
-                                        is TransactionViewModel.Item.Transaction.Transfer -> {
-                                            TransactionTransferView(
-                                                modifier = contentModifier,
-                                                sourceAccountName = transaction.accountName,
-                                                targetAccountName = transaction.targetAccountName,
-                                                sourceAmount = amountFormatter.format(
-                                                    amount = transaction.amount,
-                                                    currencySymbol = transaction.currencySymbol,
-                                                ),
-                                                targetAmount = amountFormatter.format(
-                                                    amount = transaction.targetAmount,
-                                                    currencySymbol = transaction.targetCurrencySymbol,
-                                                ),
-                                                transferIconColorScheme = transaction.transferColorScheme.toUi(),
-                                                transferIcon = transaction.transferIcon.toTintedComposable(
-                                                    imageLoader = imageLoader,
-                                                    modifier = Modifier.size(24.dp),
-                                                ),
-                                            )
-                                        }
-                                    }
-
-                                    DropdownMenu(
-                                        expanded = expandedItemId == transaction.id,
-                                        onDismissRequest = { expandedItemId = null },
-                                    ) {
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                viewModel.perform(TransactionViewModel.Action.DuplicateTransaction(transaction.id))
-                                                expandedItemId = null
-                                            },
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.ContentCopy,
-                                                    contentDescription = null,
-                                                    tint = OnSurfaceVariant,
-                                                    modifier = Modifier.size(20.dp),
-                                                )
-                                                Spacer(modifier = Modifier.size(8.dp))
-                                                Text(
-                                                    text = stringResource(R.string.transaction_duplicate),
-                                                )
-                                            }
-                                        }
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                viewModel.perform(TransactionViewModel.Action.DeleteTransaction(transaction.id))
-                                                expandedItemId = null
-                                            },
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.Delete,
-                                                    contentDescription = null,
-                                                    tint = Color(0xFFBA1A1A),
-                                                    modifier = Modifier.size(20.dp),
-                                                )
-                                                Spacer(modifier = Modifier.size(8.dp))
-                                                Text(
-                                                    text = stringResource(R.string.transaction_delete),
-                                                    color = Color(0xFFBA1A1A),
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            is TransactionViewModel.Item.Transaction ->
+                                TransactionRow(
+                                    transaction = transaction,
+                                    imageLoader = imageLoader,
+                                    amountFormatter = amountFormatter,
+                                    expanded = expandedItemId == transaction.id,
+                                    onSelect = { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) },
+                                    onLongPress = { expandedItemId = transaction.id },
+                                    onDismissMenu = { expandedItemId = null },
+                                    onDuplicate = {
+                                        viewModel.perform(TransactionViewModel.Action.DuplicateTransaction(transaction.id))
+                                        expandedItemId = null
+                                    },
+                                    onDelete = {
+                                        viewModel.perform(TransactionViewModel.Action.DeleteTransaction(transaction.id))
+                                        expandedItemId = null
+                                    },
+                                )
                         }
                     }
                 }
@@ -379,6 +290,169 @@ private fun TransactionView(
                 expanded = fabExpanded,
                 text = stringResource(R.string.transaction_add),
             )
+        }
+    }
+}
+
+@Composable
+private fun TransactionRow(
+    transaction: TransactionViewModel.Item.Transaction,
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
+    expanded: Boolean,
+    onSelect: () -> Unit,
+    onLongPress: () -> Unit,
+    onDismissMenu: () -> Unit,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val cardShape = RoundedCornerShape(12.dp)
+    val contentModifier = Modifier
+        .fillMaxWidth()
+        .combinedClickable(
+            onClick = onSelect,
+            onLongClick = onLongPress,
+        )
+        .padding(horizontal = 16.dp, vertical = 14.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = 2.dp,
+                end = 2.dp,
+                top = 2.dp,
+                bottom = 12.dp,
+            )
+            .clip(cardShape)
+            .background(Color(0xFFFFFFFF)),
+    ) {
+        when (transaction) {
+            is TransactionViewModel.Item.Transaction.Expense ->
+                TransactionExpenseView(
+                    modifier = contentModifier,
+                    categoryName = transaction.categoryName,
+                    amount = amountFormatter.format(
+                        amount = transaction.amount,
+                        currencySymbol = transaction.currencySymbol,
+                    ),
+                    accountName = transaction.accountName,
+                    iconColorScheme = transaction.categoryColorScheme.toUi(),
+                    accountIcon = {
+                        imageLoader.View(
+                            image = transaction.accountIcon,
+                            modifier = Modifier
+                                .padding(end = 6.dp)
+                                .size(14.dp),
+                            tint = Color(0xFF44464F),
+                        )
+                    },
+                    convertedAmount = transaction.conversion.format(
+                        amountFormatter,
+                    ),
+                    icon = { tint ->
+                        imageLoader.View(
+                            image = transaction.categoryIcon,
+                            modifier = Modifier.size(24.dp),
+                            tint = tint,
+                        )
+                    },
+                )
+
+            is TransactionViewModel.Item.Transaction.Income -> {
+                TransactionIncomeView(
+                    modifier = contentModifier,
+                    categoryName = transaction.categoryName,
+                    amount = amountFormatter.format(
+                        amount = transaction.amount,
+                        currencySymbol = transaction.currencySymbol,
+                    ),
+                    accountName = transaction.accountName,
+                    iconColorScheme = transaction.categoryColorScheme.toUi(),
+                    accountIcon = {
+                        imageLoader.View(
+                            image = transaction.accountIcon,
+                            modifier = Modifier
+                                .padding(end = 6.dp)
+                                .size(14.dp),
+                            tint = Color(0xFF44464F),
+                        )
+                    },
+                    convertedAmount = transaction.conversion.format(
+                        amountFormatter,
+                    ),
+                    icon = { tint ->
+                        imageLoader.View(
+                            image = transaction.categoryIcon,
+                            modifier = Modifier.size(24.dp),
+                            tint = tint,
+                        )
+                    },
+                )
+            }
+
+            is TransactionViewModel.Item.Transaction.Transfer -> {
+                TransactionTransferView(
+                    modifier = contentModifier,
+                    sourceAccountName = transaction.accountName,
+                    targetAccountName = transaction.targetAccountName,
+                    sourceAmount = amountFormatter.format(
+                        amount = transaction.amount,
+                        currencySymbol = transaction.currencySymbol,
+                    ),
+                    targetAmount = amountFormatter.format(
+                        amount = transaction.targetAmount,
+                        currencySymbol = transaction.targetCurrencySymbol,
+                    ),
+                    transferIconColorScheme = transaction.transferColorScheme.toUi(),
+                    transferIcon = { tint ->
+                        imageLoader.View(
+                            image = transaction.transferIcon,
+                            modifier = Modifier.size(24.dp),
+                            tint = tint,
+                        )
+                    },
+                )
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismissMenu,
+        ) {
+            DropdownMenuItem(
+                onClick = onDuplicate,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
+                        contentDescription = null,
+                        tint = OnSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.transaction_duplicate),
+                    )
+                }
+            }
+            DropdownMenuItem(
+                onClick = onDelete,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = Color(0xFFBA1A1A),
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.transaction_delete),
+                        color = Color(0xFFBA1A1A),
+                    )
+                }
+            }
         }
     }
 }
@@ -445,13 +519,21 @@ private fun FilterChipsRow(
             }
             filter.categoryIds?.let { ids ->
                 FilterChip(
-                    label = pluralStringResource(R.plurals.filter_chip_categories, ids.size, ids.size),
+                    label = pluralStringResource(
+                        R.plurals.filter_chip_categories,
+                        ids.size,
+                        ids.size,
+                    ),
                     onRemove = onRemoveCategories,
                 )
             }
             filter.accountIds?.let { ids ->
                 FilterChip(
-                    label = pluralStringResource(R.plurals.filter_chip_accounts, ids.size, ids.size),
+                    label = pluralStringResource(
+                        R.plurals.filter_chip_accounts,
+                        ids.size,
+                        ids.size,
+                    ),
                     onRemove = onRemoveAccounts,
                 )
             }
@@ -530,14 +612,3 @@ private fun DateFormatter.format(
     monthConfig = DateFormatter.MonthConfig.Readable,
     yearConfig = DateFormatter.YearConfig.SkipCurrent,
 )
-
-private fun Image.toTintedComposable(
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-): @Composable (tint: Color) -> Unit = { tint ->
-    imageLoader.View(
-        image = this,
-        modifier = modifier,
-        tint = tint,
-    )
-}
