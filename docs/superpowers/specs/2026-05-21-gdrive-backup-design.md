@@ -58,8 +58,9 @@ zero-backup                           (NEW, pure Kotlin JVM — mirrors zero-syn
 zero-remote                           (Android — additions)
   drive/
     DriveOAuthTokenProvider.kt        ← Credential Manager + googleid + token exchange
+                                         (provided via RemoteComponent)
     OkHttpHttpExecutor.kt             ← wraps existing OkHttpClient, implements HttpExecutor
-    AndroidSecureKeyValueStore.kt     ← EncryptedSharedPreferences
+                                         (provided via RemoteComponent)
 
 zero-core                             (Android — additions)
   backup/                             ← settings detail screen for Google Drive backup
@@ -70,6 +71,10 @@ zero-core                             (Android — additions)
 app                                   (Android — wiring + Android-only concerns)
   backup/DriveBackupSchedulerWorker.kt    ← WorkManager periodic worker
   backup/BackupNotificationPresenter.kt   ← system notification on 3 consecutive failures
+  security/AndroidSecureKeyValueStore.kt  ← EncryptedSharedPreferences — provided directly
+                                              from ApplicationComponent (not zero-remote, since it
+                                              isn't a networked concern). DriveOAuthTokenProvider
+                                              receives it via RemoteComponent.Dependencies.
   ApplicationComponent.kt             ← wires zero-backup against the Android impls
 
 app/src/main/res/xml/                 ← Android Auto Backup rules (Phase 0)
@@ -259,9 +264,9 @@ Files:
 
 Rules include:
 - `<include domain="database" path="zero.db">` — the main Room DB.
-- `<include domain="sharedpref" path="zero_secure_prefs">` — backup credential (after Phase 2 introduces this).
 - `<exclude domain="database" path="zero.db-shm">` and `<exclude domain="database" path="zero.db-wal">` — SQLite journals are device-specific.
 - `<exclude domain="sharedpref" path="com.google.android.gms.appid.xml">` — Play Services internal.
+- `<exclude domain="sharedpref" path="zero_secure_prefs">` — Drive OAuth refresh token store (added by Phase 2). Encrypted with a Keystore-backed `MasterKey` that is **device-bound** — Keystore keys cannot be exported or restored on another device, so an `<include>` would push an undecryptable blob. The correct UX on phone swap is to re-sign-in.
 
 **Migration caveat:** if a user backed up at schema vN and restores into vN+M, Room migrations run on first launch. Already supported by `MainDatabase.kt` — no new code needed.
 

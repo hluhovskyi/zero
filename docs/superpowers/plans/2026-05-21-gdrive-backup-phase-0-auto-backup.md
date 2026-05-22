@@ -193,4 +193,4 @@ No UI verification needed — this phase doesn't touch any UI.
 
 - Notifying users that Auto Backup ran. Auto Backup is implicit; that's the point.
 - Excluding specific tables. Whole DB is in or out.
-- Backing up Drive credentials (Phase 2 introduces `zero_secure_prefs`; that include line will be added in Phase 2's plan, not here).
+- Backing up Drive credentials. Phase 2 introduces `zero_secure_prefs` and adds an explicit `<exclude>` rule for it — Keystore master keys are device-bound, so the encrypted blob cannot survive transfer. Re-sign-in on the new device is the correct flow.

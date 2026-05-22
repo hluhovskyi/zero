@@ -4,7 +4,11 @@
 
 **Goal:** Replace Phase 1's `NoopBackupClient` with a real Drive REST implementation backed by Credential Manager OAuth, OkHttp transport, and EncryptedSharedPreferences. End-to-end against a real Google account by the end of the phase. Still no UI — exercised via a temporary developer entry point.
 
-**Architecture:** Three new Android-side implementations of `zero-api` interfaces: `OkHttpHttpExecutor`, `DriveOAuthTokenProvider`, `AndroidSecureKeyValueStore` — all `internal` to `zero-remote`. `DriveBackupClient` (pure Kotlin in `zero-backup`) composes them. `ApplicationComponent` wires it all and replaces the noop.
+**Architecture:** Three new Android-side implementations of `zero-api` interfaces:
+- `OkHttpHttpExecutor` and `DriveOAuthTokenProvider` — `internal` to `zero-remote`, provided via `RemoteComponent`.
+- `AndroidSecureKeyValueStore` — lives in `app/`, provided directly from `ApplicationComponent` (not networked, so it doesn't belong in `zero-remote`). `DriveOAuthTokenProvider` receives it via an expanded `RemoteComponent.Dependencies`.
+
+`DriveBackupClient` (pure Kotlin in `zero-backup`) composes them. `ApplicationComponent` wires it all and replaces the noop.
 
 **Tech Stack:** OkHttp (existing), kotlinx-serialization (existing), `androidx.credentials` (new), `com.google.android.libraries.identity.googleid` (new), `androidx.security:security-crypto` (new for EncryptedSharedPreferences).
 
@@ -22,6 +26,9 @@
 **Files:**
 - Modify: `build.gradle` (root, the `deps` map and `versions` map)
 - Modify: `zero-remote/build.gradle`
+- Modify: `app/build.gradle`
+
+Credential Manager + googleid are sign-in concerns (used by `DriveOAuthTokenProvider` in `zero-remote`) → go into `zero-remote`. `security-crypto` is the EncryptedSharedPreferences lib, used by `AndroidSecureKeyValueStore` which lives in `app` → goes into `app`.
 
 - [ ] **Step 1: Append to the root `deps` map**
 
@@ -38,19 +45,24 @@ securityCrypto             : "androidx.security:security-crypto:1.1.0-alpha06",
 implementation deps.credentials
 implementation deps.credentialsPlayServicesAuth
 implementation deps.googleId
+```
+
+- [ ] **Step 3: Add to `app/build.gradle` dependencies block**
+
+```
 implementation deps.securityCrypto
 ```
 
-- [ ] **Step 3: Build to confirm resolution**
+- [ ] **Step 4: Build to confirm resolution**
 
-Run: `./gradlew :zero-remote:assembleDebug 2>&1 | tail -10`
+Run: `./gradlew :app:assembleDebug 2>&1 | tail -10`
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add build.gradle zero-remote/build.gradle
-git commit -m "backup(remote): add Credential Manager + EncryptedSharedPreferences deps"
+git add build.gradle zero-remote/build.gradle app/build.gradle
+git commit -m "backup: add Credential Manager (zero-remote) + EncryptedSharedPreferences (app) deps"
 ```
 
 ---
@@ -103,27 +115,38 @@ git commit -m "backup(remote): add OkHttpHttpExecutor + RemoteComponent provide"
 
 ---
 
-### Task 3: `AndroidSecureKeyValueStore`
+### Task 3: `AndroidSecureKeyValueStore` + Auto Backup exclusion
+
+`AndroidSecureKeyValueStore` lives in `app/` (not `zero-remote`) because EncryptedSharedPreferences is not a networked concern. It's provided directly from `ApplicationComponent`, like `ImageLoader` or `idGenerator` are today. `DriveOAuthTokenProvider` (in `zero-remote`) receives it via `RemoteComponent.Dependencies` — see Task 4.
 
 **Files:**
-- Create: `zero-remote/src/main/java/com/hluhovskyi/zero/drive/AndroidSecureKeyValueStore.kt`
-- Create: `zero-remote/src/androidTest/java/com/hluhovskyi/zero/drive/AndroidSecureKeyValueStoreInstrumentedTest.kt` *(optional — see Step 5)*
+- Create: `app/src/main/java/com/hluhovskyi/zero/security/AndroidSecureKeyValueStore.kt`
+- Modify: `app/src/main/res/xml/backup_rules.xml`
+- Modify: `app/src/main/res/xml/data_extraction_rules.xml`
 
-- [ ] **Step 1: Implement** — `internal class AndroidSecureKeyValueStore(context: Context) : SecureKeyValueStore`. Backs onto `EncryptedSharedPreferences` with `MasterKey` (`KeyScheme.AES256_GCM`). Use file name `"zero_secure_prefs"`. All methods run on `Dispatchers.IO`.
+- [ ] **Step 1: Implement** — `class AndroidSecureKeyValueStore(context: Context) : SecureKeyValueStore`. Backs onto `EncryptedSharedPreferences` with `MasterKey` (`KeyScheme.AES256_GCM`). Use file name `"zero_secure_prefs"`. All methods run on `Dispatchers.IO`.
 
-- [ ] **Step 2: Provide via `RemoteComponent`** — add `val secureKeyValueStore: SecureKeyValueStore` to the interface and the corresponding `@Provides` in the module.
+- [ ] **Step 2: Provide via `ApplicationComponent`** — in `ApplicationComponent.Module`, add a `@Provides @ApplicationScope` factory returning `AndroidSecureKeyValueStore(context)` as `SecureKeyValueStore`.
 
-- [ ] **Step 3: Update Phase 0's backup_rules.xml** to include `zero_secure_prefs` so refresh tokens survive device transfer (intentional — `appDataFolder` is per-Google-account anyway, so re-binding on a new device with the same account is safe). Add to both `backup_rules.xml` and `data_extraction_rules.xml`:
+- [ ] **Step 3: Exclude `zero_secure_prefs` from Auto Backup** (Phase 0's rules already cover the database; this adds an explicit exclude for the secure prefs).
+
+  **Rationale:** `EncryptedSharedPreferences` is wrapped by a `MasterKey` stored in Android Keystore. Keystore keys are **device-bound** — they cannot be exported, backed up, or restored on a different device. Including `zero_secure_prefs` in Auto Backup would send an encrypted blob to the cloud that the destination device physically cannot decrypt. Worse, transparently transferring a long-lived OAuth refresh token to a new device without user consent is a privacy regression. The correct flow on phone swap is: re-sign-in on the new device.
+
+  Add to `app/src/main/res/xml/backup_rules.xml` inside `<full-backup-content>`:
 
 ```xml
-<include domain="sharedpref" path="zero_secure_prefs" />
+<exclude domain="sharedpref" path="zero_secure_prefs" />
 ```
 
-  Add it inside the `<cloud-backup>` and `<device-transfer>` blocks, and inside `<full-backup-content>` in the legacy file.
+  Add to `app/src/main/res/xml/data_extraction_rules.xml` inside **both** `<cloud-backup>` and `<device-transfer>`:
+
+```xml
+<exclude domain="sharedpref" path="zero_secure_prefs" />
+```
 
 - [ ] **Step 4: Build**
 
-Run: `./gradlew :zero-remote:assembleDebug 2>&1 | tail -10`
+Run: `./gradlew :app:assembleDebug 2>&1 | tail -10`
 Expected: BUILD SUCCESSFUL.
 
 - [ ] **Step 5: Skip instrumented test for v1** — EncryptedSharedPreferences requires an actual device/emulator. Unit-test coverage for this is impractical. Verification is end-to-end in Task 7.
@@ -131,11 +154,11 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add zero-remote/src/main/java/com/hluhovskyi/zero/drive/AndroidSecureKeyValueStore.kt \
-        zero-remote/src/main/java/com/hluhovskyi/zero/RemoteComponent.kt \
+git add app/src/main/java/com/hluhovskyi/zero/security/AndroidSecureKeyValueStore.kt \
+        app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt \
         app/src/main/res/xml/backup_rules.xml \
         app/src/main/res/xml/data_extraction_rules.xml
-git commit -m "backup(remote): add AndroidSecureKeyValueStore + include zero_secure_prefs in auto-backup"
+git commit -m "backup(app): AndroidSecureKeyValueStore + exclude zero_secure_prefs from Auto Backup"
 ```
 
 ---
@@ -145,7 +168,11 @@ git commit -m "backup(remote): add AndroidSecureKeyValueStore + include zero_sec
 **Files:**
 - Create: `zero-remote/src/main/java/com/hluhovskyi/zero/drive/DriveOAuthTokenProvider.kt`
 
-This is the most platform-specific class in the phase. Read `PlayIntegrityTokenProvider.kt` for the broad shape, but the API surface is different. Behaviour spec:
+This is the most platform-specific class in the phase. Read `PlayIntegrityTokenProvider.kt` for the broad shape, but the API surface is different.
+
+**DI shape:** `AndroidSecureKeyValueStore` lives in `app` (Task 3) and is provided by `ApplicationComponent`. `DriveOAuthTokenProvider` lives in `zero-remote` and needs `SecureKeyValueStore`. So `RemoteComponent.Dependencies` gains a new field `val secureKeyValueStore: SecureKeyValueStore` — `ApplicationComponent` satisfies this from its own provider. `HttpExecutor` remains internal to `RemoteComponent` (no cross-component dependency needed for it).
+
+Behaviour spec:
 
 - Constructor takes `Context`, `SecureKeyValueStore`, `HttpExecutor`, and the OAuth client ID (`@BindsInstance` qualifier, see Task 6).
 - `signIn()`:
@@ -177,7 +204,15 @@ Required scope string (constant in this file): `"https://www.googleapis.com/auth
 
 - [ ] **Step 1: Implement** the class per the spec above. ~200 LOC.
 
-- [ ] **Step 2: Provide via `RemoteComponent`** — add `val oauthTokenProvider: OAuthTokenProvider` to the interface; add an `@RemoteScope @Provides internal` factory in the module. Also add a new `@BindsInstance` slot on the Builder for the OAuth client ID:
+- [ ] **Step 2: Provide via `RemoteComponent`**
+
+  Expand `RemoteComponent.Dependencies` to include:
+
+  ```kotlin
+  val secureKeyValueStore: SecureKeyValueStore
+  ```
+
+  Add `val oauthTokenProvider: OAuthTokenProvider` to the public interface; add an `@RemoteScope @Provides internal` factory in the module. Also add a new `@BindsInstance` slot on the Builder for the OAuth client ID:
 
 ```kotlin
 @Qualifier @Retention(AnnotationRetention.SOURCE) private annotation class DriveOAuthClientId
@@ -283,6 +318,8 @@ In `ActivityComponent`, add a `WeakReference<Activity>` field updated by `MainAc
 ```
 
 The activity provider needs `ActivityComponent` in scope — this is the trickiest part. **Read how `BiometricAuthenticator` is currently injected and replicate the exact pattern**; do not invent a new injection path.
+
+`ApplicationComponent` already implements `RemoteComponent.Dependencies`. Because Task 3 added `SecureKeyValueStore` to `ApplicationComponent.Module`, the new `secureKeyValueStore: SecureKeyValueStore` field on `RemoteComponent.Dependencies` is satisfied automatically — Dagger picks it up via the existing dependencies bridge. No extra wiring required.
 
 - [ ] **Step 5: Delete `NoopBackupClient.kt`**
 
