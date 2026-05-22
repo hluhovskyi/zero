@@ -105,6 +105,10 @@ internal abstract class FeedbackComponent : Attachable {
         fun onFeedbackSubmittedHandler(navigator: Navigator): OnFeedbackSubmittedHandler = OnFeedbackSubmittedHandler { navigator.back() }
 
         @Provides
+        @FeedbackScope
+        fun onFeedbackCloseHandler(navigator: Navigator): OnFeedbackCloseHandler = OnFeedbackCloseHandler { navigator.back() }
+
+        @Provides
         fun feedbackSheetComponent(
             feedbackService: FeedbackService,
             breadcrumbs: Breadcrumbs,
@@ -113,6 +117,7 @@ internal abstract class FeedbackComponent : Attachable {
             isDebugBuild: Boolean,
             errorMessageProvider: () -> String,
             onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
+            onFeedbackCloseHandler: OnFeedbackCloseHandler,
         ): FeedbackSheetComponent = FeedbackSheetComponent(
             feedbackService = feedbackService,
             breadcrumbs = breadcrumbs,
@@ -121,6 +126,7 @@ internal abstract class FeedbackComponent : Attachable {
             isDebugBuild = isDebugBuild,
             errorMessageProvider = errorMessageProvider,
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
+            onFeedbackCloseHandler = onFeedbackCloseHandler,
         )
 
         @Provides
