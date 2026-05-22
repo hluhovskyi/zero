@@ -373,15 +373,20 @@ git commit -m "backup(auth): GoogleOAuthTokenProvider + AuthComponent + token-mg
 
 ---
 
-### Task 6: `DriveBackupClient`
+### Task 6: `DriveBackupClient` + `DriveComponent`
+
+`DriveBackupClient` is the Drive-specific impl of `BackupClient`. It lives inside a new sibling component `DriveComponent` in `zero-backup` — same module as `BackupComponent`, but a separate factory because the two have different responsibilities. `BackupComponent` is backend-agnostic (orchestration); `DriveComponent` owns Drive-flavored impls (this task: `DriveBackupClient`; Phase 5: `DriveSnapshotParser`). Future Dropbox/WebDAV/etc. backends would each get a sibling component (`DropboxComponent`, etc.) without touching `BackupComponent`.
+
+`DriveComponent` is **KMP-pure** (no Android imports, no OkHttp imports) — Drive REST is just HTTPS endpoints; the impl reaches them through `HttpExecutor` + `OAuthTokenProvider` interfaces from `zero-api`.
 
 **Files:**
+- Create: `zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveComponent.kt`
 - Create: `zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveBackupClient.kt`
 - Create: `zero-backup/src/test/java/com/hluhovskyi/zero/backup/DriveBackupClientTest.kt`
 - Create: `zero-backup/src/test/java/com/hluhovskyi/zero/backup/FakeHttpExecutor.kt`
 - Create: `zero-backup/src/test/java/com/hluhovskyi/zero/backup/FakeOAuthTokenProvider.kt`
 
-Pure-Kotlin implementation of `BackupClient`. Composes `HttpExecutor` + `OAuthTokenProvider` + `BackupEnvelopeSerializer`. Knows Drive REST contract:
+Pure-Kotlin implementation of `BackupClient`. Composes `HttpExecutor` + `OAuthTokenProvider` + an internal `BackupEnvelopeSerializer` (private to `DriveBackupClient`, no external surface). Knows Drive REST contract:
 
 - File name: `"zero-backup.json"`
 - Folder: `appDataFolder` (Drive special name)
@@ -409,14 +414,56 @@ Pure-Kotlin implementation of `BackupClient`. Composes `HttpExecutor` + `OAuthTo
 
 - [ ] **Step 5: Re-run tests — PASS**
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Implement `DriveComponent`** — manual DI factory, sibling of `BackupComponent`. Model after `BackupComponent.kt` shape.
+
+```kotlin
+package com.hluhovskyi.zero.backup
+
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.http.HttpExecutor
+
+interface DriveComponent {
+
+    interface Dependencies {
+        val httpExecutor: HttpExecutor
+        val oauthTokenProvider: OAuthTokenProvider
+    }
+
+    val backupClient: BackupClient
+    // driveSnapshotParser added in Phase 5
+
+    class Factory(private val dependencies: Dependencies) {
+        fun create(): DriveComponent = DefaultDriveComponent(dependencies)
+    }
+
+    companion object {
+        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
+    }
+}
+
+internal class DefaultDriveComponent(dependencies: DriveComponent.Dependencies) : DriveComponent {
+
+    private val envelopeSerializer = BackupEnvelopeSerializer()
+
+    override val backupClient: BackupClient by lazy {
+        DriveBackupClient(
+            httpExecutor = dependencies.httpExecutor,
+            oauthTokenProvider = dependencies.oauthTokenProvider,
+            envelopeSerializer = envelopeSerializer,
+        )
+    }
+}
+```
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveBackupClient.kt \
+        zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveComponent.kt \
         zero-backup/src/test/java/com/hluhovskyi/zero/backup/DriveBackupClientTest.kt \
         zero-backup/src/test/java/com/hluhovskyi/zero/backup/FakeHttpExecutor.kt \
         zero-backup/src/test/java/com/hluhovskyi/zero/backup/FakeOAuthTokenProvider.kt
-git commit -m "backup: add DriveBackupClient with multipart upload + REST contract tests"
+git commit -m "backup: DriveBackupClient + DriveComponent factory in zero-backup"
 ```
 
 ---
@@ -476,26 +523,28 @@ internal object AuthModule {
 
 `ApplicationComponent` must now implement `AuthComponent.Dependencies` — which requires it to expose `httpExecutor: HttpExecutor` (from `RemoteComponent`) and `secureKeyValueStore: SecureKeyValueStore` (already provided in Task 4). Add `httpExecutor` to `ApplicationComponent`'s abstract overrides similarly to how `feedbackService` is currently exposed.
 
-- [ ] **Step 4: Replace the `BackupClient` provider in `ApplicationComponent.Module`**
+- [ ] **Step 4: Replace `NoopBackupClient` provider via `DriveComponent`**
 
   - Remove the `NoopBackupClient` provider.
-  - Add a `@Provides BackupClient` that constructs `DriveBackupClient` inline:
+  - Add `DriveComponent` provider + a `backupClient` delegating to it:
 
 ```kotlin
 @Provides
 @ApplicationScope
-fun backupClient(
+fun driveComponent(
     httpExecutor: HttpExecutor,                    // from RemoteComponent
     oauthTokenProvider: OAuthTokenProvider,         // from AuthComponent
-    envelopeSerializer: BackupEnvelopeSerializer,   // from BackupComponent
-): BackupClient = DriveBackupClient(
-    httpExecutor = httpExecutor,
-    oauthTokenProvider = oauthTokenProvider,
-    envelopeSerializer = envelopeSerializer,
-)
+): DriveComponent = DriveComponent.factory(object : DriveComponent.Dependencies {
+    override val httpExecutor = httpExecutor
+    override val oauthTokenProvider = oauthTokenProvider
+}).create()
+
+@Provides
+fun backupClient(driveComponent: DriveComponent): BackupClient =
+    driveComponent.backupClient
 ```
 
-This is where the cross-component composition happens. `BackupComponent` is downstream — it receives the resulting `BackupClient` via its existing `Dependencies` interface (from Phase 1 Task 5).
+The cross-component composition lives here: `DriveComponent` is built from primitives exposed by `RemoteComponent` and `AuthComponent`, and `BackupComponent` (built in Phase 1's wiring) receives the resulting `BackupClient` via its `Dependencies`. Drive specifics no longer leak into `ApplicationComponent.Module` — only the factory wiring does.
 
 - [ ] **Step 5: Delete `NoopBackupClient.kt`**
 

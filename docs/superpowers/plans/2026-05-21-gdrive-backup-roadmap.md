@@ -66,19 +66,27 @@ Never request broader Drive scopes. The lint rule `BackupModuleEncapsulation` do
 ## Module Map (summary)
 
 ```
-zero-api/.../backup/                  ← interfaces + DTOs (BackupUseCase, BackupClient, BackupEnvelope, BackupError)
+zero-api/.../backup/                  ← BackupClient/UseCase/Envelope/Metadata/Error/Scheduler interfaces
 zero-api/.../auth/                    ← OAuthTokenProvider interface
 zero-api/.../http/                    ← HttpExecutor interface
 zero-api/.../security/                ← SecureKeyValueStore interface
-zero-backup/                          ← NEW: pure Kotlin orchestration & Drive REST contract
-zero-auth/                            ← NEW: Android Google OAuth flow (AuthComponent, GoogleOAuthTokenProvider)
-zero-remote/.../http/                 ← OkHttpHttpExecutor (no Drive code lives here anymore)
-zero-core/.../backup/                 ← Android: settings detail screen (BackupComponent)
-zero-core/.../imports/                ← additions: DriveSnapshotParser, DefaultImportUseCase fast-path branch
-zero-core/.../welcome/                ← additions: restore-prompt step (Phase 6)
-app/.../security/                     ← AndroidSecureKeyValueStore (EncryptedSharedPreferences)
-app/.../backup/                       ← Android: scheduler worker, notification presenter
-app/.../ApplicationComponent.kt       ← wires zero-backup + zero-auth + zero-remote against impls
+zero-backup/                          ← NEW (pure Kotlin):
+  BackupComponent.kt                  ←   provides backupUseCase (backend-agnostic)
+  DriveComponent.kt                   ←   provides backupClient + driveSnapshotParser
+                                          (Drive-specific impls live here, not in app/)
+zero-auth/                            ← NEW (Android): AuthComponent + GoogleOAuthTokenProvider
+zero-remote/.../http/                 ← OkHttpHttpExecutor (no Drive code lives here)
+zero-core/.../backup/                 ← Android: BackupDetailComponent UI + ViewModel + ViewProvider
+zero-core/.../imports/                ← DefaultImportUseCase fast-path branch
+zero-core/.../welcome/                ← restore-prompt step (Phase 6)
+app/.../scheduling/                   ← WorkManagerScheduler (GENERIC, not about backup)
+app/.../security/                     ← AndroidSecureKeyValueStore (GENERIC)
+app/.../backup/                       ← Backup-specific Android wiring:
+  BackupAndroidModule.kt              ←   Dagger Module included by ApplicationComponent.Module
+  DefaultBackupScheduler.kt           ←   implements BackupScheduler using WorkManagerScheduler
+  DriveBackupSchedulerWorker.kt       ←   WorkManager worker that calls BackupUseCase
+  BackupNotificationPresenter.kt      ←   3-strike failure notification
+app/.../ApplicationComponent.kt       ← wires DriveComponent, BackupComponent, AuthComponent
 app/src/main/res/xml/                 ← Phase 0: auto-backup rules
 app/build.gradle                      ← buildConfigField for OAuth client ID; security-crypto dep
 ```

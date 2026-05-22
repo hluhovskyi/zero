@@ -16,10 +16,13 @@
 
 ---
 
-### Task 1: `DriveSnapshotParser`
+### Task 1: `DriveSnapshotParser` (in `zero-backup`, exposed via `DriveComponent`)
+
+`DriveSnapshotParser` is Drive-specific (it talks to `BackupClient` + `OAuthTokenProvider` to fetch the envelope). It belongs in `DriveComponent` alongside `DriveBackupClient` — same module, same component, same encapsulation. Future Dropbox backend would ship a `DropboxSnapshotParser` in a sibling component without touching the Import flow.
 
 **Files:**
-- Create: `zero-core/src/main/java/com/hluhovskyi/zero/imports/DriveSnapshotParser.kt`
+- Create: `zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveSnapshotParser.kt`
+- Modify: `zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveComponent.kt` (expose `driveSnapshotParser: SnapshotParser`)
 
 Read `ZeroBackupParser.kt` first to understand the parser contract.
 
@@ -47,7 +50,7 @@ Pick **Option A**. It's one small field on an existing data class, no semantics 
 
 - [ ] **Step 3: Unit tests** for the parser against `FakeBackupClient` + `FakeOAuthTokenProvider`.
 
-- [ ] **Step 4: Wire into `ApplicationComponent.importComponentBuilder`** — add `DriveSnapshotParser(...)` to the parsers list.
+- [ ] **Step 4: Wire into `ApplicationComponent.importComponentBuilder`** — pull `driveComponent.driveSnapshotParser` (already a `SnapshotParser`) and add it to the parsers list alongside `ZeroBackupParser` + `ZenMoneySnapshotParser`. No inline construction needed; DriveComponent did the wiring.
 
 - [ ] **Step 5: Build**
 
@@ -55,10 +58,11 @@ Pick **Option A**. It's one small field on an existing data class, no semantics 
 
 ```bash
 git add zero-api/src/main/java/com/hluhovskyi/zero/imports/SnapshotParser.kt \
-        zero-core/src/main/java/com/hluhovskyi/zero/imports/DriveSnapshotParser.kt \
-        zero-core/src/test/java/com/hluhovskyi/zero/imports/DriveSnapshotParserTest.kt \
+        zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveSnapshotParser.kt \
+        zero-backup/src/main/java/com/hluhovskyi/zero/backup/DriveComponent.kt \
+        zero-backup/src/test/java/com/hluhovskyi/zero/backup/DriveSnapshotParserTest.kt \
         app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt
-git commit -m "backup(import): DriveSnapshotParser + Source.requiresFile"
+git commit -m "backup(restore): DriveSnapshotParser in DriveComponent + Source.requiresFile"
 ```
 
 ---

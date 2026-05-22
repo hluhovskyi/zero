@@ -450,7 +450,7 @@ Expected: COMPILATION FAILURE.
 
 Required behavior (no full code in plan — let the implementing engineer compose this against the failing tests):
 
-- Constructor takes `SyncEngine`, `BackupClient`, `CurrentUserRepository`, `BackupEnvelopeSerializer`, and a `coroutineScope: CoroutineScope`.
+- Constructor takes `SyncEngine`, `BackupClient`, `CurrentUserRepository`, and a `coroutineScope: CoroutineScope`. **Not** `BackupEnvelopeSerializer` — the use case works in `BackupEnvelope` Kotlin objects, the client handles serialization.
 - Holds a `MutableStateFlow<State>`. `state: Flow<State>` is `mutableState.asStateFlow()`.
 - `perform(BackupNow)` launches a coroutine that takes a `Mutex.withLock`:
   - If `phase is Uploading`, return immediately (coalesce).
@@ -504,7 +504,6 @@ interface BackupComponent {
     }
 
     val backupUseCase: BackupUseCase
-    val envelopeSerializer: BackupEnvelopeSerializer
 
     class Factory(private val dependencies: Dependencies) {
         fun create(): BackupComponent = DefaultBackupComponent(dependencies)
@@ -517,19 +516,18 @@ interface BackupComponent {
 
 internal class DefaultBackupComponent(dependencies: BackupComponent.Dependencies) : BackupComponent {
 
-    override val envelopeSerializer: BackupEnvelopeSerializer = BackupEnvelopeSerializer()
-
     override val backupUseCase: BackupUseCase by lazy {
         DefaultBackupUseCase(
             syncEngine = dependencies.syncEngine,
             backupClient = dependencies.backupClient,
             currentUserRepository = dependencies.currentUserRepository,
-            envelopeSerializer = envelopeSerializer,
             coroutineScope = dependencies.backupCoroutineScope,
         )
     }
 }
 ```
+
+**Note:** `BackupEnvelopeSerializer` does not appear in `BackupComponent`'s public surface. It's used exclusively by `DriveBackupClient` (for upload encoding) and is constructed privately inside `DriveComponent`'s impl. `DefaultBackupUseCase` works in `BackupEnvelope` Kotlin objects, not JSON strings — serialization is the client's job. This also breaks a potential circular dep (`BackupComponent → backupClient → DriveComponent → envelopeSerializer → BackupComponent`).
 
 - [ ] **Step 2: Build**
 
@@ -614,14 +612,9 @@ fun backupComponent(
 
 @Provides
 fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
-
-@Provides
-@ApplicationScope
-fun backupEnvelopeSerializer(backupComponent: BackupComponent): BackupEnvelopeSerializer =
-    backupComponent.envelopeSerializer
 ```
 
-The `BackupClient` is `NoopBackupClient` in Phase 1; Phase 2 swaps it for the real `DriveBackupClient`.
+The `BackupClient` is `NoopBackupClient` in Phase 1; Phase 2 swaps it for the real `DriveBackupClient` (provided via the new `DriveComponent`).
 
 **Debug-flavor override hook:** Phase 5's instrumented round-trip test needs to substitute `FakeBackupClient` for the real client. Since `BackupClient` is an interface and is provided directly via `@Provides`, swap-in for tests is a one-line change in an `androidTest`-flavor module or via a test-only `ApplicationComponent` builder argument. No additional plumbing here — calling out the testability seam.
 

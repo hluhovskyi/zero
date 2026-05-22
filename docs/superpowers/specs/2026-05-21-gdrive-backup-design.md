@@ -55,10 +55,20 @@ zero-api                              (pure Kotlin — interfaces & DTOs)
     SecureKeyValueStore.kt            ← interface: get/put/remove String — generic primitive
 
 zero-backup                           (NEW, pure Kotlin JVM — mirrors zero-sync)
+  BackupComponent.kt                  ← DI factory for backup orchestration; exposes backupUseCase.
+                                         Backend-agnostic: takes a BackupClient via Dependencies.
   DefaultBackupUseCase.kt             ← state machine; uses SyncEngine + BackupClient
-  DriveBackupClient.kt                ← Drive REST contract; uses HttpExecutor + OAuthTokenProvider
-  BackupEnvelopeSerializer.kt         ← envelope JSON round-trip
-  BackupComponent.kt                  ← DI factory with Dependencies interface
+  DriveComponent.kt                   ← DI factory for Drive-specific impls. Sibling of BackupComponent.
+                                         Exposes backupClient (= DriveBackupClient) and
+                                         driveSnapshotParser. Drive REST is platform-agnostic
+                                         (just HTTPS endpoints); the impl is pure Kotlin and
+                                         uses HttpExecutor + OAuthTokenProvider through interfaces.
+                                         If a second backend (Dropbox, WebDAV) lands, add a sibling
+                                         DropboxComponent without touching BackupComponent.
+  DriveBackupClient.kt                ← Drive REST contract, internal to DriveComponent
+  DriveSnapshotParser.kt              ← restore-side parser, internal to DriveComponent
+  BackupEnvelopeSerializer.kt         ← envelope JSON round-trip; constructed internally by
+                                         DriveBackupClient (no DI surface — no external consumers)
   AGENTS.md                           ← rules: no Android, no OkHttp imports
 
 zero-auth                             (NEW Android module — Google sign-in flow)
@@ -79,13 +89,29 @@ zero-core                             (Android — additions)
   welcome/                            ← restore-prompt step before presets
 
 app                                   (Android — wiring + Android-only concerns)
-  backup/DriveBackupSchedulerWorker.kt    ← WorkManager periodic worker
-  backup/BackupNotificationPresenter.kt   ← system notification on 3 consecutive failures
-  security/AndroidSecureKeyValueStore.kt  ← EncryptedSharedPreferences — provided directly
-                                              from ApplicationComponent (not zero-remote, since it
-                                              isn't a networked concern). DriveOAuthTokenProvider
-                                              receives it via RemoteComponent.Dependencies.
-  ApplicationComponent.kt             ← wires zero-backup against the Android impls
+  scheduling/WorkManagerScheduler.kt      ← GENERIC WorkManager wrapper. Not about backup.
+                                              API: enablePeriodic(name, intervalHours, networkType,
+                                              workerClass) / cancel(name). Reusable for any future
+                                              periodic Android job. Provided by ApplicationComponent.
+  security/AndroidSecureKeyValueStore.kt  ← GENERIC EncryptedSharedPreferences-backed
+                                              SecureKeyValueStore. Already not about backup.
+                                              Provided by ApplicationComponent.
+  backup/
+    BackupAndroidModule.kt                ← Dagger Module bundling backup-specific Android wiring.
+                                              Included by ApplicationComponent.Module via
+                                              `@Module(includes = [..., BackupAndroidModule::class])`,
+                                              same pattern as the existing RemoteModule.
+    DefaultBackupScheduler.kt             ← Implements BackupScheduler by adapting
+                                              WorkManagerScheduler with backup-specific config
+                                              (job name = "drive-backup-periodic", interval = 24h,
+                                              worker = DriveBackupSchedulerWorker::class.java).
+    DriveBackupSchedulerWorker.kt         ← WorkManager CoroutineWorker; instantiated by WM,
+                                              pulls BackupUseCase from MainApplication.
+    BackupNotificationPresenter.kt        ← Observes BackupUseCase.state; system notification
+                                              on 3 consecutive failures.
+  ApplicationComponent.kt             ← wires all of the above; constructs DriveComponent +
+                                          BackupComponent from interfaces provided by RemoteComponent,
+                                          AuthComponent, SyncComponent, DatabaseComponent.
 
 app/src/main/res/xml/                 ← Android Auto Backup rules (Phase 0)
 ```
