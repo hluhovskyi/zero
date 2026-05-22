@@ -18,7 +18,7 @@ internal class DefaultFeedbackViewModel(
     private val onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
     private val errorMessageProvider: () -> String,
     deviceInfo: DeviceInfo,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : FeedbackViewModel {
 
     private val mutableState = MutableStateFlow(
