@@ -24,9 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class FeedbackViewProvider(
     private val viewModel: FeedbackViewModel,
@@ -53,7 +51,7 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
             style = TextStyle(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
         )
 
@@ -73,13 +71,13 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
         if (errorMessage != null) {
             Text(
                 text = errorMessage,
-                style = TextStyle(fontSize = 12.sp, color = Error),
+                style = TextStyle(fontSize = 12.sp, color = ZeroTheme.colors.error),
             )
         }
 
         Text(
             text = state.deviceInfoPreview,
-            style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
+            style = TextStyle(fontSize = 12.sp, color = ZeroTheme.colors.onSurfaceVariant),
         )
 
         Button(

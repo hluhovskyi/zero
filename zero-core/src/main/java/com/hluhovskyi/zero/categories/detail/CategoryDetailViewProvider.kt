@@ -48,7 +48,7 @@ import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -77,7 +77,7 @@ internal class CategoryDetailViewProvider(
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
                                     contentDescription = stringResource(R.string.category_detail_more_options_description),
-                                    tint = PrimaryContainer,
+                                    tint = ZeroTheme.colors.primaryContainer,
                                 )
                             }
                             DropdownMenu(

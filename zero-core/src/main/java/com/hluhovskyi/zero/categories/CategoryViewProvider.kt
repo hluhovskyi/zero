@@ -45,11 +45,7 @@ import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.SwipeableSegmentedTabs
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val CATEGORY_TABS = listOf(CategoryType.EXPENSE, CategoryType.INCOME)
 
@@ -90,7 +86,7 @@ private fun CategoryView(
                 style = TextStyle(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Primary,
+                    color = ZeroTheme.colors.primary,
                 ),
             )
 
@@ -181,7 +177,7 @@ private fun CategoryPage(
                     style = TextStyle(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Outline,
+                        color = ZeroTheme.colors.outline,
                         letterSpacing = 0.7.sp,
                     ),
                 )
@@ -209,7 +205,8 @@ private fun ActiveCategoryCard(
 ) {
     val colorScheme = category.colorScheme.toUi()
     val categoryBg = colorScheme.background
-    val tintedBg = lerp(Color.White, categoryBg, 0.45f)
+    val rowBg = ZeroTheme.colors.surfaceContainerLowest
+    val tintedBg = lerp(rowBg, categoryBg, 0.45f)
 
     Box(
         modifier = Modifier
@@ -217,7 +214,7 @@ private fun ActiveCategoryCard(
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
             .drawBehind {
-                drawRect(Color.White)
+                drawRect(rowBg)
                 if (maxFraction > 0f) {
                     drawRect(tintedBg, size = Size(size.width * maxFraction, size.height))
                 }
@@ -246,7 +243,7 @@ private fun ActiveCategoryCard(
                         style = TextStyle(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = OnSurface,
+                            color = ZeroTheme.colors.onSurface,
                         ),
                     )
                     Text(
@@ -254,7 +251,7 @@ private fun ActiveCategoryCard(
                         style = TextStyle(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Primary,
+                            color = ZeroTheme.colors.primary,
                             letterSpacing = (-0.1).sp,
                         ),
                     )
@@ -266,14 +263,14 @@ private fun ActiveCategoryCard(
                     Text(
                         text = pluralStringResource(R.plurals.category_transaction_count, spending.transactionCount, spending.transactionCount),
                         modifier = Modifier.weight(1f),
-                        style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
+                        style = TextStyle(fontSize = 12.sp, color = ZeroTheme.colors.onSurfaceVariant),
                     )
                     Text(
                         text = stringResource(R.string.category_percent_of_total, percentOfTotal),
                         style = TextStyle(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                         ),
                     )
                 }
@@ -285,7 +282,7 @@ private fun ActiveCategoryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp)
-                .background(SurfaceContainer)
+                .background(ZeroTheme.colors.surfaceContainer)
                 .align(Alignment.BottomStart),
         ) {
             Box(
@@ -308,7 +305,7 @@ private fun InactiveCategoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLowest, shape = RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -331,7 +328,7 @@ private fun InactiveCategoryCard(
             style = TextStyle(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
         )
         Text(
@@ -339,7 +336,7 @@ private fun InactiveCategoryCard(
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = Outline,
+                color = ZeroTheme.colors.outline,
             ),
         )
     }
