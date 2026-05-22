@@ -72,21 +72,15 @@ class FeedbackReportFormatterTest {
     }
 
     @Test
-    fun `labels include feedback and type always`() {
-        val report = formatter(isDebugBuild = false).format(FeedbackType.Bug, "desc", emptySnapshot)
-        assertEquals(listOf("feedback", "bug"), report.labels)
-    }
-
-    @Test
-    fun `labels include debug when isDebugBuild`() {
-        val report = formatter(isDebugBuild = true).format(FeedbackType.Bug, "desc", emptySnapshot)
-        assertEquals(listOf("feedback", "bug", "debug"), report.labels)
-    }
-
-    @Test
-    fun `labels include selected type key`() {
+    fun `report carries selected type`() {
         val report = formatter().format(FeedbackType.Idea, "desc", emptySnapshot)
-        assertEquals(listOf("feedback", "idea"), report.labels)
+        assertEquals(FeedbackType.Idea, report.type)
+    }
+
+    @Test
+    fun `report isDebug reflects build flag`() {
+        assertFalse(formatter(isDebugBuild = false).format(FeedbackType.Bug, "desc", emptySnapshot).isDebug)
+        assertTrue(formatter(isDebugBuild = true).format(FeedbackType.Bug, "desc", emptySnapshot).isDebug)
     }
 
     @Test

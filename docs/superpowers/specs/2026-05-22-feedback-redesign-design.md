@@ -9,13 +9,14 @@
 ## What changes
 
 ### `zero-api`
-- New `FeedbackType` enum: `Bug`, `Idea`, `Other`. Each value carries a `label: String` (`"bug"` / `"idea"` / `"other"`) used verbatim as the GitHub label.
+- New `FeedbackType` enum: `Bug`, `Idea`, `Other`. Each value carries an `id: String` (`"bug"` / `"idea"` / `"other"`) sent over the wire; the function maps the id to a GitHub label.
+- `FeedbackReport` gains `type: FeedbackType` and `isDebug: Boolean` and drops `labels: List<String>` — GitHub label naming is a server concern now.
 
 ### `zero-core`
 - `FeedbackViewModel.State` gains `type: FeedbackType = FeedbackType.Bug`.
 - `FeedbackViewModel.Action` gains `SelectType(type: FeedbackType)`.
 - `DefaultFeedbackViewModel` forwards `state.type` to the formatter.
-- `FeedbackReportFormatter` accepts a `FeedbackType` and emits labels `["feedback", type.label]` (`+ "debug"` when `isDebugBuild`).
+- `FeedbackReportFormatter` accepts a `FeedbackType` and returns a `FeedbackReport` carrying that type plus `isDebug`. Label resolution moves to the cloud function.
 - `FeedbackViewProvider` rewritten to match the design:
   - Header row: close icon (left, 48dp tap target) + centered title in `PrimaryContainer` + 48dp spacer.
   - Eyebrow body text under header.
@@ -36,8 +37,9 @@
 - `FeedbackSheetComponent` receives the new close handler and forwards it to `DefaultFeedbackViewModel` (which exposes a `close()` Action; the view dispatches it from the close icon).
 
 ### `functions/feedback`
-- Add a server-side label allowlist: `feedback`, `debug`, `bug`, `idea`, `other`. Filter the incoming `labels` array to this set before calling Octokit; cap to 5 entries. Reject the request with 400 if title or body is missing (already implemented).
-- **Why deploy:** without the allowlist, a tampered AAB could spam arbitrary labels on the issue tracker. Adding the type label on the client requires the function to accept it — `bug` / `idea` / `other` are added to the allowlist as part of this deploy.
+- New request contract: `{title, body, type, debug}`. The function maps `type` (`bug` / `idea` / `other`) to a GitHub label and constructs the label array server-side: `["feedback", typeLabel, ...maybeDebug]`. Unknown types are rejected with 400.
+- **Why server-side mapping:** GitHub label naming is decoupled from the app binary. Renaming a label or splitting one type into multiple labels never requires a new release.
+- **Why deploy:** the function's request shape has changed (`labels` → `type` + `debug`); old function won't understand new requests.
 
 ## String resources
 

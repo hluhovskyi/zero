@@ -162,7 +162,7 @@ class DefaultFeedbackViewModelTest {
     }
 
     @Test
-    fun `submitted report carries selected type label`() = runTest {
+    fun `submitted report carries selected type`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
         val handler = RecordingSubmittedHandler()
@@ -173,7 +173,7 @@ class DefaultFeedbackViewModelTest {
         viewModel.perform(FeedbackViewModel.Action.Submit)
         advanceUntilIdle()
 
-        assertEquals(listOf("feedback", "other"), service.lastReport?.labels)
+        assertEquals(FeedbackType.Other, service.lastReport?.type)
     }
 
     @Test

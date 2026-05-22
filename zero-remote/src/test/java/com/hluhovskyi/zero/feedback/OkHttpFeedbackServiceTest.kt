@@ -18,7 +18,7 @@ class OkHttpFeedbackServiceTest {
     private lateinit var server: MockWebServer
     private val client = OkHttpClient()
     private val json = Json { ignoreUnknownKeys = true }
-    private val report = FeedbackReport(title = "t", body = "b", labels = listOf("debug"))
+    private val report = FeedbackReport(title = "t", body = "b", type = FeedbackType.Bug, isDebug = true)
 
     @Before
     fun setUp() {
