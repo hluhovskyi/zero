@@ -219,10 +219,20 @@
     <string name="transaction_notes_hint">Add a note…</string>
 
     <!-- Feedback -->
-    <string name="feedback_title">Send feedback</string>
-    <string name="feedback_description_hint">Describe what happened…</string>
-    <string name="feedback_submit">Send</string>
+    <string name="feedback_title">Send Feedback</string>
+    <string name="feedback_submit">Send Feedback</string>
     <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+    <string name="feedback_eyebrow">Found a bug or have an idea? Tell us what happened — we read every report.</string>
+    <string name="feedback_type_bug">Bug</string>
+    <string name="feedback_type_idea">Idea</string>
+    <string name="feedback_type_other">Other</string>
+    <string name="feedback_what_happened">What happened?</string>
+    <string name="feedback_hint_bug">Tap on a transaction to edit it — the amount field is blank instead of the current value…</string>
+    <string name="feedback_hint_idea">It would be great if I could split a transaction across two categories…</string>
+    <string name="feedback_hint_other">Tell us what\'s on your mind…</string>
+    <string name="feedback_close">Close</string>
+    <string name="feedback_privacy_footnote">Feedback is sent to the Zero team. No account data, balances or transactions are included.</string>
+    <string name="feedback_char_counter">%1$d/1000</string>
 
     <!-- Home / Welcome -->
     <string name="home_title">Zero</string>
