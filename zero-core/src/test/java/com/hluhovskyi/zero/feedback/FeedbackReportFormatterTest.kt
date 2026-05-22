@@ -29,34 +29,34 @@ class FeedbackReportFormatterTest {
     @Test
     fun `title is first non-blank line truncated to 80`() {
         val description = "\n\nFAB crash on edit\nMore details below\n"
-        val report = formatter().format(description, emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, description, emptySnapshot)
         assertEquals("FAB crash on edit", report.title)
     }
 
     @Test
     fun `title falls back to device when description blank`() {
-        val report = formatter().format("   ", emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, "   ", emptySnapshot)
         assertEquals("Feedback from Google Pixel 8", report.title)
     }
 
     @Test
     fun `title truncates long first line to 80 chars`() {
         val longLine = "x".repeat(100)
-        val report = formatter().format(longLine, emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, longLine, emptySnapshot)
         assertEquals(80, report.title.length)
     }
 
     @Test
     fun `description containing triple backticks gets a 4-backtick fence`() {
         val description = "see ```kotlin\\nval x=1\\n```"
-        val report = formatter().format(description, emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, description, emptySnapshot)
         assertTrue("body must contain 4-backtick fence", report.body.contains("````\n"))
     }
 
     @Test
     fun `description containing 4 backticks gets a 5-backtick fence`() {
         val description = "see \\n```` block ````"
-        val report = formatter().format(description, emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, description, emptySnapshot)
         assertTrue("body must contain 5-backtick fence", report.body.contains("`````\n"))
     }
 
@@ -64,7 +64,7 @@ class FeedbackReportFormatterTest {
     fun `device-info sanitiser replaces injection chars with question marks`() {
         val evil = deviceInfo.copy(manufacturer = "[evil](http://x)")
         val formatter = FeedbackReportFormatter(deviceInfo = evil, isDebugBuild = false, clock = clock)
-        val report = formatter.format("desc", emptySnapshot)
+        val report = formatter.format(FeedbackType.Bug, "desc", emptySnapshot)
         assertTrue(
             "expected sanitised manufacturer in body, got:\n${report.body}",
             report.body.contains("?evil??http???x?"),
@@ -72,20 +72,26 @@ class FeedbackReportFormatterTest {
     }
 
     @Test
-    fun `labels include feedback always`() {
-        val report = formatter(isDebugBuild = false).format("desc", emptySnapshot)
-        assertEquals(listOf("feedback"), report.labels)
+    fun `labels include feedback and type always`() {
+        val report = formatter(isDebugBuild = false).format(FeedbackType.Bug, "desc", emptySnapshot)
+        assertEquals(listOf("feedback", "bug"), report.labels)
     }
 
     @Test
     fun `labels include debug when isDebugBuild`() {
-        val report = formatter(isDebugBuild = true).format("desc", emptySnapshot)
-        assertEquals(listOf("feedback", "debug"), report.labels)
+        val report = formatter(isDebugBuild = true).format(FeedbackType.Bug, "desc", emptySnapshot)
+        assertEquals(listOf("feedback", "bug", "debug"), report.labels)
+    }
+
+    @Test
+    fun `labels include selected type key`() {
+        val report = formatter().format(FeedbackType.Idea, "desc", emptySnapshot)
+        assertEquals(listOf("feedback", "idea"), report.labels)
     }
 
     @Test
     fun `body omits diagnostics block when both rings empty`() {
-        val report = formatter().format("desc", emptySnapshot)
+        val report = formatter().format(FeedbackType.Bug, "desc", emptySnapshot)
         assertFalse("expected no <details> when no diagnostics", report.body.contains("<details>"))
     }
 
@@ -95,7 +101,7 @@ class FeedbackReportFormatterTest {
             navigation = listOf(Breadcrumbs.Entry(fixedInstant, "transactions/all")),
             breadcrumbs = emptyList(),
         )
-        val report = formatter().format("desc", snapshot)
+        val report = formatter().format(FeedbackType.Bug, "desc", snapshot)
         assertTrue(report.body.contains("<details>"))
         assertTrue(report.body.contains("### Navigation"))
         assertFalse("breadcrumbs section should be omitted", report.body.contains("### Breadcrumbs"))

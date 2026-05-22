@@ -10,11 +10,12 @@ internal class FeedbackReportFormatter(
     private val clock: Clock,
 ) {
 
-    fun format(description: String, snapshot: Breadcrumbs.Snapshot): FeedbackReport {
+    fun format(type: FeedbackType, description: String, snapshot: Breadcrumbs.Snapshot): FeedbackReport {
         val title = title(description)
         val body = body(description, snapshot)
         val labels = buildList {
             add("feedback")
+            add(type.label)
             if (isDebugBuild) add("debug")
         }
         return FeedbackReport(title = title, body = body, labels = labels)

@@ -39,8 +39,11 @@ class DefaultFeedbackViewModelTest {
     private class ScriptedFeedbackService(private val result: FeedbackSubmitResult) : FeedbackService {
         var callCount: Int = 0
             private set
+        var lastReport: FeedbackReport? = null
+            private set
         override suspend fun submit(report: FeedbackReport): FeedbackSubmitResult {
             callCount++
+            lastReport = report
             return result
         }
     }
@@ -53,15 +56,25 @@ class DefaultFeedbackViewModelTest {
         }
     }
 
+    private class RecordingCloseHandler : OnFeedbackCloseHandler {
+        var callCount: Int = 0
+            private set
+        override fun onFeedbackClose() {
+            callCount++
+        }
+    }
+
     private fun newViewModel(
         service: FeedbackService,
-        handler: OnFeedbackSubmittedHandler,
+        submittedHandler: OnFeedbackSubmittedHandler,
         scope: CoroutineScope,
+        closeHandler: OnFeedbackCloseHandler = RecordingCloseHandler(),
     ): DefaultFeedbackViewModel = DefaultFeedbackViewModel(
         feedbackService = service,
         breadcrumbs = emptyBreadcrumbs,
         reportFormatter = formatter,
-        onFeedbackSubmittedHandler = handler,
+        onFeedbackSubmittedHandler = submittedHandler,
+        onFeedbackCloseHandler = closeHandler,
         errorMessageProvider = { "error" },
         deviceInfo = deviceInfo,
         coroutineScope = scope,
@@ -133,5 +146,46 @@ class DefaultFeedbackViewModelTest {
         assertFalse(state.isSubmitting)
         assertEquals("typed text", state.description)
         assertNotNull(state.errorMessage)
+    }
+
+    @Test
+    fun `SelectType updates state type`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val handler = RecordingSubmittedHandler()
+        val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
+
+        viewModel.perform(FeedbackViewModel.Action.SelectType(FeedbackType.Idea))
+
+        val state = viewModel.state.first()
+        assertEquals(FeedbackType.Idea, state.type)
+    }
+
+    @Test
+    fun `submitted report carries selected type label`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val handler = RecordingSubmittedHandler()
+        val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
+
+        viewModel.perform(FeedbackViewModel.Action.SelectType(FeedbackType.Other))
+        viewModel.perform(FeedbackViewModel.Action.UpdateDescription("hello"))
+        viewModel.perform(FeedbackViewModel.Action.Submit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("feedback", "other"), service.lastReport?.labels)
+    }
+
+    @Test
+    fun `Close invokes close handler`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val submitted = RecordingSubmittedHandler()
+        val close = RecordingCloseHandler()
+        val viewModel = newViewModel(service, submitted, CoroutineScope(dispatcher), closeHandler = close)
+
+        viewModel.perform(FeedbackViewModel.Action.Close)
+
+        assertEquals(1, close.callCount)
     }
 }
