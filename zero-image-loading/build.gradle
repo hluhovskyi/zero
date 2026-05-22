@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+apply from: "$rootDir/gradle/compose-config.gradle"
+
 android {
     compileSdk versions.compileSdk
 
@@ -16,6 +18,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        perf {
+            initWith release
         }
     }
     compileOptions {
@@ -40,5 +45,6 @@ dependencies {
     implementation(project(":zero-api"))
 
     implementation deps.android.compose.foundation
+    perfImplementation deps.android.compose.tracing
     implementation deps.coil
 }
