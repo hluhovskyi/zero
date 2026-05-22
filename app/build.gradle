@@ -104,6 +104,10 @@ android {
     }
 
     namespace 'com.hluhovskyi.zero'
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+    }
 }
 
 dependencies {
@@ -150,8 +154,9 @@ dependencies {
     testImplementation deps.test.mockito
     testImplementation deps.test.coroutines
 
-    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.test.ext:junit:1.3.0"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:${versions.compose}"
-    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.7.0"
+    androidTestUtil "androidx.test:orchestrator:1.5.1"
     debugImplementation "androidx.compose.ui:ui-test-manifest:${versions.compose}"
 }

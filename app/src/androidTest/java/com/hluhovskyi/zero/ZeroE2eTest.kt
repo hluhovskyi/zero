@@ -23,6 +23,17 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun applyTypeFilterUpdatesListAcrossNavigation() {
+        seedDefaultSetup()
+        onTransactions()
+            .openFilter()
+            .selectType("Income")
+            .apply()
+            .assertFilterChipVisible("Income")
+            .assertCategoryNotVisible("Food")
+    }
+
+    @Test
     fun setBudgetForCategoryPersistsAndHidesEmptyCallout() {
         seedDefaultSetup()
         onBudget()
