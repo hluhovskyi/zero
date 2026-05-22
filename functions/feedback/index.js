@@ -50,13 +50,18 @@ export const feedback = async (req, res) => {
         return;
     }
 
+    const ALLOWED_LABELS = new Set(['feedback', 'debug', 'bug', 'idea', 'other']);
+    const safeLabels = Array.isArray(labels)
+        ? labels.filter((l) => typeof l === 'string' && ALLOWED_LABELS.has(l)).slice(0, 5)
+        : [];
+
     try {
         const issue = await octokit.issues.create({
             owner: REPO_OWNER,
             repo: REPO_NAME,
             title,
             body,
-            labels,
+            labels: safeLabels,
         });
         res.status(201).json({ issueUrl: issue.data.html_url });
     } catch (e) {

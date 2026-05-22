@@ -18,6 +18,8 @@ Phase 1 of `docs/superpowers/specs/2026-05-12-feedback-infra-design.md` (issue #
 
 Headers: `X-Integrity-Token: <token from StandardIntegrityManager.request>`.
 
+`labels` is filtered server-side against an allowlist (`feedback`, `debug`, `bug`, `idea`, `other`) and capped at 5 entries; unknown labels are silently dropped.
+
 Responses:
 - `201 { "issueUrl": "https://github.com/..." }` — issue created.
 - `400` — payload missing or malformed.
