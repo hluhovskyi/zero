@@ -78,6 +78,7 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 - [Architecture Patterns](docs/agents/architecture.md) — Component/ViewModel/UseCase/ViewProvider, attach() lifecycle, Flow composition
 - [Concurrency](docs/agents/concurrency.md) — Async-first design, Dispatchers, Flow vs suspend, state management, pagination
 - [Data Layer](docs/agents/data-layer.md) — Repository pattern, Room entities, query/insert conventions
+- [Backup](docs/agents/backup.md) — Android Auto Backup (allowlist rules, what's backed up, how to change it) + Drive backup pointer
 - [Navigation](docs/agents/navigation.md) — URL-based routing, Destination, Argument, Navigator, returning results between screens
 - [Dependency Injection](docs/agents/dependency-injection.md) — Dagger component structure, @BindsInstance, lifecycle timing
 - [DI Migration](docs/agents/di-migration.md) — Experimental: manual DI without Dagger for KMP readiness. Alternatives, migration pattern, checklist, order

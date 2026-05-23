@@ -83,9 +83,43 @@ val LightZeroColors = ZeroColors(
     isLight = true,
 )
 
-// TODO(dark-mode): tune these to real dark values. Mirroring light for now keeps
-// the wiring honest without committing to a palette before design lands.
-val DarkZeroColors = LightZeroColors.copy(isLight = false)
+val DarkZeroColors = ZeroColors(
+    primary = Color(0xFFB1C6FD),
+    primaryContainer = Color(0xFF2D4B7E),
+    primaryContainerLight = Color(0xFF4F6FA8),
+    onPrimary = Color(0xFF00132C),
+    onPrimaryContainer = Color(0xFFD9E2FF),
+    secondary = Color(0xFF65D9A6),
+    secondaryContainer = Color(0xFF005237),
+    onSecondary = Color(0xFF003824),
+    onSecondaryContainer = Color(0xFF82F5C1),
+    surface = Color(0xFF111318),
+    surfaceContainerLowest = Color(0xFF1B1D24),
+    surfaceContainerLow = Color(0xFF181A20),
+    surfaceContainer = Color(0xFF22252D),
+    surfaceContainerHigh = Color(0xFF2A2D35),
+    onSurface = Color(0xFFE3E2E9),
+    onSurfaceVariant = Color(0xFFC5C6D0),
+    outline = Color(0xFF8F909A),
+    outlineVariant = Color(0xFF44464F),
+    error = Color(0xFFE5564C),
+    errorContainer = Color(0xFF5A1F1B),
+    onError = Color(0xFF680003),
+    inverseSurface = Color(0xFFE3E2E9),
+    inverseOnSurface = Color(0xFF303034),
+    inversePrimary = Color(0xFF000E2F),
+    selectedPill = Color(0xFF2D4B7E),
+    scrim = Color(0x52000000),
+    transactionExpense = Color(0xFFE5564C),
+    transactionIncome = Color(0xFF65D9A6),
+    importMergeContainer = Color(0xFF15193A),
+    importNewContainer = Color(0xFF0E2A12),
+    importNewContent = Color(0xFF7FD18C),
+    importErrorContainer = Color(0xFF3A0F12),
+    importErrorContent = Color(0xFFFFB4AB),
+    welcomeCardLine = Color(0xFFFFFFFF),
+    isLight = false,
+)
 
 val LocalZeroColors = staticCompositionLocalOf<ZeroColors> {
     error("ZeroColors not provided — wrap content in ZeroTheme")

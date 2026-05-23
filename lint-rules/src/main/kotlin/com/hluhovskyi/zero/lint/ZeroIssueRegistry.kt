@@ -14,6 +14,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         HandlerFunInterfaceDetector.ISSUE,
         DatabaseComponentEncapsulationDetector.ISSUE,
         RemoteComponentEncapsulationDetector.ISSUE,
+        KmpReadinessDetector.ISSUE,
         TestBridgeBoundaryDetector.ISSUE,
         TestBridgeProductionPurityDetector.ISSUE,
         SyncEntitySerialNameDetector.ISSUE,
@@ -26,6 +27,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         UppercaseStringResourceDetector.ISSUE,
         BreadcrumbsLiteralOnlyDetector.ISSUE,
         ScopedComponentBuilderDetector.ISSUE,
+        ZeroThemeBypassDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
