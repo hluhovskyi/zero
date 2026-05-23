@@ -24,7 +24,7 @@
 - `zero-sync/build.gradle` + `zero-sync/AGENTS.md` → `zero-auth/build.gradle` + `zero-auth/AGENTS.md` (module shape; zero-auth IS Android though, not pure Kotlin — so model the `build.gradle` after `zero-remote` instead).
 - `PlayIntegrityTokenProvider.kt` → `GoogleOAuthTokenProvider.kt`
 - `OkHttpFeedbackService.kt` → `OkHttpHttpExecutor.kt` + `DriveBackupClient.kt`
-- `RemoteComponent.kt` (Builder + `@BindsInstance` + qualifiers) → `AuthComponent.kt` (same shape) + small additions to `RemoteComponent.kt` (HttpExecutor only)
+- `RemoteComponent.kt` (Dagger component with Dependencies + qualifiers) → `AuthComponent.kt` (same general shape, but no `@BindsInstance` — see Task 5 for the slimmer Builder). Plus small additions to `RemoteComponent.kt` (HttpExecutor only).
 
 ---
 
@@ -72,8 +72,9 @@ without changing this module.
 
 - Refresh tokens are written through `SecureKeyValueStore`, never to plain SharedPreferences.
 - Access tokens live in memory only — never persist them.
-- Scope is set at component build time via `@BindsInstance`. Don't accept arbitrary scopes
-  at call time; each consumer builds its own component.
+- OAuth scopes are a compile-time constant inside `AuthComponent.Module` (a `@Provides`
+  returning `listOf("...drive.appdata")`), not a runtime parameter. Future Google integrations
+  needing different scopes either recompile or build a sibling component.
 ```
 
 - [ ] **Step 5: Update root `AGENTS.md`** module map to add `zero-auth`. Locate the existing module list and append:
@@ -114,7 +115,9 @@ googleId                   : "com.google.android.libraries.identity.googleid:goo
 securityCrypto             : "androidx.security:security-crypto:1.1.0-alpha06",
 ```
 
-- [ ] **Step 2: Add to `zero-auth/build.gradle` dependencies block**
+- [ ] **Step 2: Add to `zero-auth/build.gradle`**
+
+Dependencies block:
 
 ```
 implementation deps.credentials
@@ -124,11 +127,22 @@ implementation deps.googleId
 
 `credentialsPlayServicesAuth` is the runtime Play Services adapter for Credential Manager — no code references it at compile time; it registers via manifest merger. `runtimeOnly` makes this explicit.
 
+`defaultConfig` block: move the OAuth client ID `buildConfigField` from `app/build.gradle` into here, since the value conceptually belongs to `zero-auth` (Google sign-in concern):
+
+```groovy
+buildConfigField "String", "DRIVE_OAUTH_CLIENT_ID",
+    "\"${System.getenv("DRIVE_OAUTH_CLIENT_ID") ?: localProps['driveOauthClientId'] ?: ""}\""
+```
+
+Enable `buildFeatures.buildConfig = true` in the android block (zero-remote already does this for FEEDBACK_*). Wire `localProps` reader the same way `app/build.gradle` does today.
+
 - [ ] **Step 3: Add to `app/build.gradle` dependencies block**
 
 ```
 implementation deps.securityCrypto
 ```
+
+Remove the now-redundant `DRIVE_OAUTH_CLIENT_ID` `buildConfigField` from `app/build.gradle`'s `defaultConfig` — it lives in `zero-auth` now.
 
 - [ ] **Step 4: Build to confirm resolution**
 
@@ -139,7 +153,7 @@ Expected: BUILD SUCCESSFUL.
 
 ```bash
 git add build.gradle zero-auth/build.gradle app/build.gradle
-git commit -m "backup: add Credential Manager (zero-auth) + EncryptedSharedPreferences (app) deps"
+git commit -m "backup: deps + DRIVE_OAUTH_CLIENT_ID buildConfigField in zero-auth"
 ```
 
 ---
@@ -248,17 +262,18 @@ git commit -m "backup(app): AndroidSecureKeyValueStore + exclude zero_secure_pre
 - Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/GoogleOAuthTokenProvider.kt`
 - Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/AuthComponent.kt`
 
-`AuthComponent` is the DI root for `zero-auth`. Model after `RemoteComponent.kt` — same Dagger-with-Builder shape, `@BindsInstance` for the OAuth client ID + scopes + activity provider, internal impl class, public interface.
+`AuthComponent` is the DI root for `zero-auth`. Model after `RemoteComponent.kt` — Dagger component with `Dependencies` interface, `internal` impl class, public interface. **Difference from RemoteComponent:** the Builder collapses to just `dependencies(...).build()` — no `@BindsInstance` parameters. Config values (OAuth client ID, scopes) are `@Provides` inside the Module; the activity provider arrives via `Dependencies` (a single reusable `() -> Activity?` provided at app scope).
 
 **DI shape:**
-- `AuthComponent.Dependencies` takes `httpExecutor: HttpExecutor` (provided by `RemoteComponent`) + `secureKeyValueStore: SecureKeyValueStore` (provided by `ApplicationComponent`).
-- `AuthComponent.Builder` takes `@BindsInstance` for: OAuth Web client ID, list of OAuth scopes (`listOf("https://www.googleapis.com/auth/drive.appdata")` for the backup case), and a `currentActivity: () -> Activity?` provider (from `ActivityComponent`).
+- `AuthComponent.Dependencies` takes `httpExecutor: HttpExecutor` (provided by `RemoteComponent`), `secureKeyValueStore: SecureKeyValueStore` (provided by `ApplicationComponent`), and `currentActivityProvider: () -> Activity?` (provided by `ApplicationComponent` via `CurrentActivityTracker` — see Task 7).
+- `AuthComponent.Builder` takes no `@BindsInstance` parameters.
+- `AuthComponent.Module` provides the OAuth client ID via `BuildConfig.DRIVE_OAUTH_CLIENT_ID` (read from `zero-auth/build.gradle`'s buildConfigField) and scopes as a hardcoded `@Provides`.
 - `AuthComponent.googleOAuthTokenProvider: OAuthTokenProvider` is the public surface.
 - `GoogleOAuthTokenProvider` is `internal` to `zero-auth`. Lint encapsulation rule (existing `DefaultImplMustBeInternal`) enforces this.
 
 Read `PlayIntegrityTokenProvider.kt` for the broad shape — the API surface is different, but the construction pattern and try/catch boundary apply. Behaviour spec:
 
-- Constructor takes `SecureKeyValueStore`, `HttpExecutor`, the OAuth client ID (Web client ID, `@BindsInstance`), the scopes list (`@BindsInstance`), and the activity provider (`@BindsInstance`).
+- Constructor takes `SecureKeyValueStore`, `HttpExecutor`, OAuth client ID, scopes list, and the activity provider lambda. All five come from Dagger `@Provides` in `AuthComponent.Module`; no `@BindsInstance` plumbing.
 - `signIn()`:
   1. Build `GetGoogleIdOption` with `setServerClientId(clientId)` and `setFilterByAuthorizedAccounts(false)`.
   2. Call `CredentialManager.create(context).getCredential(...)` against the activity context. **Note:** Credential Manager needs an `Activity` context, not the application context. We resolve this by deferring construction — see Task 7 wiring.
@@ -281,14 +296,22 @@ Read `PlayIntegrityTokenProvider.kt` for the broad shape — the API surface is 
 
 Required scope string (constant in this file): `"https://www.googleapis.com/auth/drive.appdata"`.
 
-**Activity vs Application context:** Credential Manager `getCredential` requires an Activity context. We solve this by:
-- `GoogleOAuthTokenProvider` doesn't hold a `Context` directly. Instead it takes a `currentActivity: () -> Activity?` lambda.
-- That lambda is provided from `ActivityComponent` and bound via `@BindsInstance`. `MainActivity` populates a static-or-coroutine-state `WeakReference<Activity>` on `onResume` / clears on `onPause` — same pattern as `AndroidBiometricAuthenticator` uses today (read it first).
-- If lambda returns null when `signIn()` is called, return `Result.Failure(BackupError.Unknown("Sign-in requires foreground activity"))`.
+**Activity vs Application context:** Credential Manager `getCredential` requires an Activity context. We solve this with a **single reusable current-activity provider** at the `app/` layer (introduced in Task 7), not via `@BindsInstance` on AuthComponent's Builder:
+
+- A new `CurrentActivityTracker` in `app/.../activity/` registers `Application.ActivityLifecycleCallbacks`, holds a `WeakReference<Activity>`, exposes `current(): Activity?`.
+- `ApplicationComponent.Module` provides a `() -> Activity?` lambda backed by that tracker, app-scoped.
+- `AuthComponent.Dependencies` declares `val currentActivityProvider: () -> Activity?` — same shape as `httpExecutor` and `secureKeyValueStore`.
+- `GoogleOAuthTokenProvider` invokes the lambda; if it returns null when `signIn()` is called, returns `Result.Failure(BackupError.Unknown("Sign-in requires foreground activity"))`.
+
+Reusable in the future for any other Android-platform code that needs the current foreground activity (biometric flow migration, etc. — out of scope for this PR).
+
+**Why this matters for `getAccessToken()`**: `AuthComponent` stays at app scope (not activity scope) so background work (WorkManager auto-backup) can mint access tokens without a foreground activity. The activity is only needed for `signIn()`, which is UI-triggered.
 
 - [ ] **Step 1: Implement** the class per the spec above. ~200 LOC.
 
 - [ ] **Step 2: Define `AuthComponent`**
+
+Client ID + scopes are scoped inside the Module (not Builder params). Client ID comes from `zero-auth`'s own `BuildConfig` (Step 2 of Task 2 moved the buildConfigField here). Scopes are a compile-time constant. The Builder collapses to just `dependencies(...).build()`.
 
 ```kotlin
 @AuthScope
@@ -303,26 +326,29 @@ interface AuthComponent {
     interface Dependencies {
         val httpExecutor: com.hluhovskyi.zero.http.HttpExecutor
         val secureKeyValueStore: com.hluhovskyi.zero.security.SecureKeyValueStore
+        val currentActivityProvider: () -> android.app.Activity?
     }
 
     @dagger.Component.Builder
     interface Builder {
         fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun googleOauthClientId(@GoogleOAuthClientId clientId: String): Builder
-
-        @BindsInstance
-        fun googleOauthScopes(@GoogleOAuthScopes scopes: List<String>): Builder
-
-        @BindsInstance
-        fun currentActivityProvider(@CurrentActivity provider: () -> android.app.Activity?): Builder
-
         fun build(): AuthComponent
     }
 
     @dagger.Module
     object Module {
+        private const val DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
+
+        @Provides
+        @AuthScope
+        @GoogleOAuthClientId
+        internal fun clientId(): String = BuildConfig.DRIVE_OAUTH_CLIENT_ID
+
+        @Provides
+        @AuthScope
+        @GoogleOAuthScopes
+        internal fun scopes(): List<String> = listOf(DRIVE_APPDATA_SCOPE)
+
         @Provides
         @AuthScope
         internal fun googleOAuthTokenProvider(
@@ -330,19 +356,19 @@ interface AuthComponent {
             httpExecutor: HttpExecutor,
             @GoogleOAuthClientId clientId: String,
             @GoogleOAuthScopes scopes: List<String>,
-            @CurrentActivity currentActivity: () -> android.app.Activity?,
+            currentActivityProvider: () -> android.app.Activity?,
         ): OAuthTokenProvider = GoogleOAuthTokenProvider(
             secureKeyValueStore = secureKeyValueStore,
             httpExecutor = httpExecutor,
             clientId = clientId,
             scopes = scopes,
-            currentActivity = currentActivity,
+            currentActivity = currentActivityProvider,
         )
     }
 }
 ```
 
-Three new `@Qualifier` annotations (`GoogleOAuthClientId`, `GoogleOAuthScopes`, `CurrentActivity`) and one `@Scope` (`AuthScope`) — all in the same file (mirroring how `RemoteComponent` colocates its qualifiers).
+Two `@Qualifier` annotations (`GoogleOAuthClientId`, `GoogleOAuthScopes`) plus one `@Scope` (`AuthScope`) — colocated in the same file (mirroring how `RemoteComponent` colocates its qualifiers). The `currentActivityProvider` lambda is unqualified (no qualifier needed — type `() -> Activity?` is unique in the graph at app scope; if a second producer ever appears, add a qualifier then).
 
 - [ ] **Step 3: Lint encapsulation** — `OAuthTokenProvider` is already a `zero-api` interface; no Android types leak through the `AuthComponent` public surface. Consider adding an `AuthComponentEncapsulation` lint rule analogous to `RemoteComponentEncapsulation` to enforce this going forward (out of scope for v1 but worth a tracking note).
 
@@ -468,65 +494,106 @@ git commit -m "backup: DriveBackupClient + DriveComponent factory in zero-backup
 
 ---
 
-### Task 7: Wire AuthComponent + DriveBackupClient into `ApplicationComponent` (replace `NoopBackupClient`)
+### Task 7: Wire AuthComponent + DriveComponent into `ApplicationComponent` (replace `NoopBackupClient`)
 
 **Files:**
+- Create: `app/src/main/java/com/hluhovskyi/zero/activity/CurrentActivityTracker.kt`
+- Modify: `app/src/main/java/com/hluhovskyi/zero/MainApplication.kt` (register the tracker on app start)
 - Modify: `app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt`
-- Modify: `app/build.gradle`
-- Modify: `app/src/main/java/com/hluhovskyi/zero/activity/ActivityComponent.kt`
-- Modify: `app/src/main/java/com/hluhovskyi/zero/activity/MainActivity.kt`
 - Delete: `app/src/main/java/com/hluhovskyi/zero/backup/NoopBackupClient.kt`
 
-- [ ] **Step 1: Add `buildConfigField` for OAuth client ID**
+The OAuth client ID buildConfigField already lives in `zero-auth/build.gradle` from Task 2 — no `app/build.gradle` changes needed here. `local.gradle.properties` example doc note (in `feedback-infra.md` style): `driveOauthClientId` is the **Web client ID** from Google Cloud Console (Android-type OAuth clients are auto-derived from package name + SHA-1; the Web client ID is what `setServerClientId(...)` needs).
 
-In `app/build.gradle` `defaultConfig`, add:
+- [ ] **Step 1: Implement `CurrentActivityTracker`** — single reusable foreground-activity provider.
 
-```groovy
-buildConfigField "String", "DRIVE_OAUTH_CLIENT_ID",
-    "\"${System.getenv("DRIVE_OAUTH_CLIENT_ID") ?: localProps['driveOauthClientId'] ?: ""}\""
+```kotlin
+package com.hluhovskyi.zero.activity
+
+import android.app.Activity
+import android.app.Application
+import android.os.Bundle
+import java.lang.ref.WeakReference
+
+class CurrentActivityTracker(application: Application) : Application.ActivityLifecycleCallbacks {
+
+    private var current: WeakReference<Activity>? = null
+
+    init { application.registerActivityLifecycleCallbacks(this) }
+
+    fun current(): Activity? = current?.get()
+
+    override fun onActivityResumed(activity: Activity) {
+        current = WeakReference(activity)
+    }
+    override fun onActivityPaused(activity: Activity) {
+        if (current?.get() === activity) current = null
+    }
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+    override fun onActivityStarted(activity: Activity) = Unit
+    override fun onActivityStopped(activity: Activity) = Unit
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+    override fun onActivityDestroyed(activity: Activity) = Unit
+}
 ```
 
-Document in `local.gradle.properties` example (in `feedback-infra.md` and a new note in the design doc) that `driveOauthClientId` is the **Web client ID** from Google Cloud Console (Android-type OAuth clients are auto-derived from package name + SHA-1; the Web client ID is what `setServerClientId(...)` needs).
+App-scoped. Single source of truth for "what's the foreground activity?" Reusable by any future Android code that needs activity context (biometric flow migration, etc. — out of scope here).
 
-- [ ] **Step 2: Plumb `currentActivity` provider**
+- [ ] **Step 2: Provide it in `ApplicationComponent.Module`**
 
-In `ActivityComponent`, add a `WeakReference<Activity>` field updated by `MainActivity.onResume` (set) / `onPause` (clear if pointing to this activity). Expose `fun currentActivity(): Activity?`. Inject this into `ApplicationComponent` via `Dependencies` is awkward — instead, expose it via `ActivityComponent` and pull it from there. **Read `AndroidBiometricAuthenticator.kt` first to see how the existing Activity-aware injection pattern works** — replicate it; do not invent a new approach.
+```kotlin
+@Provides
+@ApplicationScope
+fun currentActivityTracker(application: Application): CurrentActivityTracker =
+    CurrentActivityTracker(application)
 
-- [ ] **Step 3: Build `AuthComponent` in `ApplicationComponent.Module`**
+@Provides
+@ApplicationScope
+fun currentActivityProvider(tracker: CurrentActivityTracker): () -> Activity? =
+    { tracker.current() }
+```
 
-  Add a new `AuthModule` (mirroring the existing `RemoteModule`) with:
+`ApplicationComponent` already has `Application` in scope (or `Context` from which Application is derived via cast). Add `Application` to `ApplicationComponent.Dependencies` if it isn't there.
+
+- [ ] **Step 3: Add `AuthModule` to `ApplicationComponent.Module`**
 
 ```kotlin
 @dagger.Module
 internal object AuthModule {
 
-    private const val DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
-
     @Provides
     @ApplicationScope
-    fun authComponent(
-        component: ApplicationComponent,        // satisfies AuthComponent.Dependencies
-        activityComponent: ActivityComponent,    // for currentActivity provider
-    ): AuthComponent = AuthComponent.builder()
-        .dependencies(component)
-        .googleOauthClientId(BuildConfig.DRIVE_OAUTH_CLIENT_ID)
-        .googleOauthScopes(listOf(DRIVE_APPDATA_SCOPE))
-        .currentActivityProvider { activityComponent.currentActivity() }
-        .build()
+    fun authComponent(component: ApplicationComponent): AuthComponent =
+        AuthComponent.builder()
+            .dependencies(component)
+            .build()
 
     @Provides
-    fun googleOAuthTokenProvider(
-        authComponent: AuthComponent,
-    ): OAuthTokenProvider = authComponent.googleOAuthTokenProvider
+    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider =
+        authComponent.googleOAuthTokenProvider
 }
 ```
 
-`ApplicationComponent` must now implement `AuthComponent.Dependencies` — which requires it to expose `httpExecutor: HttpExecutor` (from `RemoteComponent`) and `secureKeyValueStore: SecureKeyValueStore` (already provided in Task 4). Add `httpExecutor` to `ApplicationComponent`'s abstract overrides similarly to how `feedbackService` is currently exposed.
+`ApplicationComponent` already implements `AuthComponent.Dependencies` because it exposes:
+- `httpExecutor` (from `RemoteComponent`)
+- `secureKeyValueStore` (Task 4)
+- `currentActivityProvider: () -> Activity?` (Step 2 of this task)
 
-- [ ] **Step 4: Replace `NoopBackupClient` provider via `DriveComponent`**
+No `@BindsInstance` builder calls — all three flow through the `Dependencies` bridge.
 
-  - Remove the `NoopBackupClient` provider.
-  - Add `DriveComponent` provider + a `backupClient` delegating to it:
+Include `AuthModule` in `ApplicationComponent.Module`'s includes list:
+
+```kotlin
+@dagger.Module(
+    includes = [
+        DatabaseModule::class,
+        RemoteModule::class,
+        AuthModule::class,
+    ],
+)
+object Module { ... }
+```
+
+- [ ] **Step 4: Add `DriveComponent` provider** (replace `NoopBackupClient`)
 
 ```kotlin
 @Provides
@@ -544,7 +611,7 @@ fun backupClient(driveComponent: DriveComponent): BackupClient =
     driveComponent.backupClient
 ```
 
-The cross-component composition lives here: `DriveComponent` is built from primitives exposed by `RemoteComponent` and `AuthComponent`, and `BackupComponent` (built in Phase 1's wiring) receives the resulting `BackupClient` via its `Dependencies`. Drive specifics no longer leak into `ApplicationComponent.Module` — only the factory wiring does.
+Remove the `NoopBackupClient` provider added in Phase 1 Task 7.
 
 - [ ] **Step 5: Delete `NoopBackupClient.kt`**
 
@@ -556,9 +623,10 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add app/
+git add app/src/main/java/com/hluhovskyi/zero/activity/CurrentActivityTracker.kt \
+        app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt
 git rm app/src/main/java/com/hluhovskyi/zero/backup/NoopBackupClient.kt
-git commit -m "backup(app): wire AuthComponent + DriveBackupClient, drop NoopBackupClient"
+git commit -m "backup(app): CurrentActivityTracker + wire AuthComponent + DriveComponent"
 ```
 
 ---

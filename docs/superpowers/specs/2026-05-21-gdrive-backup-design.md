@@ -339,12 +339,12 @@ If those threats matter to a user, v2 will add the encrypted envelope (`format: 
 
 ### Secrets matrix
 
-| Where | OAuth Client ID | OAuth Client Secret |
+| Where | OAuth Web Client ID | OAuth Client Secret |
 |---|---|---|
-| Local dev | `local.gradle.properties` (`googleOauthClientId`) | none — public client (Android-type OAuth clients have no secret) |
-| Release builds | GitHub Actions variable `GOOGLE_OAUTH_CLIENT_ID` | none |
+| Local dev | `local.gradle.properties` (`driveOauthClientId`), read by `zero-auth/build.gradle` | none — public client (Android-type OAuth clients have no secret) |
+| Release builds | GitHub Actions variable `DRIVE_OAUTH_CLIENT_ID`, read by `zero-auth/build.gradle` | none |
 
-Android-type OAuth clients are public clients identified by package name + SHA-1 signing cert. There is no secret to leak. Per `feedback_ships_in_binary_not_secret`, this is a default not a secret; we hardcode-with-env-override using the same `buildConfigField` pattern as `FEEDBACK_ENDPOINT`.
+Android-type OAuth clients are public clients identified by package name + SHA-1 signing cert. There is no secret to leak. Per `feedback_ships_in_binary_not_secret`, this is a default not a secret; we hardcode-with-env-override using the same `buildConfigField` pattern as `FEEDBACK_ENDPOINT`. The buildConfigField lives in `zero-auth/build.gradle` (not `app/build.gradle`) because the value is conceptually a Google-sign-in concern — `AuthComponent.Module` reads `BuildConfig.DRIVE_OAUTH_CLIENT_ID` directly without an inter-module Builder parameter.
 
 ---
 
