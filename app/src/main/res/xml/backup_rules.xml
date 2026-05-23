@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rules for Android Auto Backup on SDK 23-30. See data_extraction_rules.xml for SDK 31+.
+     Allowlist mode: the <include> means ONLY zero.db is backed up. SharedPreferences
+     (incl. the device-specific com.google.android.gms.appid.xml) are excluded implicitly.
+     The journal excludes carve the device-local WAL/SHM back out of the zero.db prefix. -->
+<full-backup-content>
+    <include domain="database" path="zero.db" />
+    <exclude domain="database" path="zero.db-shm" />
+    <exclude domain="database" path="zero.db-wal" />
+</full-backup-content>
