@@ -136,7 +136,7 @@ internal abstract class FeedbackComponent : Attachable {
             navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.component(
             destination = Destinations.Feedback,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             sheetComponentProvider.get()
         }
