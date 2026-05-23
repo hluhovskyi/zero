@@ -45,6 +45,9 @@ internal class MainApplication :
             Timber.plant(Timber.DebugTree())
         }
 
+        // Eagerly construct so it registers ActivityLifecycleCallbacks before the first resume.
+        applicationComponent.currentActivityTracker
+
         attachCloseable = applicationComponent.attachable.attach()
     }
 

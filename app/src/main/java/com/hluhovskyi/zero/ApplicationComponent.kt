@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Build
@@ -7,9 +8,14 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.activity.CurrentActivityTracker
+import com.hluhovskyi.zero.auth.AuthComponent
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.DriveComponent
+import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -90,6 +96,7 @@ private annotation class ApplicationScope
 )
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
+    AuthComponent.Dependencies,
     CrashComponent.Dependencies,
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
@@ -100,6 +107,7 @@ abstract class ApplicationComponent :
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val attachable: Attachable
     abstract val logger: Logger
+    abstract val currentActivityTracker: CurrentActivityTracker
     abstract val databaseComponent: DatabaseComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
@@ -127,6 +135,7 @@ abstract class ApplicationComponent :
             CrashModule::class,
             DatabaseModule::class,
             RemoteModule::class,
+            AuthModule::class,
         ],
     )
     object Module {
@@ -377,7 +386,30 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun backupClient(): BackupClient = BackupClient.Noop
+        fun currentActivityTracker(application: Application): CurrentActivityTracker =
+            CurrentActivityTracker(application)
+
+        @Provides
+        @ApplicationScope
+        fun currentActivityProvider(
+            tracker: CurrentActivityTracker,
+        ): @JvmSuppressWildcards () -> Activity? = { tracker.current() }
+
+        @Provides
+        @ApplicationScope
+        fun driveComponent(
+            httpExecutor: HttpExecutor,
+            oauthTokenProvider: OAuthTokenProvider,
+        ): DriveComponent = DriveComponent.factory(
+            object : DriveComponent.Dependencies {
+                override val httpExecutor = httpExecutor
+                override val oauthTokenProvider = oauthTokenProvider
+            },
+        ).create()
+
+        @Provides
+        @ApplicationScope
+        fun backupClient(driveComponent: DriveComponent): BackupClient = driveComponent.backupClient
 
         @Provides
         @ApplicationScope
@@ -520,6 +552,28 @@ internal object RemoteModule {
     fun feedbackService(
         remoteComponent: RemoteComponent,
     ): FeedbackService = remoteComponent.feedbackService
+
+    @Provides
+    @ApplicationScope
+    fun httpExecutor(
+        remoteComponent: RemoteComponent,
+    ): HttpExecutor = remoteComponent.httpExecutor
+}
+
+@dagger.Module
+internal object AuthModule {
+
+    @Provides
+    @ApplicationScope
+    fun authComponent(component: ApplicationComponent): AuthComponent =
+        AuthComponent.builder()
+            .dependencies(component)
+            .build()
+
+    @Provides
+    @ApplicationScope
+    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider =
+        authComponent.googleOAuthTokenProvider
 }
 
 @dagger.Module
