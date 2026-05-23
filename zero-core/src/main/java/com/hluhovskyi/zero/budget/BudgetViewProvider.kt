@@ -153,6 +153,8 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
+                        onReallocate = {},
+                        onIncrease = {},
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
                     )
