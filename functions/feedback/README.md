@@ -44,12 +44,9 @@ The function's runtime service account needs **`roles/playintegrity.tokenDecoder
 
 ## Deploy
 
-**Code-only change** (the common case — you edited `index.js`): run `./deploy.sh`. It
-redeploys the current source and preserves all existing config (env vars, secret, service
-account), so no real values are needed.
+**Code-only change** (the common case — you edited `index.js`): run `./deploy.sh`. It redeploys the current source and preserves all existing config (env vars, secret, service account), so no real values are needed.
 
-**First-time deploy or config change** (placeholders only — never paste real values into
-commits): use the full command, which sets every flag explicitly.
+**First-time deploy or config change** (placeholders only — never paste real values into commits): use the full command, which sets every flag explicitly.
 
 ```bash
 gcloud functions deploy feedback \
