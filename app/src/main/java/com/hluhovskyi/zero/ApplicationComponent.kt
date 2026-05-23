@@ -10,7 +10,6 @@ import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupUseCase
-import com.hluhovskyi.zero.backup.NoopBackupClient
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -376,7 +375,7 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun backupClient(): BackupClient = NoopBackupClient()
+        fun backupClient(): BackupClient = BackupClient.Noop
 
         @Provides
         @ApplicationScope

@@ -17,4 +17,12 @@ interface BackupClient {
         data class Failure(val error: BackupError) : DownloadResult
         object NotFound : DownloadResult
     }
+
+    /** No-op client used until a real backend lands. Every call returns `NotFound`. */
+    object Noop : BackupClient {
+        override suspend fun upload(envelope: BackupEnvelope): Result = Result.NotFound
+        override suspend fun latest(): Result = Result.NotFound
+        override suspend fun download(backupId: String): DownloadResult = DownloadResult.NotFound
+        override suspend fun delete(backupId: String): Result = Result.NotFound
+    }
 }
