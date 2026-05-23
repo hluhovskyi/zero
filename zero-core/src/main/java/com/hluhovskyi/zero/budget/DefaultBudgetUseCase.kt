@@ -21,13 +21,50 @@ internal class DefaultBudgetUseCase(
             budgetQueryUseCase.query(current.start, current.end),
             budgetQueryUseCase.query(previous.start, previous.end),
         ) { currentBudgets, previousBudgets ->
+            val sorted = sortByStatus(currentBudgets)
             BudgetUseCase.State(
                 currentPeriod = current,
                 previousPeriod = previous,
-                current = currentBudgets,
+                current = sorted,
                 previous = previousBudgets,
+                summary = summarize(sorted),
+                hasAnyBudget = sorted.any { it.budgetId != null },
             )
         }
+    }
+
+    private fun sortByStatus(
+        rows: List<BudgetQueryUseCase.Budgeted>,
+    ): List<BudgetQueryUseCase.Budgeted> {
+        val active = rows.filter { it.budgetId != null }
+        val unset = rows.filter { it.budgetId == null }
+        val over = active.filter { it.spent > it.budgeted }
+        val inProgress = active.filter { it.spent <= it.budgeted }
+            .sortedByDescending { row ->
+                if (row.budgeted > Amount.zero()) row.spent / row.budgeted else 0.0
+            }
+        return over + inProgress + unset
+    }
+
+    private fun summarize(rows: List<BudgetQueryUseCase.Budgeted>): BudgetUseCase.Summary {
+        val active = rows.filter { it.budgetId != null }
+        val totalBudgeted = active.fold(Amount.zero()) { acc, b -> acc + b.budgeted }
+        val totalSpent = active.fold(Amount.zero()) { acc, b -> acc + b.spent }
+        val overCount = active.count { it.spent > it.budgeted }
+        val pct = if (totalBudgeted > Amount.zero()) {
+            (totalSpent.value.toDouble() / totalBudgeted.value.toDouble())
+                .toFloat()
+                .coerceIn(0f, 1f)
+        } else {
+            0f
+        }
+        return BudgetUseCase.Summary(
+            totalBudgeted = totalBudgeted,
+            totalSpent = totalSpent,
+            overCount = overCount,
+            overallPct = pct,
+            isOver = totalSpent > totalBudgeted,
+        )
     }
 
     override suspend fun save(

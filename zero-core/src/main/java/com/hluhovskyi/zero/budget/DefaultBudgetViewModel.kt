@@ -148,6 +148,8 @@ internal class DefaultBudgetViewModel(
                         previousPeriodLabel = label(state.previousPeriod.start),
                         budgeted = state.current,
                         previousPeriodBudgets = state.previous,
+                        summary = state.summary,
+                        hasAnyBudget = state.hasAnyBudget,
                         isLoading = false,
                     )
                 }
