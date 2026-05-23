@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.budget
 
+import com.hluhovskyi.zero.budget.over.BudgetOverViewModel
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Id
@@ -60,11 +61,11 @@ internal class DefaultBudgetViewModel(
             }
             is BudgetViewModel.Action.TapReallocate -> dispatchOverAction(
                 action.categoryId,
-                com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode.REALLOCATE,
+                BudgetOverViewModel.Mode.REALLOCATE,
             )
             is BudgetViewModel.Action.TapIncrease -> dispatchOverAction(
                 action.categoryId,
-                com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode.INCREASE,
+                BudgetOverViewModel.Mode.INCREASE,
             )
             is BudgetViewModel.Action.ChangeEditAmount -> {
                 mutableState.update { it.copy(editingAmountText = action.text) }
@@ -150,7 +151,7 @@ internal class DefaultBudgetViewModel(
 
     private fun dispatchOverAction(
         categoryId: Id.Known,
-        mode: com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode,
+        mode: BudgetOverViewModel.Mode,
     ) {
         val snapshot = mutableState.value
         val start = snapshot.currentPeriodStart ?: return
