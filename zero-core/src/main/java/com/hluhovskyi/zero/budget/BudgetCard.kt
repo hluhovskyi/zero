@@ -224,5 +224,6 @@ private fun statusColor(status: BudgetViewModel.Item.Status): Color = when (stat
     BudgetViewModel.Item.Status.Over -> ZeroTheme.colors.error
     BudgetViewModel.Item.Status.AlmostThere -> OrangeWarn
     BudgetViewModel.Item.Status.Watch,
-    BudgetViewModel.Item.Status.Healthy -> ZeroTheme.colors.onSurfaceVariant
+    BudgetViewModel.Item.Status.Healthy,
+    -> ZeroTheme.colors.onSurfaceVariant
 }
