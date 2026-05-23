@@ -8,21 +8,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -34,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class FeedbackViewProvider(
@@ -66,57 +73,59 @@ private val TYPES = listOf(
 private fun FeedbackView(viewModel: FeedbackViewModel) {
     val state by viewModel.state.collectAsState(initial = FeedbackViewModel.State())
     val colors = ZeroTheme.colors
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 20.dp),
-    ) {
-        Header(onClose = { viewModel.perform(FeedbackViewModel.Action.Close) })
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+        ) {
+            Header(onClose = { viewModel.perform(FeedbackViewModel.Action.Close) })
 
-        Text(
-            text = stringResource(R.string.feedback_eyebrow),
-            style = TextStyle(fontSize = 13.sp, color = colors.onSurfaceVariant, lineHeight = 19.sp),
-            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
-        )
-
-        TypePillRow(
-            selected = state.type,
-            enabled = !state.isSubmitting,
-            onSelect = { viewModel.perform(FeedbackViewModel.Action.SelectType(it)) },
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        DescriptionCard(
-            value = state.description,
-            type = state.type,
-            enabled = !state.isSubmitting,
-            onChange = { viewModel.perform(FeedbackViewModel.Action.UpdateDescription(it)) },
-        )
-
-        val errorMessage = state.errorMessage
-        if (errorMessage != null) {
             Text(
-                text = errorMessage,
-                style = TextStyle(fontSize = 12.sp, color = colors.error),
-                modifier = Modifier.padding(top = 4.dp),
+                text = stringResource(R.string.feedback_eyebrow),
+                style = TextStyle(fontSize = 13.sp, color = colors.onSurfaceVariant, lineHeight = 19.sp),
+                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
+
+            TypePillRow(
+                selected = state.type,
+                enabled = !state.isSubmitting,
+                onSelect = { viewModel.perform(FeedbackViewModel.Action.SelectType(it)) },
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            DescriptionCard(
+                value = state.description,
+                type = state.type,
+                enabled = !state.isSubmitting,
+                onChange = { viewModel.perform(FeedbackViewModel.Action.UpdateDescription(it)) },
+                focusRequester = focusRequester,
+            )
+
+            val errorMessage = state.errorMessage
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    style = TextStyle(fontSize = 12.sp, color = colors.error),
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
         }
 
-        SendButton(
-            isSubmitting = state.isSubmitting,
-            enabled = state.description.isNotBlank() && !state.isSubmitting,
-            onClick = { viewModel.perform(FeedbackViewModel.Action.Submit) },
-        )
-
-        Text(
-            text = stringResource(R.string.feedback_privacy_footnote),
-            style = TextStyle(fontSize = 11.sp, color = colors.outline, lineHeight = 16.sp, textAlign = TextAlign.Center),
+        val canSend = state.description.isNotBlank() && !state.isSubmitting
+        ZeroFab(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 32.dp),
+            onClick = { if (canSend) viewModel.perform(FeedbackViewModel.Action.Submit) },
+            icon = Icons.Filled.Send,
+            contentDescription = stringResource(R.string.feedback_submit),
+            expanded = true,
+            text = stringResource(R.string.feedback_submit),
         )
     }
 }
@@ -199,6 +208,7 @@ private fun DescriptionCard(
     type: FeedbackType,
     enabled: Boolean,
     onChange: (String) -> Unit,
+    focusRequester: FocusRequester,
 ) {
     val colors = ZeroTheme.colors
     val hintRes = TYPES.first { it.type == type }.hintRes
@@ -224,7 +234,8 @@ private fun DescriptionCard(
             enabled = enabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(132.dp),
+                .height(132.dp)
+                .focusRequester(focusRequester),
             textStyle = TextStyle(fontSize = 15.sp, color = colors.onSurface, lineHeight = 22.sp),
             cursorBrush = SolidColor(colors.primaryContainer),
             decorationBox = { innerTextField ->
@@ -249,39 +260,5 @@ private fun DescriptionCard(
                 .padding(top = 4.dp),
             textAlign = TextAlign.End,
         )
-    }
-}
-
-@Composable
-private fun SendButton(isSubmitting: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    val colors = ZeroTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
-            .background(
-                color = if (enabled || isSubmitting) colors.primaryContainer else colors.surfaceContainer,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .clickable(enabled = enabled) { onClick() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (isSubmitting) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = colors.onPrimary,
-                strokeWidth = 2.dp,
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.feedback_submit),
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (enabled) colors.onPrimary else colors.outline,
-                ),
-            )
-        }
     }
 }

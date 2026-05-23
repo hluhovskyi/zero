@@ -231,7 +231,6 @@
     <string name="feedback_hint_idea">It would be great if I could split a transaction across two categories…</string>
     <string name="feedback_hint_other">Tell us what\'s on your mind…</string>
     <string name="feedback_close">Close</string>
-    <string name="feedback_privacy_footnote">Feedback is sent to the Zero team. No account data, balances or transactions are included.</string>
     <string name="feedback_char_counter">%1$d/1000</string>
 
     <!-- Home / Welcome -->
