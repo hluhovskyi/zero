@@ -19,7 +19,7 @@ class BudgetRobot(private val composeRule: ComposeTestRule) {
             }
             onAllNodesWithText("Budget").filter(hasClickAction()).onFirst().performClick()
             waitUntil(timeoutMillis = 10_000) {
-                onAllNodesWithText("Food").fetchSemanticsNodes().isNotEmpty()
+                onAllNodesWithText("Food & Drink").fetchSemanticsNodes().isNotEmpty()
             }
         }
         return this

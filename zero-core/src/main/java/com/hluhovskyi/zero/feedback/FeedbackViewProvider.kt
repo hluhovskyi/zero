@@ -34,13 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class FeedbackViewProvider(
     private val viewModel: FeedbackViewModel,
@@ -71,6 +65,7 @@ private val TYPES = listOf(
 @Composable
 private fun FeedbackView(viewModel: FeedbackViewModel) {
     val state by viewModel.state.collectAsState(initial = FeedbackViewModel.State())
+    val colors = ZeroTheme.colors
 
     Column(
         modifier = Modifier
@@ -82,7 +77,7 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
 
         Text(
             text = stringResource(R.string.feedback_eyebrow),
-            style = TextStyle(fontSize = 13.sp, color = OnSurfaceVariant, lineHeight = 19.sp),
+            style = TextStyle(fontSize = 13.sp, color = colors.onSurfaceVariant, lineHeight = 19.sp),
             modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
         )
 
@@ -105,7 +100,7 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
         if (errorMessage != null) {
             Text(
                 text = errorMessage,
-                style = TextStyle(fontSize = 12.sp, color = Error),
+                style = TextStyle(fontSize = 12.sp, color = colors.error),
                 modifier = Modifier.padding(top = 4.dp),
             )
         }
@@ -118,7 +113,7 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
 
         Text(
             text = stringResource(R.string.feedback_privacy_footnote),
-            style = TextStyle(fontSize = 11.sp, color = Outline, lineHeight = 16.sp, textAlign = TextAlign.Center),
+            style = TextStyle(fontSize = 11.sp, color = colors.outline, lineHeight = 16.sp, textAlign = TextAlign.Center),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp),
@@ -128,6 +123,7 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
 
 @Composable
 private fun Header(onClose: () -> Unit) {
+    val colors = ZeroTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,7 +134,7 @@ private fun Header(onClose: () -> Unit) {
             Icon(
                 painter = painterResource(R.drawable.ic_close_24),
                 contentDescription = stringResource(R.string.feedback_close),
-                tint = PrimaryContainer,
+                tint = colors.primaryContainer,
             )
         }
         Text(
@@ -146,7 +142,7 @@ private fun Header(onClose: () -> Unit) {
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = colors.primaryContainer,
                 textAlign = TextAlign.Center,
             ),
             modifier = Modifier.weight(1f),
@@ -157,6 +153,7 @@ private fun Header(onClose: () -> Unit) {
 
 @Composable
 private fun TypePillRow(selected: FeedbackType, enabled: Boolean, onSelect: (FeedbackType) -> Unit) {
+    val colors = ZeroTheme.colors
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         TYPES.forEach { option ->
             val isSelected = option.type == selected
@@ -164,12 +161,12 @@ private fun TypePillRow(selected: FeedbackType, enabled: Boolean, onSelect: (Fee
                 modifier = Modifier
                     .weight(1f)
                     .background(
-                        color = if (isSelected) Color.White else SurfaceContainerLow,
+                        color = if (isSelected) colors.surfaceContainerLowest else colors.surfaceContainerLow,
                         shape = RoundedCornerShape(14.dp),
                     )
                     .border(
                         width = 1.5.dp,
-                        color = if (isSelected) PrimaryContainer else Color.Transparent,
+                        color = if (isSelected) colors.primaryContainer else Color.Transparent,
                         shape = RoundedCornerShape(14.dp),
                     )
                     .clickable(enabled = enabled) { onSelect(option.type) }
@@ -180,7 +177,7 @@ private fun TypePillRow(selected: FeedbackType, enabled: Boolean, onSelect: (Fee
                 Icon(
                     painter = painterResource(option.iconRes),
                     contentDescription = null,
-                    tint = if (isSelected) PrimaryContainer else OnSurfaceVariant,
+                    tint = if (isSelected) colors.primaryContainer else colors.onSurfaceVariant,
                     modifier = Modifier.size(22.dp),
                 )
                 Text(
@@ -188,7 +185,7 @@ private fun TypePillRow(selected: FeedbackType, enabled: Boolean, onSelect: (Fee
                     style = TextStyle(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isSelected) PrimaryContainer else OnSurfaceVariant,
+                        color = if (isSelected) colors.primaryContainer else colors.onSurfaceVariant,
                     ),
                 )
             }
@@ -203,11 +200,12 @@ private fun DescriptionCard(
     enabled: Boolean,
     onChange: (String) -> Unit,
 ) {
+    val colors = ZeroTheme.colors
     val hintRes = TYPES.first { it.type == type }.hintRes
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow, shape = RoundedCornerShape(16.dp))
+            .background(colors.surfaceContainerLow, shape = RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Text(
@@ -215,7 +213,7 @@ private fun DescriptionCard(
             style = TextStyle(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
+                color = colors.onSurfaceVariant,
                 letterSpacing = 1.2.sp,
             ),
             modifier = Modifier.padding(bottom = 8.dp),
@@ -227,13 +225,13 @@ private fun DescriptionCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(132.dp),
-            textStyle = TextStyle(fontSize = 15.sp, color = OnSurface, lineHeight = 22.sp),
-            cursorBrush = SolidColor(PrimaryContainer),
+            textStyle = TextStyle(fontSize = 15.sp, color = colors.onSurface, lineHeight = 22.sp),
+            cursorBrush = SolidColor(colors.primaryContainer),
             decorationBox = { innerTextField ->
                 if (value.isEmpty()) {
                     Text(
                         text = stringResource(hintRes),
-                        style = TextStyle(fontSize = 15.sp, color = Outline, lineHeight = 22.sp),
+                        style = TextStyle(fontSize = 15.sp, color = colors.outline, lineHeight = 22.sp),
                     )
                 }
                 innerTextField()
@@ -244,7 +242,7 @@ private fun DescriptionCard(
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (value.length > WARN_CHARS) Error else Outline,
+                color = if (value.length > WARN_CHARS) colors.error else colors.outline,
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -256,12 +254,13 @@ private fun DescriptionCard(
 
 @Composable
 private fun SendButton(isSubmitting: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    val colors = ZeroTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
             .background(
-                color = if (enabled || isSubmitting) PrimaryContainer else SurfaceContainer,
+                color = if (enabled || isSubmitting) colors.primaryContainer else colors.surfaceContainer,
                 shape = RoundedCornerShape(16.dp),
             )
             .clickable(enabled = enabled) { onClick() }
@@ -271,7 +270,7 @@ private fun SendButton(isSubmitting: Boolean, enabled: Boolean, onClick: () -> U
         if (isSubmitting) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
-                color = Color.White,
+                color = colors.onPrimary,
                 strokeWidth = 2.dp,
             )
         } else {
@@ -280,7 +279,7 @@ private fun SendButton(isSubmitting: Boolean, enabled: Boolean, onClick: () -> U
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (enabled) Color.White else Outline,
+                    color = if (enabled) colors.onPrimary else colors.outline,
                 ),
             )
         }

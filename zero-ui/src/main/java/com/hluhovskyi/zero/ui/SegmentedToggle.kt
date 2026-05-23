@@ -21,9 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * @param selectedFraction Optional continuous indicator position (0..items.size-1) that overrides
@@ -50,12 +48,12 @@ fun <T> SegmentedToggle(
 
     Layout(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
             .padding(4.dp),
         content = {
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = SurfaceContainerLowest,
+                color = ZeroTheme.colors.surfaceContainerLowest,
                 elevation = 2.dp,
                 content = {},
             )
@@ -74,7 +72,7 @@ fun <T> SegmentedToggle(
                         color = if (isSelected) {
                             MaterialTheme.colors.primary
                         } else {
-                            OnSurfaceVariant
+                            ZeroTheme.colors.onSurfaceVariant
                         },
                         textAlign = TextAlign.Center,
                     )

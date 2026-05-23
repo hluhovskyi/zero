@@ -48,13 +48,7 @@ import com.hluhovskyi.zero.ui.CollapsibleHeroLayout
 import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.ZeroFab
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.ErrorContainer
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -82,7 +76,7 @@ internal class AccountDetailViewProvider(
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
                                     contentDescription = stringResource(R.string.account_detail_more_options_description),
-                                    tint = PrimaryContainer,
+                                    tint = ZeroTheme.colors.primaryContainer,
                                 )
                             }
                             DropdownMenu(
@@ -162,10 +156,10 @@ private fun HeroCard(
     imageLoader: ImageLoader,
 ) {
     val isNeg = state.isNegativeBalance
-    val heroBackground = if (isNeg) ErrorContainer else SurfaceContainerLow
-    val balanceColor = if (isNeg) Error else Primary
-    val accentColor = if (isNeg) Error else Primary
-    val inValueColor = if (isNeg) Error else Secondary
+    val heroBackground = if (isNeg) ZeroTheme.colors.errorContainer else ZeroTheme.colors.surfaceContainerLow
+    val balanceColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.primary
+    val accentColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.primary
+    val inValueColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.secondary
 
     Box(
         modifier = Modifier
@@ -227,14 +221,14 @@ private fun HeroCard(
                     label = stringResource(R.string.account_detail_out_this_month).uppercase(),
                     value = "–${amountFormatter.format(state.totalOut, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
-                    valueColor = OnSurface,
+                    valueColor = ZeroTheme.colors.onSurface,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
                     label = stringResource(R.string.account_detail_transactions).uppercase(),
                     value = state.transactionCount.toString(),
                     labelColor = accentColor.copy(alpha = 0.7f),
-                    valueColor = OnSurface,
+                    valueColor = ZeroTheme.colors.onSurface,
                 )
             }
         }

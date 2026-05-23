@@ -33,11 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.OnPrimaryContainer
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Surface
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class BiometricLockGateViewProvider(
     private val viewModel: BiometricLockGateViewModel,
@@ -66,7 +62,7 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Surface)
+            .background(ZeroTheme.colors.surface)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -83,14 +79,14 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .background(PrimaryContainer),
+                    .background(ZeroTheme.colors.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Fingerprint,
                     contentDescription = null,
                     modifier = Modifier.size(44.dp),
-                    tint = OnPrimaryContainer,
+                    tint = ZeroTheme.colors.onPrimaryContainer,
                 )
             }
             Spacer(Modifier.height(20.dp))
@@ -99,7 +95,7 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
                 style = TextStyle(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                 ),
                 textAlign = TextAlign.Center,
             )
@@ -108,7 +104,7 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
                 text = stringResource(R.string.biometric_lock_screen_subtitle),
                 style = TextStyle(
                     fontSize = 14.sp,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                 ),
                 textAlign = TextAlign.Center,
             )
@@ -116,7 +112,7 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(PrimaryContainer)
+                    .background(ZeroTheme.colors.primaryContainer)
                     .clickable(onClick = onUnlockClick)
                     .padding(horizontal = 24.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -126,7 +122,7 @@ private fun BiometricLockScreen(onUnlockClick: () -> Unit) {
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnPrimaryContainer,
+                        color = ZeroTheme.colors.onPrimaryContainer,
                     ),
                 )
             }

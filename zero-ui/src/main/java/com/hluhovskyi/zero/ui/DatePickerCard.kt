@@ -24,8 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
@@ -44,7 +43,7 @@ fun DatePickerCard(
 
     Column(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .clickable {
                 DatePickerDialog(
                     context,
@@ -62,7 +61,7 @@ fun DatePickerCard(
             text = label.uppercase(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 1.sp,
         )
         Row(
@@ -85,7 +84,7 @@ fun DatePickerCard(
                 imageVector = Icons.Filled.ArrowDropDown,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }

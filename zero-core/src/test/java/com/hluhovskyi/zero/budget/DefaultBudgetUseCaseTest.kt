@@ -1,13 +1,19 @@
 package com.hluhovskyi.zero.budget
 
+import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -154,4 +160,116 @@ class DefaultBudgetUseCaseTest {
         assertEquals(0, inserts.getValue(catC).amount.value.compareTo(BigDecimal("75")))
         // cur-b (not in source) gets handled by the repository's atomic replace — no individual delete.
     }
+
+    // ── observe ──────────────────────────────────────────────────────────────
+    // The use case is the single source of truth for derived display state. The
+    // view layer reads `state.current` (already sorted), `state.summary`, and
+    // `state.hasAnyBudget` directly — no sort, mapping, or checks downstream.
+
+    @Test
+    fun `observe sorts rows over → in-progress by pct desc → unset`() = runTest {
+        whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("in-30", budgetId = "b1", budgeted = "100", spent = "30"),
+                    row("over-1", budgetId = "b2", budgeted = "100", spent = "150"),
+                    row("unset-a", budgetId = null, budgeted = "0", spent = "5"),
+                    row("in-80", budgetId = "b3", budgeted = "100", spent = "80"),
+                    row("over-2", budgetId = "b4", budgeted = "50", spent = "60"),
+                    row("unset-b", budgetId = null, budgeted = "0", spent = "0"),
+                    row("in-50", budgetId = "b5", budgeted = "100", spent = "50"),
+                    row("over-3", budgetId = "b6", budgeted = "10", spent = "15"),
+                ),
+            ),
+        )
+
+        val state = useCase().observe(MutableStateFlow(0), type).first()
+
+        assertEquals(
+            listOf("over-1", "over-2", "over-3", "in-80", "in-50", "in-30", "unset-a", "unset-b"),
+            state.current.map { it.categoryId.value },
+        )
+    }
+
+    @Test
+    fun `observe derives empty summary when no budgets are set`() = runTest {
+        whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("u1", budgetId = null, budgeted = "0", spent = "10"),
+                    row("u2", budgetId = null, budgeted = "0", spent = "5"),
+                ),
+            ),
+        )
+
+        val state = useCase().observe(MutableStateFlow(0), type).first()
+
+        assertFalse(state.hasAnyBudget)
+        assertEquals(BudgetUseCase.Summary.empty, state.summary)
+    }
+
+    @Test
+    fun `observe derives summary totals over only set rows`() = runTest {
+        whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("c1", budgetId = "b1", budgeted = "200", spent = "50"),
+                    row("c2", budgetId = "b2", budgeted = "300", spent = "100"),
+                    row("u1", budgetId = null, budgeted = "0", spent = "999"),
+                ),
+            ),
+        )
+
+        val state = useCase().observe(MutableStateFlow(0), type).first()
+
+        assertTrue(state.hasAnyBudget)
+        assertEquals(BigDecimal("500"), state.summary.totalBudgeted.value)
+        assertEquals(BigDecimal("150"), state.summary.totalSpent.value)
+        assertEquals(0, state.summary.overCount)
+        assertEquals(0.3f, state.summary.overallPct, 0.0001f)
+        assertFalse(state.summary.isOver)
+    }
+
+    @Test
+    fun `observe flags over-budget and clips pct at 1`() = runTest {
+        whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("c1", budgetId = "b1", budgeted = "100", spent = "150"),
+                    row("c2", budgetId = "b2", budgeted = "200", spent = "50"),
+                ),
+            ),
+        )
+
+        val state = useCase().observe(MutableStateFlow(0), type).first()
+
+        assertEquals(1, state.summary.overCount)
+        assertEquals(BigDecimal("300"), state.summary.totalBudgeted.value)
+        assertEquals(BigDecimal("200"), state.summary.totalSpent.value)
+        assertFalse(state.summary.isOver)
+        assertEquals(200f / 300f, state.summary.overallPct, 0.0001f)
+    }
+
+    private fun row(
+        categoryId: String,
+        budgetId: String?,
+        budgeted: String,
+        spent: String,
+    ) = BudgetQueryUseCase.Budgeted(
+        categoryId = Id.Known(categoryId),
+        categoryName = "Cat $categoryId",
+        icon = Image.empty(),
+        colorScheme = ColorScheme.Grey,
+        spent = Amount(BigDecimal(spent)),
+        budgetId = budgetId?.let { Id.Known(it) },
+        budgeted = Amount(BigDecimal(budgeted)),
+    )
 }

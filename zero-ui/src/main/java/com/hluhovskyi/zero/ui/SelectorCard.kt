@@ -28,8 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun <T> SelectorCard(
@@ -47,7 +46,7 @@ fun <T> SelectorCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
                 .clickable { if (onClick != null) onClick() else expanded = true }
                 .padding(16.dp),
         ) {
@@ -55,7 +54,7 @@ fun <T> SelectorCard(
                 text = label.uppercase(),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 letterSpacing = 1.sp,
             )
             Row(
@@ -78,7 +77,7 @@ fun <T> SelectorCard(
                     imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = OnSurfaceVariant,
+                    tint = ZeroTheme.colors.onSurfaceVariant,
                 )
             }
         }
