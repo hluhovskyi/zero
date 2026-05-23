@@ -228,6 +228,7 @@ private fun increaseSuggestionsFor(
         .multiply(BigDecimal(50))
         .subtract(budgetedBd)
     return listOf(exact, tenWithBuffer, totalRoundedToNext50)
+        .map { it.setScale(0, RoundingMode.UP) }
         .filter { it > BigDecimal.ZERO }
         .distinct()
         .take(3)
