@@ -53,6 +53,8 @@ zero-image-loading   → ImageLoader interface + Coil impl
 zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
 zero-zenmoney        → ZenMoney CSV import
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
+zero-backup          → Backup orchestration + Drive REST client (pure Kotlin JVM, no Android)
+zero-auth            → Google OAuth (Credential Manager + token exchange)
 zero-remote          → Server-side HTTP calls
 ```
 
