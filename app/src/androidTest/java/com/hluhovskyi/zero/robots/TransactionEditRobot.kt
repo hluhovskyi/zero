@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.robots
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -20,6 +21,39 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
             onNodeWithText(category).performClick()
             onNodeWithText("ACCOUNT").performClick()
             onAllNodesWithText(account).onLast().performClick()
+        }
+        return this
+    }
+
+    fun assertCurrencySymbol(symbol: String): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(symbol).fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText(symbol).assertCountEquals(1)
+        }
+        return this
+    }
+
+    fun openCurrencyPicker(currentSymbol: String): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(currentSymbol).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText(currentSymbol).performClick()
+        }
+        return this
+    }
+
+    fun pickCurrencyByName(name: String): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Search currencies…").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText(name).performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Search currencies…").fetchSemanticsNodes().isEmpty()
+            }
         }
         return this
     }

@@ -477,15 +477,21 @@ internal class DefaultTransactionEditUseCase(
                     .filterIsInstance<TransactionEditCurrencyUseCase.State.Picked>()
                     .collectLatest { picked ->
                         mutableState.update { state ->
-                            val currency = state.currencies.firstOrNull { it.id == picked.currency.id }
-                            if (currency != null) {
-                                state.copy(
-                                    manuallyChangedCurrency = true,
-                                    selectedCurrency = currency,
-                                )
+                            val pickedCurrency = TransactionEditCurrency(
+                                id = picked.currency.id,
+                                name = picked.currency.name,
+                                currencySymbol = picked.currency.symbol,
+                            )
+                            val currencies = if (state.currencies.any { it.id == pickedCurrency.id }) {
+                                state.currencies
                             } else {
-                                state
+                                state.currencies + pickedCurrency
                             }
+                            state.copy(
+                                currencies = currencies,
+                                manuallyChangedCurrency = true,
+                                selectedCurrency = pickedCurrency,
+                            )
                         }
                     }
             }
