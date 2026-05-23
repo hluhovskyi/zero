@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider

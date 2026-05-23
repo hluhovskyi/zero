@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.budget.over
 
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
-import com.hluhovskyi.zero.budget.BudgetType
 import com.hluhovskyi.zero.budget.toInsert
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
@@ -216,11 +215,9 @@ internal class DefaultBudgetOverViewModel(
     }
 }
 
-private fun capAtOverage(remaining: Amount, overage: Amount): Amount =
-    if (remaining > overage) overage else remaining
+private fun capAtOverage(remaining: Amount, overage: Amount): Amount = if (remaining > overage) overage else remaining
 
-private fun Amount.coerceAtLeastZero(): Amount =
-    if (this < Amount.zero()) Amount.zero() else this
+private fun Amount.coerceAtLeastZero(): Amount = if (this < Amount.zero()) Amount.zero() else this
 
 private fun increaseSuggestionsFor(
     budgeted: Amount,
@@ -258,5 +255,4 @@ private fun newBudgetedFor(budgeted: Amount, text: String): Amount {
     return budgeted + Amount(parsed)
 }
 
-private fun amountIntegerString(amount: Amount): String =
-    amount.value.setScale(0, RoundingMode.UP).toPlainString()
+private fun amountIntegerString(amount: Amount): String = amount.value.setScale(0, RoundingMode.UP).toPlainString()
