@@ -43,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusTarget
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,9 +61,7 @@ import com.hluhovskyi.zero.transaction.TransactionTransferView
 import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.coroutines.flow.drop
 
 internal class TransactionViewProvider(
@@ -195,7 +192,7 @@ private fun TransactionView(
                     Text(
                         text = stringResource(R.string.transaction_empty_state),
                         fontSize = 15.sp,
-                        color = Color(0xFF44464F),
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             } else {
@@ -239,7 +236,7 @@ private fun TransactionView(
                                         text = dateFormatter.format(transaction).uppercase(),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF44464F),
+                                        color = ZeroTheme.colors.onSurfaceVariant,
                                         letterSpacing = 0.8.sp,
                                     )
                                     Text(
@@ -249,7 +246,7 @@ private fun TransactionView(
                                         ),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF44464F),
+                                        color = ZeroTheme.colors.onSurfaceVariant,
                                         letterSpacing = 0.8.sp,
                                     )
                                 }
@@ -325,7 +322,7 @@ private fun TransactionRow(
                 bottom = 12.dp,
             )
             .clip(cardShape)
-            .background(Color(0xFFFFFFFF)),
+            .background(ZeroTheme.colors.surfaceContainerLowest),
     ) {
         when (transaction) {
             is TransactionViewModel.Item.Transaction.Expense ->
@@ -344,7 +341,7 @@ private fun TransactionRow(
                             modifier = Modifier
                                 .padding(end = 6.dp)
                                 .size(14.dp),
-                            tint = Color(0xFF44464F),
+                            tint = ZeroTheme.colors.onSurfaceVariant,
                         )
                     },
                     convertedAmount = transaction.conversion.format(
@@ -375,7 +372,7 @@ private fun TransactionRow(
                             modifier = Modifier
                                 .padding(end = 6.dp)
                                 .size(14.dp),
-                            tint = Color(0xFF44464F),
+                            tint = ZeroTheme.colors.onSurfaceVariant,
                         )
                     },
                     convertedAmount = transaction.conversion.format(
@@ -427,7 +424,7 @@ private fun TransactionRow(
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = null,
-                        tint = OnSurfaceVariant,
+                        tint = ZeroTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.size(8.dp))
@@ -443,13 +440,13 @@ private fun TransactionRow(
                     Icon(
                         imageVector = Icons.Outlined.Delete,
                         contentDescription = null,
-                        tint = Color(0xFFBA1A1A),
+                        tint = ZeroTheme.colors.error,
                         modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.size(8.dp))
                     Text(
                         text = stringResource(R.string.transaction_delete),
-                        color = Color(0xFFBA1A1A),
+                        color = ZeroTheme.colors.error,
                     )
                 }
             }
@@ -466,14 +463,14 @@ private fun FilterButton(
         modifier = Modifier
             .size(44.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (activeCount > 0) PrimaryContainer else SurfaceContainerLow)
+            .background(if (activeCount > 0) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.surfaceContainerLow)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.FilterList,
             contentDescription = stringResource(R.string.transaction_filter_icon_description),
-            tint = if (activeCount > 0) Color.White else OnSurfaceVariant,
+            tint = if (activeCount > 0) ZeroTheme.colors.onPrimary else ZeroTheme.colors.onSurfaceVariant,
             modifier = Modifier.size(20.dp),
         )
         if (activeCount > 0) {
@@ -483,7 +480,7 @@ private fun FilterButton(
                     .padding(top = 6.dp, end = 6.dp)
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFE53935)),
+                    .background(ZeroTheme.colors.error),
             )
         }
     }
@@ -542,7 +539,7 @@ private fun FilterChipsRow(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(SurfaceContainerLow)
+                .background(ZeroTheme.colors.surfaceContainerLow)
                 .clickable(onClick = onClearAll)
                 .padding(horizontal = 12.dp, vertical = 5.dp),
         ) {
@@ -550,7 +547,7 @@ private fun FilterChipsRow(
                 text = stringResource(R.string.transaction_clear_all),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }
@@ -564,7 +561,7 @@ private fun FilterChip(
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(PrimaryContainer)
+            .background(ZeroTheme.colors.primaryContainer)
             .padding(start = 12.dp, end = 8.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -573,20 +570,20 @@ private fun FilterChip(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.White,
+            color = ZeroTheme.colors.onPrimary,
         )
         Box(
             modifier = Modifier
                 .size(16.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.2f))
+                .background(ZeroTheme.colors.onPrimary.copy(alpha = 0.2f))
                 .clickable(onClick = onRemove),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(R.string.transaction_remove_filter_description),
-                tint = Color.White,
+                tint = ZeroTheme.colors.onPrimary,
                 modifier = Modifier.size(10.dp),
             )
         }

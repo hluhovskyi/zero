@@ -39,9 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun AmountDisplay(
@@ -71,7 +69,7 @@ fun AmountDisplay(
             text = label,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 3.sp,
         )
 
@@ -85,7 +83,7 @@ fun AmountDisplay(
                 if (onCurrencyClick != null) {
                     Row(
                         modifier = Modifier
-                            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+                            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
                             .clickable(onClick = onCurrencyClick)
                             .padding(start = 8.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -95,13 +93,13 @@ fun AmountDisplay(
                             text = currencySymbol,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryContainer,
+                            color = ZeroTheme.colors.primaryContainer,
                         )
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = OnSurfaceVariant,
+                            tint = ZeroTheme.colors.onSurfaceVariant,
                         )
                     }
                 } else {
@@ -109,7 +107,7 @@ fun AmountDisplay(
                         text = currencySymbol,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             }

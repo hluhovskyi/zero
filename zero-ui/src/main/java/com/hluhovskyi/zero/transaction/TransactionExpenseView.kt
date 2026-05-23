@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.UiColorScheme
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun TransactionExpenseView(
@@ -52,7 +53,7 @@ fun TransactionIncomeView(
         modifier = modifier,
         primaryText = categoryName,
         primaryAmount = "+$amount",
-        amountColor = Color(0xFF006C4A),
+        amountColor = ZeroTheme.colors.transactionIncome,
         secondaryText = accountName,
         secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
@@ -66,7 +67,7 @@ fun TransactionView(
     modifier: Modifier,
     primaryText: String,
     primaryAmount: String,
-    amountColor: Color = Color(0xFF1B1B1F),
+    amountColor: Color = ZeroTheme.colors.onSurface,
     secondaryText: String,
     secondaryAmount: String? = null,
     iconColorScheme: UiColorScheme? = null,
@@ -90,7 +91,7 @@ fun TransactionView(
                     text = primaryText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1B1B1F),
+                    color = ZeroTheme.colors.onSurface,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
@@ -107,13 +108,13 @@ fun TransactionView(
                 Text(
                     text = secondaryText,
                     fontSize = 13.sp,
-                    color = Color(0xFF44464F),
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
                 secondaryAmount?.let {
                     Text(
                         fontSize = 12.sp,
-                        color = Color(0xFF44464F),
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         text = it,
                     )
                 }

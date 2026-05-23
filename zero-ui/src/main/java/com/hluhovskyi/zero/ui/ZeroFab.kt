@@ -13,10 +13,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun ZeroFab(
@@ -31,8 +30,8 @@ fun ZeroFab(
     FloatingActionButton(
         modifier = modifier,
         onClick = onClick,
-        backgroundColor = PrimaryContainer,
-        contentColor = Color.White,
+        backgroundColor = ZeroTheme.colors.primaryContainer,
+        contentColor = ZeroTheme.colors.onPrimary,
         elevation = elevation,
     ) {
         Row(

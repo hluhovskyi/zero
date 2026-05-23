@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,9 +38,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class ImportViewProvider(
     private val viewModel: ImportViewModel,
@@ -131,14 +128,14 @@ private fun UpToDateView(onDone: () -> Unit) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.import_back_description),
-                    tint = PrimaryContainer,
+                    tint = ZeroTheme.colors.primaryContainer,
                 )
             }
             Text(
                 text = stringResource(R.string.import_nothing_to_import_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
@@ -155,12 +152,12 @@ private fun UpToDateView(onDone: () -> Unit) {
                 text = stringResource(R.string.import_up_to_date_message),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             )
             Text(
                 text = stringResource(R.string.import_all_synced_message),
                 fontSize = 14.sp,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
         }
@@ -169,7 +166,7 @@ private fun UpToDateView(onDone: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(PrimaryContainer)
+                    .background(ZeroTheme.colors.primaryContainer)
                     .clickable(onClick = onDone)
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
@@ -178,7 +175,7 @@ private fun UpToDateView(onDone: () -> Unit) {
                     text = stringResource(R.string.import_done),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = ZeroTheme.colors.onPrimary,
                 )
             }
         }

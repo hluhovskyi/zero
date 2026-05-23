@@ -31,8 +31,7 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.SearchBar
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val GRID_COLUMNS = 4
 
@@ -101,14 +100,14 @@ private fun CurrencyPickerGridItem(
                         Modifier.padding(4.dp)
                     },
                 )
-                .background(SurfaceContainer, shape),
+                .background(ZeroTheme.colors.surfaceContainer, shape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = currency.symbol,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             )
         }
         Text(
@@ -116,7 +115,7 @@ private fun CurrencyPickerGridItem(
             text = currency.name,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

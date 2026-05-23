@@ -20,8 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val KEYS = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫")
 
@@ -66,7 +65,7 @@ fun NumPad(
                             Icon(
                                 imageVector = Icons.Filled.Backspace,
                                 contentDescription = stringResource(R.string.numpad_backspace_cd),
-                                tint = OutlineVariant,
+                                tint = ZeroTheme.colors.outlineVariant,
                             )
                         } else {
                             Text(
@@ -74,7 +73,7 @@ fun NumPad(
                                 style = TextStyle(
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = PrimaryContainer,
+                                    color = ZeroTheme.colors.primaryContainer,
                                 ),
                             )
                         }

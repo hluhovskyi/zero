@@ -43,9 +43,7 @@ import com.hluhovskyi.zero.transactions.edit.TransferRateMode
 import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerHigh
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -149,7 +147,7 @@ private fun RateModePill(
 ) {
     Column(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .padding(16.dp),
     ) {
         when (val mode = state.transferRateMode) {
@@ -167,7 +165,7 @@ private fun RateModePill(
                         text = pillText,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             }
@@ -182,7 +180,7 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_rate_label).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
@@ -213,7 +211,7 @@ private fun RateModePill(
                                 text = stringResource(R.string.transfer_edit_enter_rate),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = OnSurfaceVariant.copy(alpha = 0.5f),
+                                color = ZeroTheme.colors.onSurfaceVariant.copy(alpha = 0.5f),
                             )
                         }
                         innerTextField()
@@ -226,7 +224,7 @@ private fun RateModePill(
                         modifier = Modifier.padding(top = 4.dp),
                         text = computedTarget,
                         fontSize = 12.sp,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             }
@@ -241,7 +239,7 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_destination_amount).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
@@ -275,7 +273,7 @@ private fun RateModePill(
                                     text = state.targetCurrencySymbol,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = OnSurfaceVariant,
+                                    color = ZeroTheme.colors.onSurfaceVariant,
                                     modifier = Modifier.padding(end = 4.dp),
                                 )
                             }
@@ -285,7 +283,7 @@ private fun RateModePill(
                                         text = "0",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = OnSurfaceVariant.copy(alpha = 0.5f),
+                                        color = ZeroTheme.colors.onSurfaceVariant.copy(alpha = 0.5f),
                                     )
                                 }
                                 innerTextField()
@@ -337,7 +335,7 @@ private fun AccountSelectorsWithSwap(
                 .zIndex(1f)
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(SurfaceContainerHigh)
+                .background(ZeroTheme.colors.surfaceContainerHigh)
                 .clickable { onSwap() },
             contentAlignment = Alignment.Center,
         ) {
@@ -345,7 +343,7 @@ private fun AccountSelectorsWithSwap(
                 imageVector = Icons.Filled.SwapVert,
                 contentDescription = stringResource(R.string.transfer_edit_swap_description),
                 modifier = Modifier.size(20.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }

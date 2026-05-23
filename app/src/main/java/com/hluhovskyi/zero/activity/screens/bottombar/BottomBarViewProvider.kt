@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class BottomBarViewProvider(
     private val viewModel: BottomBarViewModel,
@@ -44,19 +45,19 @@ internal fun BottomBarView(
     if (state.items.isNotEmpty()) {
         BottomNavigation(
             modifier = Modifier.height(72.dp),
-            backgroundColor = Color(0xFFFFFFFF),
+            backgroundColor = ZeroTheme.colors.surfaceContainerLowest,
             elevation = 0.dp,
         ) {
             state.items.forEach { item ->
                 BottomNavigationItem(
-                    selectedContentColor = Color(0xFF000E2F),
-                    unselectedContentColor = Color(0xFF757780),
+                    selectedContentColor = ZeroTheme.colors.primary,
+                    unselectedContentColor = ZeroTheme.colors.outline,
                     alwaysShowLabel = true,
                     selected = item.selected,
                     onClick = { viewModel.perform(BottomBarViewModel.Action.SelectItem(item)) },
                     icon = {
-                        val iconTint = if (item.selected) Color(0xFF000E2F) else Color(0xFF757780)
-                        val pillColor = if (item.selected) Color(0xFFD9E2FF) else Color.Transparent
+                        val iconTint = if (item.selected) ZeroTheme.colors.primary else ZeroTheme.colors.outline
+                        val pillColor = if (item.selected) ZeroTheme.colors.selectedPill else Color.Transparent
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.padding(top = 6.dp),

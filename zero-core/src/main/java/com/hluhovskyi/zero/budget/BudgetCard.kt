@@ -38,12 +38,7 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.ui.common.toCompose
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val OverBg = Color(0xFFFFF8F6)
 private val OrangeWarn = Color(0xFFE65100)
@@ -58,9 +53,9 @@ internal fun BudgetCard(
     modifier: Modifier = Modifier,
 ) {
     val isOver = item.status == BudgetViewModel.Item.Status.Over
-    val cardBg = if (isOver) OverBg else SurfaceContainerLowest
+    val cardBg = if (isOver) OverBg else ZeroTheme.colors.surfaceContainerLowest
     val borderModifier = if (isOver) {
-        Modifier.border(1.5.dp, Error.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+        Modifier.border(1.5.dp, ZeroTheme.colors.error.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
     } else {
         Modifier
     }
@@ -93,6 +88,7 @@ private fun IconWithRing(
     val bg = item.colorScheme.background.value.toCompose()
     val primary = item.colorScheme.primary.value.toCompose()
     val ringColor = ringColor(item.status, bg = bg, primary = primary)
+    val trackColor = ZeroTheme.colors.surfaceContainer
     val animated by animateFloatAsState(
         targetValue = item.progress,
         animationSpec = tween(durationMillis = 600),
@@ -111,7 +107,7 @@ private fun IconWithRing(
             )
             val arcSize = Size(diameter, diameter)
             drawArc(
-                color = SurfaceContainer,
+                color = trackColor,
                 startAngle = 0f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -165,7 +161,7 @@ private fun TextBlock(
                 style = TextStyle(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -175,7 +171,7 @@ private fun TextBlock(
                 style = TextStyle(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (isOver) Error else Primary,
+                    color = if (isOver) ZeroTheme.colors.error else ZeroTheme.colors.primary,
                 ),
             )
         }
@@ -204,27 +200,29 @@ private fun TextBlock(
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                 ),
             )
         }
     }
 }
 
+@Composable
 private fun ringColor(
     status: BudgetViewModel.Item.Status,
     bg: Color,
     primary: Color,
 ): Color = when (status) {
-    BudgetViewModel.Item.Status.Over -> Error
+    BudgetViewModel.Item.Status.Over -> ZeroTheme.colors.error
     BudgetViewModel.Item.Status.AlmostThere -> OrangeWarn
     BudgetViewModel.Item.Status.Watch -> YellowWarn
     BudgetViewModel.Item.Status.Healthy -> lerp(bg, primary, 0.3f)
 }
 
+@Composable
 private fun statusColor(status: BudgetViewModel.Item.Status): Color = when (status) {
-    BudgetViewModel.Item.Status.Over -> Error
+    BudgetViewModel.Item.Status.Over -> ZeroTheme.colors.error
     BudgetViewModel.Item.Status.AlmostThere -> OrangeWarn
     BudgetViewModel.Item.Status.Watch,
-    BudgetViewModel.Item.Status.Healthy -> OnSurfaceVariant
+    BudgetViewModel.Item.Status.Healthy -> ZeroTheme.colors.onSurfaceVariant
 }
