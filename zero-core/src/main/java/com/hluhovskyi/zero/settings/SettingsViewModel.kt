@@ -11,6 +11,9 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         object OpenCurrencyPicker : Action
         object ToggleBiometricLock : Action
         object BiometricFeedbackShown : Action
+
+        // TODO: remove in Phase 3 (replaced by the real Backup detail screen).
+        object DevTestBackup : Action
     }
 
     sealed interface ExportFeedback {
@@ -28,5 +31,7 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         val exportFeedback: ExportFeedback? = null,
         val biometricLockEnabled: Boolean = false,
         val biometricFeedback: BiometricFeedback? = null,
+        // TODO: remove in Phase 3 — transient status for the temporary DEV backup button.
+        val devBackupStatus: String? = null,
     )
 }

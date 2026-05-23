@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.settings
 
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
@@ -41,6 +43,10 @@ abstract class SettingsComponent : AttachableViewComponent {
         val currentUserRepository: CurrentUserRepository
         val serializer: SyncSerializer
         val exportWriter: ExportWriter
+
+        // TODO: remove in Phase 3 — only the temporary DEV backup button uses these.
+        val oauthTokenProvider: OAuthTokenProvider
+        val backupUseCase: BackupUseCase
     }
 
     companion object {
@@ -93,6 +99,8 @@ abstract class SettingsComponent : AttachableViewComponent {
             exportUseCase: ExportUseCase,
             biometricLockUseCase: BiometricLockUseCase,
             biometricAuthenticator: BiometricAuthenticator,
+            oauthTokenProvider: OAuthTokenProvider,
+            backupUseCase: BackupUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
@@ -100,6 +108,8 @@ abstract class SettingsComponent : AttachableViewComponent {
             exportUseCase = exportUseCase,
             biometricLockUseCase = biometricLockUseCase,
             biometricAuthenticator = biometricAuthenticator,
+            oauthTokenProvider = oauthTokenProvider,
+            backupUseCase = backupUseCase,
         )
 
         @Provides
