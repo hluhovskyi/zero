@@ -30,7 +30,7 @@ class BudgetOverIncreaseRobot(private val composeRule: ComposeTestRule) {
     fun confirm(): BudgetRobot {
         composeRule.apply {
             onNodeWithTag("Budget.over.increase.confirm").performClick()
-            waitUntil(timeoutMillis = 10_000) {
+            waitUntil(timeoutMillis = 5_000) {
                 onAllNodesWithText("Increase Budget").fetchSemanticsNodes().isEmpty()
             }
         }

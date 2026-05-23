@@ -41,6 +41,7 @@ import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -593,8 +594,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Over.CategoryId))
-                .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodStart)))
-                .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodEnd)))
+                .period(
+                    DateRange(
+                        start = LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodStart)),
+                        end = LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodEnd)),
+                    ),
+                )
                 .initialMode(
                     arguments.getValue(Destinations.Budget.Over.InitialMode)
                         .takeIf { it.isNotEmpty() }

@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.budget.BudgetType
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.OnBackHandler
@@ -100,8 +101,7 @@ class DefaultBudgetOverViewModelTest {
         onBackHandler: OnBackHandler = OnBackHandler.Noop,
     ) = DefaultBudgetOverViewModel(
         categoryId = targetId,
-        periodStart = periodStart,
-        periodEnd = periodEnd,
+        period = DateRange(periodStart, periodEnd),
         initialMode = initialMode,
         budgetQueryUseCase = budgetQueryUseCase,
         budgetRepository = budgetRepository,

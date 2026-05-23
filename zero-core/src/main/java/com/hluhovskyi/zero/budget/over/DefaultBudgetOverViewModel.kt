@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.budget.BudgetType
 import com.hluhovskyi.zero.budget.toInsert
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
@@ -15,23 +16,25 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal class DefaultBudgetOverViewModel(
     private val categoryId: Id.Known,
-    private val periodStart: LocalDate,
-    private val periodEnd: LocalDate,
+    private val period: DateRange,
     private val initialMode: BudgetOverViewModel.Mode?,
     private val budgetQueryUseCase: BudgetQueryUseCase,
     private val budgetRepository: BudgetRepository,
     private val onReallocateCompletedHandler: OnReallocateCompletedHandler,
     private val onIncreaseCompletedHandler: OnIncreaseCompletedHandler,
     private val onBackHandler: OnBackHandler,
-    dispatchers: DispatcherProvider,
+    private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetOverViewModel {
+
+    private val periodStart get() = period.start
+    private val periodEnd get() = period.end
 
     private val mutableState = MutableStateFlow(
         BudgetOverViewModel.State(mode = initialMode ?: BudgetOverViewModel.Mode.CHOICE),
@@ -49,12 +52,16 @@ internal class DefaultBudgetOverViewModel(
                 it.copy(mode = BudgetOverViewModel.Mode.INCREASE)
             }
             BudgetOverViewModel.Action.TapBack -> {
-                val current = mutableState.value
-                if (initialMode == null && current.mode != BudgetOverViewModel.Mode.CHOICE) {
-                    mutableState.update { it.copy(mode = BudgetOverViewModel.Mode.CHOICE) }
-                } else {
-                    onBackHandler.onBack()
+                var transitioned = false
+                mutableState.update { state ->
+                    if (initialMode == null && state.mode != BudgetOverViewModel.Mode.CHOICE) {
+                        transitioned = true
+                        state.copy(mode = BudgetOverViewModel.Mode.CHOICE)
+                    } else {
+                        state
+                    }
                 }
+                if (!transitioned) onBackHandler.onBack()
             }
             BudgetOverViewModel.Action.TapClose -> onBackHandler.onBack()
             is BudgetOverViewModel.Action.SelectSource -> mutableState.update { state ->
@@ -79,7 +86,7 @@ internal class DefaultBudgetOverViewModel(
         }
     }
 
-    private fun confirmReallocate() = scope.launch {
+    private fun confirmReallocate() = scope.launch(dispatchers.cpu()) {
         val snapshot = mutableState.value
         val target = snapshot.target ?: return@launch
         val source = snapshot.selectedSource ?: return@launch
@@ -99,11 +106,13 @@ internal class DefaultBudgetOverViewModel(
                 targetBudget.toInsert().copy(amount = newTargetAmount),
             ),
         )
-        onReallocateCompletedHandler.onComplete(source.name, target.name, amountToMove)
-        onBackHandler.onBack()
+        withContext(dispatchers.main()) {
+            onReallocateCompletedHandler.onComplete(source.name, target.name, amountToMove)
+            onBackHandler.onBack()
+        }
     }
 
-    private fun confirmIncrease() = scope.launch {
+    private fun confirmIncrease() = scope.launch(dispatchers.cpu()) {
         val snapshot = mutableState.value
         val target = snapshot.target ?: return@launch
         val delta = snapshot.increaseAmountText.toBigDecimalOrNull()?.let { Amount(it) } ?: return@launch
@@ -113,8 +122,10 @@ internal class DefaultBudgetOverViewModel(
             .first() ?: return@launch
         val newAmount = targetBudget.amount + delta
         budgetRepository.insert(targetBudget.toInsert().copy(amount = newAmount))
-        onIncreaseCompletedHandler.onComplete(target.name, newAmount)
-        onBackHandler.onBack()
+        withContext(dispatchers.main()) {
+            onIncreaseCompletedHandler.onComplete(target.name, newAmount)
+            onBackHandler.onBack()
+        }
     }
 
     private fun BudgetOverViewModel.State.withRows(

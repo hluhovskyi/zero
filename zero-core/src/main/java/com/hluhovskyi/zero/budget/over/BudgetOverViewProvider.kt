@@ -88,7 +88,6 @@ private fun BudgetOverSheet(
             .background(ZeroTheme.colors.surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .padding(top = 8.dp, bottom = 16.dp),
     ) {
-        DragHandle()
         if (target == null) {
             return@Column
         }
@@ -124,20 +123,6 @@ private fun BudgetOverSheet(
                 onConfirm = { viewModel.perform(BudgetOverViewModel.Action.ConfirmIncrease) },
             )
         }
-    }
-}
-
-@Composable
-private fun DragHandle() {
-    Box(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 40.dp, height = 4.dp)
-                .background(ZeroTheme.colors.outlineVariant, RoundedCornerShape(2.dp)),
-        )
     }
 }
 

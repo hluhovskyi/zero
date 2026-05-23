@@ -6,13 +6,13 @@ import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import dagger.BindsInstance
 import dagger.Provides
-import kotlinx.datetime.LocalDate
 import java.io.Closeable
 import javax.inject.Qualifier
 import javax.inject.Scope
@@ -20,14 +20,6 @@ import javax.inject.Scope
 @Qualifier
 @Retention(AnnotationRetention.SOURCE)
 private annotation class BudgetOverCategoryId
-
-@Qualifier
-@Retention(AnnotationRetention.SOURCE)
-private annotation class BudgetOverPeriodStart
-
-@Qualifier
-@Retention(AnnotationRetention.SOURCE)
-private annotation class BudgetOverPeriodEnd
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
@@ -73,10 +65,7 @@ abstract class BudgetOverComponent : AttachableViewComponent {
         fun categoryId(@BudgetOverCategoryId id: Id.Known): Builder
 
         @BindsInstance
-        fun periodStart(@BudgetOverPeriodStart start: LocalDate): Builder
-
-        @BindsInstance
-        fun periodEnd(@BudgetOverPeriodEnd end: LocalDate): Builder
+        fun period(range: DateRange): Builder
 
         @BindsInstance
         fun initialMode(mode: BudgetOverViewModel.Mode?): Builder
@@ -98,8 +87,7 @@ abstract class BudgetOverComponent : AttachableViewComponent {
         @BudgetOverScope
         internal fun viewModel(
             @BudgetOverCategoryId categoryId: Id.Known,
-            @BudgetOverPeriodStart periodStart: LocalDate,
-            @BudgetOverPeriodEnd periodEnd: LocalDate,
+            period: DateRange,
             initialMode: BudgetOverViewModel.Mode?,
             budgetQueryUseCase: BudgetQueryUseCase,
             budgetRepository: BudgetRepository,
@@ -109,8 +97,7 @@ abstract class BudgetOverComponent : AttachableViewComponent {
             dispatcherProvider: DispatcherProvider,
         ): BudgetOverViewModel = DefaultBudgetOverViewModel(
             categoryId = categoryId,
-            periodStart = periodStart,
-            periodEnd = periodEnd,
+            period = period,
             initialMode = initialMode,
             budgetQueryUseCase = budgetQueryUseCase,
             budgetRepository = budgetRepository,
