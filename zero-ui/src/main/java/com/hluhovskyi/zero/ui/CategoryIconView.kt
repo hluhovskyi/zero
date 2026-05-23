@@ -59,6 +59,11 @@ fun CategoryIconView(
 /**
  * Overload of [CategoryIconView] that uses [UiColorScheme].
  * Provides [iconTint] to the content lambda for convenient icon tinting.
+ *
+ * In dark mode the entity's `primary` and `background` swap roles: the
+ * container fills with the darker brand tone and the icon paints with the
+ * lighter pastel, so the icon container reads as theme-coherent on the dark
+ * surface instead of an out-of-place light pastel chip.
  */
 @Composable
 fun CategoryIconView(
@@ -69,14 +74,23 @@ fun CategoryIconView(
     isSelected: Boolean = false,
     content: @Composable (iconTint: Color) -> Unit,
 ) {
+    val containerColor: Color
+    val iconColor: Color
+    if (ZeroTheme.colors.isLight) {
+        containerColor = colorScheme.background
+        iconColor = colorScheme.primary
+    } else {
+        containerColor = colorScheme.primary
+        iconColor = colorScheme.background
+    }
     CategoryIconView(
-        color = colorScheme.background,
+        color = containerColor,
         modifier = modifier,
         size = size,
         contentPadding = contentPadding,
         isSelected = isSelected,
-        primaryColor = colorScheme.primary,
+        primaryColor = iconColor,
     ) {
-        content(colorScheme.primary)
+        content(iconColor)
     }
 }
