@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 private const val BACKUP_FORMAT = 1
 
@@ -22,7 +20,6 @@ internal class DefaultBackupUseCase(
     private val coroutineScope: CoroutineScope,
 ) : BackupUseCase {
 
-    private val mutex = Mutex()
     private val mutableState = MutableStateFlow(BackupUseCase.State())
     override val state: Flow<BackupUseCase.State> = mutableState.asStateFlow()
 
@@ -34,52 +31,40 @@ internal class DefaultBackupUseCase(
     }
 
     private suspend fun performBackup() {
-        val claimed = mutex.withLock {
-            if (mutableState.value.phase is BackupUseCase.Phase.Uploading) {
-                false
-            } else {
-                mutableState.update { it.copy(phase = BackupUseCase.Phase.Uploading) }
-                true
-            }
-        }
-        if (!claimed) return
+        if (!tryClaimUploading()) return
 
         val userId = currentUserRepository.query().first().id
         val snapshot = syncEngine.export(userId)
         val envelope = BackupEnvelope(format = BACKUP_FORMAT, snapshot = snapshot)
         val result = backupClient.upload(envelope)
 
-        mutex.withLock {
-            mutableState.update { state ->
-                when (result) {
-                    is BackupClient.Result.Success -> state.copy(
-                        phase = BackupUseCase.Phase.Idle,
-                        lastSuccessAt = result.metadata.createdAt,
-                        lastError = null,
-                        consecutiveFailures = 0,
-                    )
-                    is BackupClient.Result.Failure -> state.copy(
-                        phase = BackupUseCase.Phase.Failed(result.error),
-                        lastError = result.error,
+        mutableState.update { state ->
+            when (result) {
+                is BackupClient.Result.Success -> state.copy(
+                    phase = BackupUseCase.Phase.Idle,
+                    lastSuccessAt = result.metadata.createdAt,
+                    lastError = null,
+                    consecutiveFailures = 0,
+                )
+                is BackupClient.Result.Failure -> state.copy(
+                    phase = BackupUseCase.Phase.Failed(result.error),
+                    lastError = result.error,
+                    consecutiveFailures = state.consecutiveFailures + 1,
+                )
+                BackupClient.Result.NotFound -> {
+                    val error = BackupError.Unknown("upload returned NotFound")
+                    state.copy(
+                        phase = BackupUseCase.Phase.Failed(error),
+                        lastError = error,
                         consecutiveFailures = state.consecutiveFailures + 1,
                     )
-                    BackupClient.Result.NotFound -> {
-                        val error = BackupError.Unknown("upload returned NotFound")
-                        state.copy(
-                            phase = BackupUseCase.Phase.Failed(error),
-                            lastError = error,
-                            consecutiveFailures = state.consecutiveFailures + 1,
-                        )
-                    }
                 }
             }
         }
     }
 
     private suspend fun performRestore(onSnapshot: (SyncSnapshot) -> Unit) {
-        mutex.withLock {
-            mutableState.update { it.copy(phase = BackupUseCase.Phase.Restoring) }
-        }
+        mutableState.update { it.copy(phase = BackupUseCase.Phase.Restoring) }
 
         val backupId = when (val latest = backupClient.latest()) {
             is BackupClient.Result.Success -> latest.metadata.backupId
@@ -96,23 +81,29 @@ internal class DefaultBackupUseCase(
         when (val download = backupClient.download(backupId)) {
             is BackupClient.DownloadResult.Success -> {
                 onSnapshot(download.envelope.snapshot)
-                mutex.withLock {
-                    mutableState.update { it.copy(phase = BackupUseCase.Phase.Idle, lastError = null) }
-                }
+                mutableState.update { it.copy(phase = BackupUseCase.Phase.Idle, lastError = null) }
             }
             is BackupClient.DownloadResult.Failure -> markRestoreFailure(download.error)
             BackupClient.DownloadResult.NotFound -> markRestoreFailure(BackupError.ParseFailure)
         }
     }
 
-    private suspend fun markRestoreFailure(error: BackupError) {
-        mutex.withLock {
-            mutableState.update {
-                it.copy(
-                    phase = BackupUseCase.Phase.Failed(error),
-                    lastError = error,
-                )
-            }
+    private fun markRestoreFailure(error: BackupError) {
+        mutableState.update {
+            it.copy(
+                phase = BackupUseCase.Phase.Failed(error),
+                lastError = error,
+            )
+        }
+    }
+
+    // Coalesces concurrent BackupNow callers via CAS. Returns false if another upload is already
+    // in flight; otherwise atomically transitions Idle → Uploading.
+    private fun tryClaimUploading(): Boolean {
+        while (true) {
+            val current = mutableState.value
+            if (current.phase is BackupUseCase.Phase.Uploading) return false
+            if (mutableState.compareAndSet(current, current.copy(phase = BackupUseCase.Phase.Uploading))) return true
         }
     }
 }
