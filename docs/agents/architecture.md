@@ -17,6 +17,17 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 
 **When a UseCase exists, it owns all state — ViewModels are thin projections.** A ViewModel backed by a UseCase should only `filterIsInstance` and `.map` the relevant slice; it must not introduce its own `MutableStateFlow`. State that lives in the ViewModel instead of `UseCase.InternalState` won't survive back-navigation and won't be visible to other steps in the same flow.
 
+## ViewModel UI Shape
+
+**The ViewModel exposes a sealed `Item` per visual variant; the ViewProvider pattern-matches.** Reference: `TransactionViewModel.Item` (`Summary` / `Transaction.Expense` / `Transaction.Income` / `Transaction.Transfer`). The composable does `when (item) { is X -> ...; is Y -> ... }` and reads pre-joined fields — it never inspects raw flags like `if (row.budgetId != null)`, never calls `.filter`/`.any`/`.sortedBy`, and never imports a UseCase.
+
+Split the three layers like this:
+- **UseCase** — domain truth. Sort order, aggregation, business-rule thresholds (`overCount`, `isOver`), threshold-based status enums. Emits domain types.
+- **ViewModel** — screen shape. Maps the UseCase's domain state into `sealed Item` variants, joins related collections (e.g. previous-period values onto current-period rows), pre-computes semantic states the view will switch on. Emits view-shaped types. **Does not** call `AmountFormatter` or pick Compose `Color` — those depend on framework state.
+- **View** — presentation. Pattern-matches on the sealed variant. Calls `AmountFormatter.format(...)`, reads `ZeroTheme.colors.*`, looks up `stringResource(...)`. No domain logic.
+
+When a row has sub-states (`Healthy` / `Watch` / `AlmostThere` / `Over`), pre-compute the enum on the VM and let the composable do a flat `when (item.status)` for color/text — not threshold arithmetic in the view.
+
 ## Flow Composition
 
 ViewModels `combine()` multiple repository flows into a single `Flow<State>`. Key extensions:
