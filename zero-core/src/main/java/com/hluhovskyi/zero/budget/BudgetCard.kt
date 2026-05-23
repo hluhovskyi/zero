@@ -42,8 +42,15 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
+// Bespoke traffic-light palette for the budget card. Intentional; the
+// over / warn-high / warn-medium thresholds are specific to this widget.
+@Suppress("ZeroThemeBypass")
 private val OverBg = Color(0xFFFFF8F6)
+
+@Suppress("ZeroThemeBypass")
 private val OrangeWarn = Color(0xFFE65100)
+
+@Suppress("ZeroThemeBypass")
 private val YellowWarn = Color(0xFFF9A825)
 
 @Composable
