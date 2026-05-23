@@ -12,11 +12,14 @@ Phase 1 of `docs/superpowers/specs/2026-05-12-feedback-infra-design.md` (issue #
 {
     "title": "string (required)",
     "body":  "string (required)",
-    "labels": ["string", ...]
+    "type":  "bug | idea | other (required)",
+    "debug": "boolean (optional, default false)"
 }
 ```
 
 Headers: `X-Integrity-Token: <token from StandardIntegrityManager.request>`.
+
+GitHub labels are computed server-side from `type` (the client never names a label): every issue gets `feedback`, plus the mapped type label (`bug`/`idea`/`other`), plus `debug` when `debug=true`. Unknown types are rejected with 400.
 
 Responses:
 - `201 { "issueUrl": "https://github.com/..." }` — issue created.
@@ -63,7 +66,7 @@ A real `X-Integrity-Token` only comes from a Play-Integrity-registered Android d
 curl -X POST <function-url> \
     -H "Content-Type: application/json" \
     -H "X-Integrity-Token: <token>" \
-    -d '{"title":"smoke test","body":"sent via curl","labels":["debug"]}'
+    -d '{"title":"smoke test","body":"sent via curl","type":"bug","debug":true}'
 ```
 
 Remove the temporary token logging before merging anything.

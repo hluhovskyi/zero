@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 internal data class FeedbackRequest(
     val title: String,
     val body: String,
-    val labels: List<String>,
+    val type: String,
+    val debug: Boolean,
 )

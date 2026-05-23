@@ -121,6 +121,7 @@ dependencies {
     implementation(project(":zero-ui"))
     implementation(project(":zero-database"))
     implementation(project(":zero-sync"))
+    implementation(project(":zero-backup"))
     implementation(project(":zero-core"))
     implementation(project(":zero-crash"))
     implementation(project(":zero-image-loading"))

@@ -38,7 +38,8 @@ internal class OkHttpFeedbackService(
             FeedbackRequest(
                 title = report.title,
                 body = report.body,
-                labels = report.labels,
+                type = report.type.id,
+                debug = report.isDebug,
             ),
         )
         val request = Request.Builder()
