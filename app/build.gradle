@@ -122,6 +122,7 @@ dependencies {
     implementation(project(":zero-database"))
     implementation(project(":zero-sync"))
     implementation(project(":zero-backup"))
+    implementation(project(":zero-auth"))
     implementation(project(":zero-core"))
     implementation(project(":zero-crash"))
     implementation(project(":zero-image-loading"))
@@ -146,6 +147,7 @@ dependencies {
     implementation deps.android.core.lifecycle
     implementation deps.biometric
     implementation deps.fragment
+    implementation deps.securityCrypto
     implementation deps.android.compose.uiPreview
     perfImplementation deps.android.compose.tracing
     debugImplementation deps.android.compose.uiTooling

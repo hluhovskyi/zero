@@ -4,6 +4,10 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.gradle.properties")
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+
 android {
     compileSdk versions.compileSdk
 
@@ -12,6 +16,13 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        buildConfigField "String", "DRIVE_OAUTH_CLIENT_ID",
+            "\"${System.getenv("DRIVE_OAUTH_CLIENT_ID") ?: localProps['driveOauthClientId'] ?: ""}\""
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -47,6 +58,10 @@ dependencies {
 
     implementation deps.kotlin.coroutines
     implementation deps.kotlin.serialization
+
+    implementation deps.credentials
+    runtimeOnly    deps.credentialsPlayServicesAuth
+    implementation deps.googleId
 
     implementation deps.dagger.runtime
     ksp deps.dagger.compiler
