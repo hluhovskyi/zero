@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
@@ -24,6 +23,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.TextFieldDropdownMenu
 import com.hluhovskyi.zero.ui.common.toUi
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun TransactionEditCategorySelect(
@@ -101,7 +101,7 @@ fun TransactionEditCategorySelectWithEditButton(
             Icon(
                 imageVector = Icons.Filled.Edit,
                 contentDescription = stringResource(R.string.transaction_edit_edit_categories_description),
-                tint = Color.White,
+                tint = ZeroTheme.colors.onPrimary,
             )
         }
     }

@@ -45,11 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -173,7 +169,7 @@ private fun MoreHeader() {
         style = TextStyle(
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
         ),
     )
 }
@@ -195,14 +191,14 @@ private fun MoreSection(
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 letterSpacing = 0.8.sp,
             ),
         )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SurfaceContainerLowest, RoundedCornerShape(16.dp)),
+                .background(ZeroTheme.colors.surfaceContainerLowest, RoundedCornerShape(16.dp)),
         ) {
             content()
         }
@@ -228,14 +224,14 @@ private fun MoreRow(
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(SurfaceContainer, RoundedCornerShape(10.dp)),
+                .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -244,14 +240,14 @@ private fun MoreRow(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                 ),
             )
             Text(
                 text = secondaryText,
                 style = TextStyle(
                     fontSize = 12.sp,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                 ),
             )
         }
@@ -260,7 +256,7 @@ private fun MoreRow(
                 imageVector = Icons.Filled.ChevronRight,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }
@@ -285,14 +281,14 @@ private fun MoreToggleRow(
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(SurfaceContainer, RoundedCornerShape(10.dp)),
+                .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -301,14 +297,14 @@ private fun MoreToggleRow(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                 ),
             )
             Text(
                 text = secondaryText,
                 style = TextStyle(
                     fontSize = 12.sp,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                 ),
             )
         }
@@ -316,7 +312,7 @@ private fun MoreToggleRow(
             checked = checked,
             onCheckedChange = { onToggle() },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = PrimaryContainer,
+                checkedThumbColor = ZeroTheme.colors.primaryContainer,
             ),
         )
     }

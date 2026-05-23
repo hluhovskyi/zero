@@ -38,13 +38,13 @@ class ZeroE2eTest : BaseE2eTest() {
         seedDefaultSetup()
         onBudget()
             .assertEmptyCalloutVisible()
-            .tapCategory("Food")
+            .tapCategory("Food & Drink")
             .typeDigits("100")
             .assertAmountShown("100")
             .tapCommit()
             .dismiss()
             .assertEmptyCalloutHidden()
-            .tapCategory("Food")
+            .tapCategory("Food & Drink")
             .assertAmountShown("100")
     }
 }

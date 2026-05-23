@@ -23,8 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -36,6 +34,7 @@ import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.DragHandle
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class MainActivityScreenViewProvider(
     private val navController: NavHostController,
@@ -63,7 +62,7 @@ internal class MainActivityScreenViewProvider(
             bottomSheetNavigator = bottomSheetNavigator,
             sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             sheetBackgroundColor = MaterialTheme.colors.background,
-            scrimColor = Color.Black.copy(alpha = 0.32f),
+            scrimColor = ZeroTheme.colors.scrim,
         ) {
             Scaffold(bottomBar = { if (!isKeyboardVisible) bottomBar() }) { innerPadding ->
                 NavHost(

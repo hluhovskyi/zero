@@ -39,12 +39,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.budget.NumPad
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Surface
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import java.math.BigDecimal
 
 internal class BudgetEditViewProvider(
@@ -75,7 +70,7 @@ private fun BudgetEditSheet(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(Surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+            .background(ZeroTheme.colors.surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
     ) {
         // Header
         Row(
@@ -89,7 +84,7 @@ private fun BudgetEditSheet(
                     imageVector = Icons.Filled.Close,
                     contentDescription = stringResource(R.string.budget_edit_close_cd),
                     modifier = Modifier.size(24.dp),
-                    tint = PrimaryContainer,
+                    tint = ZeroTheme.colors.primaryContainer,
                 )
             }
             Text(
@@ -102,7 +97,7 @@ private fun BudgetEditSheet(
                 style = TextStyle(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryContainer,
+                    color = ZeroTheme.colors.primaryContainer,
                     textAlign = TextAlign.Center,
                 ),
             )
@@ -134,7 +129,7 @@ private fun BudgetEditSheet(
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                 ),
             )
             val prevAmount = state.previousPeriodAmount
@@ -160,7 +155,7 @@ private fun BudgetEditSheet(
                 style = TextStyle(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 1.sp,
                 ),
             )
@@ -171,7 +166,7 @@ private fun BudgetEditSheet(
                     style = TextStyle(
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (hasAmount) OnSurfaceVariant else OutlineVariant,
+                        color = if (hasAmount) ZeroTheme.colors.onSurfaceVariant else ZeroTheme.colors.outlineVariant,
                     ),
                 )
                 Text(
@@ -180,7 +175,7 @@ private fun BudgetEditSheet(
                     style = TextStyle(
                         fontSize = 52.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PrimaryContainer,
+                        color = ZeroTheme.colors.primaryContainer,
                     ),
                 )
             }
@@ -206,7 +201,7 @@ private fun BudgetEditSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        color = if (enabled) PrimaryContainer else OutlineVariant,
+                        color = if (enabled) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outlineVariant,
                         shape = RoundedCornerShape(12.dp),
                     )
                     .then(
@@ -228,7 +223,7 @@ private fun BudgetEditSheet(
                     style = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Surface,
+                        color = ZeroTheme.colors.surface,
                     ),
                 )
             }
@@ -246,7 +241,7 @@ private fun PreviousChip(
     Box(
         modifier = Modifier
             .background(
-                color = if (selected) PrimaryContainer else SurfaceContainerLow,
+                color = if (selected) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.surfaceContainerLow,
                 shape = RoundedCornerShape(20.dp),
             )
             .clickable(onClick = onClick)
@@ -257,7 +252,7 @@ private fun PreviousChip(
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (selected) Surface else PrimaryContainer,
+                color = if (selected) ZeroTheme.colors.surface else ZeroTheme.colors.primaryContainer,
             ),
         )
     }
