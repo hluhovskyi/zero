@@ -1,0 +1,388 @@
+# Phase 4 — Auto Schedule: WorkManager + Wi-Fi Constraint + Failure Notifications
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Backup runs automatically every 24 hours on Wi-Fi. User can flip a toggle to allow mobile data. Three consecutive failed auto-backups produce a system notification. Manual `Back up now` ignores the network constraint and coalesces with any in-flight run.
+
+**Architecture:** WorkManager `PeriodicWorkRequest` calls `BackupUseCase.perform(BackupNow)` via a `CoroutineWorker`. The work is enqueued/cancelled by `DefaultBackupDetailViewModel` when sign-in toggles. Notification is posted by an Android-side `BackupNotificationPresenter` observing `backupUseCase.state.consecutiveFailures`. Coalescing already lives in `DefaultBackupUseCase` (Phase 1).
+
+**Tech Stack:** `androidx.work` (existing in zero ecosystem? — confirm in Task 1), `NotificationManagerCompat`.
+
+**Spec:** [Spec §Backup Lifecycle](../specs/2026-05-21-gdrive-backup-design.md#backup-lifecycle)
+
+**Structural analogs:**
+- No existing WorkManager precedent in this project at the time of writing — this phase adds the first one. Document the pattern in `app/AGENTS.md` so future workers follow it.
+
+---
+
+### Task 1: Add WorkManager dependency
+
+**Files:**
+- Modify: `build.gradle` (root, deps map)
+- Modify: `app/build.gradle`
+
+- [ ] **Step 1: Verify WorkManager isn't already present**
+
+Run: `grep -r "androidx.work" build.gradle app/build.gradle 2>&1 | head -5`
+
+If present: skip Step 2 + 3. If absent:
+
+- [ ] **Step 2: Append to root `deps` map**
+
+```groovy
+workManager: "androidx.work:work-runtime-ktx:2.10.0",
+```
+
+- [ ] **Step 3: Add to `app/build.gradle`**
+
+```
+implementation deps.workManager
+```
+
+- [ ] **Step 4: Build**
+
+Run: `./gradlew :app:assembleDebug 2>&1 | tail -5`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add build.gradle app/build.gradle
+git commit -m "backup(app): add WorkManager dep"
+```
+
+---
+
+### Task 2: `WorkManagerScheduler` (generic) + `DefaultBackupScheduler` (backup wrapper) + worker
+
+Split the scheduling concern into two layers so the generic Android WorkManager wrapper isn't tied to backup. Future periodic Android jobs (sync, cache cleanup) reuse the generic wrapper without imitating backup-flavoured code.
+
+**Files:**
+- Create: `app/src/main/java/com/hluhovskyi/zero/scheduling/WorkManagerScheduler.kt` (generic)
+- Create: `app/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupScheduler.kt` (backup wrapper)
+- Create: `app/src/main/java/com/hluhovskyi/zero/backup/DriveBackupSchedulerWorker.kt` (backup worker)
+
+#### `WorkManagerScheduler` — generic wrapper
+
+```kotlin
+package com.hluhovskyi.zero.scheduling
+
+import androidx.work.*
+import java.util.concurrent.TimeUnit
+
+class WorkManagerScheduler(private val workManager: WorkManager) {
+
+    fun enablePeriodic(
+        name: String,
+        intervalHours: Long,
+        networkType: NetworkType,
+        workerClass: Class<out CoroutineWorker>,
+    ) {
+        val request = PeriodicWorkRequest.Builder(workerClass, intervalHours, TimeUnit.HOURS)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(networkType).build())
+            .setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.HOURS)
+            .build()
+        workManager.enqueueUniquePeriodicWork(name, ExistingPeriodicWorkPolicy.UPDATE, request)
+    }
+
+    fun cancel(name: String) {
+        workManager.cancelUniqueWork(name)
+    }
+}
+```
+
+Knows nothing about backup. Provided directly by `ApplicationComponent.Module` (like `AndroidUriResourceFactory`).
+
+#### `DefaultBackupScheduler` — implements `BackupScheduler` using `WorkManagerScheduler`
+
+```kotlin
+package com.hluhovskyi.zero.backup
+
+import androidx.work.NetworkType
+import com.hluhovskyi.zero.backup.BackupScheduler
+import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+
+internal class DefaultBackupScheduler(
+    private val workManagerScheduler: WorkManagerScheduler,
+) : BackupScheduler {
+
+    override fun enable(wifiOnly: Boolean) {
+        workManagerScheduler.enablePeriodic(
+            name = JOB_NAME,
+            intervalHours = 24,
+            networkType = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED,
+            workerClass = DriveBackupSchedulerWorker::class.java,
+        )
+    }
+
+    override fun disable() {
+        workManagerScheduler.cancel(JOB_NAME)
+    }
+
+    companion object {
+        private const val JOB_NAME = "drive-backup-periodic"
+    }
+}
+```
+
+Provided via `BackupAndroidModule` (Task 4 of this phase).
+
+#### `DriveBackupSchedulerWorker` — CoroutineWorker
+
+A `CoroutineWorker` that:
+1. Pulls `BackupUseCase` from `MainApplication.applicationComponent.backupUseCase` (no Hilt; manual lookup mirrors how existing app classes wire up).
+2. Calls `backupUseCase.perform(BackupNow)`.
+3. Observes `backupUseCase.state` until `phase != Uploading`.
+4. Returns `Result.success()` on `Idle` or `Result.retry()` on `Failed` (WorkManager schedules a backoff retry within the 24h window).
+5. **No-op skip:** before invoking the use case, compare `SyncEngine.lastModifiedAt(userId)` against the last successful backup's stored timestamp. If unchanged → `Result.success()` without uploading.
+
+- [ ] **Step 1: Add `BackupScheduler` interface to `zero-api`**
+
+`zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupScheduler.kt`:
+
+```kotlin
+package com.hluhovskyi.zero.backup
+
+interface BackupScheduler {
+    fun enable(wifiOnly: Boolean)
+    fun disable()
+}
+```
+
+Backup-domain contract. Lives in `zero-api/backup/` (not in `zero-api/scheduling/`) because the contract is backup-flavoured.
+
+- [ ] **Step 2: Add `SyncEngine.lastModifiedAt(userId)` helper**
+
+In `zero-api/src/main/java/com/hluhovskyi/zero/sync/SyncEngine.kt`, add:
+
+```kotlin
+suspend fun lastModifiedAt(userId: Id.Known): kotlinx.datetime.LocalDateTime?
+```
+
+Implement in `DefaultSyncEngine` by taking the max `updatedDateTime` across all four pipelines' `exportAll(userId)`. (For a faster variant, add a SQL `MAX(updatedDateTime)` query to each sync DAO — but for v1, in-memory max over the already-needed export is fine since export happens immediately after anyway.)
+
+- [ ] **Step 3: Implement `WorkManagerScheduler`** (generic) per spec above.
+
+- [ ] **Step 4: Implement `DefaultBackupScheduler`** (backup-specific wrapper) per spec above.
+
+- [ ] **Step 5: Implement `DriveBackupSchedulerWorker`** per spec above.
+
+- [ ] **Step 6: Provide `WorkManagerScheduler` in `ApplicationComponent.Module`** (generic primitive, alongside `idGenerator` etc.):
+
+```kotlin
+@Provides @ApplicationScope
+fun workManager(context: Context): WorkManager = WorkManager.getInstance(context)
+
+@Provides @ApplicationScope
+fun workManagerScheduler(workManager: WorkManager): WorkManagerScheduler = WorkManagerScheduler(workManager)
+```
+
+- [ ] **Step 7: Build**
+
+Run: `./gradlew :app:assembleDebug 2>&1 | tail -10`
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add zero-api/src/main/java/com/hluhovskyi/zero/backup/BackupScheduler.kt \
+        zero-api/src/main/java/com/hluhovskyi/zero/sync/SyncEngine.kt \
+        zero-sync/src/main/java/com/hluhovskyi/zero/sync/DefaultSyncEngine.kt \
+        app/src/main/java/com/hluhovskyi/zero/scheduling/WorkManagerScheduler.kt \
+        app/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupScheduler.kt \
+        app/src/main/java/com/hluhovskyi/zero/backup/DriveBackupSchedulerWorker.kt \
+        app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt
+git commit -m "backup(schedule): WorkManagerScheduler (generic) + DefaultBackupScheduler + worker"
+```
+
+---
+
+### Task 3: `BackupAndroidModule` + wire scheduler to sign-in toggle
+
+Bundles the backup-specific Android wiring (`BackupScheduler`, `BackupNotificationPresenter`) into a single Dagger Module, mirroring the existing `RemoteModule` pattern. Keeps `ApplicationComponent.Module` from collecting backup-specific bindings.
+
+**Files:**
+- Create: `app/src/main/java/com/hluhovskyi/zero/backup/BackupAndroidModule.kt`
+- Modify: `app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt` (`@Module(includes = [...])` list)
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/DefaultBackupDetailViewModel.kt`
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/backup/BackupDetailComponent.kt`
+- Add `backup.wifiOnly` config key in `zero-api/.../config/`
+
+- [ ] **Step 1: Create `BackupAndroidModule`**
+
+```kotlin
+package com.hluhovskyi.zero.backup
+
+import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+import dagger.Module
+import dagger.Provides
+
+@Module
+internal object BackupAndroidModule {
+
+    @Provides
+    @ApplicationScope
+    fun backupScheduler(workManagerScheduler: WorkManagerScheduler): BackupScheduler =
+        DefaultBackupScheduler(workManagerScheduler)
+
+    // BackupNotificationPresenter provider added in Task 4
+}
+```
+
+- [ ] **Step 2: Include it in `ApplicationComponent`**
+
+```kotlin
+@dagger.Module(
+    includes = [
+        DatabaseModule::class,
+        RemoteModule::class,
+        BackupAndroidModule::class,   // ← new
+    ],
+)
+object Module { ... }
+```
+
+- [ ] **Step 3: Add `backup.wifiOnly` config key**
+
+Add `ScopedConfigurationKey<Boolean>` to wherever existing backup-ish keys would live (search for `ConfigurationKey` usages first). Default `true`.
+
+- [ ] **Step 4: Inject `BackupScheduler` into `BackupDetailComponent.Dependencies`** and thread it through to `DefaultBackupDetailViewModel`.
+
+- [ ] **Step 5: Subscribe in ViewModel**
+
+`attach()` launches a coroutine collecting `combine(isSignedIn, wifiOnly)` and calls `scheduler.enable(...)` / `scheduler.disable()` accordingly. Use existing `combine` patterns from `SettingsViewModel`.
+
+- [ ] **Step 6: Add the "Back up over mobile data" toggle**
+
+Extend `BackupDetailViewModel.Action` with `SetWifiOnly(Boolean)`. Toggle writes via `configurationRepository`. The `BackupDetailViewProvider` renders it as a Material `Switch` inside the existing detail screen (next to "Back up now").
+
+- [ ] **Step 7: Build + lint**
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add zero-api/src/main/java/com/hluhovskyi/zero/config/ \
+        zero-core/src/main/java/com/hluhovskyi/zero/backup/ \
+        app/src/main/java/com/hluhovskyi/zero/backup/BackupAndroidModule.kt \
+        app/src/main/java/com/hluhovskyi/zero/ApplicationComponent.kt
+git commit -m "backup(schedule): BackupAndroidModule + wire scheduler to sign-in + wifiOnly toggle"
+```
+
+---
+
+### Task 4: `BackupNotificationPresenter` (3-strike failure) — provided via `BackupAndroidModule`
+
+Add the `@Provides @ApplicationScope BackupNotificationPresenter` factory to `BackupAndroidModule` from Task 3 (alongside the `BackupScheduler` provider). Both are backup-specific Android wiring; same Dagger Module is the natural home.
+
+**Files:**
+- Create: `app/src/main/java/com/hluhovskyi/zero/backup/BackupNotificationPresenter.kt`
+- Modify: `app/src/main/java/com/hluhovskyi/zero/MainApplication.kt`
+- Modify: `app/src/main/AndroidManifest.xml` (add `POST_NOTIFICATIONS` permission for SDK 33+)
+- Add strings to `app/src/main/res/values/strings.xml`
+
+`BackupNotificationPresenter`:
+- Constructor takes `Context`, `BackupUseCase`.
+- `attach(): Closeable` launches a long-lived collector on `backupUseCase.state` (use a `SupervisorJob` scope from `MainApplication`).
+- When `state.consecutiveFailures >= 3`, post (or update) a notification with id `BACKUP_FAILURE_NOTIFICATION_ID`. When `consecutiveFailures < 3` after a Success, cancel the notification.
+- Notification text: `"Zero couldn't back up your data"`, with subtext from `BackupError`.
+- ContentIntent: deep-link to MainActivity with extra `OPEN_SETTINGS_BACKUP=true`. MainActivity reads the extra and navigates to the Backup screen.
+- Channel id `"backup-status"`, importance `IMPORTANCE_DEFAULT`. Channel is created on `MainApplication.onCreate`.
+
+- [ ] **Step 1: Add `POST_NOTIFICATIONS` permission** (SDK 33+)
+
+```xml
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+- [ ] **Step 2: Implement `BackupNotificationPresenter`**
+
+- [ ] **Step 3: Wire in `MainApplication`** — create channel in `onCreate`, instantiate `BackupNotificationPresenter` from `ApplicationComponent`, call `attach()` against an app-scoped `CoroutineScope` and ignore the returned `Closeable` (lifetime = app lifetime).
+
+- [ ] **Step 4: Add strings** — backup_notification_title, backup_notification_body_auth, backup_notification_body_network, etc.
+
+- [ ] **Step 5: Deep-link intent extra**
+
+In `MainActivity`, on `onCreate` / `onNewIntent` check for `OPEN_SETTINGS_BACKUP=true` and navigate to `BackupDestination`. Use the existing `Navigator` (read how `MainActivity` handles startup navigation today; replicate). Cancel the notification on tap by adding `setAutoCancel(true)`.
+
+- [ ] **Step 6: Build + lint**
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add app/src/main/AndroidManifest.xml \
+        app/src/main/java/com/hluhovskyi/zero/backup/BackupNotificationPresenter.kt \
+        app/src/main/java/com/hluhovskyi/zero/MainApplication.kt \
+        app/src/main/java/com/hluhovskyi/zero/activity/MainActivity.kt \
+        app/src/main/res/values/strings.xml
+git commit -m "backup(app): 3-strike failure notification + deep link"
+```
+
+---
+
+### Task 5: Coalescing verification (test)
+
+`DefaultBackupUseCase` already implements coalescing (Phase 1). This task adds a regression test that **exercises it from the WorkManager + manual tap angle** to catch any future regressions where someone introduces a parallel "is backup running" flag.
+
+**Files:**
+- Modify: `zero-backup/src/test/java/com/hluhovskyi/zero/backup/DefaultBackupUseCaseTest.kt`
+
+- [ ] **Step 1: Add coalescing test** — call `perform(BackupNow)` then call it again before the first completes (use a `FakeBackupClient` that suspends until a signal). Assert: exactly one `client.upload` invocation; both observers see the same state transitions.
+
+- [ ] **Step 2: Run**
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add zero-backup/src/test/java/com/hluhovskyi/zero/backup/DefaultBackupUseCaseTest.kt
+git commit -m "backup: regression test for coalescing concurrent backup requests"
+```
+
+---
+
+### Task 6: Manual UI + scheduling verification
+
+- [ ] **Step 1: Acquire emulator** (`./scripts/emulator/acquire`)
+
+- [ ] **Step 2: Install + launch + sign in + verify "Back up over mobile data" toggle exists**
+
+- [ ] **Step 3: Trigger immediate auto-backup**
+
+```bash
+./scripts/ui/adb.sh shell cmd jobscheduler run -f com.hluhovskyi.zero <jobId>
+# Or use the WorkManager testing hook:
+./scripts/ui/adb.sh shell am broadcast -a androidx.work.diagnostics.REQUEST_DIAGNOSTICS
+```
+
+Confirm the worker runs (`logcat | grep DriveBackupSchedulerWorker`) and the row in Settings reflects a successful backup.
+
+- [ ] **Step 4: Force 3 consecutive failures**
+
+Simulate by toggling airplane mode and tapping `Back up now` 3 times. Confirm a system notification appears after the 3rd failure.
+
+- [ ] **Step 5: Tap notification → app opens directly on Backup screen.**
+
+- [ ] **Step 6: Toggle "Back up over mobile data" off and on → confirm `cmd workmanager` shows the constraint changes.**
+
+```bash
+./scripts/ui/adb.sh shell dumpsys jobscheduler | grep -i zero
+```
+
+- [ ] **Step 7: Use `zero-project:android-ui-inspector` to verify layout.**
+
+---
+
+## Verification
+
+```bash
+./gradlew :zero-backup:test 2>&1 | tail -10
+./gradlew :app:lintDebug 2>&1 | grep -E "error:|Error" | head -10
+./gradlew :app:assembleDebug 2>&1 | tail -5
+```
+
+All MUST pass. Manual verification above MUST be performed before opening the PR.
+
+## Out of Scope
+
+- Configurable cadence (Daily / Weekly / Manual) — v2.
+- Notification deep-link payload to the specific failure cause — v2 polish.
+- Restore — Phase 5.
+- Welcome restore prompt — Phase 6.
+- Confirm dialog on disconnect — Phase 7.
