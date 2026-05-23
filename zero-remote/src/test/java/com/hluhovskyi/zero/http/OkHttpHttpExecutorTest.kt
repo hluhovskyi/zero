@@ -68,6 +68,31 @@ class OkHttpHttpExecutorTest {
     }
 
     @Test
+    fun `POST form carries form-urlencoded body`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+        executor.execute(
+            HttpRequest(
+                method = HttpRequest.Method.POST,
+                url = server.url("/token").toString(),
+                body = HttpRequest.Body.Form(
+                    mapOf("grant_type" to "refresh_token", "refresh_token" to "rt/123"),
+                ),
+            ),
+        )
+
+        val recorded = server.takeRequest()
+        assertEquals("POST", recorded.method)
+        assertTrue(
+            recorded.getHeader("Content-Type").orEmpty().startsWith("application/x-www-form-urlencoded"),
+        )
+        val body = recorded.body.readUtf8()
+        assertTrue(body.contains("grant_type=refresh_token"))
+        // Values are URL-encoded.
+        assertTrue(body.contains("refresh_token=rt%2F123"))
+    }
+
+    @Test
     fun `POST multipart is multipart-related with two typed parts`() = runTest {
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 

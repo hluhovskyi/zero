@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.http.HttpExecutor.HttpRequest
 import com.hluhovskyi.zero.http.HttpExecutor.HttpResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.FormBody
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -35,6 +36,11 @@ internal class OkHttpHttpExecutor(
     private fun HttpRequest.Body.toOkHttpBody(): RequestBody = when (this) {
         is HttpRequest.Body.Json ->
             payload.toRequestBody(JSON_MEDIA_TYPE)
+
+        is HttpRequest.Body.Form ->
+            FormBody.Builder().apply {
+                fields.forEach { (name, value) -> add(name, value) }
+            }.build()
 
         is HttpRequest.Body.Multipart ->
             MultipartBody.Builder()
