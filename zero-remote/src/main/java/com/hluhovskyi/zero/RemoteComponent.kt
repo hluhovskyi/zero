@@ -3,6 +3,8 @@ package com.hluhovskyi.zero
 import android.content.Context
 import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.feedback.OkHttpFeedbackService
+import com.hluhovskyi.zero.http.HttpExecutor
+import com.hluhovskyi.zero.http.OkHttpHttpExecutor
 import com.hluhovskyi.zero.integrity.IntegrityTokenProvider
 import com.hluhovskyi.zero.integrity.PlayIntegrityTokenProvider
 import dagger.BindsInstance
@@ -33,6 +35,8 @@ private annotation class IntegrityCloudProject
 interface RemoteComponent {
 
     val feedbackService: FeedbackService
+
+    val httpExecutor: HttpExecutor
 
     interface Dependencies {
 
@@ -74,6 +78,10 @@ interface RemoteComponent {
         @Provides
         @RemoteScope
         internal fun json(): Json = Json { ignoreUnknownKeys = true }
+
+        @Provides
+        @RemoteScope
+        internal fun httpExecutor(client: OkHttpClient): HttpExecutor = OkHttpHttpExecutor(client)
 
         @Provides
         @RemoteScope
