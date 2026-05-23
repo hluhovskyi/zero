@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -344,6 +345,7 @@ private fun ReallocateContent(
                     ),
                     enabled = amountToMove > Amount.zero(),
                     onClick = onConfirm,
+                    testTag = "Budget.over.reallocate.confirm",
                 )
             }
         }
@@ -425,6 +427,7 @@ private fun SourceCard(
             .then(borderModifier)
             .clip(shape)
             .clickable(onClick = onClick)
+            .testTag("Budget.over.source.${source.name}")
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         Row(
@@ -582,6 +585,7 @@ private fun IncreaseContent(
             label = stringResource(R.string.budget_over_increase_cta),
             enabled = amountText.toBigDecimalOrNull()?.let { it > BigDecimal.ZERO } == true,
             onClick = onConfirm,
+            testTag = "Budget.over.increase.confirm",
         )
     }
 }
@@ -683,7 +687,12 @@ private fun SheetHeader(title: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun PrimaryButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+private fun PrimaryButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    testTag: String? = null,
+) {
     val shape = RoundedCornerShape(12.dp)
     val background = if (enabled) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outlineVariant
     Box(
@@ -692,6 +701,7 @@ private fun PrimaryButton(label: String, enabled: Boolean, onClick: () -> Unit) 
             .background(background, shape)
             .clip(shape)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {

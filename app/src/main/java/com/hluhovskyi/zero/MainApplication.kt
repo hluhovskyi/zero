@@ -32,6 +32,7 @@ internal class MainApplication :
                 accountRepository = db.accountRepository,
                 categoryRepository = db.categoryRepository,
                 transactionRepository = db.transactionRepository,
+                budgetRepository = db.budgetRepository,
             ),
         )
     }
