@@ -41,9 +41,7 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Surface
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val GRID_COLUMNS = 6
 
@@ -78,7 +76,7 @@ fun IconAndColorPicker(
     Column(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .background(Surface)
+                .background(ZeroTheme.colors.surface)
                 .padding(horizontal = 24.dp)
                 .padding(top = 8.dp, bottom = 16.dp),
         ) {
@@ -109,7 +107,7 @@ fun IconAndColorPicker(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 32.dp),
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                     )
@@ -192,7 +190,7 @@ private fun SectionTitle(title: String) {
         modifier = Modifier.padding(top = 16.dp, bottom = 10.dp, start = 2.dp),
         fontSize = 10.sp,
         fontWeight = FontWeight.Bold,
-        color = OnSurfaceVariant,
+        color = ZeroTheme.colors.onSurfaceVariant,
         letterSpacing = 1.4.sp,
     )
 }
@@ -210,7 +208,7 @@ private fun IconPickerCell(
         modifier = Modifier
             .aspectRatio(1f)
             .background(
-                color = if (isSelected) colorScheme.background else SurfaceContainerLow,
+                color = if (isSelected) colorScheme.background else ZeroTheme.colors.surfaceContainerLow,
                 shape = shape,
             )
             .then(
@@ -226,7 +224,7 @@ private fun IconPickerCell(
         imageLoader.View(
             modifier = Modifier.size(24.dp),
             image = icon.image,
-            tint = if (isSelected) colorScheme.primary else OnSurfaceVariant,
+            tint = if (isSelected) colorScheme.primary else ZeroTheme.colors.onSurfaceVariant,
         )
     }
 }

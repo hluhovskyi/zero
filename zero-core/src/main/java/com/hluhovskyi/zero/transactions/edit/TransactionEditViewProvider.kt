@@ -34,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -48,10 +47,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
 import com.hluhovskyi.zero.ui.ZeroFab
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
@@ -108,7 +104,7 @@ private fun TransactionEditView(
                                     Icon(
                                         imageVector = Icons.Filled.MoreVert,
                                         contentDescription = stringResource(R.string.transaction_edit_more_options_description),
-                                        tint = PrimaryContainer,
+                                        tint = ZeroTheme.colors.primaryContainer,
                                     )
                                 }
                                 DropdownMenu(
@@ -125,13 +121,13 @@ private fun TransactionEditView(
                                             Icon(
                                                 imageVector = Icons.Outlined.ContentCopy,
                                                 contentDescription = null,
-                                                tint = OnSurface,
+                                                tint = ZeroTheme.colors.onSurface,
                                                 modifier = Modifier.size(18.dp),
                                             )
                                             Spacer(Modifier.width(8.dp))
                                             Text(
                                                 text = stringResource(R.string.transaction_duplicate),
-                                                color = OnSurface,
+                                                color = ZeroTheme.colors.onSurface,
                                             )
                                         }
                                     }
@@ -145,13 +141,13 @@ private fun TransactionEditView(
                                             Icon(
                                                 imageVector = Icons.Outlined.Delete,
                                                 contentDescription = null,
-                                                tint = Color(0xFFBA1A1A),
+                                                tint = ZeroTheme.colors.error,
                                                 modifier = Modifier.size(18.dp),
                                             )
                                             Spacer(Modifier.width(8.dp))
                                             Text(
                                                 text = stringResource(R.string.transaction_edit_delete),
-                                                color = Color(0xFFBA1A1A),
+                                                color = ZeroTheme.colors.error,
                                             )
                                         }
                                     }
@@ -197,7 +193,7 @@ private fun TransactionEditView(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .padding(top = 16.dp)
-                        .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                        .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -205,7 +201,7 @@ private fun TransactionEditView(
                         text = stringResource(R.string.transaction_notes_label).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
                     )
                     BasicTextField(
@@ -217,14 +213,14 @@ private fun TransactionEditView(
                         textStyle = TextStyle(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = OnSurface,
+                            color = ZeroTheme.colors.onSurface,
                         ),
                         decorationBox = { innerTextField ->
                             if (state.notes.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.transaction_notes_hint),
                                     fontSize = 15.sp,
-                                    color = OnSurfaceVariant,
+                                    color = ZeroTheme.colors.onSurfaceVariant,
                                 )
                             }
                             innerTextField()

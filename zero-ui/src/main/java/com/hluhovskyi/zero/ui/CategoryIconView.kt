@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * Common icon container with a rounded-square background.
@@ -39,7 +40,7 @@ fun CategoryIconView(
                     Modifier
                         .border(2.dp, primaryColor, shape)
                         .padding(2.dp)
-                        .background(Color.White, shape)
+                        .background(ZeroTheme.colors.surfaceContainerLowest, shape)
                         .padding(2.dp)
                 } else {
                     Modifier.padding(4.dp)

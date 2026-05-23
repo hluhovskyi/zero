@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun CategoryCard(
@@ -36,7 +36,7 @@ fun CategoryCard(
             text = name,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             modifier = Modifier.weight(1f),
         )
     }
