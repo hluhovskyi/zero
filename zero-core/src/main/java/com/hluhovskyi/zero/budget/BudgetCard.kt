@@ -36,8 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.colors.ColorScheme
-import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
@@ -48,19 +46,13 @@ private val YellowWarn = Color(0xFFF9A825)
 
 @Composable
 internal fun BudgetCard(
-    row: BudgetQueryUseCase.Budgeted,
+    item: BudgetViewModel.Item.Set,
     onTap: () -> Unit,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     modifier: Modifier = Modifier,
 ) {
-    val isOver = row.spent > row.budgeted
-    val pct = if (row.budgeted > Amount.zero()) {
-        (row.spent.value.toDouble() / row.budgeted.value.toDouble()).toFloat()
-    } else {
-        0f
-    }
-
+    val isOver = item.status == BudgetViewModel.Item.Status.Over
     val cardBg = if (isOver) OverBg else ZeroTheme.colors.surfaceContainerLowest
     val borderModifier = if (isOver) {
         Modifier.border(1.5.dp, ZeroTheme.colors.error.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
@@ -79,16 +71,9 @@ internal fun BudgetCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconWithRing(
-            row = row,
-            pct = pct,
-            isOver = isOver,
-            imageLoader = imageLoader,
-        )
+        IconWithRing(item = item, imageLoader = imageLoader)
         TextBlock(
-            row = row,
-            isOver = isOver,
-            pct = pct,
+            item = item,
             amountFormatter = amountFormatter,
             modifier = Modifier.weight(1f),
         )
@@ -97,17 +82,15 @@ internal fun BudgetCard(
 
 @Composable
 private fun IconWithRing(
-    row: BudgetQueryUseCase.Budgeted,
-    pct: Float,
-    isOver: Boolean,
+    item: BudgetViewModel.Item.Set,
     imageLoader: ImageLoader,
 ) {
-    val bg = row.colorScheme.background.value.toCompose()
-    val primary = row.colorScheme.primary.value.toCompose()
-    val ringColor = ringColor(isOver = isOver, pct = pct, scheme = row.colorScheme)
+    val bg = item.colorScheme.background.value.toCompose()
+    val primary = item.colorScheme.primary.value.toCompose()
+    val ringColor = ringColor(item.status, bg = bg, primary = primary)
     val trackColor = ZeroTheme.colors.surfaceContainer
     val animated by animateFloatAsState(
-        targetValue = pct.coerceIn(0f, 1f),
+        targetValue = item.progress,
         animationSpec = tween(durationMillis = 600),
         label = "ringGrow",
     )
@@ -152,7 +135,7 @@ private fun IconWithRing(
         ) {
             imageLoader.View(
                 modifier = Modifier.size(22.dp),
-                image = row.icon,
+                image = item.icon,
                 tint = primary,
             )
         }
@@ -161,12 +144,11 @@ private fun IconWithRing(
 
 @Composable
 private fun TextBlock(
-    row: BudgetQueryUseCase.Budgeted,
-    isOver: Boolean,
-    pct: Float,
+    item: BudgetViewModel.Item.Set,
     amountFormatter: AmountFormatter,
     modifier: Modifier = Modifier,
 ) {
+    val isOver = item.status == BudgetViewModel.Item.Status.Over
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -174,7 +156,7 @@ private fun TextBlock(
             verticalAlignment = Alignment.Bottom,
         ) {
             Text(
-                text = row.categoryName,
+                text = item.name,
                 modifier = Modifier.weight(1f),
                 style = TextStyle(
                     fontSize = 15.sp,
@@ -185,7 +167,7 @@ private fun TextBlock(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = amountFormatter.format(row.spent),
+                text = amountFormatter.format(item.spent),
                 style = TextStyle(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -200,17 +182,20 @@ private fun TextBlock(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = statusText(row, isOver, amountFormatter),
+                text = stringResource(
+                    if (isOver) R.string.budget_card_over else R.string.budget_card_left,
+                    amountFormatter.format(item.remaining),
+                ),
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = statusColor(isOver, pct),
+                    color = statusColor(item.status),
                 ),
             )
             Text(
                 text = stringResource(
                     R.string.budget_card_of,
-                    amountFormatter.format(row.budgeted),
+                    amountFormatter.format(item.budgeted),
                 ),
                 style = TextStyle(
                     fontSize = 12.sp,
@@ -223,35 +208,22 @@ private fun TextBlock(
 }
 
 @Composable
-private fun ringColor(isOver: Boolean, pct: Float, scheme: ColorScheme): Color = when {
-    isOver -> ZeroTheme.colors.error
-    pct > 0.85f -> OrangeWarn
-    pct > 0.65f -> YellowWarn
-    else -> lerp(
-        scheme.background.value.toCompose(),
-        scheme.primary.value.toCompose(),
-        0.3f,
-    )
+private fun ringColor(
+    status: BudgetViewModel.Item.Status,
+    bg: Color,
+    primary: Color,
+): Color = when (status) {
+    BudgetViewModel.Item.Status.Over -> ZeroTheme.colors.error
+    BudgetViewModel.Item.Status.AlmostThere -> OrangeWarn
+    BudgetViewModel.Item.Status.Watch -> YellowWarn
+    BudgetViewModel.Item.Status.Healthy -> lerp(bg, primary, 0.3f)
 }
 
 @Composable
-private fun statusText(
-    row: BudgetQueryUseCase.Budgeted,
-    isOver: Boolean,
-    amountFormatter: AmountFormatter,
-): String {
-    val diff = if (isOver) row.spent - row.budgeted else row.budgeted - row.spent
-    val formatted = amountFormatter.format(diff)
-    return if (isOver) {
-        stringResource(R.string.budget_card_over, formatted)
-    } else {
-        stringResource(R.string.budget_card_left, formatted)
-    }
-}
-
-@Composable
-private fun statusColor(isOver: Boolean, pct: Float): Color = when {
-    isOver -> ZeroTheme.colors.error
-    pct > 0.85f -> OrangeWarn
-    else -> ZeroTheme.colors.onSurfaceVariant
+private fun statusColor(status: BudgetViewModel.Item.Status): Color = when (status) {
+    BudgetViewModel.Item.Status.Over -> ZeroTheme.colors.error
+    BudgetViewModel.Item.Status.AlmostThere -> OrangeWarn
+    BudgetViewModel.Item.Status.Watch,
+    BudgetViewModel.Item.Status.Healthy,
+    -> ZeroTheme.colors.onSurfaceVariant
 }
