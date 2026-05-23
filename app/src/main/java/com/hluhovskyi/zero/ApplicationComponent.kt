@@ -7,6 +7,10 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.backup.BackupClient
+import com.hluhovskyi.zero.backup.BackupComponent
+import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.NoopBackupClient
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -65,6 +69,9 @@ import com.hluhovskyi.zero.sync.SyncSerializer
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
@@ -366,6 +373,28 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun syncSerializer(syncComponent: SyncComponent): SyncSerializer = syncComponent.serializer
+
+        @Provides
+        @ApplicationScope
+        fun backupClient(): BackupClient = NoopBackupClient()
+
+        @Provides
+        @ApplicationScope
+        fun backupComponent(
+            syncEngine: SyncEngine,
+            backupClient: BackupClient,
+            currentUserRepository: CurrentUserRepository,
+        ): BackupComponent = BackupComponent.factory(
+            object : BackupComponent.Dependencies {
+                override val syncEngine = syncEngine
+                override val backupClient = backupClient
+                override val currentUserRepository = currentUserRepository
+                override val backupCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            },
+        ).create()
+
+        @Provides
+        fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
 
         @Provides
         @ApplicationScope
