@@ -12,16 +12,17 @@ fun ZeroTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
     val zeroColors = if (darkTheme) DarkZeroColors else LightZeroColors
     val materialColors = if (darkTheme) {
         darkColors(
-            primary = zeroColors.inversePrimary,
+            primary = zeroColors.primary,
             primaryVariant = zeroColors.primaryContainer,
-            secondary = zeroColors.secondaryContainer,
-            background = zeroColors.inverseSurface,
-            surface = zeroColors.inverseSurface,
+            secondary = zeroColors.secondary,
+            secondaryVariant = zeroColors.secondaryContainer,
+            background = zeroColors.surface,
+            surface = zeroColors.surface,
             error = zeroColors.error,
-            onPrimary = zeroColors.primary,
-            onSecondary = zeroColors.onSecondaryContainer,
-            onBackground = zeroColors.inverseOnSurface,
-            onSurface = zeroColors.inverseOnSurface,
+            onPrimary = zeroColors.onPrimary,
+            onSecondary = zeroColors.onSecondary,
+            onBackground = zeroColors.onSurface,
+            onSurface = zeroColors.onSurface,
             onError = zeroColors.onError,
         )
     } else {
