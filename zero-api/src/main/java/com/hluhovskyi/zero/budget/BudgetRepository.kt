@@ -74,3 +74,12 @@ interface BudgetRepository {
         override suspend fun replace(period: DateRange, type: BudgetType, inserts: List<BudgetInsert>) = Unit
     }
 }
+
+fun BudgetRepository.Budget.toInsert(): BudgetRepository.BudgetInsert = BudgetRepository.BudgetInsert(
+    id = id,
+    categoryId = categoryId,
+    type = type,
+    amount = amount,
+    periodStart = periodStart,
+    periodEnd = periodEnd,
+)
