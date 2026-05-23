@@ -34,14 +34,33 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.AmountFormatter
 import kotlin.math.roundToInt
 
+// Bespoke sub-palette for the summary bar's dark island. Intentional;
+// not part of ZeroColors because no other widget shares these tokens.
+@Suppress("ZeroThemeBypass")
 private val SummaryBg = Color(0xFF1A2E52)
+
+@Suppress("ZeroThemeBypass")
 private val SummaryTextStrong = Color(0xE6FFFFFF)
+
+@Suppress("ZeroThemeBypass")
 private val SummaryTextDim = Color(0x73FFFFFF)
+
+@Suppress("ZeroThemeBypass")
 private val SummaryTrack = Color(0x14FFFFFF)
+
+@Suppress("ZeroThemeBypass")
 private val GreenAccent = Color(0xFF5DDBA8)
+
+@Suppress("ZeroThemeBypass")
 private val OrangeAccent = Color(0xFFFFB74D)
+
+@Suppress("ZeroThemeBypass")
 private val RedAccent = Color(0xFFFF8A65)
+
+@Suppress("ZeroThemeBypass")
 private val OverPillBg = Color(0x2EFF641E)
+
+@Suppress("ZeroThemeBypass")
 private val OnTrackPillBg = Color(0x265DDBA8)
 
 @Composable

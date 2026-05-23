@@ -671,8 +671,12 @@ private fun UnsetIconWithRing(
     item: BudgetViewModel.Item.Unset,
     imageLoader: ImageLoader,
 ) {
-    val bg = item.colorScheme.background.value.toCompose()
-    val primary = item.colorScheme.primary.value.toCompose()
+    // Match CategoryIconView: in dark mode the entity's primary/background swap
+    // so the icon container reads as theme-coherent on the dark surface.
+    val schemeBg = item.colorScheme.background.value.toCompose()
+    val schemePrimary = item.colorScheme.primary.value.toCompose()
+    val bg = if (ZeroTheme.colors.isLight) schemeBg else schemePrimary
+    val primary = if (ZeroTheme.colors.isLight) schemePrimary else schemeBg
     val ringColor = ZeroTheme.colors.surfaceContainer
     Box(
         modifier = Modifier.size(52.dp),

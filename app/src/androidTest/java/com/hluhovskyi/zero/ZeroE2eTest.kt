@@ -34,6 +34,17 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun pickingCurrencyInPickerUpdatesTransactionEditChip() {
+        seedDefaultSetup()
+        onTransactions()
+            .tapAddTransaction()
+            .assertCurrencySymbol("$")
+            .openCurrencyPicker(currentSymbol = "$")
+            .pickCurrencyByName("Albanian Lek")
+            .assertCurrencySymbol("ALL")
+    }
+
+    @Test
     fun setBudgetForCategoryPersistsAndHidesEmptyCallout() {
         seedDefaultSetup()
         onBudget()

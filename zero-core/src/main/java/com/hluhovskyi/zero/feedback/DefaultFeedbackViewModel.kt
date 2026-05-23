@@ -16,6 +16,7 @@ internal class DefaultFeedbackViewModel(
     private val breadcrumbs: Breadcrumbs,
     private val reportFormatter: FeedbackReportFormatter,
     private val onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
+    private val onFeedbackCloseHandler: OnFeedbackCloseHandler,
     private val errorMessageProvider: () -> String,
     deviceInfo: DeviceInfo,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
@@ -31,7 +32,11 @@ internal class DefaultFeedbackViewModel(
             is FeedbackViewModel.Action.UpdateDescription -> mutableState.update {
                 it.copy(description = action.text, errorMessage = null)
             }
+            is FeedbackViewModel.Action.SelectType -> mutableState.update {
+                it.copy(type = action.type)
+            }
             FeedbackViewModel.Action.Submit -> submit()
+            FeedbackViewModel.Action.Close -> onFeedbackCloseHandler.onFeedbackClose()
         }
     }
 
@@ -45,7 +50,7 @@ internal class DefaultFeedbackViewModel(
         }
         if (previous.description.isBlank() || previous.isSubmitting) return
         coroutineScope.launch {
-            val report = reportFormatter.format(previous.description, breadcrumbs.snapshot())
+            val report = reportFormatter.format(previous.type, previous.description, breadcrumbs.snapshot())
             when (feedbackService.submit(report)) {
                 is FeedbackSubmitResult.Success -> {
                     mutableState.update { it.copy(isSubmitting = false) }
