@@ -102,8 +102,13 @@ private fun IconWithRing(
     isOver: Boolean,
     imageLoader: ImageLoader,
 ) {
-    val bg = row.colorScheme.background.value.toCompose()
-    val primary = row.colorScheme.primary.value.toCompose()
+    // In dark mode the entity's primary/background swap roles so the icon
+    // container reads as theme-coherent on the dark surface — mirrors
+    // CategoryIconView. The progress ring keeps its own color logic.
+    val schemeBg = row.colorScheme.background.value.toCompose()
+    val schemePrimary = row.colorScheme.primary.value.toCompose()
+    val bg = if (ZeroTheme.colors.isLight) schemeBg else schemePrimary
+    val primary = if (ZeroTheme.colors.isLight) schemePrimary else schemeBg
     val ringColor = ringColor(isOver = isOver, pct = pct, scheme = row.colorScheme)
     val trackColor = ZeroTheme.colors.surfaceContainer
     val animated by animateFloatAsState(
