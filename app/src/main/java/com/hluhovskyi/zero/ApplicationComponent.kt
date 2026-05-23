@@ -61,6 +61,8 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
+import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
@@ -394,6 +396,11 @@ abstract class ApplicationComponent :
 
         @Provides
         fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
+
+        @Provides
+        @ApplicationScope
+        fun secureKeyValueStore(context: Context): SecureKeyValueStore =
+            AndroidSecureKeyValueStore(context)
 
         @Provides
         @ApplicationScope
