@@ -11,8 +11,7 @@ class BackupEnvelopeSerializer {
         ignoreUnknownKeys = true
     }
 
-    fun serialize(envelope: BackupEnvelope): String =
-        json.encodeToString(BackupEnvelope.serializer(), envelope)
+    fun serialize(envelope: BackupEnvelope): String = json.encodeToString(BackupEnvelope.serializer(), envelope)
 
     fun deserialize(input: String): BackupEnvelope {
         val envelope = json.decodeFromString(BackupEnvelope.serializer(), input)

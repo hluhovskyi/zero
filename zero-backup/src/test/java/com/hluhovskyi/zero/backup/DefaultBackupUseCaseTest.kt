@@ -161,23 +161,21 @@ class DefaultBackupUseCaseTest {
 
     // --- helpers ---
 
-    private fun TestScope.useCase(client: BackupClient): DefaultBackupUseCase =
-        DefaultBackupUseCase(
-            syncEngine = FakeSyncEngine(emptySnapshot),
-            backupClient = client,
-            currentUserRepository = FakeCurrentUserRepository(Id.Known("user-1")),
-            coroutineScope = this,
-        )
+    private fun TestScope.useCase(client: BackupClient): DefaultBackupUseCase = DefaultBackupUseCase(
+        syncEngine = FakeSyncEngine(emptySnapshot),
+        backupClient = client,
+        currentUserRepository = FakeCurrentUserRepository(Id.Known("user-1")),
+        coroutineScope = this,
+    )
 
-    private fun success(backupId: String = "backup-1"): BackupClient.Result =
-        BackupClient.Result.Success(
-            BackupMetadata(
-                backupId = backupId,
-                createdAt = LocalDateTime.parse("2026-05-21T11:00:00"),
-                byteSize = 0,
-                deviceLabel = "test-device",
-            ),
-        )
+    private fun success(backupId: String = "backup-1"): BackupClient.Result = BackupClient.Result.Success(
+        BackupMetadata(
+            backupId = backupId,
+            createdAt = LocalDateTime.parse("2026-05-21T11:00:00"),
+            byteSize = 0,
+            deviceLabel = "test-device",
+        ),
+    )
 
     private fun failure(error: BackupError): BackupClient.Result = BackupClient.Result.Failure(error)
 
