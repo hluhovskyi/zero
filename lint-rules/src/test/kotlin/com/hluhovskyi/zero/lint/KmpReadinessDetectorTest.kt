@@ -7,10 +7,10 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 
 @Suppress("UnstableApiUsage")
-class BackupModuleEncapsulationDetectorTest : LintDetectorTest() {
+class KmpReadinessDetectorTest : LintDetectorTest() {
 
-    override fun getDetector(): Detector = BackupModuleEncapsulationDetector()
-    override fun getIssues(): List<Issue> = listOf(BackupModuleEncapsulationDetector.ISSUE)
+    override fun getDetector(): Detector = KmpReadinessDetector()
+    override fun getIssues(): List<Issue> = listOf(KmpReadinessDetector.ISSUE)
 
     private val okhttpStub = kotlin(
         "stubs/okhttp3/OkHttpClient.kt",
@@ -59,17 +59,17 @@ class BackupModuleEncapsulationDetectorTest : LintDetectorTest() {
             )
             .testModes(TestMode.DEFAULT)
             .run()
-            .expectContains("BackupModuleEncapsulation")
+            .expectContains("KmpReadiness")
     }
 
-    fun `test flags zero-backup file importing android`() {
+    fun `test flags zero-sync file importing android`() {
         lint()
             .files(
                 androidContextStub,
                 kotlin(
-                    "../zero-backup/src/main/java/com/hluhovskyi/zero/backup/Bad.kt",
+                    "../zero-sync/src/main/java/com/hluhovskyi/zero/sync/Bad.kt",
                     """
-                    package com.hluhovskyi.zero.backup
+                    package com.hluhovskyi.zero.sync
                     import android.content.Context
                     class Bad { val ctx: Context? = null }
                     """,
@@ -77,17 +77,17 @@ class BackupModuleEncapsulationDetectorTest : LintDetectorTest() {
             )
             .testModes(TestMode.DEFAULT)
             .run()
-            .expectContains("BackupModuleEncapsulation")
+            .expectContains("KmpReadiness")
     }
 
-    fun `test flags zero-backup file importing androidx`() {
+    fun `test flags zero-api file importing androidx`() {
         lint()
             .files(
                 androidxKeyStoreStub,
                 kotlin(
-                    "../zero-backup/src/main/java/com/hluhovskyi/zero/backup/Bad.kt",
+                    "../zero-api/src/main/java/com/hluhovskyi/zero/security/Bad.kt",
                     """
-                    package com.hluhovskyi.zero.backup
+                    package com.hluhovskyi.zero.security
                     import androidx.security.crypto.MasterKey
                     class Bad { val key: MasterKey? = null }
                     """,
@@ -95,10 +95,10 @@ class BackupModuleEncapsulationDetectorTest : LintDetectorTest() {
             )
             .testModes(TestMode.DEFAULT)
             .run()
-            .expectContains("BackupModuleEncapsulation")
+            .expectContains("KmpReadiness")
     }
 
-    fun `test allows zero-backup file with kotlinx serialization`() {
+    fun `test allows KMP-ready file with kotlinx serialization`() {
         lint()
             .files(
                 serializationStub,
@@ -116,7 +116,7 @@ class BackupModuleEncapsulationDetectorTest : LintDetectorTest() {
             .expectClean()
     }
 
-    fun `test ignores files outside zero-backup`() {
+    fun `test ignores files in non-KMP-ready modules`() {
         lint()
             .files(
                 okhttpStub,

@@ -7,7 +7,7 @@ Pure-Kotlin orchestration of Google Drive backup. Mirrors `zero-sync`.
 - Define the `BackupEnvelope` wire format and serializer.
 - Implement `BackupUseCase` — the backup state machine over `SyncEngine` + a `BackupClient`.
 - Implement `DriveBackupClient` (added in Phase 2) — the Drive REST contract over `HttpExecutor` + `OAuthTokenProvider`.
-- **No Android, no OkHttp, no kotlinx-coroutines-android.** Pure Kotlin JVM module. Enforced by `BackupModuleEncapsulation` lint rule.
+- **No Android, no OkHttp, no kotlinx-coroutines-android.** Pure Kotlin JVM module. Enforced by the generic `KmpReadiness` lint rule (see `lint-rules/.../KmpReadinessDetector.kt` — add new portable modules to its list).
 
 ## Key Invariants
 

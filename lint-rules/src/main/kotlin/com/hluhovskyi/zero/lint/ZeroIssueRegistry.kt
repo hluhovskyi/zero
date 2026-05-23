@@ -14,7 +14,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         HandlerFunInterfaceDetector.ISSUE,
         DatabaseComponentEncapsulationDetector.ISSUE,
         RemoteComponentEncapsulationDetector.ISSUE,
-        BackupModuleEncapsulationDetector.ISSUE,
+        KmpReadinessDetector.ISSUE,
         TestBridgeBoundaryDetector.ISSUE,
         TestBridgeProductionPurityDetector.ISSUE,
         SyncEntitySerialNameDetector.ISSUE,
