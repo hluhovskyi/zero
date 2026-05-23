@@ -97,13 +97,15 @@ internal class DefaultBackupUseCase(
         }
     }
 
-    // Coalesces concurrent BackupNow callers via CAS. Returns false if another upload is already
-    // in flight; otherwise atomically transitions Idle → Uploading.
+    // Coalesces concurrent BackupNow callers. update() is itself a CAS retry loop, so the
+    // captured `claimed` flag is reassigned on each retry — only the iteration whose CAS wins
+    // observes the value we return.
     private fun tryClaimUploading(): Boolean {
-        while (true) {
-            val current = mutableState.value
-            if (current.phase is BackupUseCase.Phase.Uploading) return false
-            if (mutableState.compareAndSet(current, current.copy(phase = BackupUseCase.Phase.Uploading))) return true
+        var claimed = false
+        mutableState.update { state ->
+            claimed = state.phase !is BackupUseCase.Phase.Uploading
+            if (claimed) state.copy(phase = BackupUseCase.Phase.Uploading) else state
         }
+        return claimed
     }
 }
