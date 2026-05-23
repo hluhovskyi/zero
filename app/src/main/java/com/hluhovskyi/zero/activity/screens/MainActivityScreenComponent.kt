@@ -28,6 +28,8 @@ import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
 import com.hluhovskyi.zero.budget.edit.OnBudgetSavedHandler
+import com.hluhovskyi.zero.budget.over.BudgetOverComponent
+import com.hluhovskyi.zero.budget.over.BudgetOverViewModel
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -135,6 +137,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val budgetComponentBuilder: BudgetComponent.Builder
         val budgetEditComponentBuilder: BudgetEditComponent.Builder
+        val budgetOverComponentBuilder: BudgetOverComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -540,6 +543,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                             Destinations.Budget.Edit.PeriodEnd.withValue(end.toString()),
                         )
                     }
+                    .onOverActionTappedHandler { categoryId, start, end, mode ->
+                        navigator.navigateTo(
+                            Destinations.Budget.Over,
+                            Destinations.Budget.Over.CategoryId.withValue(categoryId),
+                            Destinations.Budget.Over.PeriodStart.withValue(start.toString()),
+                            Destinations.Budget.Over.PeriodEnd.withValue(end.toString()),
+                            Destinations.Budget.Over.InitialMode.withValue(mode?.name.orEmpty()),
+                        )
+                    }
                     .logging(logger),
             )
         }
@@ -564,6 +576,30 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     ),
                 )
                 .onBudgetSavedHandler(OnBudgetSavedHandler.Noop)
+                .onBackHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun budgetOverNavigationEntry(
+            componentBuilder: BudgetOverComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Budget.Over,
+            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+        ) {
+            componentBuilder
+                .categoryId(arguments.getValue(Destinations.Budget.Over.CategoryId))
+                .periodStart(LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodStart)))
+                .periodEnd(LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodEnd)))
+                .initialMode(
+                    arguments.getValue(Destinations.Budget.Over.InitialMode)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { BudgetOverViewModel.Mode.valueOf(it) },
+                )
                 .onBackHandler { navigator.back() }
                 .logging(logger)
         }

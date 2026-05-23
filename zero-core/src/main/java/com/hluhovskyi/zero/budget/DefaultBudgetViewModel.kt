@@ -15,6 +15,7 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetUseCase: BudgetUseCase,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
+    private val onOverActionTappedHandler: OnOverActionTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
@@ -57,6 +58,14 @@ internal class DefaultBudgetViewModel(
                     )
                 }
             }
+            is BudgetViewModel.Action.TapReallocate -> dispatchOverAction(
+                action.categoryId,
+                com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode.REALLOCATE,
+            )
+            is BudgetViewModel.Action.TapIncrease -> dispatchOverAction(
+                action.categoryId,
+                com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode.INCREASE,
+            )
             is BudgetViewModel.Action.ChangeEditAmount -> {
                 mutableState.update { it.copy(editingAmountText = action.text) }
             }
@@ -139,6 +148,16 @@ internal class DefaultBudgetViewModel(
         budgetUseCase.replaceFromPrevious(monthOffset.value, BudgetType.EXPENSE)
     }
 
+    private fun dispatchOverAction(
+        categoryId: Id.Known,
+        mode: com.hluhovskyi.zero.budget.over.BudgetOverViewModel.Mode,
+    ) {
+        val snapshot = mutableState.value
+        val start = snapshot.currentPeriodStart ?: return
+        val end = snapshot.currentPeriodEnd ?: return
+        onOverActionTappedHandler.onTap(categoryId, start, end, mode)
+    }
+
     override fun attachOnMain() {
         scope.launch {
             budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { state ->
@@ -146,6 +165,8 @@ internal class DefaultBudgetViewModel(
                     it.copy(
                         displayedPeriodLabel = label(state.currentPeriod.start),
                         previousPeriodLabel = label(state.previousPeriod.start),
+                        currentPeriodStart = state.currentPeriod.start,
+                        currentPeriodEnd = state.currentPeriod.end,
                         budgeted = state.current,
                         previousPeriodBudgets = state.previous,
                         items = state.current.toItems(previousPeriod = state.previous),

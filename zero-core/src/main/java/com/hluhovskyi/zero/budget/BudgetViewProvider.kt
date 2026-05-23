@@ -153,8 +153,8 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
-                        onReallocate = {},
-                        onIncrease = {},
+                        onReallocate = { viewModel.perform(BudgetViewModel.Action.TapReallocate(item.categoryId)) },
+                        onIncrease = { viewModel.perform(BudgetViewModel.Action.TapIncrease(item.categoryId)) },
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
                     )
