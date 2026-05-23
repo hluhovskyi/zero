@@ -1,0 +1,11 @@
+android {
+    composeCompiler {
+        stabilityConfigurationFiles = [
+            rootProject.layout.projectDirectory.file("stable_config.conf")
+        ]
+        if (project.hasProperty("composeReports")) {
+            reportsDestination = layout.buildDirectory.dir("compose_compiler")
+            metricsDestination = layout.buildDirectory.dir("compose_compiler")
+        }
+    }
+}

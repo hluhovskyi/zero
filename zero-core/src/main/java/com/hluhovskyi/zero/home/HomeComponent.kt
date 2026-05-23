@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.home
 
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -27,9 +28,15 @@ private const val TAG = "HomeComponent"
 abstract class HomeComponent : AttachableViewComponent {
 
     internal abstract val viewModel: HomeViewModel
+    internal abstract val welcomeComponent: WelcomeComponent
+    internal abstract val transactionComponent: TransactionComponent
 
     override val tag: String = TAG
-    override fun attach(): Closeable = viewModel.attach()
+    override fun attach(): Closeable = Closeables.merge(
+        viewModel.attach(),
+        welcomeComponent.attach(),
+        transactionComponent.attach(),
+    )
 
     interface Dependencies {
         val transactionRepository: TransactionRepository

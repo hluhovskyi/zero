@@ -38,7 +38,14 @@ Otherwise run in order — stop and report on first failure, do not continue to 
 ./gradlew assembleDebug
 ```
 
-If all pass: `✓ Tests, lint, and build passed — proceeding with merge.`
+Then run the E2E suite (CI doesn't):
+
+```bash
+./scripts/emulator/acquire
+./scripts/run-android-tests.sh
+```
+
+If all pass: `✓ Tests, lint, build, and E2E passed — proceeding with merge.`
 
 ## Step 3 — Check mergeability
 

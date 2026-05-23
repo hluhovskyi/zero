@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.budget
 
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -138,5 +139,45 @@ class RoomBudgetRepositoryTest {
         repo.delete(Id.Known("b1"))
 
         verify(budgetRoom).softDelete(Id.Known("b1"), userId, now)
+    }
+
+    @Test
+    fun `replace delegates to BudgetRoom transactional replace with keep ids and entities`() = runTest {
+        val insertA = BudgetRepository.BudgetInsert(
+            id = Id.Known("a"),
+            categoryId = Id.Known("cat-a"),
+            type = BudgetType.EXPENSE,
+            amount = Amount(BigDecimal("100")),
+            periodStart = from,
+            periodEnd = to,
+        )
+        val insertB = BudgetRepository.BudgetInsert(
+            id = Id.Unknown,
+            categoryId = Id.Known("cat-b"),
+            type = BudgetType.EXPENSE,
+            amount = Amount(BigDecimal("50")),
+            periodStart = from,
+            periodEnd = to,
+        )
+
+        repo.replace(
+            period = DateRange(from, to),
+            type = BudgetType.EXPENSE,
+            inserts = listOf(insertA, insertB),
+        )
+
+        val keepCaptor = argumentCaptor<List<Id.Known>>()
+        val entitiesCaptor = argumentCaptor<List<BudgetEntity>>()
+        verify(budgetRoom).replace(
+            org.mockito.kotlin.eq(userId),
+            org.mockito.kotlin.eq(from),
+            org.mockito.kotlin.eq(to),
+            org.mockito.kotlin.eq(BudgetType.EXPENSE.name),
+            keepCaptor.capture(),
+            org.mockito.kotlin.eq(now),
+            entitiesCaptor.capture(),
+        )
+        assertEquals(listOf(Id.Known("cat-a"), Id.Known("cat-b")), keepCaptor.firstValue)
+        assertEquals(listOf("a", "generated"), entitiesCaptor.firstValue.map { it.id.value })
     }
 }

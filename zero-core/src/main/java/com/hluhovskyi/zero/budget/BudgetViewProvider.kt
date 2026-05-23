@@ -1,5 +1,11 @@
 package com.hluhovskyi.zero.budget
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,33 +22,50 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.colors.ColorScheme
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.budget.NumPad
+import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.OnPrimary
 import com.hluhovskyi.zero.ui.theme.OnPrimaryContainer
@@ -50,8 +73,16 @@ import com.hluhovskyi.zero.ui.theme.OnSurface
 import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
 import com.hluhovskyi.zero.ui.theme.Outline
 import com.hluhovskyi.zero.ui.theme.OutlineVariant
+import com.hluhovskyi.zero.ui.theme.Primary
 import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.Surface
+import com.hluhovskyi.zero.ui.theme.SurfaceContainer
 import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import kotlinx.coroutines.delay
+import java.math.BigDecimal
+
+private const val TOAST_DURATION_MS = 2800L
 
 internal class BudgetViewProvider(
     private val viewModel: BudgetViewModel,
@@ -76,6 +107,7 @@ private fun BudgetView(
     amountFormatter: AmountFormatter,
 ) {
     val state by viewModel.state.collectAsState(initial = BudgetViewModel.State())
+    var toastMessage by remember { mutableStateOf<String?>(null) }
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -91,13 +123,21 @@ private fun BudgetView(
                     onNewer = { viewModel.perform(BudgetViewModel.Action.SelectNewerMonth) },
                 )
             }
-            item {
-                EmptyBudgetCallout(
-                    periodLabel = state.displayedPeriodLabel,
-                    totalCategories = state.budgeted.size,
-                    previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
-                    onCreateBudget = { viewModel.perform(BudgetViewModel.Action.TapCreateBudget) },
-                )
+            if (!state.hasAnyBudget) {
+                item {
+                    EmptyBudgetCallout(
+                        periodLabel = state.displayedPeriodLabel,
+                        totalCategories = state.budgeted.size,
+                        previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                    )
+                }
+            } else {
+                item {
+                    SummaryBar(
+                        summary = state.summary,
+                        amountFormatter = amountFormatter,
+                    )
+                }
             }
             if (state.previousPeriodBudgets.any { it.budgetId != null }) {
                 item {
@@ -108,16 +148,260 @@ private fun BudgetView(
                     )
                 }
             }
-            item { SectionLabel(stringResource(R.string.budget_section_set_limits)) }
-            items(state.budgeted, key = { it.categoryId.value }) { row ->
-                UnsetCategoryRow(
-                    name = row.categoryName,
-                    colorScheme = row.colorScheme,
-                    icon = row.icon,
-                    imageLoader = imageLoader,
-                    onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+            item {
+                SectionLabel(
+                    stringResource(
+                        if (state.hasAnyBudget) {
+                            R.string.budget_section_categories
+                        } else {
+                            R.string.budget_section_set_limits
+                        },
+                    ),
                 )
             }
+            items(state.budgeted, key = { it.categoryId.value }) { row ->
+                if (row.budgetId != null) {
+                    BudgetCard(
+                        row = row,
+                        onTap = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                    )
+                } else {
+                    UnsetCategoryRow(
+                        row = row,
+                        previousAmount = state.previousPeriodBudgets
+                            .firstOrNull { it.categoryId == row.categoryId && it.budgetId != null }
+                            ?.budgeted,
+                        imageLoader = imageLoader,
+                        amountFormatter = amountFormatter,
+                        onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                    )
+                }
+            }
+        }
+
+        if (state.copyConfirmVisible) {
+            CopyConfirmDialog(
+                onConfirm = {
+                    val count = state.previousPeriodBudgets.count { it.budgetId != null }
+                    val label = state.previousPeriodLabel
+                    viewModel.perform(BudgetViewModel.Action.ConfirmCopy)
+                    toastMessage = "Copied $count categories from $label"
+                },
+                onCancel = { viewModel.perform(BudgetViewModel.Action.CancelCopy) },
+            )
+        }
+
+        InlineNumpadOverlay(
+            state = state,
+            imageLoader = imageLoader,
+            amountFormatter = amountFormatter,
+            viewModel = viewModel,
+        )
+
+        BudgetToast(
+            message = toastMessage,
+            onDismiss = { toastMessage = null },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+@Composable
+private fun InlineNumpadOverlay(
+    state: BudgetViewModel.State,
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
+    viewModel: BudgetViewModel,
+) {
+    val visible = state.editingCategoryId != null
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+    ) {
+        val editingId = state.editingCategoryId ?: return@AnimatedVisibility
+        val row = state.budgeted.firstOrNull { it.categoryId == editingId } ?: return@AnimatedVisibility
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x40000000))
+                    .clickable { viewModel.perform(BudgetViewModel.Action.DismissInlineEdit) }
+                    .testTag("Budget.inlineNumpad.scrim"),
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Surface,
+                        RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                    )
+                    .padding(top = 8.dp),
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 40.dp, height = 4.dp)
+                            .background(OutlineVariant, RoundedCornerShape(2.dp)),
+                    )
+                }
+                InlineNumpadHeader(
+                    name = row.categoryName,
+                    icon = row.icon,
+                    colorScheme = row.colorScheme,
+                    previousAmount = state.editingPreviousAmount,
+                    isPreviousSelected = state.isPreviousAmountSelected,
+                    imageLoader = imageLoader,
+                    amountFormatter = amountFormatter,
+                    onPreviousChip = { viewModel.perform(BudgetViewModel.Action.TapPreviousChip) },
+                )
+                InlineAmountDisplay(state.editingAmountText)
+                NumPad(
+                    value = state.editingAmountText,
+                    onChange = { viewModel.perform(BudgetViewModel.Action.ChangeEditAmount(it)) },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                InlineCommitButton(
+                    text = state.editingAmountText,
+                    hasNextUnset = hasNextUnset(state, editingId),
+                    onCommit = { viewModel.perform(BudgetViewModel.Action.CommitInlineEdit) },
+                )
+            }
+        }
+    }
+}
+
+private fun hasNextUnset(state: BudgetViewModel.State, editingId: Id.Known): Boolean = state.budgeted.any {
+    it.categoryId != editingId &&
+        it.budgetId == null &&
+        it.categoryId !in state.skippedInSession
+}
+
+@Composable
+private fun InlineNumpadHeader(
+    name: String,
+    icon: Image,
+    colorScheme: ColorScheme,
+    previousAmount: Amount?,
+    isPreviousSelected: Boolean,
+    imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
+    onPreviousChip: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CategoryIconView(
+            colorScheme = colorScheme.toUi(),
+            size = 32.dp,
+            contentPadding = 6.dp,
+        ) { tint ->
+            imageLoader.View(
+                modifier = Modifier.size(18.dp),
+                image = icon,
+                tint = tint,
+            )
+        }
+        Text(
+            text = name,
+            modifier = Modifier.weight(1f),
+            style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurface),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (previousAmount != null) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = if (isPreviousSelected) PrimaryContainer else SurfaceContainerLow,
+                        shape = RoundedCornerShape(20.dp),
+                    )
+                    .clickable(onClick = onPreviousChip)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.budget_edit_last_month_chip, amountFormatter.format(previousAmount, currencySymbol = "$")),
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isPreviousSelected) Surface else PrimaryContainer,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InlineAmountDisplay(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        val hasAmount = text != "0"
+        Text(
+            text = "$",
+            style = TextStyle(
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (hasAmount) OnSurfaceVariant else OutlineVariant,
+            ),
+        )
+        Text(
+            text = text,
+            modifier = if (!hasAmount) Modifier.alpha(0.3f) else Modifier,
+            style = TextStyle(
+                fontSize = 44.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = PrimaryContainer,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun InlineCommitButton(text: String, hasNextUnset: Boolean, onCommit: () -> Unit) {
+    val parsed = text.toBigDecimalOrNull()
+    val hasAmount = parsed != null && parsed > BigDecimal.ZERO
+    val label = when {
+        hasNextUnset && hasAmount -> stringResource(R.string.budget_numpad_set_next, "$$text")
+        hasNextUnset && !hasAmount -> stringResource(R.string.budget_numpad_skip_next)
+        !hasNextUnset && hasAmount -> stringResource(R.string.budget_numpad_set, "$$text")
+        else -> stringResource(R.string.budget_numpad_close)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 4.dp, bottom = 28.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PrimaryContainer, RoundedCornerShape(14.dp))
+                .clickable(onClick = onCommit)
+                .testTag("Budget.inlineNumpad.commit")
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Surface),
+            )
         }
     }
 }
@@ -190,7 +474,6 @@ private fun EmptyBudgetCallout(
     periodLabel: String,
     totalCategories: Int,
     previousPeriodHadBudgets: Boolean,
-    onCreateBudget: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -229,24 +512,6 @@ private fun EmptyBudgetCallout(
                 } else {
                     stringResource(R.string.budget_stat_last_month_none)
                 },
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(OnPrimary, RoundedCornerShape(10.dp))
-                .clickable(onClick = onCreateBudget)
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.budget_create),
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryContainer,
-                ),
             )
         }
     }
@@ -330,66 +595,228 @@ private fun SectionLabel(label: String) {
 
 @Composable
 private fun UnsetCategoryRow(
-    name: String,
-    colorScheme: com.hluhovskyi.zero.colors.ColorScheme,
-    icon: com.hluhovskyi.zero.common.Image,
+    row: BudgetQueryUseCase.Budgeted,
+    previousAmount: Amount?,
     imageLoader: ImageLoader,
+    amountFormatter: AmountFormatter,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .drawBehind {
-                drawRoundRect(
-                    color = OutlineVariant,
-                    cornerRadius = CornerRadius(16.dp.toPx()),
-                    style = Stroke(
-                        width = 1.5.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)),
+            .background(SurfaceContainerLowest, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        UnsetIconWithRing(row = row, imageLoader = imageLoader)
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = row.categoryName,
+                    modifier = Modifier.weight(1f),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurface,
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = amountFormatter.format(Amount.zero()),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Outline,
                     ),
                 )
             }
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CategoryIconView(
-            colorScheme = colorScheme.toUi(),
-            size = 36.dp,
-            contentPadding = 8.dp,
-        ) { tint ->
-            imageLoader.View(
-                modifier = Modifier.size(20.dp),
-                image = icon,
-                tint = tint,
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = PrimaryContainer,
+                    )
+                    Text(
+                        text = stringResource(R.string.budget_set_limit),
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryContainer,
+                        ),
+                    )
+                }
+                Text(
+                    text = if (previousAmount != null) {
+                        stringResource(R.string.budget_card_last, amountFormatter.format(previousAmount))
+                    } else {
+                        stringResource(R.string.budget_card_no_limit)
+                    },
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        color = OnSurfaceVariant,
+                    ),
+                )
+            }
         }
-        Text(
-            text = name,
-            modifier = Modifier.weight(1f),
-            style = TextStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Box(
-            modifier = Modifier
-                .background(SurfaceContainerLow, RoundedCornerShape(10.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.budget_set_limit),
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Outline,
+    }
+}
+
+@Composable
+private fun UnsetIconWithRing(
+    row: BudgetQueryUseCase.Budgeted,
+    imageLoader: ImageLoader,
+) {
+    val bg = row.colorScheme.background.value.toCompose()
+    val primary = row.colorScheme.primary.value.toCompose()
+    Box(
+        modifier = Modifier.size(52.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokePx = 3.dp.toPx()
+            val diameter = 48.dp.toPx()
+            val topLeft = Offset(
+                x = (size.width - diameter) / 2f,
+                y = (size.height - diameter) / 2f,
+            )
+            val arcSize = Size(diameter, diameter)
+            drawArc(
+                color = SurfaceContainer,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(
+                    width = strokePx,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 4.dp.toPx())),
                 ),
             )
+        }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(bg, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            imageLoader.View(
+                modifier = Modifier.size(22.dp),
+                image = row.icon,
+                tint = primary,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun BudgetToast(
+    message: String?,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LaunchedEffect(message) {
+        if (message != null) {
+            delay(TOAST_DURATION_MS)
+            onDismiss()
+        }
+    }
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 88.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PrimaryContainer, RoundedCornerShape(14.dp))
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = Color(0xFF5DDBA8),
+            )
+            Text(
+                text = message.orEmpty(),
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnPrimary,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CopyConfirmDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Surface, RoundedCornerShape(20.dp))
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.budget_copy_confirm_title),
+                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnSurface),
+            )
+            Text(
+                text = stringResource(R.string.budget_copy_confirm_subtitle),
+                style = TextStyle(fontSize = 13.sp, color = OnSurfaceVariant),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onCancel)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_copy_confirm_cancel),
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .background(Primary, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onConfirm)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_copy_confirm_replace),
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary),
+                    )
+                }
+            }
         }
     }
 }
