@@ -25,14 +25,14 @@ internal class DefaultBackupUseCase(
 
     override fun perform(action: BackupUseCase.Action) {
         when (action) {
-            is BackupUseCase.Action.BackupNow -> coroutineScope.launch { performBackup() }
+            is BackupUseCase.Action.BackupNow -> {
+                if (claimUploading()) coroutineScope.launch { performBackup() }
+            }
             is BackupUseCase.Action.RestoreLatest -> coroutineScope.launch { performRestore(action.onSnapshot) }
         }
     }
 
     private suspend fun performBackup() {
-        if (!tryClaimUploading()) return
-
         val userId = currentUserRepository.query().first().id
         val snapshot = syncEngine.export(userId)
         val envelope = BackupEnvelope(format = BACKUP_FORMAT, snapshot = snapshot)
@@ -97,10 +97,10 @@ internal class DefaultBackupUseCase(
         }
     }
 
-    // Coalesces concurrent BackupNow callers. update() is itself a CAS retry loop, so the
-    // captured `claimed` flag is reassigned on each retry — only the iteration whose CAS wins
-    // observes the value we return.
-    private fun tryClaimUploading(): Boolean {
+    // Coalesces concurrent BackupNow callers at the gate so the second call doesn't even
+    // launch a coroutine. update() is itself a CAS retry loop; the captured `claimed` flag is
+    // reassigned on each retry — only the iteration whose CAS wins observes the value we return.
+    private fun claimUploading(): Boolean {
         var claimed = false
         mutableState.update { state ->
             claimed = state.phase !is BackupUseCase.Phase.Uploading
