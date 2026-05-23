@@ -19,17 +19,26 @@ interface DriveComponent {
     val backupClient: BackupClient
     // driveSnapshotParser added in Phase 5
 
-    class Factory(private val dependencies: Dependencies) {
-        fun create(): DriveComponent = DefaultDriveComponent(dependencies)
+    class Factory(
+        private val dependencies: Dependencies,
+        private val baseUrl: String,
+    ) {
+        fun create(): DriveComponent = DefaultDriveComponent(dependencies, baseUrl)
     }
 
     companion object {
-        fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
+        const val DEFAULT_BASE_URL = "https://www.googleapis.com"
+
+        fun factory(
+            dependencies: Dependencies,
+            baseUrl: String = DEFAULT_BASE_URL,
+        ): Factory = Factory(dependencies, baseUrl)
     }
 }
 
 internal class DefaultDriveComponent(
     dependencies: DriveComponent.Dependencies,
+    private val baseUrl: String,
 ) : DriveComponent {
 
     private val envelopeSerializer = BackupEnvelopeSerializer()
@@ -39,6 +48,7 @@ internal class DefaultDriveComponent(
             httpExecutor = dependencies.httpExecutor,
             oauthTokenProvider = dependencies.oauthTokenProvider,
             envelopeSerializer = envelopeSerializer,
+            baseUrl = baseUrl,
         )
     }
 }
