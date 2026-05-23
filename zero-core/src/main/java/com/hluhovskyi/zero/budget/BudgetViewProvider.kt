@@ -159,23 +159,20 @@ private fun BudgetView(
                     ),
                 )
             }
-            items(state.budgeted, key = { it.categoryId.value }) { row ->
-                if (row.budgetId != null) {
-                    BudgetCard(
-                        row = row,
-                        onTap = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+            items(state.items, key = { it.categoryId.value }) { item ->
+                val onTap = { viewModel.perform(BudgetViewModel.Action.TapCategory(item.categoryId)) }
+                when (item) {
+                    is BudgetViewModel.Item.Set -> BudgetCard(
+                        item = item,
+                        onTap = onTap,
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
                     )
-                } else {
-                    UnsetCategoryRow(
-                        row = row,
-                        previousAmount = state.previousPeriodBudgets
-                            .firstOrNull { it.categoryId == row.categoryId && it.budgetId != null }
-                            ?.budgeted,
+                    is BudgetViewModel.Item.Unset -> UnsetCategoryRow(
+                        item = item,
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
-                        onClick = { viewModel.perform(BudgetViewModel.Action.TapCategory(row.categoryId)) },
+                        onClick = onTap,
                     )
                 }
             }
@@ -595,8 +592,7 @@ private fun SectionLabel(label: String) {
 
 @Composable
 private fun UnsetCategoryRow(
-    row: BudgetQueryUseCase.Budgeted,
-    previousAmount: Amount?,
+    item: BudgetViewModel.Item.Unset,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     onClick: () -> Unit,
@@ -611,7 +607,7 @@ private fun UnsetCategoryRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        UnsetIconWithRing(row = row, imageLoader = imageLoader)
+        UnsetIconWithRing(item = item, imageLoader = imageLoader)
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -619,7 +615,7 @@ private fun UnsetCategoryRow(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
-                    text = row.categoryName,
+                    text = item.name,
                     modifier = Modifier.weight(1f),
                     style = TextStyle(
                         fontSize = 15.sp,
@@ -665,8 +661,8 @@ private fun UnsetCategoryRow(
                     )
                 }
                 Text(
-                    text = if (previousAmount != null) {
-                        stringResource(R.string.budget_card_last, amountFormatter.format(previousAmount))
+                    text = if (item.previousAmount != null) {
+                        stringResource(R.string.budget_card_last, amountFormatter.format(item.previousAmount))
                     } else {
                         stringResource(R.string.budget_card_no_limit)
                     },
@@ -682,11 +678,11 @@ private fun UnsetCategoryRow(
 
 @Composable
 private fun UnsetIconWithRing(
-    row: BudgetQueryUseCase.Budgeted,
+    item: BudgetViewModel.Item.Unset,
     imageLoader: ImageLoader,
 ) {
-    val bg = row.colorScheme.background.value.toCompose()
-    val primary = row.colorScheme.primary.value.toCompose()
+    val bg = item.colorScheme.background.value.toCompose()
+    val primary = item.colorScheme.primary.value.toCompose()
     Box(
         modifier = Modifier.size(52.dp),
         contentAlignment = Alignment.Center,
@@ -720,7 +716,7 @@ private fun UnsetIconWithRing(
         ) {
             imageLoader.View(
                 modifier = Modifier.size(22.dp),
-                image = row.icon,
+                image = item.icon,
                 tint = primary,
             )
         }

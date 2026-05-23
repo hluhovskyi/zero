@@ -148,6 +148,7 @@ internal class DefaultBudgetViewModel(
                         previousPeriodLabel = label(state.previousPeriod.start),
                         budgeted = state.current,
                         previousPeriodBudgets = state.previous,
+                        items = state.current.toItems(previousPeriod = state.previous),
                         summary = state.summary,
                         hasAnyBudget = state.hasAnyBudget,
                         isLoading = false,
@@ -156,6 +157,58 @@ internal class DefaultBudgetViewModel(
             }
         }
     }
+
+    private fun List<BudgetQueryUseCase.Budgeted>.toItems(
+        previousPeriod: List<BudgetQueryUseCase.Budgeted>,
+    ): List<BudgetViewModel.Item> {
+        val previousById = previousPeriod
+            .filter { it.budgetId != null }
+            .associate { it.categoryId to it.budgeted }
+        return map { row ->
+            if (row.budgetId != null) {
+                row.toSetItem()
+            } else {
+                row.toUnsetItem(previousAmount = previousById[row.categoryId])
+            }
+        }
+    }
+
+    private fun BudgetQueryUseCase.Budgeted.toSetItem(): BudgetViewModel.Item.Set {
+        val rawProgress = if (budgeted > Amount.zero()) {
+            (spent.value.toDouble() / budgeted.value.toDouble()).toFloat()
+        } else {
+            0f
+        }
+        val isOver = spent > budgeted
+        val status = when {
+            isOver -> BudgetViewModel.Item.Status.Over
+            rawProgress > 0.85f -> BudgetViewModel.Item.Status.AlmostThere
+            rawProgress > 0.65f -> BudgetViewModel.Item.Status.Watch
+            else -> BudgetViewModel.Item.Status.Healthy
+        }
+        val remaining = if (isOver) spent - budgeted else budgeted - spent
+        return BudgetViewModel.Item.Set(
+            categoryId = categoryId,
+            name = categoryName,
+            icon = icon,
+            colorScheme = colorScheme,
+            spent = spent,
+            budgeted = budgeted,
+            remaining = remaining,
+            progress = rawProgress.coerceIn(0f, 1f),
+            status = status,
+        )
+    }
+
+    private fun BudgetQueryUseCase.Budgeted.toUnsetItem(
+        previousAmount: Amount?,
+    ): BudgetViewModel.Item.Unset = BudgetViewModel.Item.Unset(
+        categoryId = categoryId,
+        name = categoryName,
+        icon = icon,
+        colorScheme = colorScheme,
+        previousAmount = previousAmount,
+    )
 
     private fun label(date: LocalDate): String = "${monthName(date.month)} ${date.year}"
 
