@@ -2,11 +2,21 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Convert all 15 Gradle build scripts from Groovy DSL (`.gradle`) to Kotlin DSL (`.gradle.kts`), extracting the `buildscript.ext` `deps`/`versions` maps into a `gradle/libs.versions.toml` version catalog. Behavior-preserving — no version bumps, no DSL semantic changes.
+**Goal:** Convert all 15 Gradle build scripts from Groovy DSL (`.gradle`) to Kotlin DSL (`.gradle.kts`), extract the `buildscript.ext` `deps`/`versions` maps into a `gradle/libs.versions.toml` version catalog, and fold in the low-risk modernizations agreed with the user (group A idioms + explicit `jvmTarget` + parallel/config-cache + dead-property cleanup).
 
-**Architecture:** The `ext.deps` nested-map pattern (`deps.android.compose.ui`) has no clean KTS equivalent, so it becomes a type-safe version catalog (`libs.androidx.compose.ui`). Modules are converted to KTS+catalog **first** while the root keeps its `ext` block alive for any not-yet-converted Groovy module; the root and `settings.gradle` convert **last**, when nothing references `ext` anymore. Each task ends with a `./gradlew help` configuration gate (cheap, evaluates every script); the final task runs the real build/test/lint.
+**Architecture:** The `ext.deps` nested-map pattern (`deps.android.compose.ui`) has no clean KTS equivalent, so it becomes a type-safe version catalog (`libs.androidx.compose.ui`). Modules are converted to KTS+catalog **first** while the root keeps its `ext` block alive for any not-yet-converted Groovy module; the root and `settings.gradle` convert **last**, when nothing references `ext` anymore. Each task ends with a `./gradlew help` configuration gate (cheap, evaluates every script); the final task runs the full build/test/lint/e2e matrix.
 
 **Tech Stack:** Gradle 9.3.1, AGP 9.1.0, Kotlin 2.3.20, KSP, Room, Compose, Spotless/ktlint, version catalog.
+
+**Scope — included modernizations (decided with the user):**
+- **Group A idioms** (canonical spelling of existing behavior): `tasks.configureEach{name==…}` → `tasks.named(…)`; nested `android{ kotlin{} }` → top-level `kotlin{}`; drop dead `vectorDrawables { useSupportLibrary = true }` (native since API 21, minSdk is 23); `repositoriesMode.set(x)` → `repositoriesMode = x`; `packagingOptions`→`packaging`; `${buildDir}`→`layout.buildDirectory`; `toLowerCase()`→`lowercase()`.
+- **Explicit Kotlin `jvmTarget = JVM_21`** everywhere (was relying on the default); pure-JVM modules standardize on `kotlin { jvmToolchain(21) }` (matches the existing `lint-rules` form) instead of a `java {}` source/target block.
+- **`gradle.properties`:** enable `org.gradle.parallel=true`; attempt `org.gradle.configuration-cache` and keep it **only if green** (see Task 8 — `isPerfBuild` task-name detection and `:app` property loading may block it; if so, leave it off and document, do NOT rework perf detection here); remove the dead `android.uniquePackageNames=false` (removed in AGP 8.0) after confirming no warning relies on it; re-evaluate `android.r8.strictFullModeForKeepRules=false`.
+
+**Scope — explicitly OUT (separate follow-up PRs):**
+- **`build-logic` convention plugins** — the per-module config dedupe. Deferred to the immediate next PR because of per-module variance (minSdk/targetSdk/desugar deviations) and the catalog-access workaround.
+- **Dependency version bumps** (`core-ktx`, `appcompat`, `fragment`, `coil`, `kotlinx-serialization`, mixed `lifecycle`, …) and **Material 2 → Material 3** — functional changes with real breakage risk; keep this PR bisectable.
+- **Reworking `isPerfBuild`** (perf-tracing trigger, recently touched in #259) — do not change its task-name semantics here.
 
 ---
 
@@ -49,8 +59,14 @@
 | `lintChecks project(":lint-rules")` | `lintChecks(project(":lint-rules"))` |
 | `perfImplementation deps.X` | `"perfImplementation"(libs.…)` — **quoted**; the `perf` build type's config has no generated accessor |
 | `"androidx.test:orchestrator:1.5.1"` (androidTestUtil) | `androidTestUtil(libs.androidx.test.orchestrator)` |
+| `repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)` | `repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS` (group A) |
+| `tasks.configureEach { task -> if (task.name == "x") { task.doLast {…} } }` | `tasks.named("x") { doLast {…} }` (group A — lazy, no graph walk) |
+| `android { kotlin { compilerOptions {…} } }` | top-level `kotlin { compilerOptions {…} }` (group A — canonical location) |
+| `vectorDrawables { useSupportLibrary true }` | **delete** (group A — native since API 21, minSdk 23) |
 
-`java { sourceCompatibility = ... }`, `kotlin { jvmToolchain(21) }`, `kotlin { compilerOptions { optIn.add("…") } }`, and `buildConfig = true` are already valid KTS — copy verbatim.
+**Kotlin `jvmTarget` (group B, applies to every module):** the existing files never set it. In every `kotlin { compilerOptions { … } }` block add `jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21` (import `org.jetbrains.kotlin.gradle.dsl.JvmTarget` and use `jvmTarget = JvmTarget.JVM_21`). For a module that previously had **no** `kotlin {}` block (e.g. `zero-image-loading`), add a top-level `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_21 } }`.
+
+`buildConfig = true` is already valid KTS — copy verbatim. Pure-JVM modules use `kotlin { jvmToolchain(21) }` (drop the `java {}` source/target block) — this sets both Java and Kotlin targets and matches the existing `lint-rules` form.
 
 ### Dependency alias map (`deps.*` → `libs.*`)
 
@@ -232,6 +248,8 @@ These have no `android {}` block. **Root build.gradle stays Groovy** (still prov
 
 - [ ] **Step 1: Write each `.gradle.kts`**
 
+All pure-JVM modules standardize on `kotlin { jvmToolchain(21) }` (group B) — drop the old `java { sourceCompatibility/targetCompatibility }` blocks.
+
 `zero-api/build.gradle.kts`, `zero-backup/build.gradle.kts` (identical content):
 ```kotlin
 plugins {
@@ -240,9 +258,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -256,7 +273,7 @@ dependencies {
 ```
 > `zero-api` has **no** `testImplementation` lines (its Groovy file lists only the three `implementation`s). `zero-backup` has both test lines. Match each source file exactly.
 
-`zero-sync/build.gradle.kts` — same as `zero-backup` but plugin order is `kotlin.jvm`, `kotlin.serialization`, `java-library`, deps add `implementation(project(":zero-api"))` first. Reproduce from `zero-sync/build.gradle` using the rules.
+`zero-sync/build.gradle.kts` — same as `zero-backup` but plugin order is `kotlin.jvm`, `kotlin.serialization`, `java-library`, deps add `implementation(project(":zero-api"))` first. `kotlin { jvmToolchain(21) }`. Reproduce from `zero-sync/build.gradle` using the rules.
 
 `zero-zenmoney/build.gradle.kts`:
 ```kotlin
@@ -266,9 +283,8 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -282,16 +298,11 @@ dependencies {
 }
 ```
 
-`lint-rules/build.gradle.kts`:
+`lint-rules/build.gradle.kts` (already used `jvmToolchain` — just drop its `java {}` block):
 ```kotlin
 plugins {
     `java-library`
     alias(libs.plugins.kotlin.jvm)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
 }
 
 kotlin {
@@ -332,8 +343,12 @@ git add -A && git commit -m "build: migrate pure-JVM modules to Kotlin DSL"
 
 - [ ] **Step 1: Write each `.gradle.kts`** (apply the translation table; full reference below for `zero-database`)
 
+> For all four modules: put `kotlin { compilerOptions { … } }` at **top level** (not nested in `android {}`), add `jvmTarget = JvmTarget.JVM_21` as the first line of `compilerOptions`, and add `import org.jetbrains.kotlin.gradle.dsl.JvmTarget`. `zero-test-bridge` has no `kotlin {}` today — add a top-level `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_21 } }`.
+
 `zero-database/build.gradle.kts`:
 ```kotlin
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -371,10 +386,12 @@ android {
     room {
         schemaDirectory("$projectDir/schemas")
     }
-    kotlin {
-        compilerOptions {
-            optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
     }
 }
 
@@ -426,6 +443,8 @@ git rm zero-database/build.gradle zero-remote/build.gradle zero-crash/build.grad
 
 - [ ] **Step 1: Write each `.gradle.kts`.** Shared shape (top of file + composeCompiler):
 ```kotlin
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
@@ -435,7 +454,7 @@ plugins {
 val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
 
 android {
-    // …compileSdk/defaultConfig/buildTypes/compileOptions/buildFeatures/namespace/lint/testOptions/kotlin per source…
+    // …compileSdk/defaultConfig/buildTypes/compileOptions/buildFeatures/namespace/lint/testOptions per source…
     composeCompiler {
         stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))
         if (isPerfBuild) {
@@ -447,12 +466,20 @@ android {
         }
     }
 }
+
+// top-level (group A: moved out of android {}; group B: explicit jvmTarget)
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        // + the module's optIn.add(…) lines
+    }
+}
 ```
 
 Per-module specifics (reproduce the rest from each Groovy source via the rules):
-- **zero-ui** — `buildTypes` has `release` + `create("perf") { initWith(getByName("release")) }`; `defaultConfig { minSdk = 21 }` (literal, not `versions.minSdk`); `compileOptions` desugaring; one optIn (`androidx.compose.material.ExperimentalMaterialApi`); deps incl. `"perfImplementation"(libs.androidx.compose.runtime.tracing)`.
-- **zero-image-loading** — `buildTypes` release + perf; **no desugaring** in compileOptions; `lint { targetSdk = 32 }` and `testOptions { targetSdk = 32 }` (literal 32, not `versions.targetSdk`); no `kotlin {}` block; deps: lintChecks, `project(":zero-api")`, `androidx.compose.foundation`, `"perfImplementation"(libs.androidx.compose.runtime.tracing)`, `coil.compose`.
-- **zero-core** — adds `alias(libs.plugins.ksp)`; `buildTypes` release + perf; desugaring on; two optIns (coroutines + foundation + animation — three total, match source); deps are the longest list (see `zero-core/build.gradle`), incl. `"perfImplementation"(libs.androidx.compose.runtime.tracing)` and `ksp(libs.dagger.compiler)`.
+- **zero-ui** — `buildTypes` has `release` + `create("perf") { initWith(getByName("release")) }`; `defaultConfig { minSdk = 21 }` (literal, not `versions.minSdk`); `compileOptions` desugaring; top-level `kotlin {}` with `jvmTarget` + one optIn (`androidx.compose.material.ExperimentalMaterialApi`); deps incl. `"perfImplementation"(libs.androidx.compose.runtime.tracing)`.
+- **zero-image-loading** — `buildTypes` release + perf; **no desugaring** in compileOptions; `lint { targetSdk = 32 }` and `testOptions { targetSdk = 32 }` (literal 32, not `versions.targetSdk`); had **no** `kotlin {}` block → add top-level `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_21 } }` (no optIns); deps: lintChecks, `project(":zero-api")`, `androidx.compose.foundation`, `"perfImplementation"(libs.androidx.compose.runtime.tracing)`, `coil.compose`.
+- **zero-core** — adds `alias(libs.plugins.ksp)`; `buildTypes` release + perf; desugaring on; top-level `kotlin {}` with `jvmTarget` + three optIns (coroutines + foundation + animation — match source exactly); deps are the longest list (see `zero-core/build.gradle`), incl. `"perfImplementation"(libs.androidx.compose.runtime.tracing)` and `ksp(libs.dagger.compiler)`.
 
 - [ ] **Step 2: Delete Groovy originals**
 
@@ -476,6 +503,7 @@ The most complex file: Properties loading, `tasks.configureEach` AAB copy, signi
 ```kotlin
 import java.io.File
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -496,20 +524,19 @@ val localProps = Properties().apply {
 
 val releaseOutputDir: String? = System.getenv("RELEASE_OUTPUT_DIR") ?: localProps.getProperty("releaseOutputDir")
 
-tasks.configureEach {
-    if (name == "bundleRelease") {
-        doLast {
-            if (releaseOutputDir != null) {
-                val outputDir = File("${layout.buildDirectory.get().asFile}/outputs/bundle/release")
-                val destDir = File(releaseOutputDir)
-                destDir.mkdirs()
-                outputDir.listFiles()?.firstOrNull { it.name.endsWith(".aab") }?.let { aab ->
-                    val versionCode = versionProps.getProperty("versionCode")
-                    copy {
-                        from(aab)
-                        into(destDir)
-                        rename { "zero-$versionCode.aab" }
-                    }
+// group A: tasks.named (lazy) instead of tasks.configureEach + name string-match
+tasks.named("bundleRelease") {
+    doLast {
+        if (releaseOutputDir != null) {
+            val outputDir = File("${layout.buildDirectory.get().asFile}/outputs/bundle/release")
+            val destDir = File(releaseOutputDir)
+            destDir.mkdirs()
+            outputDir.listFiles()?.firstOrNull { it.name.endsWith(".aab") }?.let { aab ->
+                val versionCode = versionProps.getProperty("versionCode")
+                copy {
+                    from(aab)
+                    into(destDir)
+                    rename { "zero-$versionCode.aab" }
                 }
             }
         }
@@ -527,9 +554,7 @@ android {
         versionName = versionProps.getProperty("versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        // group A: dropped `vectorDrawables { useSupportLibrary = true }` — native since API 21 (minSdk 23)
 
         buildConfigField("String", "FEEDBACK_ENDPOINT",
             "\"${System.getenv("FEEDBACK_ENDPOINT") ?: localProps.getProperty("feedbackEndpoint") ?: ""}\"")
@@ -576,14 +601,6 @@ android {
         }
     }
 
-    kotlin {
-        compilerOptions {
-            optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
-            optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
-            optIn.add("androidx.compose.material.ExperimentalMaterialApi")
-        }
-    }
-
     namespace = "com.hluhovskyi.zero"
 
     testOptions {
@@ -598,6 +615,16 @@ android {
             reportsDestination = layout.buildDirectory.dir("compose_compiler")
             metricsDestination = layout.buildDirectory.dir("compose_compiler")
         }
+    }
+}
+
+// top-level (group A: moved out of android {}; group B: explicit jvmTarget)
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
+        optIn.add("androidx.compose.material.ExperimentalMaterialApi")
     }
 }
 
@@ -677,7 +704,7 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
         google()
         mavenCentral()
@@ -745,7 +772,42 @@ spotless {
 
 ---
 
-## Task 7: Format, full verification matrix, docs
+## Task 7: gradle.properties modernization + config-cache attempt
+
+Now that the build is 100% KTS, modernize `gradle.properties`. Do each as its own verification — do **not** assume; confirm with build output.
+
+**Files:** Modify `gradle.properties`
+
+- [ ] **Step 1: Remove the dead `android.uniquePackageNames` flag**
+
+`android.uniquePackageNames=false` was removed in AGP 8.0; under AGP 9 it does nothing. First confirm it's inert — run `./gradlew help -q --warning-mode all 2>&1 | grep -i "uniquePackageNames"` (no meaningful output expected), then delete the line from `gradle.properties`. Re-run `./gradlew help -q` → BUILD SUCCESSFUL.
+
+- [ ] **Step 2: Re-evaluate `android.r8.strictFullModeForKeepRules=false`**
+
+Check whether anything depends on it: `./gradlew help -q --warning-mode all 2>&1 | grep -i "strictFullMode"`. If inert/deprecated under AGP 9, remove it; if it still affects R8 behavior, **keep it** (it's an intentional opt-out). Document the decision in the commit message.
+
+- [ ] **Step 3: Enable parallel builds**
+
+Add `org.gradle.parallel=true` (multi-module project; safe). Run `./gradlew help -q` → BUILD SUCCESSFUL.
+
+- [ ] **Step 4: Attempt the configuration cache — keep ONLY if green**
+
+Run a representative build with the cache forced on (single command):
+```bash
+./gradlew assembleDebug --configuration-cache 2>&1 | tail -30
+```
+- **If it reports "Configuration cache entry stored" with no problems:** add `org.gradle.configuration-cache=true` to `gradle.properties`, then re-run `./gradlew assembleDebug --configuration-cache` to confirm a cache **hit** ("reused").
+- **If it reports problems** (likely culprits: `gradle.startParameter.taskNames` in `isPerfBuild`, or `:app` reading `version.properties`/`local.gradle.properties` at configuration time): do **not** enable it. Leave `org.gradle.configuration-cache` unset and add a short comment in `gradle.properties` noting it's deferred to the convention-plugin/perf-rework PR (reworking `isPerfBuild` is explicitly out of scope here). Capture the reported problems in the commit message.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add gradle.properties && git commit -m "build: modernize gradle.properties (parallel, drop dead AGP flags, config-cache)"
+```
+
+---
+
+## Task 8: Format, full verification matrix, docs
 
 The full verification gate the user requires: **spotlessApply → debug build → perf build → release build (temp keystore) → unit tests → lint → spotlessCheck → e2e tests**. Run each as its own `Bash` call (no `&&` chaining per repo convention). Fix any failure before moving on.
 
@@ -808,7 +870,11 @@ Expected: BUILD SUCCESSFUL — `:app:connectedDebugAndroidTest` green. This is t
 
 - [ ] **Step 9: Sanity-check version parity**
 
-Run: `git show HEAD~6:build.gradle` (the old Groovy root) and eyeball every version string against `gradle/libs.versions.toml`. Confirm no version drifted during transcription. This is the no-version-bump gate.
+Find the commit that removed the Groovy root, then show its pre-delete content (robust to commit-count drift):
+```bash
+git show "$(git log --diff-filter=D --format=%H -1 -- build.gradle)^:build.gradle"
+```
+Eyeball every version string against `gradle/libs.versions.toml`. Confirm no version drifted during transcription. This is the no-version-bump gate.
 
 - [ ] **Step 10: Document the catalog**
 
@@ -824,6 +890,8 @@ git add -A && git commit -m "build: format KTS, document version catalog"
 
 ## Self-Review Notes
 
-- **Spec coverage:** all 15 files (catalog + 13 modules + root + settings) have a task; every `deps.*`/`versions.*`/inline-string reference has a catalog alias.
-- **Behavior preservation risks flagged:** the `android { kotlin { compilerOptions } }` block is kept nested exactly as in Groovy (it compiles today); `packagingOptions`→`packaging` and `buildDir`→`layout.buildDirectory` are the only DSL-name modernizations, both semantically identical. If the nested `kotlin {}` errors under KTS, move it to a top-level `kotlin {}` block (same `compilerOptions` content).
-- **No version bumps.** Step 5 of Task 7 is the parity gate.
+- **Spec coverage:** all 15 files (catalog + 13 modules + root + settings) + `gradle.properties` have a task; every `deps.*`/`versions.*`/inline-string reference has a catalog alias.
+- **Included modernizations are all spelled out:** group A (`tasks.named`, top-level `kotlin {}`, dropped `useSupportLibrary`, `repositoriesMode =`, `packaging`, `layout.buildDirectory`, `lowercase()`), explicit `jvmTarget = JVM_21` + JVM `jvmToolchain(21)`, and the `gradle.properties` cleanup (Task 7). The `kotlin {}` block moves to **top level** in every module — that's both the group-A idiom and the safe location under KTS.
+- **Deliberately deferred (separate PRs):** `build-logic` convention plugins; dependency version bumps; Material 2→3; reworking `isPerfBuild` (only enable config-cache in Task 7 if it's already green without that rework).
+- **No version bumps in this PR.** Task 8 Step 9 is the parity gate.
+- **Type consistency:** `JvmTarget` import (`org.jetbrains.kotlin.gradle.dsl.JvmTarget`) is required in every module that sets `jvmTarget`; `"perfImplementation"(…)` stays quoted; perf build type uses `create("perf")`.
