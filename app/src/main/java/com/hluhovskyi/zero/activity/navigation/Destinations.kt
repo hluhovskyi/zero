@@ -81,6 +81,13 @@ internal object Destinations {
             object PeriodStart : Argument<String> by stringValueOf("periodStart")
             object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
         }
+
+        object Over : Budget, Destination by destinationOf("budget/over/{categoryId}/{periodStart}/{periodEnd}", CategoryId, PeriodStart, PeriodEnd, InitialMode) {
+            object CategoryId : Argument<Id.Known> by idKnownValueOf("categoryId")
+            object PeriodStart : Argument<String> by stringValueOf("periodStart")
+            object PeriodEnd : Argument<String> by stringValueOf("periodEnd")
+            object InitialMode : Argument<String> by stringOptionalValueOf("initialMode")
+        }
     }
 
     object Settings : Destination by destinationOf("settings")

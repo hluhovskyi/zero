@@ -46,11 +46,17 @@ internal class MainActivityViewProvider(
                     }
                     val navController = rememberNavController(bottomSheetNavigator)
 
-                    screenComponent
-                        .navHostController(navController)
-                        .bottomSheetNavigator(bottomSheetNavigator)
-                        .modalBottomSheetState(sheetState)
-                        .AttachWithView()
+                    // Build per composition, not via the retaining AttachWithView overload:
+                    // retaining this component (which holds the Activity-scoped NavController)
+                    // across a config change crashes NavHost.setGraph on recreation (ZERO-2).
+                    val screen = remember(navController, bottomSheetNavigator, sheetState) {
+                        screenComponent
+                            .navHostController(navController)
+                            .bottomSheetNavigator(bottomSheetNavigator)
+                            .modalBottomSheetState(sheetState)
+                            .build()
+                    }
+                    screen.AttachWithView()
 
                     biometricLockGateComponent.AttachWithView()
                 }

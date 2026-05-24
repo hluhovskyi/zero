@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.datetime.LocalDate
 
 interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, BudgetViewModel.State> {
 
@@ -12,6 +13,8 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         object SelectOlderMonth : Action
         object SelectNewerMonth : Action
         data class TapCategory(val categoryId: Id.Known) : Action
+        data class TapReallocate(val categoryId: Id.Known) : Action
+        data class TapIncrease(val categoryId: Id.Known) : Action
         object TapCopyFromPrevious : Action
         object ConfirmCopy : Action
         object CancelCopy : Action
@@ -27,6 +30,8 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val previousPeriodLabel: String = "",
         val hasPrevious: Boolean = true,
         val hasNext: Boolean = true,
+        val currentPeriodStart: LocalDate? = null,
+        val currentPeriodEnd: LocalDate? = null,
         val budgeted: List<BudgetQueryUseCase.Budgeted> = emptyList(),
         val previousPeriodBudgets: List<BudgetQueryUseCase.Budgeted> = emptyList(),
         val items: List<Item> = emptyList(),
