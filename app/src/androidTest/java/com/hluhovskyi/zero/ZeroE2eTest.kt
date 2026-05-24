@@ -58,4 +58,31 @@ class ZeroE2eTest : BaseE2eTest() {
             .tapCategory("Food & Drink")
             .assertAmountShown("100")
     }
+
+    @Test
+    fun reallocateMovesAmountFromSourceToTargetAndClearsOverBudget() {
+        seedBudgetOverScenario()
+        onBudget()
+            .assertCategoryOver("50.00")
+            .assertOverBudgetActionsVisible()
+            .tapReallocate()
+            .assertSourceCovers("Transport")
+            .selectSource("Transport")
+            .confirmMove()
+            .assertCategoryLeft("0.00")
+            .assertCategoryLeft("150.00")
+    }
+
+    @Test
+    fun increaseGrowsTargetBudgetOnlyAndClearsOverBudget() {
+        seedBudgetOverScenario()
+        onBudget()
+            .assertCategoryOver("50.00")
+            .tapIncrease()
+            .assertSuggestionVisible("+50.00")
+            .pickSuggestion("+50.00")
+            .confirm()
+            .assertCategoryLeft("0.00")
+            .assertCategoryLeft("200.00")
+    }
 }

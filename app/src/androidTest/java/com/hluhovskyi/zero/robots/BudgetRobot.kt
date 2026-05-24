@@ -53,4 +53,61 @@ class BudgetRobot(private val composeRule: ComposeTestRule) {
         }
         return BudgetInlineNumpadRobot(composeRule)
     }
+
+    fun assertOverBudgetActionsVisible(): BudgetRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Reallocate").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("Reallocate").assertIsDisplayed()
+            onNodeWithText("Increase").assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertCategoryLeft(amount: String): BudgetRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("$amount left", substring = false).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("$amount left").assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertCategoryOver(amount: String): BudgetRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("$amount over", substring = false).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("$amount over").assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun tapReallocate(): BudgetOverReallocateRobot {
+        composeRule.apply {
+            onAllNodesWithText("Reallocate").filter(hasClickAction()).onFirst().performClick()
+            waitForIdle()
+        }
+        return BudgetOverReallocateRobot(composeRule)
+    }
+
+    fun tapIncrease(): BudgetOverIncreaseRobot {
+        composeRule.apply {
+            onAllNodesWithText("Increase").filter(hasClickAction()).onFirst().performClick()
+            waitForIdle()
+        }
+        return BudgetOverIncreaseRobot(composeRule)
+    }
+
+    fun goToHome(): TransactionsRobot {
+        composeRule.apply {
+            onAllNodesWithText("Home").filter(hasClickAction()).onFirst().performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Add transaction").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        return TransactionsRobot(composeRule)
+    }
 }
