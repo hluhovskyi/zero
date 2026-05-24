@@ -39,39 +39,33 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val skippedInSession: Set<Id.Known> = emptySet(),
     ) {
         /** Count of set budgets in the previous period — surfaced as "N budgets last month". */
-        val previousBudgetSetCount: Int
-            get() = previousPeriodBudgets.count { it.budgetId != null }
+        val previousBudgetSetCount: Int = previousPeriodBudgets.count { it.budgetId != null }
 
         /** True when the previous period has at least one set budget — gates copy-from-previous. */
-        val hasAnyPreviousBudget: Boolean
-            get() = previousBudgetSetCount > 0
+        val hasAnyPreviousBudget: Boolean = previousBudgetSetCount > 0
 
         /** The currently-edited row, if any — view-side lookup by `editingCategoryId` lives here. */
-        val editingRow: BudgetQueryUseCase.Budgeted?
-            get() = editingCategoryId?.let { id ->
-                budgeted.firstOrNull { it.categoryId == id }
-            }
+        val editingRow: BudgetQueryUseCase.Budgeted? = editingCategoryId?.let { id ->
+            budgeted.firstOrNull { it.categoryId == id }
+        }
 
         /** True when there's still an unset category to advance to from the inline numpad. */
-        val hasNextUnsetForEditing: Boolean
-            get() = editingCategoryId?.let { id ->
-                budgeted.any {
-                    it.categoryId != id &&
-                        it.budgetId == null &&
-                        it.categoryId !in skippedInSession
-                }
-            } ?: false
+        val hasNextUnsetForEditing: Boolean = editingCategoryId?.let { id ->
+            budgeted.any {
+                it.categoryId != id &&
+                    it.budgetId == null &&
+                    it.categoryId !in skippedInSession
+            }
+        } ?: false
 
-        val editingPreviousAmount: Amount?
-            get() = previousPeriodBudgets
-                .firstOrNull { it.categoryId == editingCategoryId && it.budgetId != null }
-                ?.budgeted
+        val editingPreviousAmount: Amount? = previousPeriodBudgets
+            .firstOrNull { it.categoryId == editingCategoryId && it.budgetId != null }
+            ?.budgeted
 
-        val isPreviousAmountSelected: Boolean
-            get() = editingPreviousAmount
-                ?.value
-                ?.stripTrailingZeros()
-                ?.toPlainString() == editingAmountText
+        val isPreviousAmountSelected: Boolean = editingPreviousAmount
+            ?.value
+            ?.stripTrailingZeros()
+            ?.toPlainString() == editingAmountText
     }
 
     /**

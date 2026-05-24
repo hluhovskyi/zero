@@ -27,11 +27,10 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
          * Active accounts grouped by [AccountCategory] and ordered by the category's declared
          * order — fed straight into the LazyColumn so the view does no grouping or sorting.
          */
-        val activeAccountsByCategory: List<Pair<AccountCategory, List<Account>>>
-            get() = activeAccounts
-                .groupBy { it.category }
-                .entries
-                .sortedBy { it.key.ordinal }
-                .map { it.key to it.value }
+        val activeAccountsByCategory: List<Pair<AccountCategory, List<Account>>> = activeAccounts
+            .groupBy { it.category }
+            .entries
+            .sortedBy { it.key.ordinal }
+            .map { it.key to it.value }
     }
 }

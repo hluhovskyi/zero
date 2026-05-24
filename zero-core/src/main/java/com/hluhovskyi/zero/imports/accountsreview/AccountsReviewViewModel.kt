@@ -12,8 +12,7 @@ interface AccountsReviewViewModel : ActionStateModel<AccountsReviewViewModel.Act
         val strategies: Map<Id.Known, ResolveStrategy> = emptyMap(),
     ) {
         /** Total transaction count across all accounts up for review — used by the header copy. */
-        val totalTransactions: Int
-            get() = accounts.sumOf { it.transactionCount }
+        val totalTransactions: Int = accounts.sumOf { it.transactionCount }
     }
 
     sealed interface Action {
