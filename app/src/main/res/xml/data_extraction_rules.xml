@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rules for Android Auto Backup (cloud) + D2D transfer on SDK 31+.
+     Mirror backup_rules.xml; the two paths share the Room DB include.
+     Allowlist mode: <include> means ONLY zero.db is backed up, so SharedPreferences
+     (incl. the device-specific com.google.android.gms.appid.xml) are excluded implicitly.
+     The journal excludes carve the device-local WAL/SHM back out of the zero.db prefix. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="zero.db" />
+        <exclude domain="database" path="zero.db-shm" />
+        <exclude domain="database" path="zero.db-wal" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="zero.db" />
+        <exclude domain="database" path="zero.db-shm" />
+        <exclude domain="database" path="zero.db-wal" />
+    </device-transfer>
+</data-extraction-rules>

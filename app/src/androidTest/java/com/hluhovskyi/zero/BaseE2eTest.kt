@@ -39,6 +39,8 @@ abstract class BaseE2eTest {
 
     protected fun seedDefaultSetup() = runBlocking { container.database.seedDefaultSetup() }
 
+    protected fun seedBudgetOverScenario() = runBlocking { container.database.seedBudgetOverScenario() }
+
     protected fun onTransactions() = TransactionsRobot(composeRule)
 
     protected fun onBudget() = BudgetRobot(composeRule).open()

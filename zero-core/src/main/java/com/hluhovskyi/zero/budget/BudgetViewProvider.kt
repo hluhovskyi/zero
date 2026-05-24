@@ -59,7 +59,6 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
-import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
@@ -116,7 +115,7 @@ private fun BudgetView(
                     EmptyBudgetCallout(
                         periodLabel = state.displayedPeriodLabel,
                         totalCategories = state.budgeted.size,
-                        previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                        previousPeriodHadBudgets = state.hasAnyPreviousBudget,
                     )
                 }
             } else {
@@ -127,11 +126,11 @@ private fun BudgetView(
                     )
                 }
             }
-            if (state.previousPeriodBudgets.any { it.budgetId != null }) {
+            if (state.hasAnyPreviousBudget) {
                 item {
                     CopyFromPreviousCard(
                         monthLabel = state.previousPeriodLabel,
-                        count = state.previousPeriodBudgets.count { it.budgetId != null },
+                        count = state.previousBudgetSetCount,
                         onClick = { viewModel.perform(BudgetViewModel.Action.TapCopyFromPrevious) },
                     )
                 }
@@ -153,6 +152,8 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
+                        onReallocate = { viewModel.perform(BudgetViewModel.Action.TapReallocate(item.categoryId)) },
+                        onIncrease = { viewModel.perform(BudgetViewModel.Action.TapIncrease(item.categoryId)) },
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
                     )
@@ -169,7 +170,7 @@ private fun BudgetView(
         if (state.copyConfirmVisible) {
             CopyConfirmDialog(
                 onConfirm = {
-                    val count = state.previousPeriodBudgets.count { it.budgetId != null }
+                    val count = state.previousBudgetSetCount
                     val label = state.previousPeriodLabel
                     viewModel.perform(BudgetViewModel.Action.ConfirmCopy)
                     toastMessage = "Copied $count categories from $label"
@@ -206,8 +207,7 @@ private fun InlineNumpadOverlay(
         enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
     ) {
-        val editingId = state.editingCategoryId ?: return@AnimatedVisibility
-        val row = state.budgeted.firstOrNull { it.categoryId == editingId } ?: return@AnimatedVisibility
+        val row = state.editingRow ?: return@AnimatedVisibility
 
         Box(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -255,18 +255,12 @@ private fun InlineNumpadOverlay(
                 )
                 InlineCommitButton(
                     text = state.editingAmountText,
-                    hasNextUnset = hasNextUnset(state, editingId),
+                    hasNextUnset = state.hasNextUnsetForEditing,
                     onCommit = { viewModel.perform(BudgetViewModel.Action.CommitInlineEdit) },
                 )
             }
         }
     }
-}
-
-private fun hasNextUnset(state: BudgetViewModel.State, editingId: Id.Known): Boolean = state.budgeted.any {
-    it.categoryId != editingId &&
-        it.budgetId == null &&
-        it.categoryId !in state.skippedInSession
 }
 
 @Composable
@@ -669,8 +663,12 @@ private fun UnsetIconWithRing(
     item: BudgetViewModel.Item.Unset,
     imageLoader: ImageLoader,
 ) {
-    val bg = item.colorScheme.background.value.toCompose()
-    val primary = item.colorScheme.primary.value.toCompose()
+    // Match CategoryIconView: in dark mode the entity's primary/background swap
+    // so the icon container reads as theme-coherent on the dark surface.
+    val schemeBg = item.colorScheme.background.value.toCompose()
+    val schemePrimary = item.colorScheme.primary.value.toCompose()
+    val bg = if (ZeroTheme.colors.isLight) schemeBg else schemePrimary
+    val primary = if (ZeroTheme.colors.isLight) schemePrimary else schemeBg
     val ringColor = ZeroTheme.colors.surfaceContainer
     Box(
         modifier = Modifier.size(52.dp),

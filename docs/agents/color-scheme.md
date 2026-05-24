@@ -4,7 +4,7 @@
 
 - `ZeroTheme.colors.<token>` is the **only** way to read app colors from a `@Composable`. Reading `MaterialTheme.colors.*` works for Material widgets but does not expose the extra tokens (`surfaceContainerHigh`, `selectedPill`, `importNewContainer`, …).
 - Top-level color consts in `zero-ui/.../theme/Color.kt` are deleted on purpose. If you need a new semantic token, add a field to `ZeroColors` and set values in both `LightZeroColors` and `DarkZeroColors`.
-- `DarkZeroColors` is a stub mirroring light. The real dark palette ships as a follow-up — do not assume dark-mode visuals are tuned.
+- `DarkZeroColors` holds the tuned dark palette. Status bar dark mode comes from `app/src/main/res/values-night/themes.xml` (Android resource qualifier, not Compose).
 - Function-signature defaults can read `ZeroTheme.colors.*` only inside `@Composable` functions. For non-composable defaults (e.g. a `DrawScope` lambda), hoist the read to the call site and pass the resolved `Color` in.
 
 ## Entity `ColorScheme` (domain palette)
