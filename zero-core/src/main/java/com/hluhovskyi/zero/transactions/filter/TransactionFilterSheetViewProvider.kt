@@ -1,8 +1,8 @@
 package com.hluhovskyi.zero.transactions.filter
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.TransactionFilterSheet
@@ -14,7 +14,9 @@ internal class TransactionFilterSheetViewProvider(
 
     @Composable
     override fun View() {
-        val state by viewModel.state.collectAsState(initial = TransactionFilterSheetViewModel.State())
+        val state by viewModel.state.collectAsStateWithLifecycle(
+            initialValue = TransactionFilterSheetViewModel.State(),
+        )
         TransactionFilterSheet(
             activeFilter = state.activeFilter,
             availableCategories = state.availableCategories,
