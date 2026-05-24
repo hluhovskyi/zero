@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
-apply from: "$rootDir/gradle/compose-config.gradle"
+def isPerfBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains("perf") }
 
 android {
     compileSdk versions.compileSdk
@@ -42,6 +42,16 @@ android {
     kotlin {
         compilerOptions {
             optIn.add("androidx.compose.material.ExperimentalMaterialApi")
+        }
+    }
+    composeCompiler {
+        stabilityConfigurationFiles = [rootProject.layout.projectDirectory.file("stable_config.conf")]
+        if (isPerfBuild) {
+            includeSourceInformation = true
+        }
+        if (isPerfBuild || project.hasProperty("composeReports")) {
+            reportsDestination = layout.buildDirectory.dir("compose_compiler")
+            metricsDestination = layout.buildDirectory.dir("compose_compiler")
         }
     }
 }

@@ -92,12 +92,7 @@ private fun AccountView(
     onAddAccount: OnAddAccountHandler,
 ) {
     val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
-    val grouped = remember(state.activeAccounts) {
-        state.activeAccounts
-            .groupBy { it.category }
-            .entries
-            .sortedBy { it.key.ordinal }
-    }
+    val grouped = state.activeAccountsByCategory
     val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     var showArchived by remember { mutableStateOf(false) }

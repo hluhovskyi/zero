@@ -4,7 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
-apply from: "$rootDir/gradle/compose-config.gradle"
+def isPerfBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains("perf") }
 
 android {
     compileSdk versions.compileSdk
@@ -46,6 +46,18 @@ android {
             optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
             optIn.add("androidx.compose.foundation.ExperimentalFoundationApi")
             optIn.add("androidx.compose.animation.ExperimentalAnimationApi")
+        }
+    }
+    composeCompiler {
+        stabilityConfigurationFiles = [rootProject.layout.projectDirectory.file("stable_config.conf")]
+        // Perf-only: keep source info so `Compose:<Name>` trace markers survive into bytecode.
+        if (isPerfBuild) {
+            includeSourceInformation = true
+        }
+        // Reports emitted for perf builds, or any build with -PcomposeReports.
+        if (isPerfBuild || project.hasProperty("composeReports")) {
+            reportsDestination = layout.buildDirectory.dir("compose_compiler")
+            metricsDestination = layout.buildDirectory.dir("compose_compiler")
         }
     }
 }
