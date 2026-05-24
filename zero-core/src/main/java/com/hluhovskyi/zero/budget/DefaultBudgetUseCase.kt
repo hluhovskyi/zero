@@ -138,6 +138,14 @@ internal class DefaultBudgetUseCase(
         budgetRepository.replace(current, type, inserts)
     }
 
+    override suspend fun remove(monthOffset: Int, type: BudgetType, categoryId: Id.Known) {
+        val period = periodFor(monthOffset)
+        val existing = budgetRepository
+            .query(BudgetRepository.Criteria.ForCategoryAndPeriod(categoryId, period.start, period.end, type))
+            .firstOrNull() ?: return
+        budgetRepository.delete(existing.id)
+    }
+
     private fun periodFor(monthOffset: Int): DateRange {
         val (start, end) = periodResolver.monthOffsetFrom(periodResolver.today(), monthOffset)
         return DateRange(start, end)

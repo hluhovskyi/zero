@@ -59,6 +59,17 @@ internal class DefaultBudgetViewModel(
                     )
                 }
             }
+            is BudgetViewModel.Action.LongPressCategory -> {
+                mutableState.update { state ->
+                    val row = state.budgeted.firstOrNull { it.categoryId == action.categoryId }
+                    // Only set budgets can be removed; long-pressing an unset row is a no-op.
+                    if (row?.budgetId != null) state.copy(removeConfirm = action.categoryId) else state
+                }
+            }
+            BudgetViewModel.Action.ConfirmRemove -> confirmRemove()
+            BudgetViewModel.Action.CancelRemove -> {
+                mutableState.update { it.copy(removeConfirm = null) }
+            }
             is BudgetViewModel.Action.TapReallocate -> dispatchOverAction(
                 action.categoryId,
                 BudgetOverViewModel.Mode.REALLOCATE,
@@ -147,6 +158,14 @@ internal class DefaultBudgetViewModel(
 
     private fun performCopy() = scope.launch {
         budgetUseCase.replaceFromPrevious(monthOffset.value, BudgetType.EXPENSE)
+    }
+
+    private fun confirmRemove() {
+        val categoryId = mutableState.value.removeConfirm ?: return
+        mutableState.update { it.copy(removeConfirm = null) }
+        scope.launch {
+            budgetUseCase.remove(monthOffset.value, BudgetType.EXPENSE, categoryId)
+        }
     }
 
     private fun dispatchOverAction(

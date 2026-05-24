@@ -152,6 +152,7 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
+                        onLongPress = { viewModel.perform(BudgetViewModel.Action.LongPressCategory(item.categoryId)) },
                         onReallocate = { viewModel.perform(BudgetViewModel.Action.TapReallocate(item.categoryId)) },
                         onIncrease = { viewModel.perform(BudgetViewModel.Action.TapIncrease(item.categoryId)) },
                         imageLoader = imageLoader,
@@ -176,6 +177,21 @@ private fun BudgetView(
                     toastMessage = "Copied $count categories from $label"
                 },
                 onCancel = { viewModel.perform(BudgetViewModel.Action.CancelCopy) },
+            )
+        }
+
+        state.removeConfirmRow?.let { row ->
+            val toast = stringResource(R.string.budget_remove_toast, row.categoryName)
+            RemoveConfirmSheet(
+                name = row.categoryName,
+                icon = row.icon,
+                colorScheme = row.colorScheme,
+                imageLoader = imageLoader,
+                onConfirm = {
+                    viewModel.perform(BudgetViewModel.Action.ConfirmRemove)
+                    toastMessage = toast
+                },
+                onCancel = { viewModel.perform(BudgetViewModel.Action.CancelRemove) },
             )
         }
 
@@ -750,6 +766,111 @@ internal fun BudgetToast(
                     color = ZeroTheme.colors.onPrimary,
                 ),
             )
+        }
+    }
+}
+
+@Composable
+private fun RemoveConfirmSheet(
+    name: String,
+    icon: Image,
+    colorScheme: ColorScheme,
+    imageLoader: ImageLoader,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ZeroTheme.colors.scrim)
+                .clickable(onClick = onCancel)
+                .testTag("Budget.removeConfirm.scrim"),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .background(
+                    ZeroTheme.colors.surface,
+                    RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                )
+                .padding(horizontal = 20.dp)
+                .padding(top = 8.dp, bottom = 28.dp),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 40.dp, height = 4.dp)
+                        .background(ZeroTheme.colors.outlineVariant, RoundedCornerShape(2.dp)),
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                CategoryIconView(
+                    colorScheme = colorScheme.toUi(),
+                    size = 44.dp,
+                    contentPadding = 9.dp,
+                ) { tint ->
+                    imageLoader.View(
+                        modifier = Modifier.size(22.dp),
+                        image = icon,
+                        tint = tint,
+                    )
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_title, name),
+                        style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_subtitle),
+                        style = TextStyle(fontSize = 13.sp, color = ZeroTheme.colors.onSurfaceVariant),
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onCancel)
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_cancel),
+                        style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurface),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(ZeroTheme.colors.error, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onConfirm)
+                        .testTag("Budget.removeConfirm.confirm")
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_remove),
+                        style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onPrimary),
+                    )
+                }
+            }
         }
     }
 }

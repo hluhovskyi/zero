@@ -114,6 +114,34 @@ class DefaultBudgetUseCaseTest {
         assertEquals(0, captor.firstValue.amount.value.compareTo(BigDecimal("120")))
     }
 
+    // ── remove ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `remove soft-deletes the budget for the category and period`() = runTest {
+        whenever(
+            budgetRepository.query(
+                BudgetRepository.Criteria.ForCategoryAndPeriod(catA, currentStart, currentEnd, type),
+            ),
+        ).thenReturn(flowOf(budget("b-a", catA, BigDecimal("100"))))
+
+        useCase().remove(monthOffset = 0, type = type, categoryId = catA)
+
+        verify(budgetRepository).delete(Id.Known("b-a"))
+    }
+
+    @Test
+    fun `remove is a no-op when the category has no budget in the period`() = runTest {
+        whenever(
+            budgetRepository.query(
+                BudgetRepository.Criteria.ForCategoryAndPeriod(catA, currentStart, currentEnd, type),
+            ),
+        ).thenReturn(flowOf(null))
+
+        useCase().remove(monthOffset = 0, type = type, categoryId = catA)
+
+        verify(budgetRepository, never()).delete(any())
+    }
+
     // ── replaceFromPrevious ──────────────────────────────────────────────────
 
     @Test

@@ -3,9 +3,11 @@ package com.hluhovskyi.zero.budget
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,10 +60,12 @@ private val OrangeWarn = Color(0xFFE65100)
 @Suppress("ZeroThemeBypass")
 private val YellowWarn = Color(0xFFF9A825)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun BudgetCard(
     item: BudgetViewModel.Item.Set,
     onTap: () -> Unit,
+    onLongPress: () -> Unit,
     onReallocate: () -> Unit,
     onIncrease: () -> Unit,
     imageLoader: ImageLoader,
@@ -88,7 +92,7 @@ internal fun BudgetCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onTap)
+                .combinedClickable(onClick = onTap, onLongClick = onLongPress)
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
