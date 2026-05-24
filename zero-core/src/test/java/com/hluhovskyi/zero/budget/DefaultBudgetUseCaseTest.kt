@@ -39,6 +39,9 @@ class DefaultBudgetUseCaseTest {
     private val currentEnd = LocalDate(2026, 5, 31)
     private val previousStart = LocalDate(2026, 4, 1)
     private val previousEnd = LocalDate(2026, 4, 30)
+    // Trailing 3 months ending the day before the current period (used to order unset rows).
+    private val trailingStart = LocalDate(2026, 2, 1)
+    private val trailingEnd = LocalDate(2026, 4, 30)
     private val type = BudgetType.EXPENSE
 
     private val catA = Id.Known("cat-a")
@@ -170,6 +173,8 @@ class DefaultBudgetUseCaseTest {
     fun `observe sorts rows over → in-progress by pct desc → unset`() = runTest {
         whenever(budgetQueryUseCase.query(previousStart, previousEnd))
             .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(trailingStart, trailingEnd))
+            .thenReturn(flowOf(emptyList()))
         whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
             flowOf(
                 listOf(
@@ -194,8 +199,44 @@ class DefaultBudgetUseCaseTest {
     }
 
     @Test
+    fun `observe orders unset categories by trailing spend desc then alphabetically`() = runTest {
+        whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        // Only groceries and transport have trailing-3-month spend; dining and health have none.
+        whenever(budgetQueryUseCase.query(trailingStart, trailingEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("groceries", budgetId = null, budgeted = "0", spent = "300"),
+                    row("transport", budgetId = null, budgeted = "0", spent = "100"),
+                ),
+            ),
+        )
+        // Current period: all unset, deliberately not in the expected output order.
+        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
+            flowOf(
+                listOf(
+                    row("health", budgetId = null, budgeted = "0", spent = "0"),
+                    row("groceries", budgetId = null, budgeted = "0", spent = "0"),
+                    row("dining", budgetId = null, budgeted = "0", spent = "0"),
+                    row("transport", budgetId = null, budgeted = "0", spent = "0"),
+                ),
+            ),
+        )
+
+        val state = useCase().observe(MutableStateFlow(0), type).first()
+
+        // groceries (300) > transport (100); dining/health have no history → alphabetical by name.
+        assertEquals(
+            listOf("groceries", "transport", "dining", "health"),
+            state.current.map { it.categoryId.value },
+        )
+    }
+
+    @Test
     fun `observe derives empty summary when no budgets are set`() = runTest {
         whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(trailingStart, trailingEnd))
             .thenReturn(flowOf(emptyList()))
         whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
             flowOf(
@@ -215,6 +256,8 @@ class DefaultBudgetUseCaseTest {
     @Test
     fun `observe derives summary totals over only set rows`() = runTest {
         whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(trailingStart, trailingEnd))
             .thenReturn(flowOf(emptyList()))
         whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
             flowOf(
@@ -239,6 +282,8 @@ class DefaultBudgetUseCaseTest {
     @Test
     fun `observe flags over-budget and clips pct at 1`() = runTest {
         whenever(budgetQueryUseCase.query(previousStart, previousEnd))
+            .thenReturn(flowOf(emptyList()))
+        whenever(budgetQueryUseCase.query(trailingStart, trailingEnd))
             .thenReturn(flowOf(emptyList()))
         whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
             flowOf(
