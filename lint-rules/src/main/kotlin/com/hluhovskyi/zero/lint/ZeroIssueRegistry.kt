@@ -11,6 +11,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         DefaultImplVisibilityDetector.ISSUE,
         ViewProviderVisibilityDetector.ISSUE,
         ViewProviderDependencyDetector.ISSUE,
+        StateCollectionDerivationDetector.ISSUE,
         HandlerFunInterfaceDetector.ISSUE,
         DatabaseComponentEncapsulationDetector.ISSUE,
         RemoteComponentEncapsulationDetector.ISSUE,

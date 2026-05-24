@@ -38,6 +38,30 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val editingAmountText: String = "0",
         val skippedInSession: Set<Id.Known> = emptySet(),
     ) {
+        /** Count of set budgets in the previous period — surfaced as "N budgets last month". */
+        val previousBudgetSetCount: Int
+            get() = previousPeriodBudgets.count { it.budgetId != null }
+
+        /** True when the previous period has at least one set budget — gates copy-from-previous. */
+        val hasAnyPreviousBudget: Boolean
+            get() = previousBudgetSetCount > 0
+
+        /** The currently-edited row, if any — view-side lookup by `editingCategoryId` lives here. */
+        val editingRow: BudgetQueryUseCase.Budgeted?
+            get() = editingCategoryId?.let { id ->
+                budgeted.firstOrNull { it.categoryId == id }
+            }
+
+        /** True when there's still an unset category to advance to from the inline numpad. */
+        val hasNextUnsetForEditing: Boolean
+            get() = editingCategoryId?.let { id ->
+                budgeted.any {
+                    it.categoryId != id &&
+                        it.budgetId == null &&
+                        it.categoryId !in skippedInSession
+                }
+            } ?: false
+
         val editingPreviousAmount: Amount?
             get() = previousPeriodBudgets
                 .firstOrNull { it.categoryId == editingCategoryId && it.budgetId != null }

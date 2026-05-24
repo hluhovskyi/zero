@@ -53,7 +53,6 @@ internal class AccountsReviewViewProvider(
 @Composable
 private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: ImageLoader) {
     val state by viewModel.state.collectAsState(initial = AccountsReviewViewModel.State())
-    val totalTransactions = state.accounts.sumOf { it.transactionCount }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
@@ -67,7 +66,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
         ) {
             item {
                 Text(
-                    text = stringResource(R.string.import_accounts_review_info, state.accounts.size, totalTransactions),
+                    text = stringResource(R.string.import_accounts_review_info, state.accounts.size, state.totalTransactions),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = ZeroTheme.colors.onSurfaceVariant,
