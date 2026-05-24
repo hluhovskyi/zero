@@ -101,7 +101,8 @@ private fun CategoryView(
                     .padding(bottom = 6.dp),
             ) { tab ->
                 CategoryPage(
-                    categories = state.categoriesByType[tab].orEmpty(),
+                    active = state.activeCategoriesByType[tab].orEmpty(),
+                    inactive = state.inactiveCategoriesByType[tab].orEmpty(),
                     grandTotal = state.grandTotalByType[tab] ?: Amount.zero(),
                     currencySymbol = state.currencySymbol,
                     amountFormatter = amountFormatter,
@@ -126,19 +127,14 @@ private fun CategoryView(
 
 @Composable
 private fun CategoryPage(
-    categories: List<CategoryViewModel.CategoryItem>,
+    active: List<CategoryViewModel.CategoryItem>,
+    inactive: List<CategoryViewModel.CategoryItem>,
     grandTotal: Amount,
     currencySymbol: String,
     amountFormatter: AmountFormatter,
     imageLoader: ImageLoader,
     onCategoryClick: (CategoryViewModel.CategoryItem) -> Unit,
 ) {
-    val active = remember(categories) {
-        categories.filter { it.spending is CategoryViewModel.Spending.Active }
-    }
-    val inactive = remember(categories) {
-        categories.filter { it.spending is CategoryViewModel.Spending.None }
-    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 96.dp),

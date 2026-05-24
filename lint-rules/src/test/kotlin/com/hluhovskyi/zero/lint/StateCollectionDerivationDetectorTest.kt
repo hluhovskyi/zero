@@ -24,7 +24,7 @@ class StateCollectionDerivationDetectorTest : LintDetectorTest() {
                 ).indented(),
             )
             .run()
-            .expectContains("ViewProviderStateDerivation")
+            .expectContains("ViewProviderDerivation")
     }
 
     fun `test flags firstOrNull, count, sumOf, sortedBy`() {
@@ -44,7 +44,22 @@ class StateCollectionDerivationDetectorTest : LintDetectorTest() {
                 ).indented(),
             )
             .run()
-            .expectContains("ViewProviderStateDerivation")
+            .expectContains("ViewProviderDerivation")
+    }
+
+    fun `test flags derivation on a destructured local (no state in chain)`() {
+        lint()
+            .files(
+                kotlin(
+                    "src/main/java/com/hluhovskyi/zero/foo/FooViewProvider.kt",
+                    """
+                    package com.hluhovskyi.zero.foo
+                    fun render(items: List<String>) = items.filter { it.isNotEmpty() }
+                    """,
+                ).indented(),
+            )
+            .run()
+            .expectContains("ViewProviderDerivation")
     }
 
     fun `test does not flag derivation outside a ViewProvider file`() {
@@ -63,14 +78,15 @@ class StateCollectionDerivationDetectorTest : LintDetectorTest() {
             .expectClean()
     }
 
-    fun `test does not flag derivation on a non-state receiver`() {
+    fun `test allowlists EnumEntries from kotlin enum entries`() {
         lint()
             .files(
                 kotlin(
                     "src/main/java/com/hluhovskyi/zero/foo/FooViewProvider.kt",
                     """
                     package com.hluhovskyi.zero.foo
-                    fun render(rows: List<String>) = rows.any { it.isNotEmpty() }
+                    enum class Tab { A, B, C }
+                    fun render() = Tab.entries.associateWith { it.name }
                     """,
                 ).indented(),
             )

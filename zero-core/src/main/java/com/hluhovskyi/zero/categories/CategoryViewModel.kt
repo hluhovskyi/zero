@@ -19,7 +19,19 @@ interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Actio
         val currencySymbol: String = "",
         val selectedTab: CategoryType = CategoryType.EXPENSE,
         val hasAddedCategory: Boolean = true,
-    )
+    ) {
+        /** Categories with `Spending.Active` per type — pre-partitioned for the view. */
+        val activeCategoriesByType: Map<CategoryType, List<CategoryItem>> =
+            categoriesByType.mapValues { (_, items) ->
+                items.filter { it.spending is Spending.Active }
+            }
+
+        /** Categories with `Spending.None` per type — pre-partitioned for the view. */
+        val inactiveCategoriesByType: Map<CategoryType, List<CategoryItem>> =
+            categoriesByType.mapValues { (_, items) ->
+                items.filter { it.spending is Spending.None }
+            }
+    }
 
     data class CategoryItem(
         val id: Id.Known,

@@ -19,14 +19,12 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 
 ## ViewModel UI Shape
 
-**The ViewModel exposes a sealed `Item` per visual variant; the ViewProvider pattern-matches.** Reference: `TransactionViewModel.Item` (`Summary` / `Transaction.Expense` / `Transaction.Income` / `Transaction.Transfer`). The composable does `when (item) { is X -> ...; is Y -> ... }` and reads pre-joined fields — it never inspects raw flags like `if (row.budgetId != null)`, never calls `.filter`/`.any`/`.sortedBy`, and never imports a UseCase.
+Layer split — enforced by `ViewProviderDerivation` lint:
+- **UseCase** — domain truth: sort, aggregation, business thresholds. Emits domain types.
+- **ViewModel** — screen shape: sealed `Item` per visual variant, pre-joined fields, pre-computed semantic enums (e.g. `Status.{Healthy,Watch,AlmostThere,Over}`). No formatters, no Compose `Color`.
+- **View** — `when (item) { is X -> ...; is Y -> ... }`, `AmountFormatter`, `ZeroTheme.colors`, `stringResource`. No `.filter`/`.any`/`.sortedBy`/`sumOf`, no `if (raw.field != null)`.
 
-Split the three layers like this:
-- **UseCase** — domain truth. Sort order, aggregation, business-rule thresholds (`overCount`, `isOver`), threshold-based status enums. Emits domain types.
-- **ViewModel** — screen shape. Maps the UseCase's domain state into `sealed Item` variants, joins related collections (e.g. previous-period values onto current-period rows), pre-computes semantic states the view will switch on. Emits view-shaped types. **Does not** call `AmountFormatter` or pick Compose `Color` — those depend on framework state.
-- **View** — presentation. Pattern-matches on the sealed variant. Calls `AmountFormatter.format(...)`, reads `ZeroTheme.colors.*`, looks up `stringResource(...)`. No domain logic.
-
-When a row has sub-states (`Healthy` / `Watch` / `AlmostThere` / `Over`), pre-compute the enum on the VM and let the composable do a flat `when (item.status)` for color/text — not threshold arithmetic in the view.
+Reference: `TransactionViewModel.Item`. For derived `State` fields prefer body `val foo = expr` over `get()` — same correctness, cached per instance, re-evaluated by `copy()`.
 
 ## Flow Composition
 

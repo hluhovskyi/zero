@@ -10,7 +10,7 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 4. **Resolve runtime state in `attach()`, not constructors** — repositories, data lookups, etc.
 5. **Handler callbacks dispatch on `Dispatchers.Main`** — handlers often trigger navigation which requires the main thread.
 6. **`internal` visibility for implementations** — `DefaultFeatureViewModel`, `DefaultFeatureUseCase`, `FeatureViewProvider` are all `internal`. (Enforced by Android Lint).
-7. **ViewModel exposes screen shape, View renders it** — when a list has variant rows, the VM emits a sealed `Item` and the composable does `when (item) { is X -> ...; is Y -> ... }`. No `.filter`/`.any`/`.sortedBy`/`if (raw.field != null)` in the ViewProvider, no UseCase imports in the ViewProvider. Domain derivation (sort, thresholds, aggregation) lives in the UseCase; type-discrimination and joining live in the VM. Reference: `TransactionViewModel.Item`.
+7. **ViewProvider runs no derivation** — no `.filter`/`.any`/`.sortedBy`/`sumOf`/etc., no `if (raw.field != null)`. Pre-shape data on the VM (sealed `Item` for variant rows; computed `val` for predicates and totals); composable pattern-matches. Reference: `TransactionViewModel.Item`. Enforced by `ViewProviderDerivation` lint.
 
 ## What Lives Here
 
