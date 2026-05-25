@@ -80,6 +80,12 @@ lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "lint" }
 lint-checks = { module = "com.android.tools.lint:lint-checks", version.ref = "lint" }
 lint-tests = { module = "com.android.tools.lint:lint-tests", version.ref = "lint" }
 
+# Gradle plugin artifacts — used only on the build-logic classpath so convention
+# plugins can reference the AGP / Kotlin / Compose DSLs at compile time.
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-compiler-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
