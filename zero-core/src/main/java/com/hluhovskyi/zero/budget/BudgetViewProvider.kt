@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.budget
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -97,6 +98,18 @@ private fun BudgetView(
 ) {
     val state by viewModel.state.collectAsState(initial = BudgetViewModel.State())
     var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    // Inline overlays aren't navigation destinations, so back must step back through the open
+    // ones instead of falling through to leave the Budget screen. The remove confirm is layered
+    // over the numpad, so its handler is registered last to win while both are open: back goes
+    // confirm → numpad → list. (The copy dialog is a `Dialog`, which handles back itself.)
+    BackHandler(enabled = state.editingCategoryId != null) {
+        viewModel.perform(BudgetViewModel.Action.DismissInlineEdit)
+    }
+    BackHandler(enabled = state.removeConfirm != null) {
+        viewModel.perform(BudgetViewModel.Action.CancelRemove)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -218,7 +231,8 @@ private fun InlineNumpadOverlay(
     amountFormatter: AmountFormatter,
     viewModel: BudgetViewModel,
 ) {
-    val visible = state.editingCategoryId != null
+    // Hidden while the remove confirmation is layered on top; cancelling brings it back.
+    val visible = state.editingCategoryId != null && state.removeConfirm == null
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + slideInVertically(initialOffsetY = { it }),

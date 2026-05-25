@@ -63,17 +63,10 @@ internal class DefaultBudgetViewModel(
                 mutableState.update { state ->
                     val editingId = state.editingCategoryId
                     val row = editingId?.let { id -> state.budgeted.firstOrNull { it.categoryId == id } }
-                    // Only a set budget can be removed; for an unset row there's nothing to remove.
-                    if (row?.budgetId != null) {
-                        state.copy(
-                            removeConfirm = editingId,
-                            editingCategoryId = null,
-                            editingAmountText = "0",
-                            skippedInSession = emptySet(),
-                        )
-                    } else {
-                        state
-                    }
+                    // Layer the confirmation over the numpad without tearing it down, so cancelling
+                    // (or pressing back) returns to the edit sheet the user came from. Only a set
+                    // budget can be removed; for an unset row there's nothing to remove.
+                    if (row?.budgetId != null) state.copy(removeConfirm = editingId) else state
                 }
             }
             BudgetViewModel.Action.ConfirmRemove -> confirmRemove()
@@ -172,7 +165,16 @@ internal class DefaultBudgetViewModel(
 
     private fun confirmRemove() {
         val categoryId = mutableState.value.removeConfirm ?: return
-        mutableState.update { it.copy(removeConfirm = null) }
+        // Removal closes both the confirmation and the edit sheet behind it — the row is about
+        // to drop to the unset section, so there's nothing left to edit.
+        mutableState.update {
+            it.copy(
+                removeConfirm = null,
+                editingCategoryId = null,
+                editingAmountText = "0",
+                skippedInSession = emptySet(),
+            )
+        }
         scope.launch {
             budgetUseCase.remove(monthOffset.value, BudgetType.EXPENSE, categoryId)
         }

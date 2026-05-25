@@ -76,7 +76,7 @@ class DefaultBudgetViewModelRemoveTest {
     }
 
     @Test
-    fun `TapRemove while editing a set budget opens the confirmation and closes the numpad`() = runTest {
+    fun `TapRemove while editing a set budget opens the confirmation over the edit sheet`() = runTest {
         val vm = viewModel()
         vm.attach()
 
@@ -85,7 +85,22 @@ class DefaultBudgetViewModelRemoveTest {
 
         val state = vm.state.first()
         assertEquals(setCategory, state.removeConfirm)
-        assertNull(state.editingCategoryId)
+        // The edit sheet stays open underneath so cancel/back returns to it.
+        assertEquals(setCategory, state.editingCategoryId)
+    }
+
+    @Test
+    fun `CancelRemove returns to the edit sheet it was opened from`() = runTest {
+        val vm = viewModel()
+        vm.attach()
+
+        vm.perform(BudgetViewModel.Action.TapCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapRemove)
+        vm.perform(BudgetViewModel.Action.CancelRemove)
+
+        val state = vm.state.first()
+        assertNull(state.removeConfirm)
+        assertEquals(setCategory, state.editingCategoryId)
     }
 
     @Test
@@ -109,7 +124,10 @@ class DefaultBudgetViewModelRemoveTest {
         vm.perform(BudgetViewModel.Action.ConfirmRemove)
 
         verify(budgetUseCase).remove(0, BudgetType.EXPENSE, setCategory)
-        assertNull(vm.state.first().removeConfirm)
+        val state = vm.state.first()
+        assertNull(state.removeConfirm)
+        // Confirming also closes the edit sheet — the row is dropping to the unset section.
+        assertNull(state.editingCategoryId)
     }
 
     @Test
