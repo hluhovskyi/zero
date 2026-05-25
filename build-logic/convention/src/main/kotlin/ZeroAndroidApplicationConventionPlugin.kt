@@ -11,8 +11,6 @@ class ZeroAndroidApplicationConventionPlugin : Plugin<Project> {
             apply("org.jetbrains.kotlin.plugin.compose")
         }
 
-        val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
-
         extensions.configure<ApplicationExtension> {
             configureAndroidCommon(target)
             buildFeatures {
@@ -26,7 +24,7 @@ class ZeroAndroidApplicationConventionPlugin : Plugin<Project> {
             if (isPerfBuild) {
                 includeSourceInformation.set(true)
             }
-            if (isPerfBuild || hasProperty("composeReports")) {
+            if (providers.gradleProperty("composeReports").isPresent) {
                 reportsDestination.set(layout.buildDirectory.dir("compose_compiler"))
                 metricsDestination.set(layout.buildDirectory.dir("compose_compiler"))
             }

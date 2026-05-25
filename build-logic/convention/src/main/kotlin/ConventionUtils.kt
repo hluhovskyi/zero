@@ -9,20 +9,17 @@ import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
-/**
- * The project's version catalog. The type-safe `libs` accessor is not generated for
- * included builds (gradle/gradle#15383), so convention plugins read the catalog through
- * this API instead.
- */
-// MUST be internal: a public `Project.libs` extension leaks onto consumer modules'
-// buildscript classpath and shadows the generated type-safe `libs` accessor, breaking
-// `libs.*` library references in every module that applies a convention plugin.
+// Must stay `internal`: a public `Project.libs` shadows the generated `libs` accessor in consumer modules.
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 internal fun VersionCatalog.intVersion(name: String): Int = findVersion(name).get().requiredVersion.toInt()
 
-/** Pins the Kotlin JVM target for an Android module (AGP 9 built-in Kotlin). */
+// Enables Compose source-info (trace markers) for perf builds only. The compose extension is global,
+// so requested task names are the signal (config-cache-safe).
+internal val Project.isPerfBuild: Boolean
+    get() = gradle.startParameter.taskNames.any { it.contains("perf", ignoreCase = true) }
+
 internal fun Project.configureKotlinAndroid() {
     extensions.configure<KotlinAndroidProjectExtension> {
         compilerOptions {
@@ -31,11 +28,8 @@ internal fun Project.configureKotlinAndroid() {
     }
 }
 
-/**
- * Common Android config shared by the library + compose conventions. AGP 9's
- * `CommonExtension<*,*,*,*,*>` doesn't expose `compileOptions`/`lint`/`testOptions` through
- * star projections, so the concrete extension types each get their own (identical) configurator.
- */
+// Library + application get separate configurators: AGP 9's CommonExtension<*,*,*,*,*> doesn't
+// expose compileOptions/lint/testOptions through star projections.
 internal fun LibraryExtension.configureAndroidCommon(project: Project) {
     val libs = project.libs
     compileSdk = libs.intVersion("compileSdk")
@@ -64,8 +58,7 @@ internal fun ApplicationExtension.configureAndroidCommon(project: Project) {
     compileSdk = libs.intVersion("compileSdk")
     defaultConfig {
         minSdk = libs.intVersion("minSdk")
-        // Application sets targetSdk in defaultConfig; libraries set it in lint/testOptions
-        // (AGP rejects testOptions.targetSdk on a non-library module).
+        // App targetSdk goes in defaultConfig (AGP rejects testOptions.targetSdk on a non-library module).
         targetSdk = libs.intVersion("targetSdk")
     }
     compileOptions {
