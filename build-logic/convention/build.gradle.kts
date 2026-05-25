@@ -18,5 +18,9 @@ gradlePlugin {
             id = "zero.android.library"
             implementationClass = "ZeroAndroidLibraryConventionPlugin"
         }
+        register("zeroAndroidLibraryCompose") {
+            id = "zero.android.library.compose"
+            implementationClass = "ZeroAndroidLibraryComposeConventionPlugin"
+        }
     }
 }
