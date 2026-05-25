@@ -21,17 +21,21 @@ val releaseOutputDir: String? = System.getenv("RELEASE_OUTPUT_DIR") ?: localProp
 val bundleReleaseDir = layout.buildDirectory.dir("outputs/bundle/release")
 
 tasks.configureEach {
-    if (name == "bundleRelease") {
+    if (name == "bundleRelease" && releaseOutputDir != null) {
+        // Capture plain values/providers as locals so the task action doesn't hold a
+        // reference to the build script — required for the configuration cache.
+        val destPath = releaseOutputDir
+        val outputDirProvider = bundleReleaseDir
+        val versionCode = versionProps.getProperty("versionCode")
         doLast {
-            if (releaseOutputDir != null) {
-                val outputDir = bundleReleaseDir.get().asFile
-                val destDir = File(releaseOutputDir)
-                destDir.mkdirs()
-                outputDir.listFiles()?.firstOrNull { it.name.endsWith(".aab") }?.let { aab ->
-                    val versionCode = versionProps.getProperty("versionCode")
-                    aab.copyTo(destDir.resolve("zero-$versionCode.aab"), overwrite = true)
-                }
-            }
+            val destDir = File(destPath)
+            destDir.mkdirs()
+            outputDirProvider
+                .get()
+                .asFile
+                .listFiles()
+                ?.firstOrNull { it.name.endsWith(".aab") }
+                ?.copyTo(destDir.resolve("zero-$versionCode.aab"), overwrite = true)
         }
     }
 }
