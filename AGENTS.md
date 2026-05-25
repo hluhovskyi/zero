@@ -41,6 +41,7 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
 8. **Dependencies live in the version catalog** — build scripts are Kotlin DSL (`*.gradle.kts`) and all versions/libraries/plugins are declared in `gradle/libs.versions.toml`. Add new deps there and reference via `libs.*`; never inline coordinate strings in a module.
+9. **Shared module config lives in `build-logic` convention plugins** — a module applies one of `zero.kotlin.jvm`, `zero.android.library`, `zero.android.library.compose`, or `zero.android.application` (class-based plugins in `build-logic/convention/`) and only declares its own `namespace`, module-specific plugins, overrides, and deps. Don't re-add `compileSdk`/`compileOptions`/`composeCompiler`/etc. to a module — change the convention. Catalog access inside `build-logic` uses the **`internal`** `Project.libs` helper (a public one shadows the consumer's `libs` accessor).
 
 ## Module Map
 

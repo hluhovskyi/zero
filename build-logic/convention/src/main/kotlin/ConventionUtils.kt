@@ -20,8 +20,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-internal fun VersionCatalog.intVersion(name: String): Int =
-    findVersion(name).get().requiredVersion.toInt()
+internal fun VersionCatalog.intVersion(name: String): Int = findVersion(name).get().requiredVersion.toInt()
 
 /** Pins the Kotlin JVM target for an Android module (AGP 9 built-in Kotlin). */
 internal fun Project.configureKotlinAndroid() {
