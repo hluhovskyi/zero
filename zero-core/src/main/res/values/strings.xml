@@ -269,6 +269,12 @@
     <string name="budget_copy_confirm_replace">Replace</string>
     <string name="budget_copy_confirm_cancel">Cancel</string>
 
+    <string name="budget_remove_confirm_title">Remove %1$s?</string>
+    <string name="budget_remove_confirm_subtitle">This removes the budget limit for this month only.</string>
+    <string name="budget_remove_confirm_cancel">Cancel</string>
+    <string name="budget_remove_confirm_remove">Remove</string>
+    <string name="budget_remove_toast">Removed %1$s from budget</string>
+
     <string name="budget_numpad_set">Set %1$s</string>
     <string name="budget_numpad_set_next">Set %1$s — Next →</string>
     <string name="budget_numpad_skip_next">Skip →</string>
