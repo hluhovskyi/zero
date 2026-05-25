@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.trace
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
@@ -360,7 +361,7 @@ private fun AccountItemGrid(
     onToggleAll: () -> Unit,
     onToggle: (Id.Known) -> Unit,
     imageLoader: ImageLoader,
-) {
+) = trace("AccountItemGrid") {
     FilterTileGrid(rowCount = (items.size + 4) / 5) { idx ->
         val item = items.getOrNull(idx)
         Box(
@@ -413,7 +414,7 @@ private fun CategoryTile(
     category: TransactionFilterSheetViewModel.FilterCategoryItem.Category,
     isSelected: Boolean,
     imageLoader: ImageLoader,
-) {
+) = trace("CategoryTile") {
     val colorScheme = category.colorScheme.toUi()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

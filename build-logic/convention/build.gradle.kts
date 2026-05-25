@@ -1,0 +1,30 @@
+plugins {
+    `kotlin-dsl`
+}
+
+dependencies {
+    compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.compose.compiler.gradlePlugin)
+}
+
+gradlePlugin {
+    plugins {
+        register("zeroKotlinJvm") {
+            id = "zero.kotlin.jvm"
+            implementationClass = "ZeroKotlinJvmConventionPlugin"
+        }
+        register("zeroAndroidLibrary") {
+            id = "zero.android.library"
+            implementationClass = "ZeroAndroidLibraryConventionPlugin"
+        }
+        register("zeroAndroidLibraryCompose") {
+            id = "zero.android.library.compose"
+            implementationClass = "ZeroAndroidLibraryComposeConventionPlugin"
+        }
+        register("zeroAndroidApplication") {
+            id = "zero.android.application"
+            implementationClass = "ZeroAndroidApplicationConventionPlugin"
+        }
+    }
+}

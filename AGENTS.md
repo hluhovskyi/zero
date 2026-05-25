@@ -40,6 +40,8 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/ui/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
+8. **Dependencies live in the version catalog** — build scripts are Kotlin DSL (`*.gradle.kts`) and all versions/libraries/plugins are declared in `gradle/libs.versions.toml`. Add new deps there and reference via `libs.*`; never inline coordinate strings in a module.
+9. **Shared module config lives in `build-logic` convention plugins** — a module applies `zero.kotlin.jvm` / `zero.android.library` / `zero.android.library.compose` / `zero.android.application` and declares only its namespace, extra plugins, overrides, and deps. Change shared config in the convention, not per-module. Catalog helpers in `build-logic` must stay `internal` (a public `Project.libs` shadows the module's `libs` accessor).
 
 ## Module Map
 
@@ -51,7 +53,6 @@ zero-api             → Domain interfaces and types (pure Kotlin)
 zero-database        → Room DAOs, Entities, Repository implementations
 zero-image-loading   → ImageLoader interface + Coil impl
 zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
-zero-zenmoney        → ZenMoney CSV import
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 zero-remote          → Server-side HTTP calls
 ```
