@@ -1,75 +1,23 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.android.library)
+    id("zero.android.library.compose")
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.compose)
 }
 
-val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
-
 android {
-    compileSdk =
-        libs.versions.compileSdk
-            .get()
-            .toInt()
+    namespace = "com.hluhovskyi.zero"
 
     defaultConfig {
-        minSdk =
-            libs.versions.minSdk
-                .get()
-                .toInt()
-
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-        create("perf") {
-            initWith(getByName("release"))
-        }
-    }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    buildFeatures {
-        compose = true
-    }
-    namespace = "com.hluhovskyi.zero"
     lint {
-        targetSdk =
-            libs.versions.targetSdk
-                .get()
-                .toInt()
         abortOnError = true
         checkReleaseBuilds = false
-    }
-    testOptions {
-        targetSdk =
-            libs.versions.targetSdk
-                .get()
-                .toInt()
-    }
-    composeCompiler {
-        stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))
-        if (isPerfBuild) {
-            includeSourceInformation = true
-        }
-        if (isPerfBuild || project.hasProperty("composeReports")) {
-            reportsDestination = layout.buildDirectory.dir("compose_compiler")
-            metricsDestination = layout.buildDirectory.dir("compose_compiler")
-        }
     }
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
         optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
         optIn.add("androidx.compose.foundation.ExperimentalFoundationApi")
         optIn.add("androidx.compose.animation.ExperimentalAnimationApi")
@@ -78,7 +26,6 @@ kotlin {
 
 dependencies {
     implementation(libs.kotlinx.datetime)
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
     lintChecks(project(":lint-rules"))
     implementation(project(":zero-api"))
     implementation(project(":zero-sync"))

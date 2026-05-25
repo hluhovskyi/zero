@@ -1,11 +1,6 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    `java-library`
+    id("zero.kotlin.jvm")
     alias(libs.plugins.kotlin.serialization)
-}
-
-kotlin {
-    jvmToolchain(21)
 }
 
 dependencies {

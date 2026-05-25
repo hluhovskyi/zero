@@ -1,14 +1,10 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.application)
+    id("zero.android.application")
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.compose)
 }
-
-val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
 
 val versionProps =
     Properties().apply {
@@ -41,21 +37,8 @@ tasks.configureEach {
 }
 
 android {
-    compileSdk =
-        libs.versions.compileSdk
-            .get()
-            .toInt()
-
     defaultConfig {
         applicationId = "com.hluhovskyi.zero"
-        minSdk =
-            libs.versions.minSdk
-                .get()
-                .toInt()
-        targetSdk =
-            libs.versions.targetSdk
-                .get()
-                .toInt()
         versionCode = versionProps.getProperty("versionCode").toInt()
         versionName = versionProps.getProperty("versionName")
 
@@ -96,15 +79,6 @@ android {
             isProfileable = true
         }
     }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
 
     packaging {
         resources {
@@ -117,21 +91,10 @@ android {
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
-    composeCompiler {
-        stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))
-        if (isPerfBuild) {
-            includeSourceInformation = true
-        }
-        if (isPerfBuild || project.hasProperty("composeReports")) {
-            reportsDestination = layout.buildDirectory.dir("compose_compiler")
-            metricsDestination = layout.buildDirectory.dir("compose_compiler")
-        }
-    }
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
         optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
         optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
         optIn.add("androidx.compose.material.ExperimentalMaterialApi")
@@ -142,8 +105,6 @@ dependencies {
     lintChecks(project(":lint-rules"))
 
     implementation(libs.kotlinx.datetime)
-
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(project(":zero-api"))
     implementation(project(":zero-ui"))
