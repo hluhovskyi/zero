@@ -9,10 +9,16 @@ plugins {
 val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
 
 android {
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk =
+        libs.versions.compileSdk
+            .get()
+            .toInt()
 
     defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
+        minSdk =
+            libs.versions.minSdk
+                .get()
+                .toInt()
 
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -36,12 +42,18 @@ android {
     }
     namespace = "com.hluhovskyi.zero"
     lint {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
         abortOnError = true
         checkReleaseBuilds = false
     }
     testOptions {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
     }
     composeCompiler {
         stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))

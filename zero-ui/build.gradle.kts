@@ -8,7 +8,10 @@ plugins {
 val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
 
 android {
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk =
+        libs.versions.compileSdk
+            .get()
+            .toInt()
 
     defaultConfig {
         minSdk = 21
@@ -36,10 +39,16 @@ android {
     }
     namespace = "com.hluhovskyi.zero"
     lint {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
     }
     testOptions {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
     }
     composeCompiler {
         stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))

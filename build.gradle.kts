@@ -12,7 +12,14 @@ plugins {
 spotless {
     kotlin {
         target("**/*.kt")
-        targetExclude("**/build/**/*.kt", "**/.worktrees/**/*.kt")
+        targetExclude(
+            "**/build/**/*.kt",
+            "**/.worktrees/**/*.kt",
+            // KTS build scripts make Gradle generate kotlin-dsl accessor sources under the
+            // project-local Gradle home; they are not ours to format.
+            "**/.gradle-home/**/*.kt",
+            "**/.gradle/**/*.kt",
+        )
         ktlint("1.5.0").editorConfigOverride(
             mapOf(
                 "ktlint_standard_function-naming" to "disabled",

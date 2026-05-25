@@ -1,6 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -10,14 +10,16 @@ plugins {
 
 val isPerfBuild = gradle.startParameter.taskNames.any { it.lowercase().contains("perf") }
 
-val versionProps = Properties().apply {
-    file("../version.properties").inputStream().use { load(it) }
-}
+val versionProps =
+    Properties().apply {
+        file("../version.properties").inputStream().use { load(it) }
+    }
 
-val localProps = Properties().apply {
-    val localPropsFile = rootProject.file("local.gradle.properties")
-    if (localPropsFile.exists()) localPropsFile.inputStream().use { load(it) }
-}
+val localProps =
+    Properties().apply {
+        val localPropsFile = rootProject.file("local.gradle.properties")
+        if (localPropsFile.exists()) localPropsFile.inputStream().use { load(it) }
+    }
 
 val releaseOutputDir: String? = System.getenv("RELEASE_OUTPUT_DIR") ?: localProps.getProperty("releaseOutputDir")
 val bundleReleaseDir = layout.buildDirectory.dir("outputs/bundle/release")
@@ -39,12 +41,21 @@ tasks.configureEach {
 }
 
 android {
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk =
+        libs.versions.compileSdk
+            .get()
+            .toInt()
 
     defaultConfig {
         applicationId = "com.hluhovskyi.zero"
-        minSdk = libs.versions.minSdk.get().toInt()
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        minSdk =
+            libs.versions.minSdk
+                .get()
+                .toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
         versionCode = versionProps.getProperty("versionCode").toInt()
         versionName = versionProps.getProperty("versionName")
 

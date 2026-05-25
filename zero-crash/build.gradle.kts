@@ -1,21 +1,28 @@
-import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
 }
 
-val localProps = Properties().apply {
-    val localPropsFile = rootProject.file("local.gradle.properties")
-    if (localPropsFile.exists()) localPropsFile.inputStream().use { load(it) }
-}
+val localProps =
+    Properties().apply {
+        val localPropsFile = rootProject.file("local.gradle.properties")
+        if (localPropsFile.exists()) localPropsFile.inputStream().use { load(it) }
+    }
 
 android {
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk =
+        libs.versions.compileSdk
+            .get()
+            .toInt()
 
     defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
+        minSdk =
+            libs.versions.minSdk
+                .get()
+                .toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -42,10 +49,16 @@ android {
     }
     namespace = "com.hluhovskyi.zero.crash"
     lint {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
     }
     testOptions {
-        targetSdk = libs.versions.targetSdk.get().toInt()
+        targetSdk =
+            libs.versions.targetSdk
+                .get()
+                .toInt()
     }
 }
 
