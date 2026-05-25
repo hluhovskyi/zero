@@ -64,8 +64,7 @@ internal class DefaultBudgetUseCase(
         unset: List<BudgetQueryUseCase.Budgeted>,
         trailingSpend: Map<Id.Known, Amount>,
     ): List<BudgetQueryUseCase.Budgeted> {
-        fun spendOf(row: BudgetQueryUseCase.Budgeted): BigDecimal =
-            trailingSpend[row.categoryId]?.value ?: BigDecimal.ZERO
+        fun spendOf(row: BudgetQueryUseCase.Budgeted): BigDecimal = trailingSpend[row.categoryId]?.value ?: BigDecimal.ZERO
         val (withHistory, withoutHistory) = unset.partition { spendOf(it) > BigDecimal.ZERO }
         return withHistory.sortedByDescending { spendOf(it) } +
             withoutHistory.sortedBy { it.categoryName }

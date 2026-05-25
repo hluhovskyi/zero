@@ -39,6 +39,7 @@ class DefaultBudgetUseCaseTest {
     private val currentEnd = LocalDate(2026, 5, 31)
     private val previousStart = LocalDate(2026, 4, 1)
     private val previousEnd = LocalDate(2026, 4, 30)
+
     // Trailing 3 months ending the day before the current period (used to order unset rows).
     private val trailingStart = LocalDate(2026, 2, 1)
     private val trailingEnd = LocalDate(2026, 4, 30)

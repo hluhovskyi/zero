@@ -15,6 +15,7 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         data class TapCategory(val categoryId: Id.Known) : Action
         data class TapReallocate(val categoryId: Id.Known) : Action
         data class TapIncrease(val categoryId: Id.Known) : Action
+
         /** Remove the budget currently being edited in the inline numpad. */
         object TapRemove : Action
         object ConfirmRemove : Action
