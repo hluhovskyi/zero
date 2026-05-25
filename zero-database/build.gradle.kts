@@ -1,51 +1,17 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.android.library)
+    id("zero.android.library")
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
 }
 
 android {
-    compileSdk =
-        libs.versions.compileSdk
-            .get()
-            .toInt()
+    namespace = "com.hluhovskyi.zero"
 
     defaultConfig {
-        minSdk =
-            libs.versions.minSdk
-                .get()
-                .toInt()
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    namespace = "com.hluhovskyi.zero"
-    lint {
-        targetSdk =
-            libs.versions.targetSdk
-                .get()
-                .toInt()
-    }
-    testOptions {
-        targetSdk =
-            libs.versions.targetSdk
-                .get()
-                .toInt()
-    }
     room {
         schemaDirectory("$projectDir/schemas")
     }
@@ -53,15 +19,12 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
         optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
     }
 }
 
 dependencies {
     implementation(libs.kotlinx.datetime)
-
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(project(":zero-api"))
 

@@ -4,7 +4,10 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 /**
  * The project's version catalog. The type-safe `libs` accessor is not generated for
@@ -19,6 +22,15 @@ internal val Project.libs: VersionCatalog
 
 internal fun VersionCatalog.intVersion(name: String): Int =
     findVersion(name).get().requiredVersion.toInt()
+
+/** Pins the Kotlin JVM target for an Android module (AGP 9 built-in Kotlin). */
+internal fun Project.configureKotlinAndroid() {
+    extensions.configure<KotlinAndroidProjectExtension> {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
+    }
+}
 
 /**
  * Common Android config shared by the library + compose conventions. AGP 9's

@@ -14,5 +14,9 @@ gradlePlugin {
             id = "zero.kotlin.jvm"
             implementationClass = "ZeroKotlinJvmConventionPlugin"
         }
+        register("zeroAndroidLibrary") {
+            id = "zero.android.library"
+            implementationClass = "ZeroAndroidLibraryConventionPlugin"
+        }
     }
 }
