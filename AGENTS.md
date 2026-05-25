@@ -52,7 +52,6 @@ zero-api             → Domain interfaces and types (pure Kotlin)
 zero-database        → Room DAOs, Entities, Repository implementations
 zero-image-loading   → ImageLoader interface + Coil impl
 zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
-zero-zenmoney        → ZenMoney CSV import
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 zero-remote          → Server-side HTTP calls
 ```
