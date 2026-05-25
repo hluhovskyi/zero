@@ -65,17 +65,14 @@ internal fun ApplicationExtension.configureAndroidCommon(project: Project) {
     compileSdk = libs.intVersion("compileSdk")
     defaultConfig {
         minSdk = libs.intVersion("minSdk")
+        // Application sets targetSdk in defaultConfig; libraries set it in lint/testOptions
+        // (AGP rejects testOptions.targetSdk on a non-library module).
+        targetSdk = libs.intVersion("targetSdk")
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-    lint {
-        targetSdk = libs.intVersion("targetSdk")
-    }
-    testOptions {
-        targetSdk = libs.intVersion("targetSdk")
     }
     project.dependencies.add(
         "coreLibraryDesugaring",
