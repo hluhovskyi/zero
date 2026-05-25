@@ -11,13 +11,12 @@ spotless = "7.0.2"
 coroutines = "1.10.2"
 serialization = "1.6.0"
 datetime = "0.6.2"
-coreKtx = "1.10.1"
+coreKtx = "1.18.0"
 appcompat = "1.6.1"
-lifecycle = "2.8.7"
+lifecycle = "2.10.0"
 navigationCompose = "2.9.5"
 materialIconsExtended = "1.7.8"
-activityCompose = "1.11.0"
-lifecycleViewmodelCompose = "2.9.4"
+activityCompose = "1.13.0"
 desugar = "2.0.3"
 dagger = "2.56.2"
 javaxInject = "1"
@@ -43,7 +42,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
-androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-uiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
