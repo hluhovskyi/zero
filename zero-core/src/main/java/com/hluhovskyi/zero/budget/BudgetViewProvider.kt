@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
@@ -152,7 +154,6 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
-                        onLongPress = { viewModel.perform(BudgetViewModel.Action.LongPressCategory(item.categoryId)) },
                         onReallocate = { viewModel.perform(BudgetViewModel.Action.TapReallocate(item.categoryId)) },
                         onIncrease = { viewModel.perform(BudgetViewModel.Action.TapIncrease(item.categoryId)) },
                         imageLoader = imageLoader,
@@ -259,9 +260,12 @@ private fun InlineNumpadOverlay(
                     colorScheme = row.colorScheme,
                     previousAmount = state.editingPreviousAmount,
                     isPreviousSelected = state.isPreviousAmountSelected,
+                    // Removal only applies to a budget that's already set.
+                    canRemove = row.budgetId != null,
                     imageLoader = imageLoader,
                     amountFormatter = amountFormatter,
                     onPreviousChip = { viewModel.perform(BudgetViewModel.Action.TapPreviousChip) },
+                    onRemove = { viewModel.perform(BudgetViewModel.Action.TapRemove) },
                 )
                 InlineAmountDisplay(state.editingAmountText)
                 NumPad(
@@ -286,9 +290,11 @@ private fun InlineNumpadHeader(
     colorScheme: ColorScheme,
     previousAmount: Amount?,
     isPreviousSelected: Boolean,
+    canRemove: Boolean,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     onPreviousChip: () -> Unit,
+    onRemove: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -334,6 +340,19 @@ private fun InlineNumpadHeader(
                     ),
                 )
             }
+        }
+        if (canRemove) {
+            Icon(
+                imageVector = Icons.Outlined.DeleteOutline,
+                contentDescription = stringResource(R.string.budget_remove_confirm_remove),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onRemove)
+                    .testTag("Budget.inlineNumpad.remove")
+                    .padding(6.dp)
+                    .size(22.dp),
+                tint = ZeroTheme.colors.error,
+            )
         }
     }
 }

@@ -21,7 +21,7 @@ Update the **Status** column when a phase merges. Acceptable values:
 | 3 | [Bulk setup + copy-from-last-month](2026-05-13-budget-phase-3-bulk-setup.md) | `BudgetBulkSetupComponent` full-screen flow; "Copy from {prev}" cards on screen and inside flow; inline numpad auto-advance | ☐ Pending |
 | 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ▶ In progress (PR #234) |
 | 5 | [Over-budget actions](2026-05-13-budget-phase-5-over-budget-actions.md) | `BudgetOverComponent` — Choice → Reallocate sub-view → Increase sub-view | ☐ Pending |
-| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; long-press → remove for this month | ▶ In progress (PR #258) |
+| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; remove (trash in edit sheet) → confirm → drop for this month | ▶ In progress (PR #258) |
 | 7 | _Notification dot on Budget tab — when over budget_ | Not yet planned | ☐ Pending |
 | 8 | _Income budgets_ | Not yet planned (no design) | ☐ Pending |
 

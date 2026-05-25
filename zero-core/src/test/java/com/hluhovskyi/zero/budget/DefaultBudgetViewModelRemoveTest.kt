@@ -76,21 +76,25 @@ class DefaultBudgetViewModelRemoveTest {
     }
 
     @Test
-    fun `LongPressCategory on a set category opens the remove confirmation`() = runTest {
+    fun `TapRemove while editing a set budget opens the confirmation and closes the numpad`() = runTest {
         val vm = viewModel()
         vm.attach()
 
-        vm.perform(BudgetViewModel.Action.LongPressCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapRemove)
 
-        assertEquals(setCategory, vm.state.first().removeConfirm)
+        val state = vm.state.first()
+        assertEquals(setCategory, state.removeConfirm)
+        assertNull(state.editingCategoryId)
     }
 
     @Test
-    fun `LongPressCategory on an unset category is a no-op`() = runTest {
+    fun `TapRemove while editing an unset category is a no-op`() = runTest {
         val vm = viewModel()
         vm.attach()
 
-        vm.perform(BudgetViewModel.Action.LongPressCategory(unsetCategory))
+        vm.perform(BudgetViewModel.Action.TapCategory(unsetCategory))
+        vm.perform(BudgetViewModel.Action.TapRemove)
 
         assertNull(vm.state.first().removeConfirm)
     }
@@ -100,7 +104,8 @@ class DefaultBudgetViewModelRemoveTest {
         val vm = viewModel()
         vm.attach()
 
-        vm.perform(BudgetViewModel.Action.LongPressCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapRemove)
         vm.perform(BudgetViewModel.Action.ConfirmRemove)
 
         verify(budgetUseCase).remove(0, BudgetType.EXPENSE, setCategory)
@@ -112,7 +117,8 @@ class DefaultBudgetViewModelRemoveTest {
         val vm = viewModel()
         vm.attach()
 
-        vm.perform(BudgetViewModel.Action.LongPressCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapCategory(setCategory))
+        vm.perform(BudgetViewModel.Action.TapRemove)
         vm.perform(BudgetViewModel.Action.CancelRemove)
 
         verify(budgetUseCase, never()).remove(any(), any(), any())

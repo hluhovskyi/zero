@@ -59,11 +59,21 @@ internal class DefaultBudgetViewModel(
                     )
                 }
             }
-            is BudgetViewModel.Action.LongPressCategory -> {
+            BudgetViewModel.Action.TapRemove -> {
                 mutableState.update { state ->
-                    val row = state.budgeted.firstOrNull { it.categoryId == action.categoryId }
-                    // Only set budgets can be removed; long-pressing an unset row is a no-op.
-                    if (row?.budgetId != null) state.copy(removeConfirm = action.categoryId) else state
+                    val editingId = state.editingCategoryId
+                    val row = editingId?.let { id -> state.budgeted.firstOrNull { it.categoryId == id } }
+                    // Only a set budget can be removed; for an unset row there's nothing to remove.
+                    if (row?.budgetId != null) {
+                        state.copy(
+                            removeConfirm = editingId,
+                            editingCategoryId = null,
+                            editingAmountText = "0",
+                            skippedInSession = emptySet(),
+                        )
+                    } else {
+                        state
+                    }
                 }
             }
             BudgetViewModel.Action.ConfirmRemove -> confirmRemove()
