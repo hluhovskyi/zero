@@ -1,5 +1,7 @@
 # Budget Implementation — Roadmap
 
+> **✅ Feature complete on 2026-05-26.** Phases 1–7 are merged. Phase 8 (income budgets) remains future work — no design yet.
+
 Branch: `worktree-budget-implementation`
 Design: `ui_kits/zero/BudgetScreen.jsx` + `Components.jsx` from Claude Design archive `ZWcjTa2_AydRGtUCPjE0Sg`.
 
@@ -7,7 +9,7 @@ This is the index across multiple PRs. Each phase is its own plan file and ships
 
 ## Goal
 
-Let the user set a monthly spending limit per expense category, see how the month's spend tracks against each limit, and recover when a category goes over (reallocate or increase). Ship in 6 phases so each PR is reviewable and the foundation lands before any flow-heavy UI.
+Let the user set a monthly spending limit per expense category, see how the month's spend tracks against each limit, and recover when a category goes over (reallocate or increase). Ship in phases so each PR is reviewable and the foundation lands before any flow-heavy UI.
 
 ## Phase Index & Status Tracker
 
@@ -16,17 +18,16 @@ Update the **Status** column when a phase merges. Acceptable values:
 
 | # | Plan | Ships | Status |
 |---|------|-------|--------|
-| 1 | [Foundation](2026-05-13-budget-phase-1-foundation.md) | `BudgetEntity` + Room + repository + sync + `BudgetComponent` skeleton + Budget tab destination + empty-state UI (matches design's no-budget month) | ▶ In progress (PR #201) |
-| 2 | [Single-category edit](2026-05-13-budget-phase-2-single-edit.md) | `BudgetEditComponent` bottom sheet — NumPad + "Last month" chip → persist one budget | ▶ In progress |
-| 3 | [Bulk setup + copy-from-last-month](2026-05-13-budget-phase-3-bulk-setup.md) | `BudgetBulkSetupComponent` full-screen flow; "Copy from {prev}" cards on screen and inside flow; inline numpad auto-advance | ☐ Pending |
-| 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ▶ In progress (PR #234) |
-| 5 | [Over-budget actions](2026-05-13-budget-phase-5-over-budget-actions.md) | `BudgetOverComponent` — Choice → Reallocate sub-view → Increase sub-view | ☐ Pending |
-| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; remove (trash in edit sheet) → confirm → drop for this month | ▶ In progress (PR #258) |
-| 7 | _Notification dot on Budget tab — when over budget_ | Not yet planned | ☐ Pending |
+| 1 | [Foundation](2026-05-13-budget-phase-1-foundation.md) | `BudgetEntity` + Room + repository + sync + `BudgetComponent` skeleton + Budget tab destination + empty-state UI (matches design's no-budget month) | ✅ Merged (PR #201) |
+| 2 | [Single-category edit](2026-05-13-budget-phase-2-single-edit.md) | `BudgetEditComponent` bottom sheet — NumPad + "Last month" chip → persist one budget | ✅ Merged (PR #208) |
+| 3 | [Bulk setup + copy-from-last-month](2026-05-13-budget-phase-3-bulk-setup.md) | `BudgetBulkSetupComponent` full-screen flow; "Copy from {prev}" cards on screen and inside flow; inline numpad auto-advance | ✅ Merged (PR #221) |
+| 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ✅ Merged (PR #234) |
+| 5 | [Over-budget actions](2026-05-13-budget-phase-5-over-budget-actions.md) | `BudgetOverComponent` — Choice → Reallocate sub-view → Increase sub-view | ✅ Merged (PR #250) |
+| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; remove (trash in edit sheet) → confirm → drop for this month | ✅ Merged (PR #258) |
+| 7 | [Over-budget dot](2026-05-25-budget-phase-7-over-budget-dot.md) | Over-budget notification dot on the Budget tab — `BudgetUseCase.observeAnyOver` + `BottomBarViewModel.Item.hasAlert` | ✅ Merged (PR #268) |
 | 8 | _Income budgets_ | Not yet planned (no design) | ☐ Pending |
 
 **Out of scope of this roadmap** (separate plans when designed):
-- **Phase 7 — Notification dot on Budget tab** when any category is over budget. Requires extending `BottomBarViewModel.Item` with `hasAlert`, plus a new `BudgetOverAnyUseCase`. Plan when prioritized.
 - **Phase 8 — Income budgets.** The schema is income-ready (Phase 1 ships `BudgetType` column), but UI is not designed. Plan when designs land.
 
 ## Cross-Cutting Decisions
