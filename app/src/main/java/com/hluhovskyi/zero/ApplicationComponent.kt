@@ -214,7 +214,7 @@ abstract class ApplicationComponent :
         fun androidUriResourceFactory(
             context: Context,
         ): AndroidUriResourceFactory = DefaultAndroidUriResourceFactory(
-            packageName = context.packageName,
+            context = context,
         )
 
         @Provides
