@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero
 
 import android.content.Context
-import android.net.Uri as AndroidUri
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,6 +9,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import com.hluhovskyi.zero.common.Uri
+import android.net.Uri as AndroidUri
 import androidx.compose.foundation.Image as ComposeImage
 import androidx.compose.ui.graphics.Color as ComposeColor
 
