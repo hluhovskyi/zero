@@ -8,8 +8,8 @@ internal class CoilImageLoaderFactory(
 ) : ImageLoader.Factory {
 
     override fun create(): ImageLoader = CoilImageLoader(
-        context = context,
         imageLoader = CoilImageLoaderLib.Builder(context)
+            .components { add(ResourceNameUriMapper()) }
             .build(),
     )
 }
