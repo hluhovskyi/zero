@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
 import java.math.BigDecimal
@@ -39,6 +40,13 @@ internal class DefaultBudgetUseCase(
                 summary = summarize(sorted),
                 hasAnyBudget = sorted.any { it.budgetId != null },
             )
+        }
+    }
+
+    override fun observeAnyOver(type: BudgetType): Flow<Boolean> {
+        val current = periodFor(0)
+        return budgetQueryUseCase.query(current.start, current.end).map { rows ->
+            rows.any { it.budgetId != null && it.spent > it.budgeted }
         }
     }
 

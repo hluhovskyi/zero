@@ -19,6 +19,13 @@ interface BudgetUseCase {
      */
     fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType = BudgetType.EXPENSE): Flow<State>
 
+    /**
+     * Emits true when at least one expense category with a set budget is over budget for the
+     * current month. Lightweight relative to [observe] — a single current-period query, no
+     * previous/trailing windows. Drives the over-budget dot on the Budget tab.
+     */
+    fun observeAnyOver(type: BudgetType = BudgetType.EXPENSE): Flow<Boolean>
+
     /** Upsert a single budget for [categoryId] in the period derived from [monthOffset]. */
     suspend fun save(
         monthOffset: Int,
@@ -74,6 +81,7 @@ interface BudgetUseCase {
 
     object Noop : BudgetUseCase {
         override fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType): Flow<State> = emptyFlow()
+        override fun observeAnyOver(type: BudgetType): Flow<Boolean> = emptyFlow()
         override suspend fun save(monthOffset: Int, type: BudgetType, categoryId: Id.Known, amount: Amount) = Unit
         override suspend fun replaceFromPrevious(monthOffset: Int, type: BudgetType) = Unit
         override suspend fun remove(monthOffset: Int, type: BudgetType, categoryId: Id.Known) = Unit
