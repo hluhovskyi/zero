@@ -24,14 +24,8 @@ class ZeroE2eTest : BaseE2eTest() {
 
     @Test
     fun batchSelectRemovesSelectedTransactions() {
-        seedDefaultSetup()
+        seedExpenses()
         onTransactions()
-            .tapAddTransaction()
-            .fillExpense(amount = "42", category = "Food", account = "Wallet")
-            .save()
-            .tapAddTransaction()
-            .fillExpense(amount = "99", category = "Food", account = "Wallet")
-            .save()
             .assertHasExpense(amount = "42")
             .assertHasExpense(amount = "99")
             .longPressTransaction(amount = "42")
