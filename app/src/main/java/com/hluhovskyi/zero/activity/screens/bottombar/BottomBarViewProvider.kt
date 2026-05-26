@@ -79,11 +79,13 @@ internal fun BottomBarView(
                                     tint = iconTint,
                                 )
                                 if (item.hasAlert) {
+                                    // 9.dp error dot + 2.dp surface halo ring (total 13.dp), per the
+                                    // design's NavBadge (9px dot, 2px surface boxShadow ring).
                                     Box(
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
-                                            .offset(x = 3.dp, y = (-3).dp)
-                                            .size(9.dp)
+                                            .offset(x = 5.dp, y = (-5).dp)
+                                            .size(13.dp)
                                             .background(ZeroTheme.colors.surfaceContainerLowest, CircleShape)
                                             .padding(2.dp)
                                             .background(ZeroTheme.colors.error, CircleShape)
