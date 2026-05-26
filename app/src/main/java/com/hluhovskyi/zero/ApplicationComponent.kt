@@ -40,8 +40,10 @@ import com.hluhovskyi.zero.common.time.ZoneBasedClock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.currencies.CompositeCurrencyLoader
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyLoader
+import com.hluhovskyi.zero.currencies.ExchangeRateService
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
@@ -223,12 +225,16 @@ abstract class ApplicationComponent :
             resourceResolver: ResourceResolver,
             androidUriResourceFactory: AndroidUriResourceFactory,
             localeProvider: LocaleProvider,
+            exchangeRateService: ExchangeRateService,
             logger: Logger,
-        ): CurrencyLoader = PredefinedCurrencyLoader(
-            resourceResolver = resourceResolver,
-            androidUriResourceFactory = androidUriResourceFactory,
-            localeProvider = localeProvider,
-            logger = logger,
+        ): CurrencyLoader = CompositeCurrencyLoader(
+            delegate = PredefinedCurrencyLoader(
+                resourceResolver = resourceResolver,
+                androidUriResourceFactory = androidUriResourceFactory,
+                localeProvider = localeProvider,
+                logger = logger,
+            ),
+            exchangeRateService = exchangeRateService,
         )
 
         @Provides
@@ -513,6 +519,12 @@ internal object RemoteModule {
     fun feedbackService(
         remoteComponent: RemoteComponent,
     ): FeedbackService = remoteComponent.feedbackService
+
+    @Provides
+    @ApplicationScope
+    fun exchangeRateService(
+        remoteComponent: RemoteComponent,
+    ): ExchangeRateService = remoteComponent.exchangeRateService
 }
 
 @dagger.Module
