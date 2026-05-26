@@ -326,7 +326,7 @@ private fun TransactionRow(
             )
             .clip(cardShape)
             .background(
-                if (selected) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.surfaceContainerLowest,
+                if (selected) ZeroTheme.colors.primaryContainerLight else ZeroTheme.colors.surfaceContainerLowest,
             ),
     ) {
         when (transaction) {
@@ -421,8 +421,8 @@ private fun TransactionRow(
         if (selected) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
+                    .align(Alignment.TopStart)
+                    .padding(start = 36.dp, top = 8.dp)
                     .size(20.dp)
                     .clip(CircleShape)
                     .background(ZeroTheme.colors.primary),
