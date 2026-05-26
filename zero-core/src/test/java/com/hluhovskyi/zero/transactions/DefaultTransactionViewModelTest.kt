@@ -257,15 +257,52 @@ class DefaultTransactionViewModelTest {
     }
 
     @Test
-    fun `DeleteTransaction action calls transactionRepository delete`() = runTest {
+    fun `ToggleSelection adds then removes an id and exits selection mode when empty`() = runTest {
         val viewModel = createViewModel(backgroundScope)
         viewModel.attach()
         runCurrent()
 
-        viewModel.perform(TransactionViewModel.Action.DeleteTransaction(Id.Known("t1")))
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t1")))
+        runCurrent()
+        assertEquals(setOf(Id.Known("t1")), viewModel.state.first().selectedIds)
+        assertEquals(true, viewModel.state.first().inSelectionMode)
+
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t1")))
+        runCurrent()
+        assertEquals(emptySet<Id.Known>(), viewModel.state.first().selectedIds)
+        assertEquals(false, viewModel.state.first().inSelectionMode)
+    }
+
+    @Test
+    fun `DeleteSelected deletes every selected id and clears the selection`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t1")))
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t2")))
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.DeleteSelected)
         runCurrent()
 
         verify(transactionRepository).delete(Id.Known("t1"))
+        verify(transactionRepository).delete(Id.Known("t2"))
+        assertEquals(emptySet<Id.Known>(), viewModel.state.first().selectedIds)
+    }
+
+    @Test
+    fun `ExitSelection clears the selection`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t1")))
+        runCurrent()
+        viewModel.perform(TransactionViewModel.Action.ExitSelection)
+        runCurrent()
+
+        assertEquals(emptySet<Id.Known>(), viewModel.state.first().selectedIds)
     }
 
     @Test

@@ -52,7 +52,6 @@ internal class DefaultTransactionViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
-    private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
     private val transactionFilterApplicator: TransactionFilterApplicator,
@@ -87,14 +86,27 @@ internal class DefaultTransactionViewModel(
                 mutableState.update { it.copy(searchQuery = action.query) }
             }
 
-            is TransactionViewModel.Action.DeleteTransaction -> {
-                coroutineScope.launch {
-                    transactionRepository.delete(action.id)
+            is TransactionViewModel.Action.ToggleSelection -> {
+                mutableState.update { state ->
+                    val updated = if (action.id in state.selectedIds) {
+                        state.selectedIds - action.id
+                    } else {
+                        state.selectedIds + action.id
+                    }
+                    state.copy(selectedIds = updated)
                 }
             }
 
-            is TransactionViewModel.Action.DuplicateTransaction -> {
-                onDuplicateTransactionHandler.onDuplicate(action.id)
+            is TransactionViewModel.Action.ExitSelection -> {
+                mutableState.update { it.copy(selectedIds = emptySet()) }
+            }
+
+            is TransactionViewModel.Action.DeleteSelected -> {
+                val ids = mutableState.value.selectedIds
+                coroutineScope.launch {
+                    ids.forEach { transactionRepository.delete(it) }
+                }
+                mutableState.update { it.copy(selectedIds = emptySet()) }
             }
 
             is TransactionViewModel.Action.Filter.Open -> {
