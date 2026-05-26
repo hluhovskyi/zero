@@ -21,7 +21,7 @@ Update the **Status** column when a phase merges. Acceptable values:
 | 3 | [Bulk setup + copy-from-last-month](2026-05-13-budget-phase-3-bulk-setup.md) | `BudgetBulkSetupComponent` full-screen flow; "Copy from {prev}" cards on screen and inside flow; inline numpad auto-advance | ☐ Pending |
 | 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ▶ In progress (PR #234) |
 | 5 | [Over-budget actions](2026-05-13-budget-phase-5-over-budget-actions.md) | `BudgetOverComponent` — Choice → Reallocate sub-view → Increase sub-view | ☐ Pending |
-| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; long-press → remove for this month | ☐ Pending |
+| 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; remove (trash in edit sheet) → confirm → drop for this month | ▶ In progress (PR #258) |
 | 7 | _Notification dot on Budget tab — when over budget_ | Not yet planned | ☐ Pending |
 | 8 | _Income budgets_ | Not yet planned (no design) | ☐ Pending |
 
@@ -49,7 +49,7 @@ Reallocate is `source.budgeted -= X; target.budgeted += X` in one repository cal
 
 ### Category ordering for "unset" rows — trailing 3-month average
 
-`BudgetCategoryOrderingUseCase` (Phase 6) ranks categories by avg spend over the previous 3 calendar months. Set rows in Phase 4 sort by `spent / budgeted` desc; unset rows sort by 3-month-avg desc. Cold-start users with <3 months data fall back to alphabetical.
+Phase 6 ranks unset categories by spend over the previous 3 calendar months. This lives in `DefaultBudgetUseCase` (alongside the existing set-row sort), reusing `BudgetQueryUseCase` against a trailing window — no separate use case, and no ViewModel-side derivation. Set rows in Phase 4 sort by `spent / budgeted` desc; unset rows sort by trailing-spend desc. Cold-start users with no trailing history fall back to alphabetical.
 
 ### Multi-currency
 

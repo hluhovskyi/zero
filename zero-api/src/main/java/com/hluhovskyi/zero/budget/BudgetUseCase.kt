@@ -33,6 +33,13 @@ interface BudgetUseCase {
      */
     suspend fun replaceFromPrevious(monthOffset: Int, type: BudgetType)
 
+    /**
+     * Soft-delete the budget for [categoryId] in the period derived from [monthOffset]. Scoped to
+     * that one period — budgets for the same category in other periods are untouched. No-op when
+     * the category has no budget in the period.
+     */
+    suspend fun remove(monthOffset: Int, type: BudgetType, categoryId: Id.Known)
+
     data class State(
         val currentPeriod: DateRange,
         val previousPeriod: DateRange,
@@ -69,5 +76,6 @@ interface BudgetUseCase {
         override fun observe(monthOffsetFlow: Flow<Int>, type: BudgetType): Flow<State> = emptyFlow()
         override suspend fun save(monthOffset: Int, type: BudgetType, categoryId: Id.Known, amount: Amount) = Unit
         override suspend fun replaceFromPrevious(monthOffset: Int, type: BudgetType) = Unit
+        override suspend fun remove(monthOffset: Int, type: BudgetType, categoryId: Id.Known) = Unit
     }
 }

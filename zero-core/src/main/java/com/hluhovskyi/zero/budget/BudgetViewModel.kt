@@ -15,6 +15,11 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         data class TapCategory(val categoryId: Id.Known) : Action
         data class TapReallocate(val categoryId: Id.Known) : Action
         data class TapIncrease(val categoryId: Id.Known) : Action
+
+        /** Remove the budget currently being edited in the inline numpad. */
+        object TapRemove : Action
+        object ConfirmRemove : Action
+        object CancelRemove : Action
         object TapCopyFromPrevious : Action
         object ConfirmCopy : Action
         object CancelCopy : Action
@@ -42,6 +47,8 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
         val editingCategoryId: Id.Known? = null,
         val editingAmountText: String = "0",
         val skippedInSession: Set<Id.Known> = emptySet(),
+        /** Category whose budget is pending a remove confirmation, if any. */
+        val removeConfirm: Id.Known? = null,
     ) {
         /** Count of set budgets in the previous period — surfaced as "N budgets last month". */
         val previousBudgetSetCount: Int = previousPeriodBudgets.count { it.budgetId != null }
@@ -51,6 +58,11 @@ interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, B
 
         /** The currently-edited row, if any — view-side lookup by `editingCategoryId` lives here. */
         val editingRow: BudgetQueryUseCase.Budgeted? = editingCategoryId?.let { id ->
+            budgeted.firstOrNull { it.categoryId == id }
+        }
+
+        /** The row pending remove confirmation, if any — drives the confirmation sheet. */
+        val removeConfirmRow: BudgetQueryUseCase.Budgeted? = removeConfirm?.let { id ->
             budgeted.firstOrNull { it.categoryId == id }
         }
 
