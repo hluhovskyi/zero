@@ -3,11 +3,13 @@ package com.hluhovskyi.zero.robots
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 
 class TransactionsRobot(private val composeRule: ComposeTestRule) {
 
@@ -67,6 +69,46 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
                 onAllNodesWithText(name).fetchSemanticsNodes().isEmpty()
             }
             onAllNodesWithText(name).assertCountEquals(0)
+        }
+        return this
+    }
+
+    fun longPressTransaction(amount: String): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(amount, substring = true).fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText(amount, substring = true)[0].performTouchInput { longClick() }
+        }
+        return this
+    }
+
+    fun tapTransaction(amount: String): TransactionsRobot {
+        composeRule.onAllNodesWithText(amount, substring = true)[0].performClick()
+        return this
+    }
+
+    fun assertSelectionCount(count: Int): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("$count selected").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("$count selected").assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun deleteSelected(): TransactionsRobot {
+        composeRule.onNodeWithContentDescription("Delete selected").performClick()
+        return this
+    }
+
+    fun assertAmountNotVisible(amount: String): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(amount, substring = true).fetchSemanticsNodes().isEmpty()
+            }
+            onAllNodesWithText(amount, substring = true).assertCountEquals(0)
         }
         return this
     }
