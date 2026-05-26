@@ -1,6 +1,6 @@
 # zero-remote — Agent Guide
 
-Android library module. Server-side calls (currently: feedback submission to a GCP Cloud Function gated by Play Integrity).
+Android library module. Server-side calls (feedback submission to a GCP Cloud Function gated by Play Integrity; live exchange rates from Frankfurter).
 
 ## Rules
 
@@ -19,3 +19,4 @@ Android library module. Server-side calls (currently: feedback submission to a G
 - `RemoteComponent` — public Dagger component, the only entry point
 - `feedback/` — `OkHttpFeedbackService` (impl) + `FeedbackRequest` / `FeedbackResponse` (HTTP body shapes)
 - `integrity/` — `IntegrityTokenProvider` interface + `PlayIntegrityTokenProvider` impl (wraps Google's `StandardIntegrityManager`)
+- `currencies/` — `OkHttpFrankfurterExchangeRateService` (impl of `ExchangeRateService`) + `FrankfurterLatestResponse` (HTTP body shape). Frankfurter covers ~31 fiat currencies only — no crypto; unsupported bases return empty, the app's `CompositeCurrencyLoader` then falls back to bundled rates.
