@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.Navigator
+import com.hluhovskyi.zero.budget.BudgetUseCase
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
@@ -12,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -19,6 +21,7 @@ import java.io.Closeable
 internal class DefaultBottomBarViewModel(
     private val androidUriResourceFactory: AndroidUriResourceFactory,
     private val navigator: Navigator,
+    private val budgetUseCase: BudgetUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : BottomBarViewModel {
 
@@ -108,22 +111,27 @@ internal class DefaultBottomBarViewModel(
 
     override fun attach(): Closeable = Closeables.of {
         coroutineScope.launch {
-            navigator.state.collectLatest { navigatorState ->
-                val bottomBarId = navigatorState.destination.toBottomBarId()
-                mutableState.update { state ->
-                    state.copy(
-                        items = if (bottomBarId is Id.Known) {
-                            bottomNavigationItems.map { item ->
-                                item.copy(
-                                    selected = item.id == bottomBarId,
-                                )
-                            }
-                        } else {
-                            emptyList()
-                        },
-                    )
+            combine(
+                navigator.state,
+                budgetUseCase.observeAnyOver(),
+            ) { navigatorState, isOver -> navigatorState to isOver }
+                .collectLatest { (navigatorState, isOver) ->
+                    val bottomBarId = navigatorState.destination.toBottomBarId()
+                    mutableState.update { state ->
+                        state.copy(
+                            items = if (bottomBarId is Id.Known) {
+                                bottomNavigationItems.map { item ->
+                                    item.copy(
+                                        selected = item.id == bottomBarId,
+                                        hasAlert = item.id == budgetId && isOver,
+                                    )
+                                }
+                            } else {
+                                emptyList()
+                            },
+                        )
+                    }
                 }
-            }
         }
     }
 

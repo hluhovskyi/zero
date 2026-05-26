@@ -55,6 +55,17 @@ abstract class BudgetComponent : AttachableViewComponent {
             categorySpendingUseCase = categorySpendingUseCase,
         )
 
+        fun useCase(
+            budgetRepository: BudgetRepository,
+            budgetQueryUseCase: BudgetQueryUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): BudgetUseCase = DefaultBudgetUseCase(
+            budgetRepository = budgetRepository,
+            budgetQueryUseCase = budgetQueryUseCase,
+            periodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider),
+        )
+
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
             .dependencies(dependencies)
             .onCategoryTappedHandler(OnCategoryTappedHandler.Noop)
