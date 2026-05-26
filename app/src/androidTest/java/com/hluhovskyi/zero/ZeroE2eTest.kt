@@ -74,6 +74,17 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun overBudgetShowsDotOnBudgetTabAndClearsWhenRaised() {
+        seedBudgetOverScenario()
+        onBudget()
+            .assertBudgetTabAlertVisible()
+            .tapIncrease()
+            .pickSuggestion("+50.00")
+            .confirm()
+            .assertBudgetTabAlertHidden()
+    }
+
+    @Test
     fun increaseGrowsTargetBudgetOnlyAndClearsOverBudget() {
         seedBudgetOverScenario()
         onBudget()
