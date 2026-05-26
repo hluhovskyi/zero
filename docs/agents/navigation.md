@@ -40,3 +40,11 @@ Do not relay results through ViewModel state or shared flows on components.
 ## Bottom Sheet Destinations
 
 Use `NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet` for destinations that should appear as a bottom sheet overlay. In `MainActivityScreenViewProvider` these are registered as `dialog {}` destinations (so they overlay the current screen rather than replacing it), wrapped in `BottomSheetNavDestination` which owns the `ModalBottomSheetLayout` show/dismiss logic.
+
+## In-Screen Overlays and System Back
+
+Some overlays aren't nav destinations — they're sheets/numpads/confirms rendered inside a `ViewProvider`, shown/hidden on a state flag (e.g. the Budget inline numpad and remove-confirm sheet). These do **not** get back-to-dismiss for free; only nav destinations and `Dialog` do.
+
+- **A state-gated in-screen overlay must add `BackHandler(enabled = <overlay visible>) { dispatch(Dismiss) }`** — without it, system back falls through to the nav stack and leaves the whole screen. (`Dialog` is exempt; it consumes back via `onDismissRequest`.)
+- **A sub-overlay opened from another overlay must layer on top and step back to it, not collapse to the screen** — keep the parent's state set, hide it while the child shows, and have the child's dismiss reveal it. So back walks `child → parent → screen`.
+- **`BackHandler` priority is composition order — the last-composed enabled one wins** — register the topmost overlay's handler last so back targets it first.
