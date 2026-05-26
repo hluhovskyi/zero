@@ -191,18 +191,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             .transactionEditCurrencyUseCase(transactionEditCurrencyUseCase)
 
         @Provides
-        @ForMainActivity
-        fun transactionComponentBuilderForMainActivity(
-            builder: TransactionComponent.Builder,
-            navigator: Navigator,
-        ): TransactionComponent.Builder = builder.onDuplicateTransactionHandler { transactionId ->
-            navigator.navigateTo(
-                Destinations.Transaction.Item.Duplicate,
-                Destinations.Transaction.Item.TransactionId.withValue(transactionId),
-            )
-        }
-
-        @Provides
         @MainActivityScreenScope
         fun navigationArgumentSerializer(): NavigationArgumentSerializer = CompositeNavigationArgumentSerializer()
 
@@ -296,7 +284,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun homeNavigationEntry(
             homeComponentBuilder: HomeComponent.Builder,
             welcomeComponentBuilder: WelcomeComponent.Builder,
-            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
             navigatorScope: NavigatorScope,
             logger: Logger,
@@ -493,7 +481,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun categoryDetailNavigationEntry(
             componentBuilder: CategoryDetailComponent.Builder,
-            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.Item.Detail) {
@@ -700,7 +688,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         fun accountDetailNavigationEntry(
             componentBuilder: AccountDetailComponent.Builder,
-            @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
+            transactionComponentBuilder: TransactionComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Account.Item.Detail) {
