@@ -3,9 +3,12 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -16,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.View
@@ -67,11 +72,25 @@ internal fun BottomBarView(
                                     .requiredSize(width = 56.dp, height = 32.dp)
                                     .background(pillColor, RoundedCornerShape(50)),
                             )
-                            imageLoader.View(
-                                image = item.icon,
-                                modifier = Modifier.sizeIn(maxHeight = 24.dp),
-                                tint = iconTint,
-                            )
+                            Box {
+                                imageLoader.View(
+                                    image = item.icon,
+                                    modifier = Modifier.sizeIn(maxHeight = 24.dp),
+                                    tint = iconTint,
+                                )
+                                if (item.hasAlert) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = 3.dp, y = (-3).dp)
+                                            .size(9.dp)
+                                            .background(ZeroTheme.colors.surfaceContainerLowest, CircleShape)
+                                            .padding(2.dp)
+                                            .background(ZeroTheme.colors.error, CircleShape)
+                                            .semantics { contentDescription = "Over budget" },
+                                    )
+                                }
+                            }
                         }
                     },
                     label = { Text(text = item.name) },
