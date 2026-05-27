@@ -44,6 +44,7 @@ import com.hluhovskyi.zero.currencies.CompositeCurrencyLoader
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyLoader
 import com.hluhovskyi.zero.currencies.ExchangeRateService
+import com.hluhovskyi.zero.currencies.RateSnapshotStore
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
@@ -222,10 +223,12 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         internal fun currencyLoader(
+            context: Context,
             resourceResolver: ResourceResolver,
             androidUriResourceFactory: AndroidUriResourceFactory,
             localeProvider: LocaleProvider,
             exchangeRateService: ExchangeRateService,
+            zonedClock: ZonedClock,
             logger: Logger,
         ): CurrencyLoader = CompositeCurrencyLoader(
             delegate = PredefinedCurrencyLoader(
@@ -235,6 +238,8 @@ abstract class ApplicationComponent :
                 logger = logger,
             ),
             exchangeRateService = exchangeRateService,
+            store = RateSnapshotStore(context),
+            clock = zonedClock,
         )
 
         @Provides
