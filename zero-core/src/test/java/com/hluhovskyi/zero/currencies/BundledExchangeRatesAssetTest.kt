@@ -35,11 +35,15 @@ class BundledExchangeRatesAssetTest {
             addAll(overrides.rates.keys)
         }
 
-        // 29 Frankfurter fiat rates + EUR base + BTC + ETH overrides. Bump deliberately if the
-        // bundled files change — this is the version-to-version stability guard.
-        assertEquals(32, supported.size)
+        // 29 Frankfurter fiat rates + EUR base + 13 overrides (BTC/ETH + curated fiat Frankfurter
+        // doesn't cover). Bump deliberately if the bundled files change — this is the
+        // version-to-version stability guard.
+        assertEquals(43, supported.size)
         assertEquals("EUR", fiat.base)
         assertTrue("USD" in supported)
         assertTrue("BTC" in supported && "ETH" in supported)
+        // Curated overrides Frankfurter (ECB) doesn't provide.
+        assertTrue("AED" in supported && "SAR" in supported && "TWD" in supported)
+        assertTrue("RUB" !in supported)
     }
 }
