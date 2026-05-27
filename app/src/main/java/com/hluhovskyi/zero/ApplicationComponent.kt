@@ -44,9 +44,9 @@ import com.hluhovskyi.zero.currencies.CompositeCurrencyLoader
 import com.hluhovskyi.zero.currencies.ConfigurationRateSnapshotStore
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyLoader
-import com.hluhovskyi.zero.currencies.ExchangeRateService
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
+import com.hluhovskyi.zero.currencies.ExchangeRateService
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
 import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase

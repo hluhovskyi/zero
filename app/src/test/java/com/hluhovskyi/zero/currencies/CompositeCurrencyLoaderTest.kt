@@ -46,8 +46,7 @@ class CompositeCurrencyLoaderTest {
         rates = rates.associate { (id, value) -> id to Rate(value) },
     )
 
-    private fun divide(numerator: Double, denominator: Double): BigDecimal =
-        BigDecimal.valueOf(numerator).divide(BigDecimal.valueOf(denominator), 10, RoundingMode.HALF_UP)
+    private fun divide(numerator: Double, denominator: Double): BigDecimal = BigDecimal.valueOf(numerator).divide(BigDecimal.valueOf(denominator), 10, RoundingMode.HALF_UP)
 
     private fun loader(
         bundled: FakeLoader,
