@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.budget
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
@@ -59,7 +62,6 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
-import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
@@ -96,6 +98,18 @@ private fun BudgetView(
 ) {
     val state by viewModel.state.collectAsState(initial = BudgetViewModel.State())
     var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    // Inline overlays aren't navigation destinations, so back must step back through the open
+    // ones instead of falling through to leave the Budget screen. The remove confirm is layered
+    // over the numpad, so its handler is registered last to win while both are open: back goes
+    // confirm → numpad → list. (The copy dialog is a `Dialog`, which handles back itself.)
+    BackHandler(enabled = state.editingCategoryId != null) {
+        viewModel.perform(BudgetViewModel.Action.DismissInlineEdit)
+    }
+    BackHandler(enabled = state.removeConfirm != null) {
+        viewModel.perform(BudgetViewModel.Action.CancelRemove)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -116,7 +130,7 @@ private fun BudgetView(
                     EmptyBudgetCallout(
                         periodLabel = state.displayedPeriodLabel,
                         totalCategories = state.budgeted.size,
-                        previousPeriodHadBudgets = state.previousPeriodBudgets.any { it.budgetId != null },
+                        previousPeriodHadBudgets = state.hasAnyPreviousBudget,
                     )
                 }
             } else {
@@ -127,11 +141,11 @@ private fun BudgetView(
                     )
                 }
             }
-            if (state.previousPeriodBudgets.any { it.budgetId != null }) {
+            if (state.hasAnyPreviousBudget) {
                 item {
                     CopyFromPreviousCard(
                         monthLabel = state.previousPeriodLabel,
-                        count = state.previousPeriodBudgets.count { it.budgetId != null },
+                        count = state.previousBudgetSetCount,
                         onClick = { viewModel.perform(BudgetViewModel.Action.TapCopyFromPrevious) },
                     )
                 }
@@ -153,6 +167,8 @@ private fun BudgetView(
                     is BudgetViewModel.Item.Set -> BudgetCard(
                         item = item,
                         onTap = onTap,
+                        onReallocate = { viewModel.perform(BudgetViewModel.Action.TapReallocate(item.categoryId)) },
+                        onIncrease = { viewModel.perform(BudgetViewModel.Action.TapIncrease(item.categoryId)) },
                         imageLoader = imageLoader,
                         amountFormatter = amountFormatter,
                     )
@@ -169,12 +185,27 @@ private fun BudgetView(
         if (state.copyConfirmVisible) {
             CopyConfirmDialog(
                 onConfirm = {
-                    val count = state.previousPeriodBudgets.count { it.budgetId != null }
+                    val count = state.previousBudgetSetCount
                     val label = state.previousPeriodLabel
                     viewModel.perform(BudgetViewModel.Action.ConfirmCopy)
                     toastMessage = "Copied $count categories from $label"
                 },
                 onCancel = { viewModel.perform(BudgetViewModel.Action.CancelCopy) },
+            )
+        }
+
+        state.removeConfirmRow?.let { row ->
+            val toast = stringResource(R.string.budget_remove_toast, row.categoryName)
+            RemoveConfirmSheet(
+                name = row.categoryName,
+                icon = row.icon,
+                colorScheme = row.colorScheme,
+                imageLoader = imageLoader,
+                onConfirm = {
+                    viewModel.perform(BudgetViewModel.Action.ConfirmRemove)
+                    toastMessage = toast
+                },
+                onCancel = { viewModel.perform(BudgetViewModel.Action.CancelRemove) },
             )
         }
 
@@ -200,14 +231,14 @@ private fun InlineNumpadOverlay(
     amountFormatter: AmountFormatter,
     viewModel: BudgetViewModel,
 ) {
-    val visible = state.editingCategoryId != null
+    // Hidden while the remove confirmation is layered on top; cancelling brings it back.
+    val visible = state.editingCategoryId != null && state.removeConfirm == null
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
     ) {
-        val editingId = state.editingCategoryId ?: return@AnimatedVisibility
-        val row = state.budgeted.firstOrNull { it.categoryId == editingId } ?: return@AnimatedVisibility
+        val row = state.editingRow ?: return@AnimatedVisibility
 
         Box(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -243,9 +274,12 @@ private fun InlineNumpadOverlay(
                     colorScheme = row.colorScheme,
                     previousAmount = state.editingPreviousAmount,
                     isPreviousSelected = state.isPreviousAmountSelected,
+                    // Removal only applies to a budget that's already set.
+                    canRemove = row.budgetId != null,
                     imageLoader = imageLoader,
                     amountFormatter = amountFormatter,
                     onPreviousChip = { viewModel.perform(BudgetViewModel.Action.TapPreviousChip) },
+                    onRemove = { viewModel.perform(BudgetViewModel.Action.TapRemove) },
                 )
                 InlineAmountDisplay(state.editingAmountText)
                 NumPad(
@@ -255,18 +289,12 @@ private fun InlineNumpadOverlay(
                 )
                 InlineCommitButton(
                     text = state.editingAmountText,
-                    hasNextUnset = hasNextUnset(state, editingId),
+                    hasNextUnset = state.hasNextUnsetForEditing,
                     onCommit = { viewModel.perform(BudgetViewModel.Action.CommitInlineEdit) },
                 )
             }
         }
     }
-}
-
-private fun hasNextUnset(state: BudgetViewModel.State, editingId: Id.Known): Boolean = state.budgeted.any {
-    it.categoryId != editingId &&
-        it.budgetId == null &&
-        it.categoryId !in state.skippedInSession
 }
 
 @Composable
@@ -276,9 +304,11 @@ private fun InlineNumpadHeader(
     colorScheme: ColorScheme,
     previousAmount: Amount?,
     isPreviousSelected: Boolean,
+    canRemove: Boolean,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     onPreviousChip: () -> Unit,
+    onRemove: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -324,6 +354,19 @@ private fun InlineNumpadHeader(
                     ),
                 )
             }
+        }
+        if (canRemove) {
+            Icon(
+                imageVector = Icons.Outlined.DeleteOutline,
+                contentDescription = stringResource(R.string.budget_remove_confirm_remove),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onRemove)
+                    .testTag("Budget.inlineNumpad.remove")
+                    .padding(6.dp)
+                    .size(22.dp),
+                tint = ZeroTheme.colors.error,
+            )
         }
     }
 }
@@ -756,6 +799,111 @@ internal fun BudgetToast(
                     color = ZeroTheme.colors.onPrimary,
                 ),
             )
+        }
+    }
+}
+
+@Composable
+private fun RemoveConfirmSheet(
+    name: String,
+    icon: Image,
+    colorScheme: ColorScheme,
+    imageLoader: ImageLoader,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ZeroTheme.colors.scrim)
+                .clickable(onClick = onCancel)
+                .testTag("Budget.removeConfirm.scrim"),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .background(
+                    ZeroTheme.colors.surface,
+                    RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                )
+                .padding(horizontal = 20.dp)
+                .padding(top = 8.dp, bottom = 28.dp),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 40.dp, height = 4.dp)
+                        .background(ZeroTheme.colors.outlineVariant, RoundedCornerShape(2.dp)),
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                CategoryIconView(
+                    colorScheme = colorScheme.toUi(),
+                    size = 44.dp,
+                    contentPadding = 9.dp,
+                ) { tint ->
+                    imageLoader.View(
+                        modifier = Modifier.size(22.dp),
+                        image = icon,
+                        tint = tint,
+                    )
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_title, name),
+                        style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_subtitle),
+                        style = TextStyle(fontSize = 13.sp, color = ZeroTheme.colors.onSurfaceVariant),
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onCancel)
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_cancel),
+                        style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurface),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(ZeroTheme.colors.error, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onConfirm)
+                        .testTag("Budget.removeConfirm.confirm")
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.budget_remove_confirm_remove),
+                        style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onPrimary),
+                    )
+                }
+            }
         }
     }
 }

@@ -5,7 +5,6 @@ import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.http.HttpExecutor.HttpRequest
 import com.hluhovskyi.zero.http.HttpExecutor.HttpResponse
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
@@ -125,14 +124,11 @@ internal class DriveBackupClient(
         }
     }
 
-    private fun authHeader(token: String): Map<String, String> =
-        mapOf("Authorization" to "Bearer $token")
+    private fun authHeader(token: String): Map<String, String> = mapOf("Authorization" to "Bearer $token")
 
-    private fun authExpired(): BackupClient.Result =
-        BackupClient.Result.Failure(BackupError.AuthExpired)
+    private fun authExpired(): BackupClient.Result = BackupClient.Result.Failure(BackupError.AuthExpired)
 
-    private fun failure(response: HttpResponse): BackupClient.Result =
-        BackupClient.Result.Failure(errorFor(response))
+    private fun failure(response: HttpResponse): BackupClient.Result = BackupClient.Result.Failure(errorFor(response))
 
     private fun errorFor(response: HttpResponse): BackupError = when {
         response.status == HTTP_UNAUTHORIZED -> BackupError.AuthExpired

@@ -23,6 +23,23 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun batchSelectRemovesSelectedTransactions() {
+        seedExpenses()
+        onTransactions()
+            .assertHasExpense(amount = "42")
+            .assertHasExpense(amount = "99")
+            .longPressTransaction(amount = "42")
+            .assertSelectionCount(1)
+            .assertDuplicateVisible()
+            .tapTransaction(amount = "99")
+            .assertSelectionCount(2)
+            .assertDuplicateNotVisible()
+            .deleteSelected()
+            .assertAmountNotVisible("42")
+            .assertAmountNotVisible("99")
+    }
+
+    @Test
     fun applyTypeFilterUpdatesListAcrossNavigation() {
         seedDefaultSetup()
         onTransactions()
@@ -57,5 +74,32 @@ class ZeroE2eTest : BaseE2eTest() {
             .assertEmptyCalloutHidden()
             .tapCategory("Food & Drink")
             .assertAmountShown("100")
+    }
+
+    @Test
+    fun reallocateMovesAmountFromSourceToTargetAndClearsOverBudget() {
+        seedBudgetOverScenario()
+        onBudget()
+            .assertCategoryOver("50.00")
+            .assertOverBudgetActionsVisible()
+            .tapReallocate()
+            .assertSourceCovers("Transport")
+            .selectSource("Transport")
+            .confirmMove()
+            .assertCategoryLeft("0.00")
+            .assertCategoryLeft("150.00")
+    }
+
+    @Test
+    fun increaseGrowsTargetBudgetOnlyAndClearsOverBudget() {
+        seedBudgetOverScenario()
+        onBudget()
+            .assertCategoryOver("50.00")
+            .tapIncrease()
+            .assertSuggestionVisible("+50.00")
+            .pickSuggestion("+50.00")
+            .confirm()
+            .assertCategoryLeft("0.00")
+            .assertCategoryLeft("200.00")
     }
 }

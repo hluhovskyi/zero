@@ -15,7 +15,6 @@ import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.backup.DriveComponent
-import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -58,6 +57,7 @@ import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackService
+import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -225,7 +225,7 @@ abstract class ApplicationComponent :
         fun androidUriResourceFactory(
             context: Context,
         ): AndroidUriResourceFactory = DefaultAndroidUriResourceFactory(
-            packageName = context.packageName,
+            context = context,
         )
 
         @Provides
@@ -386,8 +386,7 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun currentActivityTracker(application: Application): CurrentActivityTracker =
-            CurrentActivityTracker(application)
+        fun currentActivityTracker(application: Application): CurrentActivityTracker = CurrentActivityTracker(application)
 
         @Provides
         @ApplicationScope
@@ -431,8 +430,7 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun secureKeyValueStore(context: Context): SecureKeyValueStore =
-            AndroidSecureKeyValueStore(context)
+        fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
 
         @Provides
         @ApplicationScope
@@ -565,15 +563,13 @@ internal object AuthModule {
 
     @Provides
     @ApplicationScope
-    fun authComponent(component: ApplicationComponent): AuthComponent =
-        AuthComponent.builder()
-            .dependencies(component)
-            .build()
+    fun authComponent(component: ApplicationComponent): AuthComponent = AuthComponent.builder()
+        .dependencies(component)
+        .build()
 
     @Provides
     @ApplicationScope
-    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider =
-        authComponent.googleOAuthTokenProvider
+    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider = authComponent.googleOAuthTokenProvider
 }
 
 @dagger.Module

@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.budget
 
+import com.hluhovskyi.zero.budget.over.BudgetOverViewModel
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Id
@@ -15,6 +16,7 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetUseCase: BudgetUseCase,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
+    private val onOverActionTappedHandler: OnOverActionTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
@@ -57,6 +59,28 @@ internal class DefaultBudgetViewModel(
                     )
                 }
             }
+            BudgetViewModel.Action.TapRemove -> {
+                mutableState.update { state ->
+                    val editingId = state.editingCategoryId
+                    val row = editingId?.let { id -> state.budgeted.firstOrNull { it.categoryId == id } }
+                    // Layer the confirmation over the numpad without tearing it down, so cancelling
+                    // (or pressing back) returns to the edit sheet the user came from. Only a set
+                    // budget can be removed; for an unset row there's nothing to remove.
+                    if (row?.budgetId != null) state.copy(removeConfirm = editingId) else state
+                }
+            }
+            BudgetViewModel.Action.ConfirmRemove -> confirmRemove()
+            BudgetViewModel.Action.CancelRemove -> {
+                mutableState.update { it.copy(removeConfirm = null) }
+            }
+            is BudgetViewModel.Action.TapReallocate -> dispatchOverAction(
+                action.categoryId,
+                BudgetOverViewModel.Mode.REALLOCATE,
+            )
+            is BudgetViewModel.Action.TapIncrease -> dispatchOverAction(
+                action.categoryId,
+                BudgetOverViewModel.Mode.INCREASE,
+            )
             is BudgetViewModel.Action.ChangeEditAmount -> {
                 mutableState.update { it.copy(editingAmountText = action.text) }
             }
@@ -139,6 +163,33 @@ internal class DefaultBudgetViewModel(
         budgetUseCase.replaceFromPrevious(monthOffset.value, BudgetType.EXPENSE)
     }
 
+    private fun confirmRemove() {
+        val categoryId = mutableState.value.removeConfirm ?: return
+        // Removal closes both the confirmation and the edit sheet behind it — the row is about
+        // to drop to the unset section, so there's nothing left to edit.
+        mutableState.update {
+            it.copy(
+                removeConfirm = null,
+                editingCategoryId = null,
+                editingAmountText = "0",
+                skippedInSession = emptySet(),
+            )
+        }
+        scope.launch {
+            budgetUseCase.remove(monthOffset.value, BudgetType.EXPENSE, categoryId)
+        }
+    }
+
+    private fun dispatchOverAction(
+        categoryId: Id.Known,
+        mode: BudgetOverViewModel.Mode,
+    ) {
+        val snapshot = mutableState.value
+        val start = snapshot.currentPeriodStart ?: return
+        val end = snapshot.currentPeriodEnd ?: return
+        onOverActionTappedHandler.onTap(categoryId, start, end, mode)
+    }
+
     override fun attachOnMain() {
         scope.launch {
             budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { state ->
@@ -146,6 +197,8 @@ internal class DefaultBudgetViewModel(
                     it.copy(
                         displayedPeriodLabel = label(state.currentPeriod.start),
                         previousPeriodLabel = label(state.previousPeriod.start),
+                        currentPeriodStart = state.currentPeriod.start,
+                        currentPeriodEnd = state.currentPeriod.end,
                         budgeted = state.current,
                         previousPeriodBudgets = state.previous,
                         items = state.current.toItems(previousPeriod = state.previous),

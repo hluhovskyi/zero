@@ -12,21 +12,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,34 +62,147 @@ private val YellowWarn = Color(0xFFF9A825)
 internal fun BudgetCard(
     item: BudgetViewModel.Item.Set,
     onTap: () -> Unit,
+    onReallocate: () -> Unit,
+    onIncrease: () -> Unit,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     modifier: Modifier = Modifier,
 ) {
     val isOver = item.status == BudgetViewModel.Item.Status.Over
     val cardBg = if (isOver) OverBg else ZeroTheme.colors.surfaceContainerLowest
+    val cardShape = RoundedCornerShape(16.dp)
     val borderModifier = if (isOver) {
-        Modifier.border(1.5.dp, ZeroTheme.colors.error.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+        Modifier.border(1.5.dp, ZeroTheme.colors.error.copy(alpha = 0.2f), cardShape)
     } else {
         Modifier
     }
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(cardBg, RoundedCornerShape(16.dp))
+            .background(cardBg, cardShape)
             .then(borderModifier)
-            .clickable(onClick = onTap)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+            .clip(cardShape),
     ) {
-        IconWithRing(item = item, imageLoader = imageLoader)
-        TextBlock(
-            item = item,
-            amountFormatter = amountFormatter,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onTap)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            IconWithRing(item = item, imageLoader = imageLoader)
+            TextBlock(
+                item = item,
+                amountFormatter = amountFormatter,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        if (isOver) {
+            OverActionRow(
+                onReallocate = onReallocate,
+                onIncrease = onIncrease,
+                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun OverActionRow(
+    onReallocate: () -> Unit,
+    onIncrease: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedActionButton(
+            label = stringResource(R.string.budget_card_reallocate),
+            icon = Icons.Filled.SwapHoriz,
+            onClick = onReallocate,
             modifier = Modifier.weight(1f),
+        )
+        FilledActionButton(
+            label = stringResource(R.string.budget_card_increase),
+            icon = Icons.Filled.ArrowUpward,
+            onClick = onIncrease,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun OutlinedActionButton(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    Row(
+        modifier = modifier
+            .height(36.dp)
+            .border(1.dp, ZeroTheme.colors.error, shape)
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = ZeroTheme.colors.error,
+        )
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 6.dp),
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ZeroTheme.colors.error,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun FilledActionButton(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    Row(
+        modifier = modifier
+            .height(36.dp)
+            .background(ZeroTheme.colors.error, shape)
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = ZeroTheme.colors.onPrimary,
+        )
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 6.dp),
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ZeroTheme.colors.onPrimary,
+            ),
         )
     }
 }

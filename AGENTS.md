@@ -28,7 +28,7 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 ## Cross-Cutting Rules
 
 1. **Branch Isolation** — Every distinct task MUST have a dedicated branch. Never commit directly to `master`. Verify current branch before every commit. See [Branch Management](docs/agents/branch-management.md).
-2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
+2. **Follow code style conventions; run `./gradlew spotlessApply` before pushing** — formatting is spotless-enforced and CI's `spotlessCheck` gates the merge, but no local hook runs it. See [Code Style](docs/agents/code-style.md).
 3. **Strict Development Lifecycle**:
     - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
     - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/ui/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
@@ -40,6 +40,8 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 5. **UI Validation** — Compilation is not validation for UI/layout bugs. Use the `android-ui-inspector` skill (`./scripts/ui/dump-ui.sh`) to empirically verify bounds and visibility via ADB before committing. A UI task is not complete until the inspector confirms it on device.
 6. **Library Updates Over Hacks** — Before implementing any complex workaround, check if a minor version bump of relevant project libraries provides a native API that solves the problem.
 7. **When invoking brainstorming or writing-plans** — read [Superpowers Workflow](docs/agents/superpowers-workflow.md) first for project-specific optimizations that keep plans lean and design docs focused.
+8. **Dependencies live in the version catalog** — build scripts are Kotlin DSL (`*.gradle.kts`) and all versions/libraries/plugins are declared in `gradle/libs.versions.toml`. Add new deps there and reference via `libs.*`; never inline coordinate strings in a module.
+9. **Shared module config lives in `build-logic` convention plugins** — a module applies `zero.kotlin.jvm` / `zero.android.library` / `zero.android.library.compose` / `zero.android.application` and declares only its namespace, extra plugins, overrides, and deps. Change shared config in the convention, not per-module. Catalog helpers in `build-logic` must stay `internal` (a public `Project.libs` shadows the module's `libs` accessor).
 
 ## Module Map
 
@@ -51,7 +53,6 @@ zero-api             → Domain interfaces and types (pure Kotlin)
 zero-database        → Room DAOs, Entities, Repository implementations
 zero-image-loading   → ImageLoader interface + Coil impl
 zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
-zero-zenmoney        → ZenMoney CSV import
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 zero-backup          → Backup orchestration + Drive REST client (pure Kotlin JVM, no Android)
 zero-auth            → Google OAuth (Credential Manager + token exchange)

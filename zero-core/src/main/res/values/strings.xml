@@ -167,6 +167,12 @@
     <string name="transaction_clear_all">Clear all</string>
     <string name="transaction_remove_filter_description">Remove filter</string>
     <string name="transaction_add">Add transaction</string>
+    <string name="transaction_selection_exit_description">Exit selection</string>
+    <string name="transaction_selection_more_description">More options</string>
+    <plurals name="transaction_selection_count">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
 
     <!-- Transaction Filter Sheet -->
     <string name="filter_title">Filter</string>
@@ -269,6 +275,12 @@
     <string name="budget_copy_confirm_replace">Replace</string>
     <string name="budget_copy_confirm_cancel">Cancel</string>
 
+    <string name="budget_remove_confirm_title">Remove %1$s?</string>
+    <string name="budget_remove_confirm_subtitle">This removes the budget limit for this month only.</string>
+    <string name="budget_remove_confirm_cancel">Cancel</string>
+    <string name="budget_remove_confirm_remove">Remove</string>
+    <string name="budget_remove_toast">Removed %1$s from budget</string>
+
     <string name="budget_numpad_set">Set %1$s</string>
     <string name="budget_numpad_set_next">Set %1$s — Next →</string>
     <string name="budget_numpad_skip_next">Skip →</string>
@@ -289,4 +301,28 @@
     <string name="budget_card_of">of %1$s</string>
     <string name="budget_card_last">last: %1$s</string>
     <string name="budget_card_no_limit">no limit</string>
+    <string name="budget_card_reallocate">Reallocate</string>
+    <string name="budget_card_increase">Increase</string>
+    <string name="budget_over_choice_title">%1$s is over budget</string>
+    <string name="budget_over_choice_subtitle">Spent %1$s of %2$s — %3$s over</string>
+    <string name="budget_over_choice_reallocate_title">Reallocate budget</string>
+    <string name="budget_over_choice_reallocate_subtitle">Move money from another category</string>
+    <string name="budget_over_choice_increase_title">Increase budget</string>
+    <string name="budget_over_choice_increase_subtitle">Add more to this category\'s limit</string>
+    <string name="budget_over_reallocate_header">Reallocate From</string>
+    <string name="budget_over_target_needs">%1$s needs</string>
+    <string name="budget_over_target_more">%1$s more</string>
+    <string name="budget_over_section_available">Available to move</string>
+    <string name="budget_over_section_suggestions">Suggestions</string>
+    <string name="budget_over_source_remaining">%1$s remaining</string>
+    <string name="budget_over_source_of">of %1$s</string>
+    <string name="budget_over_source_covers">✓ Covers it</string>
+    <string name="budget_over_source_partial">Partial</string>
+    <string name="budget_over_source_empty">No categories have remaining budget</string>
+    <string name="budget_over_reallocate_cta">Move %1$s from %2$s</string>
+    <string name="budget_over_increase_header">Increase Budget</string>
+    <string name="budget_over_increase_new_label">New Budget</string>
+    <string name="budget_over_increase_cta">Confirm Increase</string>
+    <string name="budget_over_back_cd">Back</string>
+    <string name="budget_over_close_cd">Close</string>
 </resources>
