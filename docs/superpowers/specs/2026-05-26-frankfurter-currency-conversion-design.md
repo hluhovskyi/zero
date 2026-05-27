@@ -9,78 +9,94 @@ stale. We want **live** rates from [Frankfurter](https://frankfurter.dev/)
 while **keeping the bundled rates** so currencies Frankfurter does not cover — notably crypto
 like `BTC`, plus exotic fiat — still convert. The user calls these the "custom overrides".
 
-Frankfurter `/v1/latest?base=USD` returns `{ "base": "USD", "date": "...", "rates": { "EUR": 0.86, ... } }`
-covering ~31 fiat currencies. It has **no crypto** and 404s/empties for unsupported bases.
+Frankfurter `/v1/latest?base=EUR` returns `{ "base": "EUR", "date": "...", "rates": { "USD": 1.16, ... } }`
+covering ~31 fiat currencies. It has **no crypto** and updates once per banking day (weekends/holidays
+return the last working day's table).
 
 ## Approach
 
-A **layered loader**. Frankfurter supplies live fiat rates; the bundled assets remain the
-fallback and the *sole* source for everything Frankfurter lacks (crypto + exotic fiat).
+A **layered loader** with smart, minimal fetching:
 
-Merge rule: `bundled ∪ live`, **live wins on key overlap**. So fiat rates become fresh while
-`BTC`/`ADA`/etc. keep flowing from the bundle. Any network failure or unsupported base →
-empty live map → merged result is bundled-only, i.e. exactly today's behavior. No crash, no UI
-change.
+- **One fetch per calendar day.** `/v1/latest` (base = EUR, ECB's native base) returns the entire
+  fiat table in a single call. Any pair is derived locally by cross-rate:
+  `rate(A→B) = table[B] / table[A]`. So we never fetch per-currency — one request covers everything.
+- **Persisted.** The snapshot is written to a small JSON file, so restarts within a day reuse it and
+  offline sessions fall back to the last persisted (stale) snapshot.
+- **Bundled fallback.** Bundled rates are merged underneath the live table; **live fiat wins on
+  overlap, while keys Frankfurter omits (crypto/exotic) keep their bundled values**. No snapshot at
+  all (first run offline) → bundled-only, i.e. today's behavior. No crash, no UI change.
+- **Latest-rate semantics (for now).** A transaction's converted value uses the latest daily rate,
+  matching today's single-snapshot model. Transaction-date/historical rates are explicitly out of
+  scope.
 
-The network call lives in `zero-remote` behind a new `zero-api` interface, mirroring the
-existing `FeedbackService` / `OkHttpFeedbackService` / `RemoteComponent` precedent. Orchestration
-(merge + cache + fallback) lives in `app` as a new `CurrencyLoader` implementation.
+The network call lives in `zero-remote` behind a `zero-api` interface, implemented with **Retrofit
+kept fully internal** to the module — `RemoteComponent` exposes only the `zero-api` interface, never
+Retrofit/OkHttp/serialization types (enforced by the `RemoteComponentEncapsulation` lint rule, which
+now also forbids `retrofit2.*`). The daily-cache + persistence + cross-rate orchestration lives in
+`app`.
 
 ## Components
 
 | Type | Module | Template analog | Responsibility |
 |------|--------|-----------------|----------------|
-| `ExchangeRateService` (interface + `Noop`) | zero-api `currencies/` | `FeedbackService` | `suspend fun ratesFor(baseId: Id.Known): Map<Id.Known, Rate>`. `Noop` returns `emptyMap()`. |
-| `OkHttpFrankfurterExchangeRateService` (`internal`) | zero-remote `currencies/` | `OkHttpFeedbackService` | GETs `<endpoint>/latest?base=<CODE>`, parses `rates`, maps to `Map<Id.Known, Rate>`. All failures (IO, non-200, blank endpoint) → `emptyMap` + `Timber.w`. |
+| `ExchangeRateService` + `ExchangeRateSnapshot` (+ `Noop`) | zero-api `currencies/` | `FeedbackService` | `suspend fun latest(): ExchangeRateSnapshot?` — the full base-relative table, or `null` when unavailable. |
+| `FrankfurterApi` (`internal`) | zero-remote `currencies/` | — | Retrofit `@GET("v1/latest")` with `base=EUR` default. |
+| `RetrofitExchangeRateService` (`internal`) | zero-remote `currencies/` | `OkHttpFeedbackService` | Calls the API, maps to `ExchangeRateSnapshot`; `IOException`/`HttpException` → `null` + `Timber.w`. |
 | `FrankfurterLatestResponse` (`internal`, `@Serializable`) | zero-remote `currencies/` | `FeedbackResponse` | HTTP body shape: `base`, `date`, `rates: Map<String, Double>`. |
-| `CompositeCurrencyLoader` (`internal`) | app `currencies/` | `PredefinedCurrencyLoader` | Wraps a delegate `CurrencyLoader` (predefined) + `ExchangeRateService`. Merges, caches per base, falls back. |
+| `RateSnapshotStore` (`internal`) | app `currencies/` | — | JSON-file persistence of `{ fetchedOn, base, rates }` in `filesDir`; failures swallowed. |
+| `CompositeCurrencyLoader` (`internal`) | app `currencies/` | `PredefinedCurrencyLoader` | Refresh ≤ once/day (via `ZonedClock`) + persist + cross-rate + merge over bundled `delegate`. |
 
-**DI changes (mirror `feedbackService` wiring exactly):**
-- `RemoteComponent` exposes `val exchangeRateService: ExchangeRateService`; add `@BindsInstance exchangeRateEndpoint(@ExchangeRateEndpoint endpoint: String)` to its Builder, defaulted in `builder()` to the Frankfurter v1 base URL constant. The endpoint is a public, non-secret default (ships in the binary) — hardcode the constant; no `BuildConfig`/`local.properties` plumbing needed.
-- `RemoteModule` (in `ApplicationComponent.kt`) adds `exchangeRateService(remoteComponent)` provider.
-- `ApplicationComponent.currencyLoader` returns `CompositeCurrencyLoader(delegate = PredefinedCurrencyLoader(...), exchangeRateService = ...)` instead of the bare `PredefinedCurrencyLoader`.
-
-The `RemoteComponentEncapsulation` lint rule forbids exposing `okhttp3.*` / serialization types
-from `RemoteComponent` — exposing `ExchangeRateService` (a zero-api interface) is compliant.
+**DI changes (mirror `feedbackService` wiring):**
+- `RemoteComponent` exposes `val exchangeRateService: ExchangeRateService`; provides an internal
+  `FrankfurterApi` (Retrofit built from the OkHttp client + kotlinx-serialization converter) and wraps
+  it in `RetrofitExchangeRateService`. The base URL is a public non-secret default bound via
+  `@BindsInstance exchangeRateEndpoint`, defaulted to `https://api.frankfurter.dev/`.
+- `app` applies the `kotlin-serialization` plugin (for `RateSnapshotStore.Stored`).
+- `ApplicationComponent.currencyLoader` builds `CompositeCurrencyLoader(PredefinedCurrencyLoader(...),
+  exchangeRateService, RateSnapshotStore(context), zonedClock)`.
 
 ## Data Flow
 
 `CurrencyConvertUseCase.getRate(from, to)` → `CurrencyLoader.ratesFor(from)` →
 `CompositeCurrencyLoader`:
-1. `delegate.ratesFor(from)` → bundled map (e.g. USD→{EUR, BTC, ...}).
-2. `exchangeRateService.ratesFor(from)` → live fiat map (e.g. USD→{EUR, ...}), or `emptyMap`.
-3. Merge `bundled + live` (live overrides), cache per `from`, return.
+1. `currentSnapshot()` — if already refreshed today, reuse; else (under a mutex) load the persisted
+   snapshot if it's today's, otherwise fetch `latest()`, persist, and cache. On fetch failure, reuse
+   the stale persisted snapshot if any.
+2. Cross-rate the snapshot to base `from` (`out[T] = table[T] / table[from]`, plus `from→base` and
+   `from→from = 1`). If `from` isn't in the table and isn't the base (e.g. crypto base) → empty live.
+3. Merge `bundled + live` (live wins), cache per `from` for the day.
 
-`USD → BTC`: live map has no `BTC`, so the bundled `BTC` rate survives the merge. ✅
-`USD → EUR`: live `EUR` overrides the stale bundled `EUR`. ✅
-`base = BTC` (Frankfurter 404): live map empty → bundled-only. ✅
+`USD → BTC`: live cross-rates have no `BTC`, so the bundled `BTC` rate survives. ✅
+`USD → EUR`: live `EUR` (= 1 / table[USD]) overrides the stale bundled `EUR`. ✅
+Day rollover: `currentSnapshot()` clears the per-currency cache and refetches. ✅
+Offline: stale persisted snapshot, then bundled. ✅
 
-`availableCurrencies()` delegates unchanged to the predefined loader (the 219-currency superset;
-Frankfurter's ~31 are a strict subset, so no union needed).
+`availableCurrencies()` delegates unchanged to the predefined loader (the 219-currency superset).
 
 ## Error Handling
 
-Frankfurter unreachable / unsupported base / parse error → `emptyMap()` inside the service,
-logged via `Timber.w` in zero-remote (transport distinctions never leak through the public API,
-per zero-remote rule 4). Composite loader then yields bundled-only rates. No exceptions surface.
+Network error / non-200 → `null` from the service (`Timber.w` in zero-remote; transport distinctions
+never leak through the public API, per zero-remote rule 4). Corrupt/missing cache file → `null` from
+the store. The composite loader degrades gracefully: live → stale-persisted → bundled.
 
-## Caching ("for now")
+## Caching
 
-In-memory per-session cache keyed by base (`ConcurrentHashMap`, matching the existing
-`PredefinedCurrencyLoader`). Rates do not refresh within a session — acceptable for now and
-consistent with current behavior. **Out of scope / follow-up:** TTL, disk persistence, daily
-refresh policy.
+- **In-memory:** current snapshot + the day it was refreshed; per-currency cross-rate map.
+- **Persistent:** one JSON file (`exchange_rates.json`) holding the latest snapshot + its fetch day.
+- **Policy:** at most one network attempt per local calendar day; offline serves the last persisted
+  snapshot. **Out of scope / follow-up:** intra-day refresh, retry-on-reconnect, eviction.
 
 ## Testing
 
-- `OkHttpFrankfurterExchangeRateServiceTest` (MockWebServer, mirrors `OkHttpFeedbackServiceTest`):
-  happy path parses `rates` into `Map<Id.Known, Rate>`; 500 → empty; socket reset → empty;
-  blank endpoint → empty + zero requests; request URL carries `base` query param.
-- `CompositeCurrencyLoaderTest`: live overlays bundled (fresh EUR wins); bundled-only keys (BTC)
-  survive merge; empty live map → bundled only; second call for same base served from cache
-  (delegate + service invoked once).
+- `RetrofitExchangeRateServiceTest` (MockWebServer): happy path maps the snapshot and requests
+  `/v1/latest?base=EUR`; 500 → null; socket reset → null.
+- `RateSnapshotStoreTest`: save→load round-trip; missing file → null.
+- `CompositeCurrencyLoaderTest`: live cross-rates override bundled while crypto survives; null
+  snapshot → bundled only; fetch ≤ once/day across currencies; new day → refetch with fresh rates;
+  today's persisted snapshot reused without fetching; stale persisted snapshot used when today's fetch
+  fails; `availableCurrencies` delegates.
 
 ## Out of Scope
 
-Persisting rates, TTL / refresh policy, historical rates, user-editable custom rates, and
-changing the `availableCurrencies` set.
+Transaction-date/historical rates, intra-day refresh policy, retry-on-reconnect, user-editable custom
+rates, and changing the `availableCurrencies` set.

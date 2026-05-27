@@ -10,6 +10,16 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-26-frankfurter-currency-conversion-design.md`
 
+> **Revision (post-review):** the tasks below describe the initial OkHttp + per-base + in-memory
+> build. Following review the design was upgraded — see the spec for the current shape. Net changes:
+> - `ExchangeRateService` now returns `ExchangeRateSnapshot?` from a single `latest()` (full EUR
+>   table); pairs are cross-rated locally instead of one network call per base.
+> - The zero-remote impl uses **Retrofit kept internal** (`FrankfurterApi` + `RetrofitExchangeRateService`);
+>   `retrofit2.*` added to the `RemoteComponentEncapsulation` lint prefixes.
+> - `CompositeCurrencyLoader` fetches **≤ once per calendar day** (via `ZonedClock`) and persists the
+>   snapshot through a new `RateSnapshotStore` (JSON file), falling back stale-persisted → bundled.
+> - `app` now applies the `kotlin-serialization` plugin.
+
 ---
 
 ### Task 1: `ExchangeRateService` contract in zero-api
