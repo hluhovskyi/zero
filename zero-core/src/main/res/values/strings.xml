@@ -167,6 +167,12 @@
     <string name="transaction_clear_all">Clear all</string>
     <string name="transaction_remove_filter_description">Remove filter</string>
     <string name="transaction_add">Add transaction</string>
+    <string name="transaction_selection_exit_description">Exit selection</string>
+    <string name="transaction_selection_more_description">More options</string>
+    <plurals name="transaction_selection_count">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
 
     <!-- Transaction Filter Sheet -->
     <string name="filter_title">Filter</string>
