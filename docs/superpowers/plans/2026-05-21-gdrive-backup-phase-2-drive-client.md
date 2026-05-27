@@ -258,6 +258,16 @@ git commit -m "backup(app): AndroidSecureKeyValueStore + exclude zero_secure_pre
 
 ### Task 5: `GoogleOAuthTokenProvider` + `AuthComponent` (in `zero-auth`)
 
+> **⚠️ Superseded as built.** The Credential-Manager + token-endpoint + refresh-token design
+> described below proved unworkable for a serverless public client (no way to mint a refresh
+> token without a backend secret; `GetGoogleIdOption` only authenticates). The implementation
+> instead uses the **Google Identity Authorization API** (`play-services-auth`) to mint
+> `drive.appdata` access tokens directly — no refresh token, no token endpoint, no `HttpExecutor`,
+> no Web client ID, no `buildConfigField`. `AuthComponent.Dependencies` is `{ context,
+> secureKeyValueStore, currentActivityProvider }`. There are no `zero-auth` unit tests (Play
+> services isn't unit-testable). See the spec's §Auth design-correction. The text below is kept
+> for historical context.
+
 **Files:**
 - Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/GoogleOAuthTokenProvider.kt`
 - Create: `zero-auth/src/main/java/com/hluhovskyi/zero/auth/AuthComponent.kt`

@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.auth
 
 import android.app.Activity
-import com.hluhovskyi.zero.http.HttpExecutor
+import android.content.Context
 import com.hluhovskyi.zero.security.SecureKeyValueStore
 import dagger.Provides
 import javax.inject.Qualifier
@@ -10,10 +10,6 @@ import javax.inject.Scope
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class AuthScope
-
-@Qualifier
-@Retention(AnnotationRetention.SOURCE)
-private annotation class GoogleOAuthClientId
 
 @Qualifier
 @Retention(AnnotationRetention.SOURCE)
@@ -29,7 +25,7 @@ interface AuthComponent {
     val googleOAuthTokenProvider: OAuthTokenProvider
 
     interface Dependencies {
-        val httpExecutor: HttpExecutor
+        val context: Context
         val secureKeyValueStore: SecureKeyValueStore
         val currentActivityProvider: @JvmSuppressWildcards () -> Activity?
     }
@@ -54,26 +50,19 @@ interface AuthComponent {
 
         @Provides
         @AuthScope
-        @GoogleOAuthClientId
-        internal fun clientId(): String = BuildConfig.DRIVE_OAUTH_CLIENT_ID
-
-        @Provides
-        @AuthScope
         @GoogleOAuthScopes
         internal fun scopes(): List<String> = listOf(DRIVE_APPDATA_SCOPE)
 
         @Provides
         @AuthScope
         internal fun googleOAuthTokenProvider(
+            context: Context,
             secureKeyValueStore: SecureKeyValueStore,
-            httpExecutor: HttpExecutor,
-            @GoogleOAuthClientId clientId: String,
             @GoogleOAuthScopes scopes: List<String>,
             currentActivityProvider: @JvmSuppressWildcards () -> Activity?,
         ): OAuthTokenProvider = GoogleOAuthTokenProvider(
+            context = context,
             secureKeyValueStore = secureKeyValueStore,
-            httpExecutor = httpExecutor,
-            clientId = clientId,
             scopes = scopes,
             currentActivity = currentActivityProvider,
         )

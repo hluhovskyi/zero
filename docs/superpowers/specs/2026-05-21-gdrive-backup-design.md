@@ -71,10 +71,11 @@ zero-backup                           (NEW, pure Kotlin JVM — mirrors zero-syn
                                          DriveBackupClient (no DI surface — no external consumers)
   AGENTS.md                           ← rules: no Android, no OkHttp imports
 
-zero-auth                             (NEW Android module — Google sign-in flow)
+zero-auth                             (NEW Android module — Google authorization flow)
   AuthComponent.kt                    ← DI root: exposes googleOAuthTokenProvider
-  GoogleOAuthTokenProvider.kt         ← Credential Manager + googleid + token exchange
-                                         (internal — implements OAuthTokenProvider; scope-parameterized)
+  GoogleOAuthTokenProvider.kt         ← Google Identity Authorization API (play-services-auth):
+                                         mints drive.appdata access tokens, no refresh token / no
+                                         secret (internal; implements OAuthTokenProvider)
   AGENTS.md                           ← rules: only OAuth concerns; no networking, no UI
 
 zero-remote                           (Android — additions, narrowed)
@@ -149,13 +150,15 @@ The OAuth scope `https://www.googleapis.com/auth/drive.appdata` grants access to
 
 ### Auth (`zero-auth` module)
 
-Owned by `GoogleOAuthTokenProvider` in the new `zero-auth` module. The provider is generic over Google OAuth — scope (`drive.appdata` for the backup use case) is configured at construction. Future integrations that need Google sign-in (Calendar, Sheets, etc.) reuse this provider with different scopes.
+Owned by `GoogleOAuthTokenProvider` in the new `zero-auth` module. The provider is generic over Google scopes — the scope (`drive.appdata` for the backup use case) is provided at construction. Future integrations needing a Google API scope reuse this provider with different scopes.
 
-- **Sign in:** Android's `androidx.credentials.CredentialManager` + `com.google.android.libraries.identity.googleid` (`GoogleIdTokenCredential`). User picks an account, grants the configured scope. We receive an OAuth ID token + a Google authorization grant.
-- **Token exchange:** the authorization grant is exchanged for an access + refresh token via the standard OAuth 2.0 token endpoint `https://oauth2.googleapis.com/token`. We use `HttpExecutor` (the same one `RemoteComponent` provides for Drive REST calls) — no Google client lib.
-- **Storage:** access token is held in memory only. Refresh token is stored in `EncryptedSharedPreferences` (Keystore-wrapped) via `SecureKeyValueStore`. On every authenticated call, if the access token is missing or returns 401, we refresh.
-- **Revoke:** `https://oauth2.googleapis.com/revoke?token=<refresh_token>` clears the grant server-side. On disconnect we revoke, then clear the local refresh token.
-- **Dependencies:** `AuthComponent.Dependencies` takes `httpExecutor: HttpExecutor` (from `RemoteComponent`), `secureKeyValueStore: SecureKeyValueStore` (from `ApplicationComponent`), `currentActivity: () -> Activity?` (from `ActivityComponent`), and the OAuth client ID via `@BindsInstance`.
+> **Design correction (Phase 2 smoke test).** The original design here was "Credential Manager → exchange a grant at the OAuth token endpoint → store a **refresh token**." That is **not achievable for a public client with no backend**: minting a refresh token requires either a client secret (a confidential/Web client → a server) or a PKCE browser flow, and the spec mandates no server and no secret. `GetGoogleIdOption` also only authenticates (it returns an ID token, not a Drive grant). The corrected design below uses the **Google Identity Authorization API** to mint short-lived **access tokens** on demand — no refresh token, no Web client, no secret, no server. This is how Android Drive-backup apps (e.g. WhatsApp) work.
+
+- **Authorization (not authentication):** `Identity.getAuthorizationClient(context).authorize(AuthorizationRequest{ requestedScopes = [drive.appdata] })`. The app is identified purely by its **Android OAuth client** (package name + signing-cert SHA-1) — there is no ID token, no Web client ID, and no client secret. The first call returns a consent `PendingIntent`, launched on the foreground activity (`ActivityResultRegistry`); the user approves Drive access once.
+- **Access tokens:** the authorization result carries a short-lived (~1 h) access token, cached in memory. When it expires, `authorize()` is called again — **silently, with no UI** (including from background work), because Google Play services owns the long-lived grant for the device account.
+- **No refresh token, no token endpoint, no `SecureKeyValueStore` for credentials.** A small connected-flag is persisted so `isSignedIn` survives process death; there is no secret on device.
+- **Revoke (disconnect):** clear local state (`isSignedIn → false`, drop the cached token). There is no on-device refresh token to wipe; the user can fully revoke the grant in their Google account settings (a remote-revoke call is a Phase 7 polish item).
+- **Dependencies:** `AuthComponent.Dependencies` takes `context: Context` (for the Authorization client + silent background refresh), `secureKeyValueStore: SecureKeyValueStore` (for the connected flag), and `currentActivityProvider: () -> Activity?` (to launch the one-time consent). No `HttpExecutor`, no OAuth-client-ID, no `@BindsInstance`.
 
 ### Transport (OkHttp behind `HttpExecutor`)
 
@@ -322,7 +325,7 @@ Rules include:
 
 - Casual exposure via the Drive UI: `appDataFolder` is invisible to the user and to third-party apps.
 - Other apps on the same device reading the file: only Zero with the user's grant can read.
-- Stolen refresh token via root/backup attack: refresh token is in `EncryptedSharedPreferences` (Android Keystore-wrapped, hardware-backed on modern devices).
+- Stolen credentials via root/backup attack: there is **no refresh token on device**. Access tokens live in memory only (~1 h) and are re-minted by Play services; the long-lived grant is held by Google, not by Zero.
 
 ### What we do NOT protect against in v1
 
@@ -339,12 +342,14 @@ If those threats matter to a user, v2 will add the encrypted envelope (`format: 
 
 ### Secrets matrix
 
-| Where | OAuth Web Client ID | OAuth Client Secret |
-|---|---|---|
-| Local dev | `local.gradle.properties` (`driveOauthClientId`), read by `zero-auth/build.gradle` | none — public client (Android-type OAuth clients have no secret) |
-| Release builds | GitHub Actions variable `DRIVE_OAUTH_CLIENT_ID`, read by `zero-auth/build.gradle` | none |
+There are **no secrets and no build-time OAuth config**. The Authorization API identifies the app by its **Android OAuth client** (package name + signing-cert SHA-1), which is registered in Google Cloud but never embedded in the app — the OS presents the signature. Nothing OAuth-related ships in the binary, so there is no `buildConfigField`, no `driveOauthClientId`, and no client secret anywhere.
 
-Android-type OAuth clients are public clients identified by package name + SHA-1 signing cert. There is no secret to leak. Per `feedback_ships_in_binary_not_secret`, this is a default not a secret; we hardcode-with-env-override using the same `buildConfigField` pattern as `FEEDBACK_ENDPOINT`. The buildConfigField lives in `zero-auth/build.gradle` (not `app/build.gradle`) because the value is conceptually a Google-sign-in concern — `AuthComponent.Module` reads `BuildConfig.DRIVE_OAUTH_CLIENT_ID` directly without an inter-module Builder parameter.
+| Artifact | Where | Secret? |
+|---|---|---|
+| Android OAuth client (package + SHA-1) | Google Cloud Console only | no — identity, not a secret; nothing in the binary |
+| OAuth client secret | n/a | none — public client, no backend |
+
+(Setup note: a Google Cloud project with the Drive API enabled, an OAuth consent screen requesting `drive.appdata`, and an Android OAuth client for the app's signing cert. A Web client ID is **not** required — it was only needed by the abandoned sign-in / refresh-token design.)
 
 ---
 
@@ -355,7 +360,7 @@ Tiered, from cheapest/most-coverage to highest-fidelity/least-automatable.
 ### Tier 1 — Unit tests (per module, run in CI)
 
 - `zero-backup`: `DefaultBackupUseCaseTest` (state machine, coalescing, 3-strike counter), `BackupEnvelopeSerializerTest` (round-trip + v1 fixture + unknown-format rejection), `DriveBackupClientTest` against a fake `HttpExecutor` (URLs, headers, status-code → BackupError mapping). No Android, no real Drive.
-- `zero-auth`: `GoogleOAuthTokenProviderTest` against a fake `HttpExecutor` + in-memory `SecureKeyValueStore` (token caching, refresh, revoke, signed-out-server-side handling). Sign-in itself can't be unit-tested (Credential Manager is system UI).
+- `zero-auth`: **no unit tests.** `GoogleOAuthTokenProvider` talks to the Google Identity Authorization API (Play services) for both sign-in and access-token minting, neither of which is unit-testable. It is validated on-device in the Tier 4 manual smoke test.
 - `zero-remote`: `OkHttpHttpExecutorTest` against `MockWebServer` (same pattern as `OkHttpFeedbackServiceTest`).
 - `zero-core`: `DefaultImportUseCaseTest` gains "all-new fast path" cases.
 

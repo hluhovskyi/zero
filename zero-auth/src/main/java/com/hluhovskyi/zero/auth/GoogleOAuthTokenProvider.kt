@@ -1,44 +1,48 @@
 package com.hluhovskyi.zero.auth
 
 import android.app.Activity
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.AuthorizationResult
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.api.Scope
+import com.google.android.gms.tasks.Task
 import com.hluhovskyi.zero.backup.BackupError
-import com.hluhovskyi.zero.http.HttpExecutor
-import com.hluhovskyi.zero.http.HttpExecutor.HttpRequest
 import com.hluhovskyi.zero.security.SecureKeyValueStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onStart
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
- * [OAuthTokenProvider] over Android Credential Manager + the OAuth 2.0 token endpoint.
+ * [OAuthTokenProvider] backed by the Google Identity **Authorization API**
+ * ([Identity.getAuthorizationClient]). The app is identified purely by its Android OAuth client
+ * (package + signing cert) — no Web client ID, no client secret, no server. Google Play services
+ * owns the long-lived grant for the device account; we mint short-lived **access tokens** on
+ * demand and never hold a refresh token.
  *
- * Token management ([getAccessToken], [revoke], [isSignedIn]) is fully unit-tested against a fake
- * [HttpExecutor]. [signIn] drives the system Credential Manager UI and therefore cannot be
- * unit-tested — it is validated on-device in Phase 2's manual smoke test (Task 9), which is the
- * only place the real Google authorization grant for `drive.appdata` is exercised before merge.
- *
- * Refresh tokens are persisted via [SecureKeyValueStore] (Keystore-wrapped); access tokens live in
- * memory only.
+ * [signIn] shows the Drive-permission consent once (a PendingIntent launched on the foreground
+ * activity). After that, [getAccessToken] re-mints access tokens silently — including from
+ * background work with no UI. None of this is unit-testable (it talks to Play services), so it is
+ * validated on-device in the manual smoke test.
  */
 internal class GoogleOAuthTokenProvider(
+    private val context: Context,
     private val secureKeyValueStore: SecureKeyValueStore,
-    private val httpExecutor: HttpExecutor,
-    private val clientId: String,
     private val scopes: List<String>,
     private val currentActivity: () -> Activity?,
 ) : OAuthTokenProvider {
-
-    private val json = Json { ignoreUnknownKeys = true }
 
     @Volatile
     private var cachedAccessToken: CachedToken? = null
@@ -46,164 +50,119 @@ internal class GoogleOAuthTokenProvider(
     private val signedIn = MutableStateFlow(false)
 
     override val isSignedIn: Flow<Boolean> = signedIn
-        .onStart { signedIn.value = secureKeyValueStore.get(KEY_REFRESH_TOKEN) != null }
+        .onStart { signedIn.value = secureKeyValueStore.get(KEY_CONNECTED) == "true" }
 
     override suspend fun signIn(): OAuthTokenProvider.Result {
-        val activity = currentActivity()
-            ?: return OAuthTokenProvider.Result.Failure(
-                BackupError.Unknown("Sign-in requires a foreground activity"),
-            )
-
         return try {
-            val option = GetGoogleIdOption.Builder()
-                .setServerClientId(clientId)
-                .setFilterByAuthorizedAccounts(false)
-                .build()
-            val request = GetCredentialRequest.Builder()
-                .addCredentialOption(option)
-                .build()
-
-            val response = CredentialManager.create(activity).getCredential(activity, request)
-            val credential = GoogleIdTokenCredential.createFrom(response.credential.data)
-
-            // Exchange the Google authorization grant for OAuth access + refresh tokens.
-            // NOTE: the exact grant acquisition for `drive.appdata` offline access is validated
-            // on-device in Task 9; the token-endpoint exchange below is the standard OAuth flow.
-            val tokens = exchangeAuthorizationCode(credential.idToken)
-                ?: return OAuthTokenProvider.Result.Failure(BackupError.AuthExpired)
-
-            val refreshToken = tokens.refreshToken
+            val result = authorize()
+            val token = result.accessToken
                 ?: return OAuthTokenProvider.Result.Failure(
-                    BackupError.Unknown("No refresh token returned"),
+                    BackupError.Unknown("Authorization granted no access token"),
                 )
-
-            val accountLabel = credential.id
-            secureKeyValueStore.put(KEY_REFRESH_TOKEN, refreshToken)
-            secureKeyValueStore.put(KEY_ACCOUNT_LABEL, accountLabel)
-            cacheAccessToken(tokens)
+            cacheToken(token)
+            secureKeyValueStore.put(KEY_CONNECTED, "true")
             signedIn.value = true
-            OAuthTokenProvider.Result.Success(accountLabel)
-        } catch (e: GetCredentialCancellationException) {
-            Timber.d(e, "GoogleOAuthTokenProvider: sign-in cancelled")
+            OAuthTokenProvider.Result.Success(ACCOUNT_LABEL)
+        } catch (e: ConsentCancelledException) {
+            Timber.d(e, "GoogleOAuthTokenProvider: consent cancelled")
             OAuthTokenProvider.Result.Cancelled
-        } catch (e: GetCredentialException) {
+        } catch (e: Exception) {
             Timber.w(e, "GoogleOAuthTokenProvider: sign-in failed")
             OAuthTokenProvider.Result.Failure(BackupError.Unknown(e.message ?: "Sign-in failed"))
         }
     }
 
     override suspend fun getAccessToken(): String? {
-        cachedAccessToken?.let { cached ->
-            if (!cached.isExpired()) return cached.value
-        }
+        cachedAccessToken?.let { if (!it.isExpired()) return it.value }
 
-        val refreshToken = secureKeyValueStore.get(KEY_REFRESH_TOKEN) ?: return null
-
-        val response = runCatching {
-            httpExecutor.execute(
-                HttpRequest(
-                    method = HttpRequest.Method.POST,
-                    url = TOKEN_ENDPOINT,
-                    body = HttpRequest.Body.Form(
-                        mapOf(
-                            "client_id" to clientId,
-                            "refresh_token" to refreshToken,
-                            "grant_type" to "refresh_token",
-                        ),
-                    ),
-                ),
-            )
-        }.getOrElse {
-            Timber.w(it, "GoogleOAuthTokenProvider: token refresh failed")
-            return null
-        }
-
-        if (response.status != HTTP_OK) {
-            // 400 invalid_grant means the grant was revoked server-side; drop the stale access token.
-            Timber.w("GoogleOAuthTokenProvider: refresh returned ${response.status}")
-            cachedAccessToken = null
-            return null
-        }
-
-        val tokens = runCatching { json.decodeFromString<TokenResponse>(response.bodyAsString()) }
-            .getOrElse {
-                Timber.w(it, "GoogleOAuthTokenProvider: malformed token response")
-                return null
+        return try {
+            val result = Identity.getAuthorizationClient(context)
+                .authorize(authorizationRequest())
+                .await()
+            val token = result.accessToken
+            if (result.hasResolution() || token == null) {
+                // Consent is needed again (e.g. revoked) — caller must re-run signIn().
+                null
+            } else {
+                cacheToken(token)
+                token
             }
-        cacheAccessToken(tokens)
-        return tokens.accessToken
+        } catch (e: Exception) {
+            Timber.w(e, "GoogleOAuthTokenProvider: getAccessToken failed")
+            null
+        }
     }
 
     override suspend fun revoke() {
-        val refreshToken = secureKeyValueStore.get(KEY_REFRESH_TOKEN)
-        if (refreshToken != null) {
-            runCatching {
-                httpExecutor.execute(
-                    HttpRequest(
-                        method = HttpRequest.Method.POST,
-                        url = "$REVOKE_ENDPOINT?token=$refreshToken",
-                    ),
-                )
-            }.onFailure { Timber.w(it, "GoogleOAuthTokenProvider: revoke call failed") }
-        }
-        // Always clear local state — we must never leave a dangling local credential.
-        secureKeyValueStore.remove(KEY_REFRESH_TOKEN)
-        secureKeyValueStore.remove(KEY_ACCOUNT_LABEL)
+        // No refresh token to revoke server-side; clear local state. The user can fully revoke the
+        // grant from their Google account settings (proper remote revoke lands in Phase 7).
+        secureKeyValueStore.remove(KEY_CONNECTED)
         cachedAccessToken = null
         signedIn.value = false
     }
 
-    private suspend fun exchangeAuthorizationCode(code: String): TokenResponse? {
-        val response = runCatching {
-            httpExecutor.execute(
-                HttpRequest(
-                    method = HttpRequest.Method.POST,
-                    url = TOKEN_ENDPOINT,
-                    body = HttpRequest.Body.Form(
-                        mapOf(
-                            "client_id" to clientId,
-                            "code" to code,
-                            "grant_type" to "authorization_code",
-                            "redirect_uri" to "",
-                            "scope" to scopes.joinToString(" "),
-                        ),
-                    ),
-                ),
-            )
-        }.getOrElse {
-            Timber.w(it, "GoogleOAuthTokenProvider: code exchange failed")
-            return null
-        }
-        if (response.status != HTTP_OK) {
-            Timber.w("GoogleOAuthTokenProvider: code exchange returned ${response.status}")
-            return null
-        }
-        return runCatching { json.decodeFromString<TokenResponse>(response.bodyAsString()) }
-            .getOrNull()
+    private suspend fun authorize(): AuthorizationResult {
+        val client = Identity.getAuthorizationClient(context)
+        val result = client.authorize(authorizationRequest()).await()
+        if (!result.hasResolution()) return result
+
+        val activity = currentActivity() as? ComponentActivity
+            ?: throw IllegalStateException("Sign-in requires a foreground activity")
+        val pendingIntent = result.pendingIntent
+            ?: throw IllegalStateException("Authorization needs consent but supplied no intent")
+        val data = launchConsent(activity, pendingIntent) ?: throw ConsentCancelledException()
+        return client.getAuthorizationResultFromIntent(data)
     }
 
-    private fun cacheAccessToken(tokens: TokenResponse) {
-        val expiresAt = System.currentTimeMillis() + (tokens.expiresIn * 1000) - EXPIRY_MARGIN_MS
-        cachedAccessToken = CachedToken(tokens.accessToken, expiresAt)
+    private fun authorizationRequest(): AuthorizationRequest = AuthorizationRequest.builder()
+        .setRequestedScopes(scopes.map { Scope(it) })
+        .build()
+
+    private suspend fun launchConsent(
+        activity: ComponentActivity,
+        pendingIntent: PendingIntent,
+    ): Intent? = withContext(Dispatchers.Main) {
+        suspendCancellableCoroutine { continuation ->
+            val key = "drive_auth_${System.nanoTime()}"
+            lateinit var launcher: ActivityResultLauncher<IntentSenderRequest>
+            launcher = activity.activityResultRegistry.register(
+                key,
+                ActivityResultContracts.StartIntentSenderForResult(),
+            ) { activityResult ->
+                launcher.unregister()
+                if (continuation.isActive) {
+                    val data = if (activityResult.resultCode == Activity.RESULT_OK) activityResult.data else null
+                    continuation.resume(data)
+                }
+            }
+            continuation.invokeOnCancellation { launcher.unregister() }
+            launcher.launch(IntentSenderRequest.Builder(pendingIntent.intentSender).build())
+        }
+    }
+
+    private fun cacheToken(token: String) {
+        cachedAccessToken = CachedToken(token, System.currentTimeMillis() + TOKEN_TTL_MS)
+    }
+
+    private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
+        addOnSuccessListener { continuation.resume(it) }
+        addOnFailureListener { continuation.resumeWithException(it) }
+        addOnCanceledListener { continuation.cancel() }
     }
 
     private data class CachedToken(val value: String, val expiresAtMillis: Long) {
         fun isExpired(): Boolean = System.currentTimeMillis() >= expiresAtMillis
     }
 
-    @Serializable
-    private data class TokenResponse(
-        @SerialName("access_token") val accessToken: String,
-        @SerialName("expires_in") val expiresIn: Long = 3600,
-        @SerialName("refresh_token") val refreshToken: String? = null,
-    )
+    private class ConsentCancelledException : Exception()
 
     companion object {
-        private const val TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
-        private const val REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
-        private const val KEY_REFRESH_TOKEN = "drive.refresh_token"
-        private const val KEY_ACCOUNT_LABEL = "drive.account_label"
-        private const val HTTP_OK = 200
-        private const val EXPIRY_MARGIN_MS = 60_000L
+        private const val KEY_CONNECTED = "drive.connected"
+
+        // TODO(Phase 3): surface the real account email (request the email scope) for the UI.
+        private const val ACCOUNT_LABEL = "Google Drive"
+
+        // Google access tokens last ~1h; refresh a little early to avoid using a stale one.
+        private const val TOKEN_TTL_MS = 45L * 60L * 1000L
     }
 }
