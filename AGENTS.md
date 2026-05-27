@@ -28,7 +28,7 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 ## Cross-Cutting Rules
 
 1. **Branch Isolation** — Every distinct task MUST have a dedicated branch. Never commit directly to `master`. Verify current branch before every commit. See [Branch Management](docs/agents/branch-management.md).
-2. **Follow code style conventions** — see [Code Style](docs/agents/code-style.md).
+2. **Follow code style conventions; run `./gradlew spotlessApply` before pushing** — formatting is spotless-enforced and CI's `spotlessCheck` gates the merge, but no local hook runs it. See [Code Style](docs/agents/code-style.md).
 3. **Strict Development Lifecycle**:
     - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
     - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/ui/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
