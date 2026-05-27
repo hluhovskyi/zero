@@ -59,6 +59,7 @@ class RemoteComponentEncapsulationDetector :
     companion object {
         private val FORBIDDEN_PACKAGE_PREFIXES = listOf(
             "okhttp3.",
+            "retrofit2.",
             "com.google.android.play.core.integrity.",
             "com.google.android.play.integrity.",
             "kotlinx.serialization.json.",
@@ -67,7 +68,7 @@ class RemoteComponentEncapsulationDetector :
         val ISSUE: Issue = Issue.create(
             id = "RemoteComponentEncapsulation",
             briefDescription = "RemoteComponent must not expose remote internals",
-            explanation = "OkHttp, Play Integrity, and kotlinx.serialization Json types are " +
+            explanation = "OkHttp, Retrofit, Play Integrity, and kotlinx.serialization Json types are " +
                 "internal implementation details of zero-remote. Exposing them violates module " +
                 "encapsulation. Only zero-api interfaces should be exposed. See zero-remote/AGENTS.md.",
             category = Category.CORRECTNESS,

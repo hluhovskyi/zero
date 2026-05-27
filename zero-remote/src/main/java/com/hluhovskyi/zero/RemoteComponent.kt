@@ -2,7 +2,8 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import com.hluhovskyi.zero.currencies.ExchangeRateService
-import com.hluhovskyi.zero.currencies.OkHttpFrankfurterExchangeRateService
+import com.hluhovskyi.zero.currencies.FrankfurterApi
+import com.hluhovskyi.zero.currencies.RetrofitExchangeRateService
 import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.feedback.OkHttpFeedbackService
 import com.hluhovskyi.zero.integrity.IntegrityTokenProvider
@@ -10,7 +11,10 @@ import com.hluhovskyi.zero.integrity.PlayIntegrityTokenProvider
 import dagger.BindsInstance
 import dagger.Provides
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
 import javax.inject.Scope
@@ -49,7 +53,7 @@ interface RemoteComponent {
 
     companion object {
 
-        private const val FRANKFURTER_ENDPOINT = "https://api.frankfurter.dev/v1"
+        private const val FRANKFURTER_ENDPOINT = "https://api.frankfurter.dev/"
 
         fun builder(dependencies: Dependencies): Builder = DaggerRemoteComponent.builder()
             .dependencies(dependencies)
@@ -115,14 +119,21 @@ interface RemoteComponent {
 
         @Provides
         @RemoteScope
-        internal fun exchangeRateService(
+        internal fun frankfurterApi(
             @ExchangeRateEndpoint endpoint: String,
             client: OkHttpClient,
             json: Json,
-        ): ExchangeRateService = OkHttpFrankfurterExchangeRateService(
-            endpoint = endpoint,
-            client = client,
-            json = json,
-        )
+        ): FrankfurterApi = Retrofit.Builder()
+            .baseUrl(endpoint)
+            .client(client)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(FrankfurterApi::class.java)
+
+        @Provides
+        @RemoteScope
+        internal fun exchangeRateService(
+            api: FrankfurterApi,
+        ): ExchangeRateService = RetrofitExchangeRateService(api)
     }
 }
