@@ -109,7 +109,7 @@ class CompositeCurrencyLoaderTest {
     @Test
     fun `today's persisted snapshot is reused without fetching`() = runTest {
         val store = RateSnapshotStore(FakeConfigurationRepository())
-        store.save(RateSnapshotStore.Stored(fetchedOn = "2026-05-26", base = "EUR", rates = mapOf("USD" to 1.16)))
+        store.save(RateSnapshotStore.Stored(fetchedOn = LocalDate(2026, 5, 26), base = "EUR", rates = mapOf("USD" to 1.16)))
         val service = FakeService(eurSnapshot(usd to 9.99))
 
         val rates = loader(FakeLoader(emptyMap()), service, FakeClock(LocalDate(2026, 5, 26)), store).ratesFor(usd)
@@ -121,7 +121,7 @@ class CompositeCurrencyLoaderTest {
     @Test
     fun `stale persisted snapshot is used when today's fetch fails`() = runTest {
         val store = RateSnapshotStore(FakeConfigurationRepository())
-        store.save(RateSnapshotStore.Stored(fetchedOn = "2026-05-25", base = "EUR", rates = mapOf("USD" to 1.16)))
+        store.save(RateSnapshotStore.Stored(fetchedOn = LocalDate(2026, 5, 25), base = "EUR", rates = mapOf("USD" to 1.16)))
 
         val rates = loader(FakeLoader(emptyMap()), FakeService(null), FakeClock(LocalDate(2026, 5, 26)), store).ratesFor(usd)
 

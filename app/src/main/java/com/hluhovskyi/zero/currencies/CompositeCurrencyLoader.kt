@@ -69,7 +69,7 @@ internal class CompositeCurrencyLoader(
 
     private suspend fun resolveForDay(today: LocalDate): ExchangeRateSnapshot? {
         val stored = store.load()
-        if (stored != null && stored.fetchedOn == today.toString()) {
+        if (stored != null && stored.fetchedOn == today) {
             return stored.toSnapshot()
         }
 
@@ -110,7 +110,7 @@ private fun RateSnapshotStore.Stored.toSnapshot(): ExchangeRateSnapshot = Exchan
 )
 
 private fun ExchangeRateSnapshot.toStored(day: LocalDate): RateSnapshotStore.Stored = RateSnapshotStore.Stored(
-    fetchedOn = day.toString(),
+    fetchedOn = day,
     base = base.value,
     rates = rates.entries.associate { (id, rate) -> id.value to rate.value.toDouble() },
 )

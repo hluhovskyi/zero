@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.currencies
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.firstOrDefault
 import com.hluhovskyi.zero.config.write
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -16,7 +17,12 @@ import timber.log.Timber
  */
 internal class RateSnapshotStore(
     private val configurationRepository: ConfigurationRepository,
-    private val json: Json = Json { ignoreUnknownKeys = true },
+    // Same setup as SyncSerializer / BackupEnvelopeSerializer; kotlinx.datetime types serialize as
+    // ISO-8601 via their built-in serializers, no SerializersModule needed.
+    private val json: Json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    },
 ) {
 
     suspend fun load(): Stored? {
@@ -41,7 +47,7 @@ internal class RateSnapshotStore(
 
     @Serializable
     data class Stored(
-        val fetchedOn: String,
+        val fetchedOn: LocalDate,
         val base: String,
         val rates: Map<String, Double>,
     )

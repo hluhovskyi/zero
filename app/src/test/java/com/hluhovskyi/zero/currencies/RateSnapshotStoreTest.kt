@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.currencies
 
 import com.hluhovskyi.zero.config.write
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -12,7 +13,7 @@ class RateSnapshotStoreTest {
     fun `save then load round-trips`() = runTest {
         val store = RateSnapshotStore(FakeConfigurationRepository())
         val stored = RateSnapshotStore.Stored(
-            fetchedOn = "2026-05-26",
+            fetchedOn = LocalDate(2026, 5, 26),
             base = "EUR",
             rates = mapOf("USD" to 1.16, "GBP" to 0.86),
         )
@@ -38,10 +39,10 @@ class RateSnapshotStoreTest {
     @Test
     fun `save overwrites the previous snapshot`() = runTest {
         val store = RateSnapshotStore(FakeConfigurationRepository())
-        store.save(RateSnapshotStore.Stored("2026-05-25", "EUR", mapOf("USD" to 1.10)))
+        store.save(RateSnapshotStore.Stored(LocalDate(2026, 5, 25), "EUR", mapOf("USD" to 1.10)))
 
-        store.save(RateSnapshotStore.Stored("2026-05-26", "EUR", mapOf("USD" to 1.16)))
+        store.save(RateSnapshotStore.Stored(LocalDate(2026, 5, 26), "EUR", mapOf("USD" to 1.16)))
 
-        assertEquals("2026-05-26", store.load()!!.fetchedOn)
+        assertEquals(LocalDate(2026, 5, 26), store.load()!!.fetchedOn)
     }
 }
