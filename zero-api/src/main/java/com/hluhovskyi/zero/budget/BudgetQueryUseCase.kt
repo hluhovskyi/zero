@@ -15,8 +15,7 @@ interface BudgetQueryUseCase {
 
     /**
      * Emits true when at least one expense category with a set budget is over budget for the
-     * current month. A single current-month [query] projected to a boolean — unset categories
-     * (`budgetId == null`) never count. Drives the over-budget dot on the Budget tab.
+     * current month. Categories without a set budget never count.
      */
     fun observeAnyOver(): Flow<Boolean>
 

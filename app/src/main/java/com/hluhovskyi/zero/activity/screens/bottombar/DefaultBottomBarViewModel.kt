@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -113,7 +114,7 @@ internal class DefaultBottomBarViewModel(
         coroutineScope.launch {
             combine(
                 navigator.state,
-                budgetQueryUseCase.observeAnyOver(),
+                budgetQueryUseCase.observeAnyOver().onStart { emit(false) },
             ) { navigatorState, isOver -> navigatorState to isOver }
                 .collectLatest { (navigatorState, isOver) ->
                     val bottomBarId = navigatorState.destination.toBottomBarId()

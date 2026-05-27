@@ -79,8 +79,6 @@ internal fun BottomBarView(
                                     tint = iconTint,
                                 )
                                 if (item.hasAlert) {
-                                    // 9.dp error dot + 2.dp surface halo ring (total 13.dp), per the
-                                    // design's NavBadge (9px dot, 2px surface boxShadow ring).
                                     Box(
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
