@@ -226,18 +226,19 @@ abstract class ApplicationComponent :
             incorrectStateDetector: IncorrectStateDetector,
             databaseComponent: DatabaseComponent,
             logger: Logger,
-        ): CurrencyComponent = CurrencyComponent.builder(
-            object : CurrencyComponent.Dependencies {
+        ): CurrencyComponent = CurrencyComponent.factory(
+            dependencies = object : CurrencyComponent.Dependencies {
                 override val resourceResolver = resourceResolver
-                override val androidUriResourceFactory = androidUriResourceFactory
                 override val localeProvider = localeProvider
                 override val exchangeRateService = exchangeRateService
                 override val configurationRepository = configurationRepository
                 override val zonedClock = zonedClock
                 override val incorrectStateDetector = incorrectStateDetector
-                override val databaseComponent = databaseComponent
+                override val currencyRepositoryTransformer = databaseComponent.currencyRepositoryTransformer
                 override val logger = logger
             },
+            ratesUri = androidUriResourceFactory.asset("exchange_rates.min.json"),
+            overridesUri = androidUriResourceFactory.asset("exchange_rate_overrides.min.json"),
         )
 
         @Provides
