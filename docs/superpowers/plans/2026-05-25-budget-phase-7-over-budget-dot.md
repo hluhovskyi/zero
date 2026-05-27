@@ -4,7 +4,7 @@
 
 **Goal:** Show a red dot on the Budget tab in the bottom navigation whenever at least one expense category is over its set budget for the current month.
 
-**Architecture:** Reuse the existing `BudgetUseCase` (no new use case). Add a focused `observeAnyOver(type): Flow<Boolean>` method that resolves the current month and runs a single `BudgetQueryUseCase.query` + over-check — keeping current-month resolution and the over-budget check in the domain layer (the heavy `observe()` with its previous/trailing queries is not reused). `BudgetUseCase` is provided at `@ActivityScope` via a `BudgetComponent.useCase(...)` companion factory (mirroring the existing `BudgetComponent.queryUseCase(...)`) so `BottomBarComponent` can consume it. `BottomBarViewModel.Item` gains `hasAlert: Boolean`, set only on the Budget tab; `BottomBarViewProvider` renders the dot per the design's `NavBadge`.
+**Architecture:** Reuse the existing `BudgetQueryUseCase` (no new use case) — the over-budget check is a pure projection of the `Budgeted` rows it already produces, so it belongs next to that producer. Add a focused `observeAnyOver(): Flow<Boolean>` method that resolves the current month (via an injected `PeriodResolver`) and runs a single `query` + over-check. `BudgetQueryUseCase` is already exposed in `ActivityComponent.Dependencies`, so `BottomBarComponent` consumes it with no new DI — only `DefaultBudgetQueryUseCase` gains a `PeriodResolver` (built in the existing `BudgetComponent.queryUseCase(...)` factory from `clock`/`zoneProvider`). `BottomBarViewModel.Item` gains `hasAlert: Boolean`, set only on the Budget tab; `BottomBarViewProvider` renders the dot per the design's `NavBadge`.
 
 **Tech Stack:** Kotlin, Dagger, Jetpack Compose, kotlinx.coroutines Flow, JUnit, Mockito, Compose UI test.
 
@@ -12,141 +12,109 @@
 
 ---
 
-### Task 1: Add `observeAnyOver` to `BudgetUseCase` + unit tests
+### Task 1: Add `observeAnyOver` to `BudgetQueryUseCase` + unit tests
 
 **Files:**
-- Modify: `zero-api/src/main/java/com/hluhovskyi/zero/budget/BudgetUseCase.kt` — add method to interface + `Noop`.
-- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/budget/DefaultBudgetUseCase.kt` — implement.
-- Test: `zero-core/src/test/java/com/hluhovskyi/zero/budget/DefaultBudgetUseCaseTest.kt` — add cases (mirror existing Mockito + `row(...)` helper idiom in that file).
+- Modify: `zero-api/src/main/java/com/hluhovskyi/zero/budget/BudgetQueryUseCase.kt` — add method to interface + `Noop`.
+- Modify: `zero-core/src/main/java/com/hluhovskyi/zero/budget/DefaultBudgetQueryUseCase.kt` — inject `PeriodResolver`, implement.
+- Test: `zero-core/src/test/java/com/hluhovskyi/zero/budget/DefaultBudgetQueryUseCaseTest.kt` — add cases (mirror the existing Mockito + `category()`/`budget()`/`spending()` helpers in that file).
 
-- [ ] **Step 1: Write failing tests** in `DefaultBudgetUseCaseTest.kt` (use the existing `useCase()`, `periodResolver`, and `row(...)` helpers; `observeAnyOver` only queries the current period, so only the `currentStart, currentEnd` query needs stubbing):
+- [ ] **Step 1: Write failing tests** in `DefaultBudgetQueryUseCaseTest.kt`. The use case under test joins three flows, each wrapped in `onStartWithEmptyList()`, so the first combined emission is empty — assert on `.last()` (the settled value), exactly like the existing `query` tests. Add a fake `PeriodResolver` whose `currentMonth()` returns `from to to`:
 
 ```kotlin
 @Test
 fun `observeAnyOver emits true when a set budget is over spent`() = runTest {
-    whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-        flowOf(listOf(row("c1", budgetId = "b1", budgeted = "100", spent = "150"))),
-    )
-    assertTrue(useCase().observeAnyOver(type).first())
-}
+    whenever(categoriesQueryUseCase.queryAll()).thenReturn(flowOf(listOf(category("c1"))))
+    whenever(budgetRepository.query(any<BudgetRepository.Criteria<List<BudgetRepository.Budget>>>()))
+        .thenReturn(flowOf(listOf(budget("b1", "c1", BigDecimal("100")))))
+    whenever(categorySpendingUseCase.query(any()))
+        .thenReturn(flowOf(listOf(spending("c1", BigDecimal("150")))))
 
-@Test
-fun `observeAnyOver emits false when set budgets are within limit`() = runTest {
-    whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-        flowOf(listOf(row("c1", budgetId = "b1", budgeted = "100", spent = "80"))),
-    )
-    assertFalse(useCase().observeAnyOver(type).first())
+    assertTrue(useCase().observeAnyOver().last())
 }
-
-@Test
-fun `observeAnyOver ignores unset categories even when spent is positive`() = runTest {
-    whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-        flowOf(listOf(row("u1", budgetId = null, budgeted = "0", spent = "999"))),
-    )
-    assertFalse(useCase().observeAnyOver(type).first())
-}
+// + within-limit → false, and unset-category-with-spend → false (budgetId == null never counts)
 ```
 
 - [ ] **Step 2: Run to verify they fail**
 
-Run: `./gradlew :zero-core:testDebugUnitTest --tests "*DefaultBudgetUseCaseTest*"`
+Run: `./gradlew :zero-core:testDebugUnitTest --tests "*DefaultBudgetQueryUseCaseTest*"`
 Expected: FAIL — `observeAnyOver` unresolved.
 
-- [ ] **Step 3: Add to the `BudgetUseCase` interface** (after `observe(...)`):
+- [ ] **Step 3: Add to the `BudgetQueryUseCase` interface** (after `query(...)`):
 
 ```kotlin
 /**
  * Emits true when at least one expense category with a set budget is over budget for the
- * current month. Lightweight relative to [observe] — a single current-period query, no
- * previous/trailing windows. Drives the over-budget dot on the Budget tab.
+ * current month. A single current-month [query] projected to a boolean — unset categories
+ * (`budgetId == null`) never count. Drives the over-budget dot on the Budget tab.
  */
-fun observeAnyOver(type: BudgetType = BudgetType.EXPENSE): Flow<Boolean>
+fun observeAnyOver(): Flow<Boolean>
 ```
 
 and to `Noop`:
 
 ```kotlin
-override fun observeAnyOver(type: BudgetType): Flow<Boolean> = emptyFlow()
+override fun observeAnyOver(): Flow<Boolean> = flowOf(false)
 ```
 
-- [ ] **Step 4: Implement in `DefaultBudgetUseCase`** (the `type` param is accepted for parity with `observe`; the current `BudgetQueryUseCase.query` is EXPENSE-only, so it is not yet threaded further — matching how `observe` treats `type`):
+- [ ] **Step 4: Implement in `DefaultBudgetQueryUseCase`** — add a `private val periodResolver: PeriodResolver` constructor param and:
 
 ```kotlin
-override fun observeAnyOver(type: BudgetType): Flow<Boolean> {
-    val current = periodFor(0)
-    return budgetQueryUseCase.query(current.start, current.end).map { rows ->
+override fun observeAnyOver(): Flow<Boolean> {
+    val (start, end) = periodResolver.currentMonth()
+    return query(start, end).map { rows ->
         rows.any { it.budgetId != null && it.spent > it.budgeted }
     }
 }
 ```
 
-Add imports as needed: `kotlinx.coroutines.flow.map`. (`periodFor(0)` already exists and returns the current month via `PeriodResolver`.)
+Add `import kotlinx.coroutines.flow.map`.
 
 - [ ] **Step 5: Run to verify pass**
 
-Run: `./gradlew :zero-core:testDebugUnitTest --tests "*DefaultBudgetUseCaseTest*"`
+Run: `./gradlew :zero-core:testDebugUnitTest --tests "*DefaultBudgetQueryUseCaseTest*"`
 Expected: PASS (existing + 3 new).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add zero-api/src/main/java/com/hluhovskyi/zero/budget/BudgetUseCase.kt \
-        zero-core/src/main/java/com/hluhovskyi/zero/budget/DefaultBudgetUseCase.kt \
-        zero-core/src/test/java/com/hluhovskyi/zero/budget/DefaultBudgetUseCaseTest.kt
-git commit -m "budget(phase 7): add BudgetUseCase.observeAnyOver for current month"
+git add zero-api/src/main/java/com/hluhovskyi/zero/budget/BudgetQueryUseCase.kt \
+        zero-core/src/main/java/com/hluhovskyi/zero/budget/DefaultBudgetQueryUseCase.kt \
+        zero-core/src/test/java/com/hluhovskyi/zero/budget/DefaultBudgetQueryUseCaseTest.kt
+git commit -m "budget(phase 7): add BudgetQueryUseCase.observeAnyOver for current month"
 ```
 
 ---
 
-### Task 2: Provide `BudgetUseCase` at `@ActivityScope`
+### Task 2: Supply `PeriodResolver` to the query factory + consume from the bottom bar
+
+No new `@ActivityScope` provision — `budgetQueryUseCase` is already in `ActivityComponent.Dependencies`, so the bottom bar consumes it directly. The only wiring is supplying the new `PeriodResolver` to `DefaultBudgetQueryUseCase` through its existing factory.
 
 **Files:**
-- Modify: `zero-core/.../budget/BudgetComponent.kt` — add a `useCase(...)` factory to the `companion object`, mirroring the existing `queryUseCase(...)`.
-- Modify: `app/.../activity/ActivityComponent.kt` — add `@Provides @ActivityScope fun budgetUseCase(...)`.
-- Modify: `app/.../activity/screens/bottombar/BottomBarComponent.kt` — add `budgetUseCase` to `Dependencies` + pass into the `viewModel(...)` provider.
+- Modify: `zero-core/.../budget/BudgetComponent.kt` — `queryUseCase(...)` factory gains `clock`/`zoneProvider`, builds `DefaultPeriodResolver`.
+- Modify: `app/.../ApplicationComponent.kt` — pass `clock`/`zoneProvider` (both already provider params) to `BudgetComponent.queryUseCase(...)`.
+- Modify: `app/.../activity/screens/bottombar/BottomBarComponent.kt` — add `budgetQueryUseCase` to `Dependencies` + pass into the `viewModel(...)` provider.
 
-- [ ] **Step 1: Add factory to `BudgetComponent.companion`** (next to `queryUseCase`; `Clock`/`ZoneProvider` already imported):
+- [ ] **Step 1: Extend the `queryUseCase` factory** (`Clock`/`ZoneProvider` already imported in `BudgetComponent.kt`):
 
 ```kotlin
-fun useCase(
+fun queryUseCase(
+    categoriesQueryUseCase: CategoriesQueryUseCase,
     budgetRepository: BudgetRepository,
-    budgetQueryUseCase: BudgetQueryUseCase,
+    categorySpendingUseCase: CategorySpendingUseCase,
     clock: Clock,
     zoneProvider: ZoneProvider,
-): BudgetUseCase = DefaultBudgetUseCase(
+): BudgetQueryUseCase = DefaultBudgetQueryUseCase(
+    categoriesQueryUseCase = categoriesQueryUseCase,
     budgetRepository = budgetRepository,
-    budgetQueryUseCase = budgetQueryUseCase,
+    categorySpendingUseCase = categorySpendingUseCase,
     periodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider),
 )
 ```
 
-- [ ] **Step 2: Provide at `@ActivityScope`** in `ActivityComponent.Module` (add `import com.hluhovskyi.zero.budget.BudgetUseCase`):
+- [ ] **Step 2: Pass `clock`/`zoneProvider`** at the single call site — `ApplicationComponent.budgetQueryUseCase` (both params are already declared on that `@Provides`).
 
-```kotlin
-@Provides
-@ActivityScope
-fun budgetUseCase(
-    budgetRepository: BudgetRepository,
-    budgetQueryUseCase: BudgetQueryUseCase,
-    clock: Clock,
-    zoneProvider: ZoneProvider,
-): BudgetUseCase = BudgetComponent.useCase(
-    budgetRepository = budgetRepository,
-    budgetQueryUseCase = budgetQueryUseCase,
-    clock = clock,
-    zoneProvider = zoneProvider,
-)
-```
-
-(`budgetRepository`, `budgetQueryUseCase`, `clock`, `zoneProvider` are all already in `ActivityComponent.Dependencies`.)
-
-- [ ] **Step 3: Extend `BottomBarComponent`** — add to `Dependencies`:
-
-```kotlin
-val budgetUseCase: BudgetUseCase
-```
-
-add the param to the `viewModel(...)` `@Provides`, pass it into `DefaultBottomBarViewModel(...)`, and `import com.hluhovskyi.zero.budget.BudgetUseCase`.
+- [ ] **Step 3: Extend `BottomBarComponent`** — add `val budgetQueryUseCase: BudgetQueryUseCase` to `Dependencies`, add the param to the `viewModel(...)` `@Provides`, pass it into `DefaultBottomBarViewModel(...)`, and `import com.hluhovskyi.zero.budget.BudgetQueryUseCase`. (`ActivityComponent` already satisfies `budgetQueryUseCase`.)
 
 - [ ] **Step 4:** Build deferred to end of Task 3 (VM constructor param lands there). Commit combined with Task 3.
 
@@ -156,7 +124,7 @@ add the param to the `viewModel(...)` `@Provides`, pass it into `DefaultBottomBa
 
 **Files:**
 - Modify: `app/.../bottombar/BottomBarViewModel.kt` — add `hasAlert: Boolean = false` to `Item`.
-- Modify: `app/.../bottombar/DefaultBottomBarViewModel.kt` — accept `budgetUseCase`, combine `observeAnyOver()` with navigator state, set `hasAlert` on the Budget item only.
+- Modify: `app/.../bottombar/DefaultBottomBarViewModel.kt` — accept `budgetQueryUseCase`, combine `observeAnyOver()` with navigator state, set `hasAlert` on the Budget item only.
 
 - [ ] **Step 1: Add field to `Item`**
 
@@ -170,14 +138,14 @@ data class Item(
 )
 ```
 
-- [ ] **Step 2: Update `DefaultBottomBarViewModel`** — add constructor param `private val budgetUseCase: BudgetUseCase` and rewrite `attach()` to combine the over-budget flow with navigator state:
+- [ ] **Step 2: Update `DefaultBottomBarViewModel`** — add constructor param `private val budgetQueryUseCase: BudgetQueryUseCase` and rewrite `attach()` to combine the over-budget flow with navigator state:
 
 ```kotlin
 override fun attach(): Closeable = Closeables.of {
     coroutineScope.launch {
         combine(
             navigator.state,
-            budgetUseCase.observeAnyOver(),
+            budgetQueryUseCase.observeAnyOver(),
         ) { navigatorState, isOver -> navigatorState to isOver }
             .collectLatest { (navigatorState, isOver) ->
                 val bottomBarId = navigatorState.destination.toBottomBarId()
@@ -200,7 +168,7 @@ override fun attach(): Closeable = Closeables.of {
 }
 ```
 
-Add imports: `kotlinx.coroutines.flow.combine`, `com.hluhovskyi.zero.budget.BudgetUseCase`.
+Add imports: `kotlinx.coroutines.flow.combine`, `com.hluhovskyi.zero.budget.BudgetQueryUseCase`.
 
 - [ ] **Step 3: Build the app module**
 
@@ -338,8 +306,8 @@ git commit -m "docs(budget): mark Budget feature complete (phase 7 shipped)"
 
 ## Self-Review Notes
 
-- **Spec coverage:** reuse `BudgetUseCase` via new `observeAnyOver` (T1) + unit tests (T1) + `@ActivityScope` provision (T2) + `hasAlert` only on Budget tab (T3) + dot render matching design tokens (T4) + single E2E asserting visible→cleared (T5) + roadmap flip (T6). Phase 4 order untouched; no tap-nav change. ✅
-- **No new use case:** reuses `BudgetUseCase`; no derivation in the VM (it consumes a `Flow<Boolean>`). ✅
+- **Spec coverage:** reuse `BudgetQueryUseCase` via new `observeAnyOver` (T1) + unit tests (T1) + factory/consumer wiring, no new DI provision (T2) + `hasAlert` only on Budget tab (T3) + dot render matching design tokens (T4) + single E2E asserting visible→cleared (T5) + roadmap flip (T6). Phase 4 order untouched; no tap-nav change. ✅
+- **No new use case:** reuses `BudgetQueryUseCase` (already activity-scoped); no derivation in the VM (it consumes a `Flow<Boolean>`). ✅
 - **Out of scope:** Income budgets (Phase 8) — not started.
 - **No new hex:** dot uses `ZeroTheme.colors.error` and `surfaceContainerLowest`; no literals.
 - **Type consistency:** `observeAnyOver(type): Flow<Boolean>`, `Item.hasAlert`, factory `useCase(budgetRepository, budgetQueryUseCase, clock, zoneProvider)`, contentDescription `"Over budget"` used identically across tasks.

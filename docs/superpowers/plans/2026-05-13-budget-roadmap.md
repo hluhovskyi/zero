@@ -24,7 +24,7 @@ Update the **Status** column when a phase merges. Acceptable values:
 | 4 | [Summary + progress](2026-05-13-budget-phase-4-summary-progress.md) | `SummaryBar` donut, `BudgetCard` progress bar, sort order (over → in-progress by % → unset) | ✅ Merged (PR #234) |
 | 5 | [Over-budget actions](2026-05-13-budget-phase-5-over-budget-actions.md) | `BudgetOverComponent` — Choice → Reallocate sub-view → Increase sub-view | ✅ Merged (PR #250) |
 | 6 | [Ordering + remove](2026-05-13-budget-phase-6-ordering-remove.md) | Sort unset categories by 3-month avg spend; remove (trash in edit sheet) → confirm → drop for this month | ✅ Merged (PR #258) |
-| 7 | [Over-budget dot](2026-05-25-budget-phase-7-over-budget-dot.md) | Over-budget notification dot on the Budget tab — `BudgetUseCase.observeAnyOver` + `BottomBarViewModel.Item.hasAlert` | ✅ Merged (PR #268) |
+| 7 | [Over-budget dot](2026-05-25-budget-phase-7-over-budget-dot.md) | Over-budget notification dot on the Budget tab — `BudgetQueryUseCase.observeAnyOver` + `BottomBarViewModel.Item.hasAlert` | ✅ Merged (PR #268) |
 | 8 | _Income budgets_ | Not yet planned (no design) | ☐ Pending |
 
 **Out of scope of this roadmap** (separate plans when designed):

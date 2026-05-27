@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.activity.navigation.Navigator
-import com.hluhovskyi.zero.budget.BudgetUseCase
+import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -33,7 +33,7 @@ internal abstract class BottomBarComponent : AttachableViewComponent {
     interface Dependencies {
         val imageLoader: ImageLoader
         val androidUriResourceFactory: AndroidUriResourceFactory
-        val budgetUseCase: BudgetUseCase
+        val budgetQueryUseCase: BudgetQueryUseCase
     }
 
     companion object {
@@ -59,11 +59,11 @@ internal abstract class BottomBarComponent : AttachableViewComponent {
         fun viewModel(
             androidUriResourceFactory: AndroidUriResourceFactory,
             navigator: Navigator,
-            budgetUseCase: BudgetUseCase,
+            budgetQueryUseCase: BudgetQueryUseCase,
         ): BottomBarViewModel = DefaultBottomBarViewModel(
             androidUriResourceFactory = androidUriResourceFactory,
             navigator = navigator,
-            budgetUseCase = budgetUseCase,
+            budgetQueryUseCase = budgetQueryUseCase,
         )
 
         @Provides

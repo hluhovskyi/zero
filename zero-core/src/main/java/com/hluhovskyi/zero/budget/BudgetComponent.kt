@@ -49,20 +49,12 @@ abstract class BudgetComponent : AttachableViewComponent {
             categoriesQueryUseCase: CategoriesQueryUseCase,
             budgetRepository: BudgetRepository,
             categorySpendingUseCase: CategorySpendingUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): BudgetQueryUseCase = DefaultBudgetQueryUseCase(
             categoriesQueryUseCase = categoriesQueryUseCase,
             budgetRepository = budgetRepository,
             categorySpendingUseCase = categorySpendingUseCase,
-        )
-
-        fun useCase(
-            budgetRepository: BudgetRepository,
-            budgetQueryUseCase: BudgetQueryUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
-        ): BudgetUseCase = DefaultBudgetUseCase(
-            budgetRepository = budgetRepository,
-            budgetQueryUseCase = budgetQueryUseCase,
             periodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider),
         )
 

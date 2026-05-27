@@ -3,7 +3,7 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.Destinations
 import com.hluhovskyi.zero.activity.navigation.Navigator
-import com.hluhovskyi.zero.budget.BudgetUseCase
+import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
@@ -21,7 +21,7 @@ import java.io.Closeable
 internal class DefaultBottomBarViewModel(
     private val androidUriResourceFactory: AndroidUriResourceFactory,
     private val navigator: Navigator,
-    private val budgetUseCase: BudgetUseCase,
+    private val budgetQueryUseCase: BudgetQueryUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : BottomBarViewModel {
 
@@ -113,7 +113,7 @@ internal class DefaultBottomBarViewModel(
         coroutineScope.launch {
             combine(
                 navigator.state,
-                budgetUseCase.observeAnyOver(),
+                budgetQueryUseCase.observeAnyOver(),
             ) { navigatorState, isOver -> navigatorState to isOver }
                 .collectLatest { (navigatorState, isOver) ->
                     val bottomBarId = navigatorState.destination.toBottomBarId()

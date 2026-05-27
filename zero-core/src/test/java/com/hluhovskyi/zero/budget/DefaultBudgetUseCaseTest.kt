@@ -332,36 +332,6 @@ class DefaultBudgetUseCaseTest {
         assertEquals(200f / 300f, state.summary.overallPct, 0.0001f)
     }
 
-    // ── observeAnyOver ─────────────────────────────────────────────────────────
-    // Lightweight current-month-only signal that drives the bottom-bar dot.
-
-    @Test
-    fun `observeAnyOver emits true when a set budget is over spent`() = runTest {
-        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-            flowOf(listOf(row("c1", budgetId = "b1", budgeted = "100", spent = "150"))),
-        )
-
-        assertTrue(useCase().observeAnyOver(type).first())
-    }
-
-    @Test
-    fun `observeAnyOver emits false when set budgets are within limit`() = runTest {
-        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-            flowOf(listOf(row("c1", budgetId = "b1", budgeted = "100", spent = "80"))),
-        )
-
-        assertFalse(useCase().observeAnyOver(type).first())
-    }
-
-    @Test
-    fun `observeAnyOver ignores unset categories even when spent is positive`() = runTest {
-        whenever(budgetQueryUseCase.query(currentStart, currentEnd)).thenReturn(
-            flowOf(listOf(row("u1", budgetId = null, budgeted = "0", spent = "999"))),
-        )
-
-        assertFalse(useCase().observeAnyOver(type).first())
-    }
-
     private fun row(
         categoryId: String,
         budgetId: String?,

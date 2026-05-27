@@ -313,6 +313,8 @@ abstract class ApplicationComponent :
                 clock = clock,
                 zoneProvider = zoneProvider,
             ),
+            clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides

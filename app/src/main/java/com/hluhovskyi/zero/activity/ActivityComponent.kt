@@ -13,7 +13,6 @@ import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
-import com.hluhovskyi.zero.budget.BudgetUseCase
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.over.BudgetOverComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
@@ -204,20 +203,6 @@ abstract class ActivityComponent :
         fun budgetOverComponentBuilder(
             component: ActivityComponent,
         ): BudgetOverComponent.Builder = BudgetOverComponent.builder(component)
-
-        @Provides
-        @ActivityScope
-        fun budgetUseCase(
-            budgetRepository: BudgetRepository,
-            budgetQueryUseCase: BudgetQueryUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
-        ): BudgetUseCase = BudgetComponent.useCase(
-            budgetRepository = budgetRepository,
-            budgetQueryUseCase = budgetQueryUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
-        )
 
         @Provides
         fun categoryPickerComponentBuilder(
