@@ -6,10 +6,11 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.colors.schemeForOrGrey
 import com.hluhovskyi.zero.common.Amount
-import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
@@ -22,8 +23,6 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +39,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import java.io.Closeable
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -58,8 +56,9 @@ internal class DefaultTransactionViewModel(
     private val transactionFilterApplicator: TransactionFilterApplicator,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
-) : TransactionViewModel {
+    private val dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    TransactionViewModel {
 
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
     override val state: Flow<TransactionViewModel.State> = mutableState
@@ -77,7 +76,7 @@ internal class DefaultTransactionViewModel(
 
             is TransactionViewModel.Action.LoadMore -> {
                 if (mutableState.value.searchQuery.isBlank()) {
-                    coroutineScope.launch {
+                    scope.launch(dispatchers.io()) {
                         loadMoreTrigger.emit(Unit)
                     }
                 }
@@ -104,7 +103,7 @@ internal class DefaultTransactionViewModel(
 
             is TransactionViewModel.Action.DeleteSelected -> {
                 val ids = mutableState.value.selectedIds
-                coroutineScope.launch {
+                scope.launch(dispatchers.io()) {
                     ids.forEach { transactionRepository.delete(it) }
                 }
                 mutableState.update { it.copy(selectedIds = emptySet()) }
@@ -151,8 +150,8 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
+    override fun attachOnMain() {
+        scope.launch(dispatchers.io()) {
             launch {
                 transactionFilterUseCase.state.collect { useCaseState ->
                     if (useCaseState is TransactionFilterUseCase.State.Applied) {
