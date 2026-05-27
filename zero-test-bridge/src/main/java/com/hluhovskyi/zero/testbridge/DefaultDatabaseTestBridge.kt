@@ -100,6 +100,56 @@ internal class DefaultDatabaseTestBridge(
         )
     }
 
+    override suspend fun seedExpenses() {
+        currentUserRepository.query().first()
+
+        val iconId = IconRepository.unknownCategoryIconId()
+        val colorId = Id.Known("blue")
+        val currencyId = Id.Known("USD")
+        val accountId = Id.Known("test-account")
+        val categoryId = Id.Known("test-category")
+
+        accountRepository.insert(
+            AccountRepository.AccountInsert(
+                id = accountId,
+                name = "Wallet",
+                currencyId = currencyId,
+                iconId = iconId,
+                colorId = colorId,
+                initialBalance = Amount(BigDecimal.ZERO),
+                category = AccountCategory.CASH,
+            ),
+        )
+
+        categoryRepository.insert(
+            CategoryRepository.CategoryInsert(
+                id = categoryId,
+                parentCategoryId = Id.Unknown,
+                name = "Food",
+                iconId = iconId,
+                colorId = colorId,
+                type = CategoryType.EXPENSE,
+            ),
+        )
+
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val noonToday = LocalDateTime(today.year, today.month, today.dayOfMonth, 12, 0)
+        listOf("42" to "expense-42", "99" to "expense-99").forEach { (amount, id) ->
+            transactionRepository.insert(
+                TransactionRepository.Transaction.Expense(
+                    id = Id.Known(id),
+                    amount = Amount(BigDecimal(amount)),
+                    accountId = accountId,
+                    currencyId = currencyId,
+                    dateTime = noonToday,
+                    updatedDateTime = noonToday,
+                    categoryId = categoryId,
+                    rate = Rate.Same,
+                ),
+            )
+        }
+    }
+
     override suspend fun seedBudgetOverScenario() {
         // Triggering the user query materializes the default category presets
         // (Food & Drink, Transport, ...) which the scenario below relies on.

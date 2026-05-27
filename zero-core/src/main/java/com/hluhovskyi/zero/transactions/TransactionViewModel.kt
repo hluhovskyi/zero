@@ -16,8 +16,10 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data class SelectTransaction(val item: Item.Transaction) : Action
         data object LoadMore : Action
         data class UpdateSearchQuery(val query: String) : Action
-        data class DeleteTransaction(val id: Id.Known) : Action
-        data class DuplicateTransaction(val id: Id.Known) : Action
+        data class ToggleSelection(val id: Id.Known) : Action
+        data object ExitSelection : Action
+        data object DeleteSelected : Action
+        data object DuplicateSelected : Action
 
         sealed interface Filter : Action {
             data object Open : Filter
@@ -33,7 +35,13 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         val transactions: List<Item> = emptyList(),
         val searchQuery: String = "",
         val activeFilter: TransactionFilter = TransactionFilter(),
-    )
+        val selectedIds: Set<Id.Known> = emptySet(),
+    ) {
+        val inSelectionMode: Boolean = selectedIds.isNotEmpty()
+        val selectionCount: Int = selectedIds.size
+
+        fun isSelected(id: Id.Known): Boolean = id in selectedIds
+    }
 
     @Stable
     sealed interface Item {

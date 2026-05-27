@@ -13,4 +13,12 @@ interface DatabaseTestBridge {
      * Used by Phase 5 (over-budget Reallocate / Increase) e2e tests.
      */
     suspend fun seedBudgetOverScenario()
+
+    /**
+     * Seeds a Wallet account, a "Food" expense category, and two expenses
+     * ($42 and $99) so the transaction list has selectable rows without going
+     * through the (separately-tested) UI creation flow. Used by the
+     * batch-select removal e2e test.
+     */
+    suspend fun seedExpenses()
 }
