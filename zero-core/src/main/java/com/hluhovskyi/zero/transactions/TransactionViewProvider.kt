@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
@@ -53,7 +56,6 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
-import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
@@ -63,6 +65,10 @@ import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.coroutines.flow.drop
+
+// Shared height for the search/filter header and the selection bar so the
+// list below them doesn't jump vertically when selection mode toggles.
+private val HeaderBarHeight = 64.dp
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -96,8 +102,11 @@ private fun TransactionView(
     onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
-    var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     val lazyListState = rememberLazyListState()
+
+    BackHandler(enabled = state.inSelectionMode) {
+        viewModel.perform(TransactionViewModel.Action.ExitSelection)
+    }
 
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -133,11 +142,19 @@ private fun TransactionView(
             .focusTarget(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            if (displayConfig.showSearchBar || displayConfig.showFilterButton) {
+            if (state.inSelectionMode) {
+                SelectionBar(
+                    count = state.selectionCount,
+                    onClose = { viewModel.perform(TransactionViewModel.Action.ExitSelection) },
+                    onDuplicate = { viewModel.perform(TransactionViewModel.Action.DuplicateSelected) },
+                    onDelete = { viewModel.perform(TransactionViewModel.Action.DeleteSelected) },
+                )
+            } else if (displayConfig.showSearchBar || displayConfig.showFilterButton) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .height(HeaderBarHeight)
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (displayConfig.showSearchBar) {
@@ -167,7 +184,7 @@ private fun TransactionView(
             }
 
             // Active filter chips
-            if (state.activeFilter.isActive) {
+            if (!state.inSelectionMode && state.activeFilter.isActive) {
                 FilterChipsRow(
                     filter = state.activeFilter,
                     onRemovePeriod = { viewModel.perform(TransactionViewModel.Action.Filter.RemovePeriod) },
@@ -257,17 +274,16 @@ private fun TransactionView(
                                     transaction = transaction,
                                     imageLoader = imageLoader,
                                     amountFormatter = amountFormatter,
-                                    expanded = expandedItemId == transaction.id,
-                                    onSelect = { viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction)) },
-                                    onLongPress = { expandedItemId = transaction.id },
-                                    onDismissMenu = { expandedItemId = null },
-                                    onDuplicate = {
-                                        viewModel.perform(TransactionViewModel.Action.DuplicateTransaction(transaction.id))
-                                        expandedItemId = null
+                                    selected = state.isSelected(transaction.id),
+                                    onClick = {
+                                        if (state.inSelectionMode) {
+                                            viewModel.perform(TransactionViewModel.Action.ToggleSelection(transaction.id))
+                                        } else {
+                                            viewModel.perform(TransactionViewModel.Action.SelectTransaction(transaction))
+                                        }
                                     },
-                                    onDelete = {
-                                        viewModel.perform(TransactionViewModel.Action.DeleteTransaction(transaction.id))
-                                        expandedItemId = null
+                                    onLongPress = {
+                                        viewModel.perform(TransactionViewModel.Action.ToggleSelection(transaction.id))
                                     },
                                 )
                         }
@@ -276,7 +292,7 @@ private fun TransactionView(
             }
         }
 
-        if (displayConfig.showFab) {
+        if (displayConfig.showFab && !state.inSelectionMode) {
             ZeroFab(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -296,18 +312,15 @@ private fun TransactionRow(
     transaction: TransactionViewModel.Item.Transaction,
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
-    expanded: Boolean,
-    onSelect: () -> Unit,
+    selected: Boolean,
+    onClick: () -> Unit,
     onLongPress: () -> Unit,
-    onDismissMenu: () -> Unit,
-    onDuplicate: () -> Unit,
-    onDelete: () -> Unit,
 ) {
     val cardShape = RoundedCornerShape(12.dp)
     val contentModifier = Modifier
         .fillMaxWidth()
         .combinedClickable(
-            onClick = onSelect,
+            onClick = onClick,
             onLongClick = onLongPress,
         )
         .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -328,6 +341,7 @@ private fun TransactionRow(
             is TransactionViewModel.Item.Transaction.Expense ->
                 TransactionExpenseView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     categoryName = transaction.categoryName,
                     amount = amountFormatter.format(
                         amount = transaction.amount,
@@ -359,6 +373,7 @@ private fun TransactionRow(
             is TransactionViewModel.Item.Transaction.Income -> {
                 TransactionIncomeView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     categoryName = transaction.categoryName,
                     amount = amountFormatter.format(
                         amount = transaction.amount,
@@ -391,6 +406,7 @@ private fun TransactionRow(
             is TransactionViewModel.Item.Transaction.Transfer -> {
                 TransactionTransferView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     sourceAccountName = transaction.accountName,
                     targetAccountName = transaction.targetAccountName,
                     sourceAmount = amountFormatter.format(
@@ -412,42 +428,100 @@ private fun TransactionRow(
                 )
             }
         }
+    }
+}
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissMenu,
+@Composable
+private fun SelectionBar(
+    count: Int,
+    onClose: () -> Unit,
+    onDuplicate: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(HeaderBarHeight)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .clickable(onClick = onClose),
+            contentAlignment = Alignment.Center,
         ) {
-            DropdownMenuItem(
-                onClick = onDuplicate,
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = stringResource(R.string.transaction_selection_exit_description),
+                tint = ZeroTheme.colors.onSurface,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(modifier = Modifier.size(8.dp))
+        Text(
+            modifier = Modifier.weight(1f),
+            text = pluralStringResource(R.plurals.transaction_selection_count, count, count),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ZeroTheme.colors.onSurface,
+        )
+        if (count == 1) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = onDuplicate),
+                contentAlignment = Alignment.Center,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = null,
-                        tint = ZeroTheme.colors.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = stringResource(R.string.transaction_duplicate),
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.ContentCopy,
+                    contentDescription = stringResource(R.string.transaction_duplicate),
+                    tint = ZeroTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
             }
-            DropdownMenuItem(
-                onClick = onDelete,
+        }
+        Box {
+            var menuExpanded by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = { menuExpanded = true }),
+                contentAlignment = Alignment.Center,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = null,
-                        tint = ZeroTheme.colors.error,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = stringResource(R.string.transaction_delete),
-                        color = ZeroTheme.colors.error,
-                    )
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.transaction_selection_more_description),
+                    tint = ZeroTheme.colors.onSurface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        menuExpanded = false
+                        onDelete()
+                    },
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            tint = ZeroTheme.colors.error,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(R.string.transaction_delete),
+                            color = ZeroTheme.colors.error,
+                        )
+                    }
                 }
             }
         }

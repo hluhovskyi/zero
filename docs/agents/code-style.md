@@ -2,6 +2,10 @@
 
 Conventions to keep code consistent across the codebase.
 
+## Formatting — run spotless before pushing
+
+**Run `./gradlew spotlessApply` before pushing any Kotlin change** — most of the conventions below (trailing commas, line wrapping, blank lines, import ordering) are spotless-enforced. CI's `spotlessCheck` gates the merge and no local git hook runs it, so an unformatted commit is only caught after CI finishes — the most expensive point to discover it.
+
 ## Naming Conventions
 
 **Name concrete implementations `Default*`, never `*Impl`** — `DefaultFooViewModel`, not `FooViewModelImpl`. A lint rule (`DefaultImplMustBeInternal`) enforces that `Default*` classes are `internal`; violating the naming convention silently bypasses that guard.

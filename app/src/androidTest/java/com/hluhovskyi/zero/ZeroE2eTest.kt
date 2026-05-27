@@ -23,6 +23,23 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun batchSelectRemovesSelectedTransactions() {
+        seedExpenses()
+        onTransactions()
+            .assertHasExpense(amount = "42")
+            .assertHasExpense(amount = "99")
+            .longPressTransaction(amount = "42")
+            .assertSelectionCount(1)
+            .assertDuplicateVisible()
+            .tapTransaction(amount = "99")
+            .assertSelectionCount(2)
+            .assertDuplicateNotVisible()
+            .deleteSelected()
+            .assertAmountNotVisible("42")
+            .assertAmountNotVisible("99")
+    }
+
+    @Test
     fun applyTypeFilterUpdatesListAcrossNavigation() {
         seedDefaultSetup()
         onTransactions()
