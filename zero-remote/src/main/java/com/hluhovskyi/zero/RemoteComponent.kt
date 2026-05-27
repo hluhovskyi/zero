@@ -2,7 +2,7 @@ package com.hluhovskyi.zero
 
 import android.content.Context
 import com.hluhovskyi.zero.currencies.ExchangeRateService
-import com.hluhovskyi.zero.currencies.FrankfurterApi
+import com.hluhovskyi.zero.currencies.FrankfurterRemoteService
 import com.hluhovskyi.zero.currencies.RetrofitExchangeRateService
 import com.hluhovskyi.zero.feedback.FeedbackService
 import com.hluhovskyi.zero.feedback.OkHttpFeedbackService
@@ -119,21 +119,26 @@ interface RemoteComponent {
 
         @Provides
         @RemoteScope
-        internal fun frankfurterApi(
+        internal fun retrofit(
             @ExchangeRateEndpoint endpoint: String,
             client: OkHttpClient,
             json: Json,
-        ): FrankfurterApi = Retrofit.Builder()
+        ): Retrofit = Retrofit.Builder()
             .baseUrl(endpoint)
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(FrankfurterApi::class.java)
+
+        @Provides
+        @RemoteScope
+        internal fun frankfurterRemoteService(
+            retrofit: Retrofit,
+        ): FrankfurterRemoteService = retrofit.create(FrankfurterRemoteService::class.java)
 
         @Provides
         @RemoteScope
         internal fun exchangeRateService(
-            api: FrankfurterApi,
-        ): ExchangeRateService = RetrofitExchangeRateService(api)
+            service: FrankfurterRemoteService,
+        ): ExchangeRateService = RetrofitExchangeRateService(service)
     }
 }

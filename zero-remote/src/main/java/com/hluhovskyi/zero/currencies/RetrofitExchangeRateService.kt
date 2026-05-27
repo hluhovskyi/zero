@@ -7,11 +7,11 @@ import timber.log.Timber
 import java.io.IOException
 
 internal class RetrofitExchangeRateService(
-    private val api: FrankfurterApi,
+    private val service: FrankfurterRemoteService,
 ) : ExchangeRateService {
 
     override suspend fun latest(): ExchangeRateSnapshot? = try {
-        val response = api.latest()
+        val response = service.latest()
         ExchangeRateSnapshot(
             base = Id(response.base.uppercase()),
             rates = response.rates.entries.associate { (code, rate) -> Id(code.uppercase()) to Rate(rate) },

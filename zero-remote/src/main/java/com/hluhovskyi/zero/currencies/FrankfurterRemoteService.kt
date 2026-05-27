@@ -3,7 +3,7 @@ package com.hluhovskyi.zero.currencies
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-internal interface FrankfurterApi {
+internal interface FrankfurterRemoteService {
 
     @GET("v1/latest")
     suspend fun latest(@Query("base") base: String = DEFAULT_BASE): FrankfurterLatestResponse

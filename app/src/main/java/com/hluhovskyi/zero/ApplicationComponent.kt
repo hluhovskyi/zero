@@ -41,10 +41,10 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CompositeCurrencyLoader
+import com.hluhovskyi.zero.currencies.ConfigurationRateSnapshotStore
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyLoader
 import com.hluhovskyi.zero.currencies.ExchangeRateService
-import com.hluhovskyi.zero.currencies.RateSnapshotStore
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
@@ -238,7 +238,7 @@ abstract class ApplicationComponent :
                 logger = logger,
             ),
             exchangeRateService = exchangeRateService,
-            store = RateSnapshotStore(configurationRepository),
+            store = ConfigurationRateSnapshotStore(configurationRepository),
             clock = zonedClock,
         )
 

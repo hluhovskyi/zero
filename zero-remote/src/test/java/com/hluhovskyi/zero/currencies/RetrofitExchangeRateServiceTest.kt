@@ -69,7 +69,7 @@ class RetrofitExchangeRateServiceTest {
             .client(OkHttpClient())
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(FrankfurterApi::class.java)
+            .create(FrankfurterRemoteService::class.java)
         return RetrofitExchangeRateService(api)
     }
 }

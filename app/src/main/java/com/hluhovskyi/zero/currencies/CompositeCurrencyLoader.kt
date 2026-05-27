@@ -2,12 +2,11 @@ package com.hluhovskyi.zero.currencies
 
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
+import com.hluhovskyi.zero.common.div
 import com.hluhovskyi.zero.common.time.ZonedClock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -84,23 +83,27 @@ internal class CompositeCurrencyLoader(
         return stored?.toSnapshot()
     }
 
+    /**
+     * Derives the rate table for base [from] from the EUR-based [snapshot] using cross-rates:
+     * `from→target = (EUR→target) / (EUR→from)`. A single daily fetch of the EUR table therefore
+     * answers any pair, with `from→[snapshot.base]` and `from→from = 1` filled in explicitly.
+     *
+     * Returns an empty map when [from] is absent from the table — i.e. a currency the live source
+     * does not cover (e.g. crypto like BTC) — so the caller falls back to bundled rates for it.
+     */
     private fun crossRates(snapshot: ExchangeRateSnapshot, from: Id.Known): Map<Id.Known, Rate> {
         val fromRate = when (from) {
-            snapshot.base -> BigDecimal.ONE
-            else -> snapshot.rates[from]?.value ?: return emptyMap()
+            snapshot.base -> Rate.Same
+            else -> snapshot.rates[from] ?: return emptyMap()
         }
 
         val out = HashMap<Id.Known, Rate>(snapshot.rates.size + 2)
-        out[snapshot.base] = Rate(BigDecimal.ONE.divide(fromRate, RATE_SCALE, RoundingMode.HALF_UP))
+        out[snapshot.base] = Rate.Same / fromRate
         for ((target, rate) in snapshot.rates) {
-            out[target] = Rate(rate.value.divide(fromRate, RATE_SCALE, RoundingMode.HALF_UP))
+            out[target] = rate / fromRate
         }
         out[from] = Rate.Same
         return out
-    }
-
-    companion object {
-        private const val RATE_SCALE = 10
     }
 }
 

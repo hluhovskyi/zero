@@ -7,11 +7,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class RateSnapshotStoreTest {
+class ConfigurationRateSnapshotStoreTest {
 
     @Test
     fun `save then load round-trips`() = runTest {
-        val store = RateSnapshotStore(FakeConfigurationRepository())
+        val store = ConfigurationRateSnapshotStore(FakeConfigurationRepository())
         val stored = RateSnapshotStore.Stored(
             fetchedOn = LocalDate(2026, 5, 26),
             base = "EUR",
@@ -25,7 +25,7 @@ class RateSnapshotStoreTest {
 
     @Test
     fun `load returns null when unset`() = runTest {
-        assertNull(RateSnapshotStore(FakeConfigurationRepository()).load())
+        assertNull(ConfigurationRateSnapshotStore(FakeConfigurationRepository()).load())
     }
 
     @Test
@@ -33,12 +33,12 @@ class RateSnapshotStoreTest {
         val config = FakeConfigurationRepository()
         config.write(CurrencyConfigurationKey.RateSnapshot, "{ this is not valid json")
 
-        assertNull(RateSnapshotStore(config).load())
+        assertNull(ConfigurationRateSnapshotStore(config).load())
     }
 
     @Test
     fun `save overwrites the previous snapshot`() = runTest {
-        val store = RateSnapshotStore(FakeConfigurationRepository())
+        val store = ConfigurationRateSnapshotStore(FakeConfigurationRepository())
         store.save(RateSnapshotStore.Stored(LocalDate(2026, 5, 25), "EUR", mapOf("USD" to 1.10)))
 
         store.save(RateSnapshotStore.Stored(LocalDate(2026, 5, 26), "EUR", mapOf("USD" to 1.16)))
