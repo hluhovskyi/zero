@@ -24,6 +24,7 @@ fun TransactionExpenseView(
     iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
+    isSelected: Boolean = false,
     icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
@@ -34,6 +35,7 @@ fun TransactionExpenseView(
         secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
         secondaryIcon = accountIcon,
+        isSelected = isSelected,
         mainIcon = icon,
     )
 }
@@ -47,6 +49,7 @@ fun TransactionIncomeView(
     iconColorScheme: UiColorScheme? = null,
     accountIcon: (@Composable () -> Unit)? = null,
     convertedAmount: String? = null,
+    isSelected: Boolean = false,
     icon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
@@ -58,6 +61,7 @@ fun TransactionIncomeView(
         secondaryAmount = convertedAmount,
         iconColorScheme = iconColorScheme,
         secondaryIcon = accountIcon,
+        isSelected = isSelected,
         mainIcon = icon,
     )
 }
@@ -72,6 +76,7 @@ fun TransactionView(
     secondaryAmount: String? = null,
     iconColorScheme: UiColorScheme? = null,
     secondaryIcon: (@Composable () -> Unit)? = null,
+    isSelected: Boolean = false,
     mainIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     Row(
@@ -79,7 +84,7 @@ fun TransactionView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (mainIcon != null && iconColorScheme != null) {
-            CategoryIconView(colorScheme = iconColorScheme) { tint ->
+            CategoryIconView(colorScheme = iconColorScheme, isSelected = isSelected) { tint ->
                 mainIcon(tint)
             }
         }
@@ -131,6 +136,7 @@ fun TransactionTransferView(
     sourceAmount: String,
     targetAmount: String,
     transferIconColorScheme: UiColorScheme? = null,
+    isSelected: Boolean = false,
     transferIcon: (@Composable (tint: Color) -> Unit)? = null,
 ) {
     TransactionView(
@@ -140,6 +146,7 @@ fun TransactionTransferView(
         secondaryText = sourceAccountName,
         secondaryAmount = "-$sourceAmount",
         iconColorScheme = transferIconColorScheme,
+        isSelected = isSelected,
         mainIcon = transferIcon,
     )
 }

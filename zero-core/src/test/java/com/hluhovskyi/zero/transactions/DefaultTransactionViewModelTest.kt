@@ -68,6 +68,8 @@ class DefaultTransactionViewModelTest {
 
     @Mock private lateinit var onTransactionSelectedHandler: OnTransactionSelectedHandler
 
+    @Mock private lateinit var onDuplicateTransactionHandler: OnDuplicateTransactionHandler
+
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
     private val fakeClock = object : Clock {
@@ -292,6 +294,21 @@ class DefaultTransactionViewModelTest {
     }
 
     @Test
+    fun `DuplicateSelected duplicates the single selected transaction and clears selection`() = runTest {
+        val viewModel = createViewModel(backgroundScope)
+        viewModel.attach()
+        runCurrent()
+
+        viewModel.perform(TransactionViewModel.Action.ToggleSelection(Id.Known("t1")))
+        runCurrent()
+        viewModel.perform(TransactionViewModel.Action.DuplicateSelected)
+        runCurrent()
+
+        verify(onDuplicateTransactionHandler).onDuplicate(Id.Known("t1"))
+        assertEquals(emptySet<Id.Known>(), viewModel.state.first().selectedIds)
+    }
+
+    @Test
     fun `ExitSelection clears the selection`() = runTest {
         val viewModel = createViewModel(backgroundScope)
         viewModel.attach()
@@ -409,6 +426,7 @@ class DefaultTransactionViewModelTest {
         currencyPrimaryUseCase = currencyPrimaryUseCase,
         currencyConvertUseCase = currencyConvertUseCase,
         onTransactionSelectedHandler = onTransactionSelectedHandler,
+        onDuplicateTransactionHandler = onDuplicateTransactionHandler,
         filter = filter,
         transactionFilterApplicator = TransactionFilterApplicator.Identity,
         clock = fakeClock,

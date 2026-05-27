@@ -52,6 +52,7 @@ internal class DefaultTransactionViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val onTransactionSelectedHandler: OnTransactionSelectedHandler,
+    private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
     private val transactionFilterApplicator: TransactionFilterApplicator,
@@ -105,6 +106,13 @@ internal class DefaultTransactionViewModel(
                 val ids = mutableState.value.selectedIds
                 coroutineScope.launch {
                     ids.forEach { transactionRepository.delete(it) }
+                }
+                mutableState.update { it.copy(selectedIds = emptySet()) }
+            }
+
+            is TransactionViewModel.Action.DuplicateSelected -> {
+                mutableState.value.selectedIds.singleOrNull()?.let { id ->
+                    onDuplicateTransactionHandler.onDuplicate(id)
                 }
                 mutableState.update { it.copy(selectedIds = emptySet()) }
             }

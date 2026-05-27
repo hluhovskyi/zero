@@ -19,6 +19,7 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         data class ToggleSelection(val id: Id.Known) : Action
         data object ExitSelection : Action
         data object DeleteSelected : Action
+        data object DuplicateSelected : Action
 
         sealed interface Filter : Action {
             data object Open : Filter

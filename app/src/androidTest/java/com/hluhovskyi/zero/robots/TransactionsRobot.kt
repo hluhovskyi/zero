@@ -98,8 +98,34 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
         return this
     }
 
+    fun assertDuplicateVisible(): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Duplicate").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithContentDescription("Duplicate").assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertDuplicateNotVisible(): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Duplicate").fetchSemanticsNodes().isEmpty()
+            }
+            onAllNodesWithContentDescription("Duplicate").assertCountEquals(0)
+        }
+        return this
+    }
+
     fun deleteSelected(): TransactionsRobot {
-        composeRule.onNodeWithContentDescription("Delete selected").performClick()
+        composeRule.apply {
+            onNodeWithContentDescription("More options").performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Delete").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("Delete").performClick()
+        }
         return this
     }
 

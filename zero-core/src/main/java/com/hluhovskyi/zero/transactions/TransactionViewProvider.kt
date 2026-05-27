@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,13 +22,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +65,10 @@ import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.coroutines.flow.drop
+
+// Shared height for the search/filter header and the selection bar so the
+// list below them doesn't jump vertically when selection mode toggles.
+private val HeaderBarHeight = 64.dp
 
 internal class TransactionViewProvider(
     private val viewModel: TransactionViewModel,
@@ -138,13 +146,15 @@ private fun TransactionView(
                 SelectionBar(
                     count = state.selectionCount,
                     onClose = { viewModel.perform(TransactionViewModel.Action.ExitSelection) },
+                    onDuplicate = { viewModel.perform(TransactionViewModel.Action.DuplicateSelected) },
                     onDelete = { viewModel.perform(TransactionViewModel.Action.DeleteSelected) },
                 )
             } else if (displayConfig.showSearchBar || displayConfig.showFilterButton) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .height(HeaderBarHeight)
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (displayConfig.showSearchBar) {
@@ -325,14 +335,13 @@ private fun TransactionRow(
                 bottom = 12.dp,
             )
             .clip(cardShape)
-            .background(
-                if (selected) ZeroTheme.colors.primaryContainerLight else ZeroTheme.colors.surfaceContainerLowest,
-            ),
+            .background(ZeroTheme.colors.surfaceContainerLowest),
     ) {
         when (transaction) {
             is TransactionViewModel.Item.Transaction.Expense ->
                 TransactionExpenseView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     categoryName = transaction.categoryName,
                     amount = amountFormatter.format(
                         amount = transaction.amount,
@@ -364,6 +373,7 @@ private fun TransactionRow(
             is TransactionViewModel.Item.Transaction.Income -> {
                 TransactionIncomeView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     categoryName = transaction.categoryName,
                     amount = amountFormatter.format(
                         amount = transaction.amount,
@@ -396,6 +406,7 @@ private fun TransactionRow(
             is TransactionViewModel.Item.Transaction.Transfer -> {
                 TransactionTransferView(
                     modifier = contentModifier,
+                    isSelected = selected,
                     sourceAccountName = transaction.accountName,
                     targetAccountName = transaction.targetAccountName,
                     sourceAmount = amountFormatter.format(
@@ -417,25 +428,6 @@ private fun TransactionRow(
                 )
             }
         }
-
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 36.dp, top = 8.dp)
-                    .size(20.dp)
-                    .clip(CircleShape)
-                    .background(ZeroTheme.colors.primary),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = ZeroTheme.colors.onPrimary,
-                    modifier = Modifier.size(14.dp),
-                )
-            }
-        }
     }
 }
 
@@ -443,12 +435,14 @@ private fun TransactionRow(
 private fun SelectionBar(
     count: Int,
     onClose: () -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .height(HeaderBarHeight)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -473,19 +467,63 @@ private fun SelectionBar(
             fontWeight = FontWeight.SemiBold,
             color = ZeroTheme.colors.onSurface,
         )
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .clickable(onClick = onDelete),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = stringResource(R.string.transaction_selection_delete_description),
-                tint = ZeroTheme.colors.error,
-                modifier = Modifier.size(20.dp),
-            )
+        if (count == 1) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = onDuplicate),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ContentCopy,
+                    contentDescription = stringResource(R.string.transaction_duplicate),
+                    tint = ZeroTheme.colors.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Box {
+            var menuExpanded by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = { menuExpanded = true }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.transaction_selection_more_description),
+                    tint = ZeroTheme.colors.onSurface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        menuExpanded = false
+                        onDelete()
+                    },
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            tint = ZeroTheme.colors.error,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(R.string.transaction_delete),
+                            color = ZeroTheme.colors.error,
+                        )
+                    }
+                }
+            }
         }
     }
 }
