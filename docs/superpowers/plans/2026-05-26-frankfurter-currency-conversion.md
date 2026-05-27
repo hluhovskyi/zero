@@ -17,7 +17,8 @@
 > - The zero-remote impl uses **Retrofit kept internal** (`FrankfurterApi` + `RetrofitExchangeRateService`);
 >   `retrofit2.*` added to the `RemoteComponentEncapsulation` lint prefixes.
 > - `CompositeCurrencyLoader` fetches **≤ once per calendar day** (via `ZonedClock`) and persists the
->   snapshot through a new `RateSnapshotStore` (JSON file), falling back stale-persisted → bundled.
+>   snapshot through a new `RateSnapshotStore` backed by `ConfigurationRepository` (Room/SQLite, ACID),
+>   falling back stale-persisted → bundled.
 > - `app` now applies the `kotlin-serialization` plugin.
 
 ---

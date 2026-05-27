@@ -223,11 +223,11 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         internal fun currencyLoader(
-            context: Context,
             resourceResolver: ResourceResolver,
             androidUriResourceFactory: AndroidUriResourceFactory,
             localeProvider: LocaleProvider,
             exchangeRateService: ExchangeRateService,
+            configurationRepository: ConfigurationRepository,
             zonedClock: ZonedClock,
             logger: Logger,
         ): CurrencyLoader = CompositeCurrencyLoader(
@@ -238,7 +238,7 @@ abstract class ApplicationComponent :
                 logger = logger,
             ),
             exchangeRateService = exchangeRateService,
-            store = RateSnapshotStore(context),
+            store = RateSnapshotStore(configurationRepository),
             clock = zonedClock,
         )
 

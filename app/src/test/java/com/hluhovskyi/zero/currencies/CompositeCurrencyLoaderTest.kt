@@ -9,16 +9,11 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.junit.Assert.assertEquals
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 class CompositeCurrencyLoaderTest {
-
-    @get:Rule
-    val tmp = TemporaryFolder()
 
     private val eur = Id("EUR")
     private val usd = Id("USD")
@@ -58,7 +53,7 @@ class CompositeCurrencyLoaderTest {
         bundled: FakeLoader,
         service: FakeService,
         clock: FakeClock,
-        store: RateSnapshotStore = RateSnapshotStore(tmp.newFile().also { it.delete() }),
+        store: RateSnapshotStore = RateSnapshotStore(FakeConfigurationRepository()),
     ) = CompositeCurrencyLoader(bundled, service, store, clock)
 
     @Test
@@ -113,7 +108,7 @@ class CompositeCurrencyLoaderTest {
 
     @Test
     fun `today's persisted snapshot is reused without fetching`() = runTest {
-        val store = RateSnapshotStore(tmp.newFile("persisted.json"))
+        val store = RateSnapshotStore(FakeConfigurationRepository())
         store.save(RateSnapshotStore.Stored(fetchedOn = "2026-05-26", base = "EUR", rates = mapOf("USD" to 1.16)))
         val service = FakeService(eurSnapshot(usd to 9.99))
 
@@ -125,7 +120,7 @@ class CompositeCurrencyLoaderTest {
 
     @Test
     fun `stale persisted snapshot is used when today's fetch fails`() = runTest {
-        val store = RateSnapshotStore(tmp.newFile("stale.json"))
+        val store = RateSnapshotStore(FakeConfigurationRepository())
         store.save(RateSnapshotStore.Stored(fetchedOn = "2026-05-25", base = "EUR", rates = mapOf("USD" to 1.16)))
 
         val rates = loader(FakeLoader(emptyMap()), FakeService(null), FakeClock(LocalDate(2026, 5, 26)), store).ratesFor(usd)
