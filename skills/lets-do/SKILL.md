@@ -109,15 +109,17 @@ per task — don't duplicate that here.
 
 Run all of the following. Fix any failure before opening the PR.
 
-### Tests
+### Build checks — one Gradle invocation
+
+**Batch the Gradle gates into a single fail-fast invocation** — one daemon spin-up, stops at the first failure. Don't run them as separate calls.
+
 ```bash
-./gradlew testDebugUnitTest 2>&1 | tail -20
+./gradlew testDebugUnitTest lintDebug 2>&1 | tail -25
 ```
 
-### Lint
-```bash
-./gradlew lintDebug 2>&1 | grep -E "error:|Error" | head -20
-```
+**Run efficiency** (these dominate token/time cost otherwise):
+- **Never poll a background task** — `run_in_background` auto-notifies on completion; don't `cat`/`Read` its output before the notification, and don't re-read an empty output.
+- **Acquire the emulator once**, at first UI need (Step 5), and hold it for all device work — don't acquire/release per check.
 
 ### UI inspection
 

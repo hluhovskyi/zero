@@ -34,7 +34,7 @@ done
 
 if [ "$FAST" -eq 0 ]; then
   echo "▶ Running :app:connectedDebugAndroidTest against $SERIAL..."
-  exec ./gradlew :app:connectedDebugAndroidTest "${ARGS[@]}"
+  exec ./gradlew :app:connectedDebugAndroidTest ${ARGS[@]+"${ARGS[@]}"}
 fi
 
 RUNNER="com.hluhovskyi.zero.test/androidx.test.runner.AndroidJUnitRunner"
@@ -56,7 +56,7 @@ fi
 
 echo "▶ Fast e2e via am instrument on $SERIAL (no Gradle build)..."
 # am instrument exits 0 even when tests fail, so derive the exit code from its output.
-out=$(adb shell am instrument -w "${class_args[@]}" "$RUNNER" 2>&1)
+out=$(adb shell am instrument -w ${class_args[@]+"${class_args[@]}"} "$RUNNER" 2>&1)
 echo "$out"
 if echo "$out" | grep -qE "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed|crashed"; then
   exit 1

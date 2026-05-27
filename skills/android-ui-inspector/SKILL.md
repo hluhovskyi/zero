@@ -58,6 +58,8 @@ Use this skill **before committing any UI change** — not only when something l
 
    **Bottom-sheet scroll hazard:** swiping past the last item of a bottom sheet dismisses it. Dump after each swipe to confirm the sheet is still mounted, or use a smaller swipe delta. For long sheets like the icon picker, use `./scripts/ui/open-screen.sh icon-picker-expense` (or `-income` / `-account`) to land directly on the sheet without rebuilding the tap chain each iteration.
 
+   **Seed state with a script, don't hand-drive multi-step setup.** To verify a state-dependent widget, reach its precondition via a seed script rather than re-typing the flow each iteration — e.g. `./scripts/ui/seed-budget-over.sh` lands on the Budget screen in the over-budget state (drives the tab dot). Extend that pattern for new stateful UI instead of repeating onboard → create → configure taps by hand.
+
 5. **Screenshot (Only When Needed):** The XML dump covers structure, bounds, and navigation. Take a screenshot only when you suspect a **visual rendering artifact** — wrong color, clipping, overflow, or a composable that the dump shows as present but looks broken:
    ```bash
    adb shell screencap -p /sdcard/screen.png
