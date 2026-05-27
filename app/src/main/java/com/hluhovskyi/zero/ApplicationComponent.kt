@@ -40,17 +40,11 @@ import com.hluhovskyi.zero.common.time.ZoneBasedClock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
-import com.hluhovskyi.zero.currencies.CompositeCurrencyLoader
-import com.hluhovskyi.zero.currencies.ConfigurationRateSnapshotStore
+import com.hluhovskyi.zero.currencies.CurrencyComponent
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.CurrencyLoader
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.currencies.ExchangeRateService
-import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
-import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
-import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
 import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.feedback.DeviceInfo
@@ -222,65 +216,47 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        internal fun currencyLoader(
+        fun currencyComponent(
             resourceResolver: ResourceResolver,
             androidUriResourceFactory: AndroidUriResourceFactory,
             localeProvider: LocaleProvider,
             exchangeRateService: ExchangeRateService,
             configurationRepository: ConfigurationRepository,
             zonedClock: ZonedClock,
+            incorrectStateDetector: IncorrectStateDetector,
+            databaseComponent: DatabaseComponent,
             logger: Logger,
-        ): CurrencyLoader = CompositeCurrencyLoader(
-            delegate = PredefinedCurrencyLoader(
-                resourceResolver = resourceResolver,
-                androidUriResourceFactory = androidUriResourceFactory,
-                localeProvider = localeProvider,
-                logger = logger,
-            ),
-            exchangeRateService = exchangeRateService,
-            store = ConfigurationRateSnapshotStore(configurationRepository),
-            clock = zonedClock,
+        ): CurrencyComponent = CurrencyComponent.builder(
+            object : CurrencyComponent.Dependencies {
+                override val resourceResolver = resourceResolver
+                override val androidUriResourceFactory = androidUriResourceFactory
+                override val localeProvider = localeProvider
+                override val exchangeRateService = exchangeRateService
+                override val configurationRepository = configurationRepository
+                override val zonedClock = zonedClock
+                override val incorrectStateDetector = incorrectStateDetector
+                override val databaseComponent = databaseComponent
+                override val logger = logger
+            },
         )
 
         @Provides
         @ApplicationScope
-        internal fun currencyRepository(
-            localeProvider: LocaleProvider,
-            currencyLoader: CurrencyLoader,
-            databaseComponent: DatabaseComponent,
-        ): CurrencyRepository {
-            val baseRepository = JavaCurrencyRepository(
-                localeProvider = localeProvider,
-                currencyLoader = currencyLoader,
-            )
-            return databaseComponent.transform(baseRepository)
-        }
+        fun currencyRepository(
+            currencyComponent: CurrencyComponent,
+        ): CurrencyRepository = currencyComponent.currencyRepository
 
         @Provides
         @ApplicationScope
         fun currencyPrimaryUseCase(
-            configurationRepository: ConfigurationRepository,
-            currencyRepository: CurrencyRepository,
-            localeProvider: LocaleProvider,
-            logger: Logger,
-        ): CurrencyPrimaryUseCase = LocaleBasedCurrencyPrimaryUseCase(
-            configurationRepository = configurationRepository,
-            currencyRepository = currencyRepository,
-            localeProvider = localeProvider,
-            logger = logger,
-        )
+            currencyComponent: CurrencyComponent,
+        ): CurrencyPrimaryUseCase = currencyComponent.currencyPrimaryUseCase
 
         @Provides
         @ApplicationScope
-        internal fun currencyConvertUseCase(
-            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-            currencyLoader: CurrencyLoader,
-            incorrectStateDetector: IncorrectStateDetector,
-        ): CurrencyConvertUseCase = PredefinedCurrencyConvertUseCase(
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            currencyLoader = currencyLoader,
-            incorrectStateDetector = incorrectStateDetector,
-        )
+        fun currencyConvertUseCase(
+            currencyComponent: CurrencyComponent,
+        ): CurrencyConvertUseCase = currencyComponent.currencyConvertUseCase
 
         @Provides
         @ApplicationScope
