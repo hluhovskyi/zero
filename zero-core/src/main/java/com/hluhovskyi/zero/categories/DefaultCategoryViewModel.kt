@@ -6,8 +6,8 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.observe
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -24,7 +24,7 @@ internal class DefaultCategoryViewModel(
     CategoryViewModel {
 
     private val mutableState = MutableStateFlow(CategoryViewModel.State())
-    override val state: Flow<CategoryViewModel.State> = mutableState
+    override val state: StateFlow<CategoryViewModel.State> = mutableState
 
     override fun perform(action: CategoryViewModel.Action) {
         when (action) {

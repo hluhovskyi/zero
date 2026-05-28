@@ -3,8 +3,8 @@ package com.hluhovskyi.zero.welcome
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.settings.OnImportSelectedHandler
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 internal class DefaultWelcomeViewModel(
@@ -14,7 +14,7 @@ internal class DefaultWelcomeViewModel(
     WelcomeViewModel {
 
     private val mutableState = MutableStateFlow(WelcomeViewModel.State())
-    override val state: Flow<WelcomeViewModel.State> = mutableState
+    override val state: StateFlow<WelcomeViewModel.State> = mutableState
 
     override fun perform(action: WelcomeViewModel.Action) {
         when (action) {

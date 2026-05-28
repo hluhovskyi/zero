@@ -5,8 +5,11 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.coroutines.flow.StateFlow
 
 interface CategoryViewModel : AttachableActionStateModel<CategoryViewModel.Action, CategoryViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         data class SelectCategory(val category: CategoryItem) : Action

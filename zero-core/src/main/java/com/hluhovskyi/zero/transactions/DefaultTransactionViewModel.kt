@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -61,7 +62,7 @@ internal class DefaultTransactionViewModel(
     TransactionViewModel {
 
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
-    override val state: Flow<TransactionViewModel.State> = mutableState
+    override val state: StateFlow<TransactionViewModel.State> = mutableState
 
     private val loadMoreTrigger = MutableSharedFlow<Unit>(
         extraBufferCapacity = 1,
