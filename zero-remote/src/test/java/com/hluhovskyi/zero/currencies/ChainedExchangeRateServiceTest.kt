@@ -13,8 +13,7 @@ class ChainedExchangeRateServiceTest {
     private val usd = Id("USD")
     private val btc = Id("BTC")
 
-    private fun snapshot(vararg rates: Pair<Id.Known, Double>) =
-        ExchangeRateSnapshot(eur, rates.associate { (id, value) -> id to Rate(value) })
+    private fun snapshot(vararg rates: Pair<Id.Known, Double>) = ExchangeRateSnapshot(eur, rates.associate { (id, value) -> id to Rate(value) })
 
     private fun service(snapshot: ExchangeRateSnapshot?) = object : ExchangeRateService {
         override suspend fun latest(): ExchangeRateSnapshot? = snapshot
