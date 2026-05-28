@@ -40,6 +40,24 @@ class BudgetRobot(private val composeRule: ComposeTestRule) {
         return this
     }
 
+    fun assertBudgetTabAlertVisible(): BudgetRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Over budget").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        return this
+    }
+
+    fun assertBudgetTabAlertHidden(): BudgetRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithContentDescription("Over budget").fetchSemanticsNodes().isEmpty()
+            }
+        }
+        return this
+    }
+
     fun tapCategory(name: String): BudgetInlineNumpadRobot {
         composeRule.apply {
             waitUntil(timeoutMillis = 5_000) {

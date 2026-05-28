@@ -7,13 +7,22 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 
 internal class DefaultBudgetQueryUseCase(
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val budgetRepository: BudgetRepository,
     private val categorySpendingUseCase: CategorySpendingUseCase,
+    private val periodResolver: PeriodResolver,
 ) : BudgetQueryUseCase {
+
+    override fun observeAnyOver(): Flow<Boolean> {
+        val (start, end) = periodResolver.currentMonth()
+        return query(start, end).map { rows ->
+            rows.any { it.budgetId != null && it.spent > it.budgeted }
+        }
+    }
 
     override fun query(from: LocalDate, to: LocalDate): Flow<List<BudgetQueryUseCase.Budgeted>> = combine(
         categoriesQueryUseCase.queryAll().onStartWithEmptyList(),

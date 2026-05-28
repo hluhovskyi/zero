@@ -147,7 +147,8 @@ All MUST pass. All four manual paths above MUST be verified before opening the P
 ## Out of Scope
 
 - Account-switching (signing in with a different account) — Phase 3 already supports re-sign-in after disconnect; explicit switch is a v2 polish.
-- "Forget device" — revoking on one device doesn't revoke on others (each device has its own refresh token). v2.
+- "Forget device" — revoking on one device doesn't revoke on others (each device holds its own grant via Play services; there is no on-device refresh token). v2.
+- **Auth note (Phase 2 correction):** there is no on-device refresh token. Disconnect = clear local state + drop the cached access token; access tokens are minted on demand via the Authorization API. A remote-revoke call (OAuth `revoke` of the live access token) is the optional polish here. See the spec's §Auth.
 - Selectively deleting old backup snapshots — single-slot model means there's only one to delete.
 
 ---

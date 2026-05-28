@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -33,10 +35,17 @@ class DefaultBudgetQueryUseCaseTest {
     private val from = LocalDate(2026, 5, 1)
     private val to = LocalDate(2026, 5, 31)
 
+    private val periodResolver = object : PeriodResolver {
+        override fun today(): LocalDate = from
+        override fun currentMonth(): Pair<LocalDate, LocalDate> = from to to
+        override fun monthOffsetFrom(reference: LocalDate, offsetMonths: Int): Pair<LocalDate, LocalDate> = from to to
+    }
+
     private fun useCase() = DefaultBudgetQueryUseCase(
         categoriesQueryUseCase = categoriesQueryUseCase,
         budgetRepository = budgetRepository,
         categorySpendingUseCase = categorySpendingUseCase,
+        periodResolver = periodResolver,
     )
 
     private fun category(id: String, type: CategoryType = CategoryType.EXPENSE) = CategoriesQueryUseCase.Category(
@@ -129,5 +138,44 @@ class DefaultBudgetQueryUseCaseTest {
         val result = useCase().query(from, to).last()
 
         assertEquals(listOf("c1"), result.map { it.categoryId.value })
+    }
+
+    // ── observeAnyOver ─────────────────────────────────────────────────────────
+    // Current-month-only over-budget signal that drives the bottom-bar dot.
+
+    @Test
+    fun `observeAnyOver emits true when a set budget is over spent`() = runTest {
+        whenever(categoriesQueryUseCase.queryAll())
+            .thenReturn(flowOf(listOf(category("c1"))))
+        whenever(budgetRepository.query(any<BudgetRepository.Criteria<List<BudgetRepository.Budget>>>()))
+            .thenReturn(flowOf(listOf(budget("b1", "c1", BigDecimal("100")))))
+        whenever(categorySpendingUseCase.query(any()))
+            .thenReturn(flowOf(listOf(spending("c1", BigDecimal("150")))))
+
+        assertTrue(useCase().observeAnyOver().last())
+    }
+
+    @Test
+    fun `observeAnyOver emits false when set budgets are within limit`() = runTest {
+        whenever(categoriesQueryUseCase.queryAll())
+            .thenReturn(flowOf(listOf(category("c1"))))
+        whenever(budgetRepository.query(any<BudgetRepository.Criteria<List<BudgetRepository.Budget>>>()))
+            .thenReturn(flowOf(listOf(budget("b1", "c1", BigDecimal("100")))))
+        whenever(categorySpendingUseCase.query(any()))
+            .thenReturn(flowOf(listOf(spending("c1", BigDecimal("80")))))
+
+        assertFalse(useCase().observeAnyOver().last())
+    }
+
+    @Test
+    fun `observeAnyOver ignores unset categories even when spent is positive`() = runTest {
+        whenever(categoriesQueryUseCase.queryAll())
+            .thenReturn(flowOf(listOf(category("c1"))))
+        whenever(budgetRepository.query(any<BudgetRepository.Criteria<List<BudgetRepository.Budget>>>()))
+            .thenReturn(flowOf(emptyList()))
+        whenever(categorySpendingUseCase.query(any()))
+            .thenReturn(flowOf(listOf(spending("c1", BigDecimal("999")))))
+
+        assertFalse(useCase().observeAnyOver().last())
     }
 }

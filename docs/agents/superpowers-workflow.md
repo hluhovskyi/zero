@@ -32,6 +32,8 @@ If a plan task is nothing but boilerplate that a doc or skill already covers, re
 3. The nearest module AGENTS.md for the feature area
 4. The most similar existing screen as implementation reference (e.g., `CategoryDetailViewProvider` for new detail screens)
 
+**A brief that names a new type to add (`add a FooUseCase`) is a candidate, not a directive** — first find the use case that already *produces* the underlying data and add a focused method there. A boolean/aggregate that's a pure projection of a query's rows belongs on that query use case, not on a new type or the orchestrator that happens to already compute it. Planning straight to the brief's wording cost three correction rounds in Budget Phase 7 (PR #268).
+
 ## Design docs — What to omit
 
 The brainstorming skill writes a spec with architecture, components, and data-flow sections. For this project, cut:

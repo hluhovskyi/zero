@@ -17,5 +17,6 @@ internal interface BottomBarViewModel : AttachableActionStateModel<BottomBarView
         val name: String,
         val icon: Image,
         val selected: Boolean,
+        val hasAlert: Boolean = false,
     )
 }

@@ -49,10 +49,13 @@ abstract class BudgetComponent : AttachableViewComponent {
             categoriesQueryUseCase: CategoriesQueryUseCase,
             budgetRepository: BudgetRepository,
             categorySpendingUseCase: CategorySpendingUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): BudgetQueryUseCase = DefaultBudgetQueryUseCase(
             categoriesQueryUseCase = categoriesQueryUseCase,
             budgetRepository = budgetRepository,
             categorySpendingUseCase = categorySpendingUseCase,
+            periodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider),
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
