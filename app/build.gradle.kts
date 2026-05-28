@@ -141,6 +141,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.compose.uiToolingPreview)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
     debugImplementation(libs.androidx.compose.uiTooling)
