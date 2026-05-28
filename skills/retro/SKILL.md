@@ -36,8 +36,9 @@ Look for signals of friction:
 - **Approach Revision:** Multiple commits touching the same file with "fix", "revert", or "again".
 - **User Course-Correction:** Patterns the user corrected or tools they suggested mid-session.
 - **Blind Operation:** Commits made without running a tool that could actually verify the behavioral change (e.g. fixing UI without dumping hierarchy).
+- **Iteration Cost:** Hypothesis-fix-test cycles >2 on the same layer, repeated reads of the same file, polling background tasks instead of awaiting notifications — token/speed signals even if no commit lands.
 
-## Step 3 — Analyze (Internal Questions & 5 Whys)
+## Step 3 — Analyze
 
 Answer these questions internally before writing anything:
 
@@ -46,39 +47,35 @@ Answer these questions internally before writing anything:
 3. **Assumption Traps:** Did you stay within the "existing code's box" too long? Did a dependency bump or architectural change solve a problem you were trying to "hack" your way through?
 4. **The Short-Circuit Rule:** What single rule or pointer would have reduced the turn count to 1?
 
-Perform a root-cause analysis on the session friction. You MUST answer "Why?" five times for any major pivot or failure. Do not settle for "I made a mistake" summaries.
+**Trace any major pivot to its earliest detectable signal** — what one thing, if known at turn 1, would have made it a one-shot?
 
-1. **Why** did the friction or failure occur?
-2. **Why** did the initial research or strategy fail to account for it?
-3. **Why** was the erroneous assumption made?
-4. **Why** did the current process/tools allow the assumption to persist?
-5. **Why** did the environment (docs, linters, types) not prevent the error?
+## Step 4 — Propose (Actionable Items)
 
-**Goal:** Identify why the process or environment allowed the failure to happen.
-
-## Step 4 — Propose (Actionable Safeguards)
-
-Present findings concisely. A retrospective is ONLY complete if it results in an actionable documentation update or a programmatic safeguard (e.g., a lint rule) that makes the error impossible to repeat.
+**Empty is valid — prefer empty over invented.** A retrospective is complete when honest action items are surfaced across the four axes below, or when none survive the filters.
 
 **Before listing any item, run both filters. Cut anything that fails either one.**
 
-**Filter 1 — Root cause test:** Does this rule address the underlying failure mode, or does it patch one specific instance of it? A rule that says "component X has dimension Y" patches a symptom — the wrong value was used. The root cause is the process failure that allowed the wrong value to go undetected (e.g., not running a visual verification). Document the process failure, not the specific wrong value. Ask: "If this exact component were refactored tomorrow, would the rule still prevent the same class of mistake?"
+**Filter 1 — Root cause test:** Does this address the underlying failure mode, or does it patch one specific instance of it? A rule that says "component X has dimension Y" patches a symptom — the wrong value was used. The root cause is the process failure that allowed it to go undetected (e.g., not running a visual verification). Address the process failure, not the specific wrong value. Ask: "If this exact component were refactored tomorrow, would the rule still prevent the same class of mistake?"
 
-**Filter 2 — Reach test:** "Would I actually read this file, at the moment I need it, in a future session?" If not, cut it. One sharp item beats three diluted ones. Zero items is a valid outcome if nothing passes the filter.
+**Filter 2 — Reach test:** "Would I actually use this, at the moment I need it, in a future session?" If not, cut it. One sharp item beats three diluted ones.
 
 ```
 ## Final Achieved Architecture
 - [one-sentence summary of the final solution]
 
 ## The "One Rule" to skip iterations
-- [the most impactful rule derived from the 5 Whys]
+- [the most impactful single rule, or "—" if none]
 
-## What's worth documenting
-- [insight] → suggest: add to [file] under [section]
-- [safeguard] → suggest: implement linter/static check for [rule]
+## Actionable items (apply filters to each; empty axes are valid)
+- **Docs** — [insight → file/section]
+- **Repo/infra** — [one-time setting or script tweak]
+- **Speed/token** — [recurring per-session win — Claude behavior or process]
+- **Behavior (no artifact)** — [self-correction; not committed anywhere]
 ```
 
-Keep it short. No padding. Then ask: **"Which of these would you like me to write?"** — one item is fine; the user picks, not you.
+Surface speed/token wins by default — they're often the biggest payback per session and easiest to overlook because they don't produce artifacts. Tool-call count, build-cycle count, and retry loops are the data points.
+
+Keep it short. No padding. Then ask: **"Which of these would you like me to write?"** — one item is fine, zero is fine; the user picks, not you.
 
 ## Step 5 — Write (if confirmed)
 
@@ -93,6 +90,19 @@ For each doc update:
 - Cast each rule in the format used throughout this codebase's AGENTS.md files: `**<imperative or trigger condition>** — <why or consequence>`. If the imperative part doesn't fit in a short bold phrase, it's two rules — split it.
 - **Self-check before committing:** does each new rule fit in one bold phrase + one sentence? If not, compress or split. No tutorial prose, no code examples unless a snippet is the only way to convey the rule.
 - Commit with message: `docs: <what was added and why>`
+
+## Follow-up — Skill self-check (after main retro is complete)
+
+Run **only after** the main retro has presented action items and the user has chosen what to write (or declined all). This is a separate pass; do not interleave it with Steps 1–5.
+
+Gut-check:
+- Did the user redirect framing or ask for an axis the skill didn't surface?
+- Did the skill bias toward one output type?
+- Did any rule fire without value this session?
+
+If yes to any: propose **at most one** edit to `skills/retro/SKILL.md`, apply the same two filters, write only if it survives. Otherwise post: `Skill self-check: no edit.`
+
+Cap: one edit per retro. Do not meta-retro this self-check.
 
 ## Guardrails
 
