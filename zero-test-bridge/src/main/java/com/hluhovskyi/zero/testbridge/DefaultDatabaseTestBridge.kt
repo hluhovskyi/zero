@@ -21,8 +21,10 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.hours
 
 fun DatabaseTestBridge(
     cleanupJob: CleanupJob,
@@ -132,8 +134,10 @@ internal class DefaultDatabaseTestBridge(
             ),
         )
 
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val noonToday = LocalDateTime(today.year, today.month, today.dayOfMonth, 12, 0)
+        // Stamp into the near future so updatedDateTime deterministically beats the screen's
+        // attach-time clock read — the two race and "now" loses ~37% of the time. The list's
+        // live query surfaces rows whose updatedDateTime is after that captured attach time.
+        val seededAt = (Clock.System.now() + 1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
         listOf("42" to "expense-42", "99" to "expense-99").forEach { (amount, id) ->
             transactionRepository.insert(
                 TransactionRepository.Transaction.Expense(
@@ -141,8 +145,8 @@ internal class DefaultDatabaseTestBridge(
                     amount = Amount(BigDecimal(amount)),
                     accountId = accountId,
                     currencyId = currencyId,
-                    dateTime = noonToday,
-                    updatedDateTime = noonToday,
+                    dateTime = seededAt,
+                    updatedDateTime = seededAt,
                     categoryId = categoryId,
                     rate = Rate.Same,
                 ),
