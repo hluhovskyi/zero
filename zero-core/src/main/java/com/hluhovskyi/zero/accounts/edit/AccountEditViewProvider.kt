@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -61,7 +63,7 @@ internal class AccountEditViewProvider(
     override fun View() {
         AccountEditView(
             viewModel = viewModel,
-            onClose = onClose,
+            onClose = onClose::onClose,
             imageLoader = imageLoader,
         )
     }
@@ -70,12 +72,16 @@ internal class AccountEditViewProvider(
 @Composable
 private fun AccountEditView(
     viewModel: AccountEditViewModel,
-    onClose: OnCloseHandler,
+    onClose: () -> Unit,
     imageLoader: ImageLoader,
 ) {
-    val state by viewModel.state.collectAsState(initial = AccountEditViewModel.State())
+    val state by viewModel.state.collectAsState()
     val focusRequester = remember { FocusRequester() }
-    val categoryDisplayNames = AccountCategory.entries.associateWith { it.displayName() }
+
+    val resources = LocalResources.current
+    val categoryDisplayNames = remember(resources) {
+        AccountCategory.entries.associateWith { resources.getString(it.displayNameRes()) }
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -85,7 +91,7 @@ private fun AccountEditView(
         Column {
             ModalHeader(
                 title = if (state.isEditMode) stringResource(R.string.account_edit_title_edit) else stringResource(R.string.account_edit_title_new),
-                onClose = { onClose.onClose() },
+                onClose = onClose,
             )
             Column(
                 modifier = Modifier
@@ -136,7 +142,7 @@ private fun AccountEditView(
                 SelectorCard(
                     modifier = Modifier.fillMaxWidth(),
                     label = stringResource(R.string.account_edit_type_label),
-                    value = categoryDisplayNames.getValue(state.category),
+                    value = stringResource(state.category.displayNameRes()),
                     items = AccountCategory.entries,
                     nameMapping = { categoryDisplayNames.getValue(it) },
                     onItemSelected = { category ->
@@ -252,14 +258,14 @@ private fun IconTile(
     }
 }
 
-@Composable
-private fun AccountCategory.displayName(): String = when (this) {
-    AccountCategory.CASH -> stringResource(R.string.account_type_cash)
-    AccountCategory.BANK -> stringResource(R.string.account_type_bank)
-    AccountCategory.CREDIT_CARDS -> stringResource(R.string.account_type_credit_cards)
-    AccountCategory.DIGITAL_WALLETS -> stringResource(R.string.account_type_digital_wallets)
-    AccountCategory.CRYPTO -> stringResource(R.string.account_type_crypto)
-    AccountCategory.OTHER -> stringResource(R.string.account_type_other)
+@StringRes
+private fun AccountCategory.displayNameRes(): Int = when (this) {
+    AccountCategory.CASH -> R.string.account_type_cash
+    AccountCategory.BANK -> R.string.account_type_bank
+    AccountCategory.CREDIT_CARDS -> R.string.account_type_credit_cards
+    AccountCategory.DIGITAL_WALLETS -> R.string.account_type_digital_wallets
+    AccountCategory.CRYPTO -> R.string.account_type_crypto
+    AccountCategory.OTHER -> R.string.account_type_other
 }
 
 @Composable
