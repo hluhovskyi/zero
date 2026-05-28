@@ -21,10 +21,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import java.math.BigDecimal
-import kotlin.time.Duration.Companion.hours
 
 fun DatabaseTestBridge(
     cleanupJob: CleanupJob,
@@ -33,6 +31,7 @@ fun DatabaseTestBridge(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
     budgetRepository: BudgetRepository,
+    seedPresets: suspend () -> Unit,
 ): DatabaseTestBridge = DefaultDatabaseTestBridge(
     cleanupJob = cleanupJob,
     currentUserRepository = currentUserRepository,
@@ -40,6 +39,7 @@ fun DatabaseTestBridge(
     categoryRepository = categoryRepository,
     transactionRepository = transactionRepository,
     budgetRepository = budgetRepository,
+    seedPresetsAction = seedPresets,
 )
 
 internal class DefaultDatabaseTestBridge(
@@ -49,11 +49,14 @@ internal class DefaultDatabaseTestBridge(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
+    private val seedPresetsAction: suspend () -> Unit,
 ) : DatabaseTestBridge {
 
     override suspend fun clearData() {
         cleanupJob.clearAllTables()
     }
+
+    override suspend fun seedPresets() = seedPresetsAction()
 
     override suspend fun seedDefaultSetup() {
         currentUserRepository.query().first()
@@ -134,11 +137,8 @@ internal class DefaultDatabaseTestBridge(
             ),
         )
 
-        // Must be strictly in the future. The transaction list filters its live stream by
-        // `updatedDateTime > attachTime`, where `attachTime` is captured by the screen's IO
-        // coroutine that races this seed. A "now" stamp loses that race a meaningful share of
-        // the time and the row never renders; a future buffer makes the seed unambiguously win.
-        val seededAt = (Clock.System.now() + 1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val noonToday = LocalDateTime(today.year, today.month, today.dayOfMonth, 12, 0)
         listOf("42" to "expense-42", "99" to "expense-99").forEach { (amount, id) ->
             transactionRepository.insert(
                 TransactionRepository.Transaction.Expense(
@@ -146,8 +146,8 @@ internal class DefaultDatabaseTestBridge(
                     amount = Amount(BigDecimal(amount)),
                     accountId = accountId,
                     currencyId = currencyId,
-                    dateTime = seededAt,
-                    updatedDateTime = seededAt,
+                    dateTime = noonToday,
+                    updatedDateTime = noonToday,
                     categoryId = categoryId,
                     rate = Rate.Same,
                 ),
@@ -156,8 +156,8 @@ internal class DefaultDatabaseTestBridge(
     }
 
     override suspend fun seedBudgetOverScenario() {
-        // Triggering the user query materializes the default category presets
-        // (Food & Drink, Transport, ...) which the scenario below relies on.
+        // Presets are seeded by BaseE2eTest after clearData; this scenario relies on
+        // Food & Drink / Transport from that baseline.
         currentUserRepository.query().first()
 
         val currencyId = Id.Known("USD")

@@ -107,6 +107,7 @@ abstract class ApplicationComponent :
     abstract val attachable: Attachable
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
+    abstract override val presetsComponent: PresetsComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
 

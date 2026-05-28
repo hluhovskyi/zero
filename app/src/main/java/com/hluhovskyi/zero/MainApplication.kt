@@ -33,6 +33,7 @@ internal class MainApplication :
                 categoryRepository = db.categoryRepository,
                 transactionRepository = db.transactionRepository,
                 budgetRepository = db.budgetRepository,
+                seedPresets = { applicationComponent.presetsComponent.presetsUseCase.seed() },
             ),
         )
     }
