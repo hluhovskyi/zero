@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -55,6 +56,13 @@ internal class MainActivityScreenViewProvider(
                 } catch (e: Exception) {
                     // Ignore
                 }
+            }
+        }
+
+        val focusManager = LocalFocusManager.current
+        LaunchedEffect(modalBottomSheetState.targetValue) {
+            if (modalBottomSheetState.targetValue != ModalBottomSheetValue.Hidden) {
+                focusManager.clearFocus()
             }
         }
 
