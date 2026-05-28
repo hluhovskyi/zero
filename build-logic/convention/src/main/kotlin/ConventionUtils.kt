@@ -24,6 +24,8 @@ internal fun Project.configureKotlinAndroid() {
     extensions.configure<KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
+            // kotlinx.serialization is used across most modules; opt in once here.
+            optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
         }
     }
 }
