@@ -8,9 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * [SecureKeyValueStore] backed by [EncryptedSharedPreferences]. The encryption key is wrapped by a
- * Keystore-backed [MasterKey], which is device-bound — the backing file (`zero_secure_prefs`) must
- * be excluded from Android Auto Backup, since the master key cannot be restored on another device.
+ * [SecureKeyValueStore] backed by [EncryptedSharedPreferences] (Keystore-wrapped). The master key
+ * is device-bound, so `zero_secure_prefs` must stay out of Auto Backup — see docs/agents/backup.md.
  */
 internal class AndroidSecureKeyValueStore(
     private val context: Context,

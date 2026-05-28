@@ -4,10 +4,8 @@ import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.http.HttpExecutor
 
 /**
- * Manual DI factory for Drive-specific backup impls. Sibling of [BackupComponent]:
- * [BackupComponent] is backend-agnostic orchestration; [DriveComponent] owns the Drive REST
- * implementation. A future backend (Dropbox, WebDAV) would add its own sibling component without
- * touching [BackupComponent].
+ * Manual DI factory for Drive-specific backup impls (sibling of the backend-agnostic
+ * [BackupComponent]). A future backend would add its own sibling component.
  */
 interface DriveComponent {
 

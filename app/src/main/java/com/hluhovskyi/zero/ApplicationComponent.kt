@@ -107,7 +107,6 @@ abstract class ApplicationComponent :
     abstract val activityComponentBuilder: ActivityComponent.Builder
     abstract val attachable: Attachable
     abstract val logger: Logger
-    abstract val currentActivityTracker: CurrentActivityTracker
     abstract val databaseComponent: DatabaseComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
@@ -392,7 +391,7 @@ abstract class ApplicationComponent :
         @ApplicationScope
         fun currentActivityProvider(
             tracker: CurrentActivityTracker,
-        ): @JvmSuppressWildcards () -> Activity? = { tracker.current() }
+        ): @JvmSuppressWildcards () -> Activity? = tracker
 
         @Provides
         @ApplicationScope
@@ -587,5 +586,6 @@ internal object CrashModule {
     @ApplicationScope
     fun attachable(
         crashComponent: CrashComponent,
-    ): Attachable = AttachApplicationComponent(crashComponent)
+        currentActivityTracker: CurrentActivityTracker,
+    ): Attachable = AttachApplicationComponent(crashComponent, currentActivityTracker)
 }

@@ -26,16 +26,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * [OAuthTokenProvider] backed by the Google Identity **Authorization API**
- * ([Identity.getAuthorizationClient]). The app is identified purely by its Android OAuth client
- * (package + signing cert) — no Web client ID, no client secret, no server. Google Play services
- * owns the long-lived grant for the device account; we mint short-lived **access tokens** on
- * demand and never hold a refresh token.
- *
- * [signIn] shows the Drive-permission consent once (a PendingIntent launched on the foreground
- * activity). After that, [getAccessToken] re-mints access tokens silently — including from
- * background work with no UI. None of this is unit-testable (it talks to Play services), so it is
- * validated on-device in the manual smoke test.
+ * [OAuthTokenProvider] over the Google Identity Authorization API: mints short-lived
+ * `drive.appdata` access tokens (no refresh token, no secret). Play-services-backed, so validated
+ * on-device rather than in unit tests.
  */
 internal class GoogleOAuthTokenProvider(
     private val context: Context,

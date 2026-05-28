@@ -3,29 +3,37 @@ package com.hluhovskyi.zero.activity
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import com.hluhovskyi.zero.common.Attachable
+import com.hluhovskyi.zero.common.Closeables
+import java.io.Closeable
 import java.lang.ref.WeakReference
 
 /**
- * Single reusable foreground-activity provider. Registers [Application.ActivityLifecycleCallbacks]
- * and holds a [WeakReference] to the resumed activity. Anything that needs an `Activity` context
- * (e.g. Credential Manager sign-in) reads it through [current].
+ * Tracks the foreground activity. Implements `() -> Activity?` so it can be bound directly across
+ * module boundaries (e.g. `zero-auth`); [attach] registers/unregisters the lifecycle callbacks.
  */
-class CurrentActivityTracker(application: Application) : Application.ActivityLifecycleCallbacks {
+class CurrentActivityTracker(
+    private val application: Application,
+) : Application.ActivityLifecycleCallbacks,
+    () -> Activity?,
+    Attachable {
 
-    private var current: WeakReference<Activity>? = null
+    private var currentRef: WeakReference<Activity>? = null
 
-    init {
+    override fun invoke(): Activity? = currentRef?.get()
+
+    override fun attach(): Closeable {
         application.registerActivityLifecycleCallbacks(this)
+        val callbacks = this
+        return Closeables.from { application.unregisterActivityLifecycleCallbacks(callbacks) }
     }
 
-    fun current(): Activity? = current?.get()
-
     override fun onActivityResumed(activity: Activity) {
-        current = WeakReference(activity)
+        currentRef = WeakReference(activity)
     }
 
     override fun onActivityPaused(activity: Activity) {
-        if (current?.get() === activity) current = null
+        if (currentRef?.get() === activity) currentRef = null
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit

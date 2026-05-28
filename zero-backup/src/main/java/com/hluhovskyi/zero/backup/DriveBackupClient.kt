@@ -12,14 +12,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * Drive REST implementation of [BackupClient] over the generic [HttpExecutor] +
- * [OAuthTokenProvider] interfaces. Pure Kotlin — no Android or OkHttp imports (enforced by the
- * `KmpReadiness` lint rule).
- *
- * The single backup file is `zero-backup.json` in Drive's hidden `appDataFolder`. v1 [upload]
- * always creates a new file; single-rolling-file replace (Drive PATCH by id) lands with the
- * scheduler in a later phase. [latest] picks the most recently modified file, so restore stays
- * correct even if more than one exists.
+ * Drive REST [BackupClient] over [HttpExecutor] + [OAuthTokenProvider]. Pure Kotlin, no OkHttp
+ * (`KmpReadiness` lint). Single file `zero-backup.json` in `appDataFolder`; v1 [upload] creates a
+ * new file each time and [latest] picks the most recent.
  */
 internal class DriveBackupClient(
     private val httpExecutor: HttpExecutor,
