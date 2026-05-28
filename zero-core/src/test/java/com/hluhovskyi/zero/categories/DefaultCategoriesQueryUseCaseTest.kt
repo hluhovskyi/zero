@@ -6,6 +6,8 @@ import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationKey
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -38,6 +40,8 @@ class DefaultCategoriesQueryUseCaseTest {
 
     @Mock private lateinit var transactionRepository: TransactionRepository
 
+    @Mock private lateinit var configurationRepository: ConfigurationRepository
+
     // Fixed clock: 2024-06-01T12:00:00Z in UTC
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
@@ -61,6 +65,8 @@ class DefaultCategoriesQueryUseCaseTest {
                 any(),
             ),
         ).thenReturn(flowOf(emptyList()))
+        whenever(configurationRepository.observe(any<ConfigurationKey<Boolean>>(), any()))
+            .thenReturn(flowOf(true))
     }
 
     private fun createUseCase() = DefaultCategoriesQueryUseCase(
@@ -68,6 +74,7 @@ class DefaultCategoriesQueryUseCaseTest {
         iconRepository = iconRepository,
         colorRepository = colorRepository,
         transactionRepository = transactionRepository,
+        configurationRepository = configurationRepository,
         clock = fakeClock,
         zoneProvider = fakeZoneProvider,
     )
@@ -324,5 +331,45 @@ class DefaultCategoriesQueryUseCaseTest {
         val result = createUseCase().queryRanked(signals).first()
         assertEquals(Id.Known("match"), result[0].id)
         assertEquals(Id.Known("base"), result[1].id)
+    }
+
+    @Test
+    fun `queryRanked ignores signals when ranking signals are disabled in config`() = runTest {
+        whenever(configurationRepository.observe(any<ConfigurationKey<Boolean>>(), any()))
+            .thenReturn(flowOf(false))
+
+        val catMatch = CategoryRepository.Category(
+            id = Id.Known("match"), parentCategoryId = Id.Unknown,
+            name = "Match", iconId = Id.Unknown, colorId = Id.Unknown,
+        )
+        val catBase = CategoryRepository.Category(
+            id = Id.Known("base"), parentCategoryId = Id.Unknown,
+            name = "Base", iconId = Id.Unknown, colorId = Id.Unknown,
+        )
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(catMatch, catBase)))
+
+        // Same setup as the multiplicative-signals test: catBase has higher base usage.
+        val recentDate = LocalDateTime(2024, 6, 1, 12, 0, 0)
+        whenever(transactionRepository.query(any<TransactionRepository.Criteria.CategoryUsageStatistics>(), any()))
+            .thenReturn(
+                flowOf(
+                    listOf(
+                        TransactionRepository.CategoryUsageStatistic(Id.Known("match"), 2, recentDate),
+                        TransactionRepository.CategoryUsageStatistic(Id.Known("base"), 3, recentDate),
+                    ),
+                ),
+            )
+
+        // Even with signals that would normally boost catMatch, the disabled config keeps base ranking.
+        val signals = flowOf<CategoriesQueryUseCase.RankSignal>(
+            CategoriesQueryUseCase.RankSignal.AccountChanged(Id.Known("acc-1")),
+            CategoriesQueryUseCase.RankSignal.DateChanged(LocalDate(2024, 6, 15)),
+            CategoriesQueryUseCase.RankSignal.AmountChanged(BigDecimal("10.00")),
+        )
+
+        val result = createUseCase().queryRanked(signals).first()
+        assertEquals(Id.Known("base"), result[0].id)
+        assertEquals(Id.Known("match"), result[1].id)
     }
 }

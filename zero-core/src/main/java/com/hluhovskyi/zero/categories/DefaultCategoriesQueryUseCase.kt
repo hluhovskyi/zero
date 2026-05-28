@@ -8,12 +8,15 @@ import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.observe
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
@@ -29,6 +32,7 @@ internal class DefaultCategoriesQueryUseCase(
     private val iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
     private val transactionRepository: TransactionRepository,
+    private val configurationRepository: ConfigurationRepository,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
 ) : CategoriesQueryUseCase {
@@ -62,7 +66,11 @@ internal class DefaultCategoriesQueryUseCase(
     override fun queryRanked(
         signals: Flow<CategoriesQueryUseCase.RankSignal>,
     ): Flow<List<CategoriesQueryUseCase.Category>> {
-        val signalState = signals.runningFold(SignalState()) { state, signal ->
+        val effectiveSignals = configurationRepository
+            .observe(CategoryConfigurationKey.RankingSignalsEnabled)
+            .flatMapLatest { enabled -> if (enabled) signals else emptyFlow() }
+
+        val signalState = effectiveSignals.runningFold(SignalState()) { state, signal ->
             when (signal) {
                 is CategoriesQueryUseCase.RankSignal.AccountChanged ->
                     state.copy(accountId = signal.accountId)

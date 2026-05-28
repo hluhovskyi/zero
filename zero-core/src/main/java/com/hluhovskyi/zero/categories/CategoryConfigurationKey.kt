@@ -14,4 +14,9 @@ internal sealed class CategoryConfigurationKey<Type>(
         name = "has_added_category",
         defaultValue = false,
     )
+
+    object RankingSignalsEnabled : CategoryConfigurationKey<Boolean>(
+        name = "ranking_signals_enabled",
+        defaultValue = true,
+    )
 }
