@@ -10,6 +10,7 @@ import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Rate
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
@@ -18,12 +19,14 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -91,7 +94,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `LoadMore action emits to the trigger passed to Criteria_All query`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -119,7 +122,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `attach queries Criteria_After with a recent timestamp`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -171,7 +174,7 @@ class DefaultTransactionViewModelTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
         whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
 
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -190,7 +193,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `UpdateSearchQuery updates searchQuery in state immediately`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -206,7 +209,7 @@ class DefaultTransactionViewModelTest {
         whenever(transactionRepository.query(any<TransactionRepository.Criteria.Search>(), any()))
             .thenReturn(searchFlow)
 
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -233,7 +236,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `LoadMore is no-op when search is active`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -260,7 +263,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `ToggleSelection adds then removes an id and exits selection mode when empty`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -277,7 +280,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `DeleteSelected deletes every selected id and clears the selection`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -295,7 +298,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `DuplicateSelected duplicates the single selected transaction and clears selection`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -310,7 +313,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `ExitSelection clears the selection`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel(testScheduler)
         viewModel.attach()
         runCurrent()
 
@@ -325,7 +328,7 @@ class DefaultTransactionViewModelTest {
     @Test
     fun `ForCategory filter queries ForCategories criterion instead of All`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
+        val viewModel = createViewModel(testScheduler, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
@@ -343,7 +346,7 @@ class DefaultTransactionViewModelTest {
     @Test
     fun `ForCategory filter makes LoadMore a no-op`() = runTest {
         val categoryId = Id.Known("cat1")
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
+        val viewModel = createViewModel(testScheduler, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
 
@@ -401,7 +404,7 @@ class DefaultTransactionViewModelTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(currency)
         whenever(currencyConvertUseCase.convertToPrimary(any(), any())).thenReturn(Amount(BigDecimal.TEN))
 
-        val viewModel = createViewModel(backgroundScope, filter = TransactionFilter.forCategory(categoryId))
+        val viewModel = createViewModel(testScheduler, filter = TransactionFilter.forCategory(categoryId))
         viewModel.attach()
         runCurrent()
         advanceUntilIdle()
@@ -414,23 +417,31 @@ class DefaultTransactionViewModelTest {
     }
 
     private fun createViewModel(
-        coroutineScope: CoroutineScope,
+        scheduler: TestCoroutineScheduler,
         filter: TransactionFilter = TransactionFilter.All,
-    ) = DefaultTransactionViewModel(
-        transactionRepository = transactionRepository,
-        accountRepository = accountRepository,
-        currencyRepository = currencyRepository,
-        iconRepository = iconRepository,
-        colorRepository = colorRepository,
-        categoriesQueryUseCase = categoriesQueryUseCase,
-        currencyPrimaryUseCase = currencyPrimaryUseCase,
-        currencyConvertUseCase = currencyConvertUseCase,
-        onTransactionSelectedHandler = onTransactionSelectedHandler,
-        onDuplicateTransactionHandler = onDuplicateTransactionHandler,
-        filter = filter,
-        transactionFilterApplicator = TransactionFilterApplicator.Identity,
-        clock = fakeClock,
-        zoneProvider = fakeZoneProvider,
-        coroutineScope = coroutineScope,
-    )
+    ): DefaultTransactionViewModel {
+        val dispatcher = StandardTestDispatcher(scheduler)
+        val dispatchers = object : DispatcherProvider {
+            override fun io(): CoroutineDispatcher = dispatcher
+            override fun cpu(): CoroutineDispatcher = dispatcher
+            override fun main(): CoroutineDispatcher = dispatcher
+        }
+        return DefaultTransactionViewModel(
+            transactionRepository = transactionRepository,
+            accountRepository = accountRepository,
+            currencyRepository = currencyRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
+            categoriesQueryUseCase = categoriesQueryUseCase,
+            currencyPrimaryUseCase = currencyPrimaryUseCase,
+            currencyConvertUseCase = currencyConvertUseCase,
+            onTransactionSelectedHandler = onTransactionSelectedHandler,
+            onDuplicateTransactionHandler = onDuplicateTransactionHandler,
+            filter = filter,
+            transactionFilterApplicator = TransactionFilterApplicator.Identity,
+            clock = fakeClock,
+            zoneProvider = fakeZoneProvider,
+            dispatchers = dispatchers,
+        )
+    }
 }

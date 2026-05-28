@@ -4,8 +4,8 @@ import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.observe
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
@@ -23,7 +23,7 @@ internal class DefaultAccountViewModel(
     AccountViewModel {
 
     private val mutableState = MutableStateFlow(AccountViewModel.State())
-    override val state: Flow<AccountViewModel.State> = mutableState
+    override val state: StateFlow<AccountViewModel.State> = mutableState
 
     override fun perform(action: AccountViewModel.Action) {
         when (action) {
