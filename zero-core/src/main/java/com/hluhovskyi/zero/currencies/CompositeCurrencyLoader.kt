@@ -108,8 +108,7 @@ internal class CompositeCurrencyLoader(
     }
 }
 
-private fun RateSnapshotStore.Stored.toRates(): Map<Id.Known, Rate> =
-    rates.entries.associate { (code, rate) -> Id(code) to Rate(rate) }
+private fun RateSnapshotStore.Stored.toRates(): Map<Id.Known, Rate> = rates.entries.associate { (code, rate) -> Id(code) to Rate(rate) }
 
 private fun ExchangeRateSnapshot.toStored(day: LocalDate): RateSnapshotStore.Stored = RateSnapshotStore.Stored(
     fetchedOn = day,
