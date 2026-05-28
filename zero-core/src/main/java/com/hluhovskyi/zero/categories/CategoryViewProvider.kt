@@ -72,7 +72,7 @@ private fun CategoryView(
     amountFormatter: AmountFormatter,
     onAddCategory: OnAddCategoryHandler,
 ) {
-    val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
+    val state by viewModel.state.collectAsState()
     val expenseLabel = stringResource(R.string.transaction_type_expense)
     val incomeLabel = stringResource(R.string.transaction_type_income)
 

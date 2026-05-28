@@ -96,7 +96,7 @@ private fun BudgetView(
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
 ) {
-    val state by viewModel.state.collectAsState(initial = BudgetViewModel.State())
+    val state by viewModel.state.collectAsState()
     var toastMessage by remember { mutableStateOf<String?>(null) }
 
     // Inline overlays aren't navigation destinations, so back must step back through the open

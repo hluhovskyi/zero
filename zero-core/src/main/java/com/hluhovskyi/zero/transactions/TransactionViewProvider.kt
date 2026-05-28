@@ -101,7 +101,7 @@ private fun TransactionView(
     displayConfig: DisplayConfig = DisplayConfig(),
     onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
 ) {
-    val state by viewModel.state.collectAsState(initial = TransactionViewModel.State())
+    val state by viewModel.state.collectAsState()
     val lazyListState = rememberLazyListState()
 
     BackHandler(enabled = state.inSelectionMode) {

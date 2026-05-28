@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
@@ -54,6 +55,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
+        val dispatchers: DispatcherProvider
     }
 
     companion object {
@@ -117,6 +119,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             transactionFilterApplicator: TransactionFilterApplicator,
             clock: Clock,
             zoneProvider: ZoneProvider,
+            dispatchers: DispatcherProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
             accountRepository = accountRepository,
@@ -133,6 +136,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             transactionFilterApplicator = transactionFilterApplicator,
             clock = clock,
             zoneProvider = zoneProvider,
+            dispatchers = dispatchers,
         )
 
         @Provides

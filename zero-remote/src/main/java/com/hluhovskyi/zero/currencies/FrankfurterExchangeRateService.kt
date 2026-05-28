@@ -6,7 +6,8 @@ import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
 
-internal class RetrofitExchangeRateService(
+/** Tier 1: ECB-authoritative rates from Frankfurter (~30 fiat, no crypto). */
+internal class FrankfurterExchangeRateService(
     private val service: FrankfurterRemoteService,
 ) : ExchangeRateService {
 
@@ -17,10 +18,10 @@ internal class RetrofitExchangeRateService(
             rates = response.rates.entries.associate { (code, rate) -> Id(code.uppercase()) to Rate(rate) },
         )
     } catch (e: IOException) {
-        Timber.w(e, "RetrofitExchangeRateService: network error")
+        Timber.w(e, "FrankfurterExchangeRateService: network error")
         null
     } catch (e: HttpException) {
-        Timber.w(e, "RetrofitExchangeRateService: server returned ${e.code()}")
+        Timber.w(e, "FrankfurterExchangeRateService: server returned ${e.code()}")
         null
     }
 }

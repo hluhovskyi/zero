@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.user.DefaultNewUserUseCase
@@ -40,6 +41,7 @@ abstract class HomeComponent : AttachableViewComponent {
 
     interface Dependencies {
         val transactionRepository: TransactionRepository
+        val dispatchers: DispatcherProvider
     }
 
     companion object {
@@ -85,8 +87,10 @@ abstract class HomeComponent : AttachableViewComponent {
         @HomeScope
         fun viewModel(
             newUserUseCase: NewUserUseCase,
+            dispatchers: DispatcherProvider,
         ): HomeViewModel = DefaultHomeViewModel(
             newUserUseCase = newUserUseCase,
+            dispatchers = dispatchers,
         )
 
         @Provides
