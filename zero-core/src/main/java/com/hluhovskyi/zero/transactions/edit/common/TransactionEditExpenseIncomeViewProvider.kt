@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,6 +47,12 @@ private fun TransactionEditExpenseIncomeView(
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseIncomeViewModel.State())
     val focusRequester = remember { FocusRequester() }
+
+    if (shouldFocus) {
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
+    }
 
     Column(
         modifier = Modifier
