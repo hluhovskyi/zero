@@ -17,7 +17,7 @@ import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-class RetrofitExchangeRateServiceTest {
+class CurrencyApiExchangeRateServiceTest {
 
     private lateinit var server: MockWebServer
     private val json = Json { ignoreUnknownKeys = true }
@@ -34,10 +34,10 @@ class RetrofitExchangeRateServiceTest {
     }
 
     @Test
-    fun `happy path maps snapshot and queries v1 latest with EUR base`() = runTest {
+    fun `happy path maps the EUR table to an EUR snapshot`() = runTest {
         server.enqueue(
             MockResponse().setResponseCode(200).setBody(
-                """{"base":"EUR","date":"2026-05-26","rates":{"USD":1.16,"GBP":0.86}}""",
+                """{"date":"2026-05-27","eur":{"usd":1.16,"btc":0.00002}}""",
             ),
         )
 
@@ -45,8 +45,8 @@ class RetrofitExchangeRateServiceTest {
 
         assertEquals(Id("EUR"), snapshot.base)
         assertEquals(Rate(1.16).value, snapshot.rates.getValue(Id("USD")).value)
-        assertEquals(Rate(0.86).value, snapshot.rates.getValue(Id("GBP")).value)
-        assertEquals("/v1/latest?base=EUR", server.takeRequest().path)
+        assertEquals(Rate(0.00002).value, snapshot.rates.getValue(Id("BTC")).value)
+        assertEquals("/v1/currencies/eur.min.json", server.takeRequest().path)
     }
 
     @Test
@@ -63,13 +63,13 @@ class RetrofitExchangeRateServiceTest {
         assertNull(service().latest())
     }
 
-    private fun service(): RetrofitExchangeRateService {
+    private fun service(): CurrencyApiExchangeRateService {
         val api = Retrofit.Builder()
             .baseUrl(server.url("/"))
             .client(OkHttpClient())
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(FrankfurterRemoteService::class.java)
-        return RetrofitExchangeRateService(api)
+            .create(CurrencyApiRemoteService::class.java)
+        return CurrencyApiExchangeRateService(api)
     }
 }
