@@ -43,8 +43,6 @@ abstract class SettingsComponent : AttachableViewComponent {
         val currentUserRepository: CurrentUserRepository
         val serializer: SyncSerializer
         val exportWriter: ExportWriter
-
-        // TODO: remove in Phase 3 — only the temporary DEV backup button uses these.
         val oauthTokenProvider: OAuthTokenProvider
         val backupUseCase: BackupUseCase
     }
@@ -53,6 +51,7 @@ abstract class SettingsComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerSettingsComponent.builder()
             .dependencies(dependencies)
             .onImportSelectedHandler(OnImportSelectedHandler.Noop)
+            .onBackupSelectedHandler(OnBackupSelectedHandler.Noop)
             .settingsCurrencyUseCase(SettingsCurrencyUseCase.Noop)
     }
 
@@ -62,6 +61,9 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onImportSelectedHandler(handler: OnImportSelectedHandler): Builder
+
+        @BindsInstance
+        fun onBackupSelectedHandler(handler: OnBackupSelectedHandler): Builder
 
         @BindsInstance
         fun settingsCurrencyUseCase(useCase: SettingsCurrencyUseCase): Builder
@@ -94,6 +96,7 @@ abstract class SettingsComponent : AttachableViewComponent {
         @SettingsScope
         fun viewModel(
             onImportSelected: OnImportSelectedHandler,
+            onBackupSelected: OnBackupSelectedHandler,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
             exportUseCase: ExportUseCase,
@@ -103,6 +106,7 @@ abstract class SettingsComponent : AttachableViewComponent {
             backupUseCase: BackupUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
+            onBackupSelected = onBackupSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,
             exportUseCase = exportUseCase,

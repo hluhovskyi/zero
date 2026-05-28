@@ -25,6 +25,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
@@ -182,6 +183,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val colorPickerComponentFactory: ColorPickerComponent.Factory
 
         val settingsComponentBuilder: SettingsComponent.Builder
+        val backupDetailComponentBuilder: BackupDetailComponent.Builder
         val importComponentBuilder: ImportComponent.Builder
 
         val biometricLockUseCase: BiometricLockUseCase
@@ -945,9 +947,23 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Settings) {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                .onBackupSelectedHandler { navigator.navigateTo(Destinations.Backup) }
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .biometricLockUseCase(biometricLockUseCase)
                 .biometricAuthenticator(biometricAuthenticator)
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun backupNavigationEntry(
+            componentBuilder: BackupDetailComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Backup) {
+            componentBuilder
+                .onBackHandler { navigator.back() }
                 .logging(logger)
         }
 

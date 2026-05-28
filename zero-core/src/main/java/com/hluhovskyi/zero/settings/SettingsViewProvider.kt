@@ -44,9 +44,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
+import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.rememberBackupRelativeTime
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
+import kotlinx.datetime.LocalDateTime
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -92,11 +95,6 @@ private fun MoreView(viewModel: SettingsViewModel) {
         }
     }
 
-    // TODO: remove in Phase 3 — DEV backup button feedback.
-    LaunchedEffect(state.devBackupStatus) {
-        state.devBackupStatus?.let { snackbarHostState.showSnackbar(it) }
-    }
-
     LaunchedEffect(state.biometricFeedback) {
         when (state.biometricFeedback) {
             SettingsViewModel.BiometricFeedback.Unavailable -> {
@@ -125,6 +123,18 @@ private fun MoreView(viewModel: SettingsViewModel) {
                         primaryText = stringResource(R.string.settings_primary_currency),
                         secondaryText = state.selectedCurrencyName.ifEmpty { stringResource(R.string.settings_currency_loading) },
                         onClick = { viewModel.perform(SettingsViewModel.Action.OpenCurrencyPicker) },
+                    )
+                }
+            }
+            item {
+                val backup = state.backup
+                MoreSection(title = stringResource(R.string.settings_section_backup).uppercase()) {
+                    MoreRow(
+                        icon = Icons.Outlined.CloudUpload,
+                        primaryText = stringResource(R.string.settings_backup_row_title),
+                        secondaryText = backupRowSubtitle(backup),
+                        secondaryColor = backupRowSubtitleColor(backup),
+                        onClick = { viewModel.perform(SettingsViewModel.Action.OpenBackup) },
                     )
                 }
             }
@@ -159,18 +169,6 @@ private fun MoreView(viewModel: SettingsViewModel) {
                         },
                         checked = state.biometricLockEnabled,
                         onToggle = { viewModel.perform(SettingsViewModel.Action.ToggleBiometricLock) },
-                    )
-                }
-            }
-            // TODO: remove in Phase 3 — temporary entry point for the Drive backup smoke test.
-            item {
-                MoreSection(title = "DEV") {
-                    MoreRow(
-                        icon = Icons.Outlined.CloudUpload,
-                        primaryText = "DEV: Test backup",
-                        secondaryText = state.devBackupStatus ?: "Sign in + back up to Drive",
-                        onClick = { viewModel.perform(SettingsViewModel.Action.DevTestBackup) },
-                        showChevron = false,
                     )
                 }
             }
@@ -230,6 +228,7 @@ private fun MoreRow(
     secondaryText: String,
     onClick: () -> Unit,
     showChevron: Boolean = true,
+    secondaryColor: androidx.compose.ui.graphics.Color? = null,
 ) {
     Row(
         modifier = Modifier
@@ -265,7 +264,7 @@ private fun MoreRow(
                 text = secondaryText,
                 style = TextStyle(
                     fontSize = 12.sp,
-                    color = ZeroTheme.colors.onSurfaceVariant,
+                    color = secondaryColor ?: ZeroTheme.colors.onSurfaceVariant,
                 ),
             )
         }
@@ -279,6 +278,35 @@ private fun MoreRow(
         }
     }
 }
+
+/**
+ * Maps the projected backup summary to the row's secondary text. Per
+ * `feedback_viewmodel_no_derivation` this lives in the composable, not the ViewModel —
+ * the ViewModel passes the raw passthrough state and the row picks the right copy.
+ */
+@Composable
+private fun backupRowSubtitle(backup: SettingsViewModel.BackupSummary): String = when {
+    !backup.isSignedIn -> stringResource(R.string.settings_backup_row_off)
+    backup.phase is BackupUseCase.Phase.Uploading -> stringResource(R.string.settings_backup_row_uploading)
+    backup.phase is BackupUseCase.Phase.Restoring -> stringResource(R.string.settings_backup_row_restoring)
+    backup.phase is BackupUseCase.Phase.Failed && backup.consecutiveFailures > 0 ->
+        stringResource(R.string.settings_backup_row_failed)
+    backup.lastSuccessAt != null ->
+        stringResource(R.string.settings_backup_row_last_at, settingsBackupRelativeTime(backup.lastSuccessAt))
+    else -> stringResource(R.string.settings_backup_row_on)
+}
+
+@Composable
+private fun backupRowSubtitleColor(backup: SettingsViewModel.BackupSummary): androidx.compose.ui.graphics.Color = when {
+    !backup.isSignedIn -> ZeroTheme.colors.outline
+    backup.phase is BackupUseCase.Phase.Failed && backup.consecutiveFailures > 0 -> ZeroTheme.colors.error
+    backup.phase is BackupUseCase.Phase.Uploading || backup.phase is BackupUseCase.Phase.Restoring ->
+        ZeroTheme.colors.primaryContainer
+    else -> ZeroTheme.colors.onSurfaceVariant
+}
+
+@Composable
+private fun settingsBackupRelativeTime(at: LocalDateTime): String = rememberBackupRelativeTime(at)
 
 @Composable
 private fun MoreToggleRow(
