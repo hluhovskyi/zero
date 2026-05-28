@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.activity.CurrentActivityTracker
 import com.hluhovskyi.zero.auth.AuthComponent
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.BackupApplicationComponent
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupDeepLinkSignal
@@ -19,7 +20,6 @@ import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.BackupNotificationPresenter
 import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
-import com.hluhovskyi.zero.backup.DefaultBackupScheduler
 import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -143,7 +143,6 @@ abstract class ApplicationComponent :
             DatabaseModule::class,
             RemoteModule::class,
             AuthModule::class,
-            BackupAndroidModule::class,
         ],
     )
     object Module {
@@ -431,6 +430,31 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        internal fun backupApplicationComponent(
+            context: Context,
+            backupUseCase: BackupUseCase,
+            workManagerScheduler: WorkManagerScheduler,
+        ): BackupApplicationComponent = BackupApplicationComponent.builder(
+            object : BackupApplicationComponent.Dependencies {
+                override val context = context
+                override val backupUseCase = backupUseCase
+                override val workManagerScheduler = workManagerScheduler
+            },
+        ).build()
+
+        @Provides
+        internal fun backupScheduler(component: BackupApplicationComponent): BackupScheduler = component.backupScheduler
+
+        @Provides
+        internal fun backupNotificationPresenter(component: BackupApplicationComponent): BackupNotificationPresenter =
+            component.backupNotificationPresenter
+
+        @Provides
+        internal fun backupDeepLinkSignal(component: BackupApplicationComponent): BackupDeepLinkSignal =
+            component.backupDeepLinkSignal
+
+        @Provides
+        @ApplicationScope
         fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
 
         @Provides
@@ -576,30 +600,6 @@ internal object RemoteModule {
     fun exchangeRateService(
         remoteComponent: RemoteComponent,
     ): ExchangeRateService = remoteComponent.exchangeRateService
-}
-
-@dagger.Module
-internal object BackupAndroidModule {
-
-    @Provides
-    @ApplicationScope
-    fun backupScheduler(
-        workManagerScheduler: WorkManagerScheduler,
-    ): BackupScheduler = DefaultBackupScheduler(workManagerScheduler)
-
-    @Provides
-    @ApplicationScope
-    fun backupNotificationPresenter(
-        context: Context,
-        backupUseCase: BackupUseCase,
-    ): BackupNotificationPresenter = BackupNotificationPresenter(
-        context = context,
-        backupUseCase = backupUseCase,
-    )
-
-    @Provides
-    @ApplicationScope
-    fun backupDeepLinkSignal(): BackupDeepLinkSignal = BackupDeepLinkSignal()
 }
 
 @dagger.Module
