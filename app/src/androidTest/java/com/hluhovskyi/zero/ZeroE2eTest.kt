@@ -57,8 +57,8 @@ class ZeroE2eTest : BaseE2eTest() {
             .tapAddTransaction()
             .assertCurrencySymbol("$")
             .openCurrencyPicker(currentSymbol = "$")
-            .pickCurrencyByName("Albanian Lek")
-            .assertCurrencySymbol("ALL")
+            .pickCurrencyByName("Australian Dollar")
+            .assertCurrencySymbol("A$")
     }
 
     @Test
