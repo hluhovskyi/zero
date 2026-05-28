@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import java.math.BigDecimal
 
 interface TransactionRepository {
 
@@ -28,6 +29,11 @@ interface TransactionRepository {
         data class ById(val id: Id.Known) : Criteria<Transaction>
         data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
+        data class CategoryUsageStatisticsByAccount(val accountId: Id.Known)
+            : Criteria<List<CategoryUsageStatistic>>
+        data class CategoryUsageStatisticsByMonth(val month: Int)
+            : Criteria<List<CategoryUsageStatistic>>
+        class CategoryAmountStatistics : Criteria<List<CategoryAmountStatistic>>
         data class Search(val query: String) : Criteria<List<Transaction>>
         data class CategorySpendingBetween(
             val from: LocalDate,
@@ -72,6 +78,11 @@ interface TransactionRepository {
         val currencyId: Id.Known,
         val totalAmount: Amount,
         val transactionCount: Int,
+    )
+
+    data class CategoryAmountStatistic(
+        val categoryId: Id.Known,
+        val averageAmount: BigDecimal,
     )
 
     sealed interface Transaction {
