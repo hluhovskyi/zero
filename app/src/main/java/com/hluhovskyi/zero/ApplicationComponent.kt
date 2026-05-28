@@ -3,6 +3,7 @@ package com.hluhovskyi.zero
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import androidx.work.WorkManager
 import android.os.Build
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
@@ -65,6 +66,7 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
 import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
 import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -109,6 +111,8 @@ abstract class ApplicationComponent :
     abstract val databaseComponent: DatabaseComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
+    abstract override val syncEngine: SyncEngine
+    abstract override val currentUserRepository: CurrentUserRepository
 
     interface Dependencies {
 
@@ -422,6 +426,14 @@ abstract class ApplicationComponent :
         @Provides
         @ApplicationScope
         fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManager(context: Context): WorkManager = WorkManager.getInstance(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManagerScheduler(workManager: WorkManager): WorkManagerScheduler = WorkManagerScheduler(workManager)
 
         @Provides
         @ApplicationScope

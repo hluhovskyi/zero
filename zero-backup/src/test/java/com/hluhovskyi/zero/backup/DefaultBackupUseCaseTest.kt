@@ -184,6 +184,7 @@ class DefaultBackupUseCaseTest {
         override suspend fun import(snapshot: SyncSnapshot, userId: Id.Known) = Unit
         override suspend fun loadSnapshot(uri: Uri.NonEmpty): SyncSnapshot = snapshot
         override suspend fun delta(snapshot: SyncSnapshot, userId: Id.Known): SyncSnapshot = snapshot
+        override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = null
     }
 
     private class FakeCurrentUserRepository(private val userId: Id.Known) : CurrentUserRepository {

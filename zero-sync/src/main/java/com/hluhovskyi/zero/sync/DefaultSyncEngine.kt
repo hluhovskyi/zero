@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.resource.UriResult
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -56,6 +57,13 @@ internal class DefaultSyncEngine(
         transactions = computeDelta(transactionPipeline, snapshot.transactions, userId),
         budgets = computeDelta(budgetPipeline, snapshot.budgets, userId),
     )
+
+    override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = sequenceOf(
+        categoryPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
+        accountPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
+        transactionPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
+        budgetPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
+    ).filterNotNull().maxOrNull()
 
     private suspend fun <T : SyncEntity> mergePipeline(
         pipeline: SyncPipeline<T>,
