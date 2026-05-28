@@ -152,6 +152,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.compose.uiToolingPreview)
+    implementation(libs.androidx.metrics.performance)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
     debugImplementation(libs.androidx.compose.uiTooling)
 

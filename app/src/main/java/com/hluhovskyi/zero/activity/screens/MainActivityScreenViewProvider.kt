@@ -25,10 +25,13 @@ import androidx.compose.material.navigation.bottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.metrics.performance.PerformanceMetricsState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -68,6 +71,14 @@ internal class MainActivityScreenViewProvider(
             if (modalBottomSheetState.targetValue != ModalBottomSheetValue.Hidden) {
                 focusManager.clearFocus()
             }
+        }
+
+        val performanceHolder = rememberPerformanceHolder()
+        LaunchedEffect(navController, performanceHolder) {
+            navController.currentBackStackEntryFlow
+                .collect {
+                    performanceHolder.state?.putState("Screen", it.destination.route.orEmpty())
+                }
         }
 
         ModalBottomSheetLayout(
@@ -199,3 +210,11 @@ private const val NAV_TRANSITION_MILLIS = 180
 private val BOTTOM_BAR_TAB_ROUTES = setOf("home", "accounts", "categories", "budget", "settings")
 
 private fun isTabSwitch(from: String?, to: String?): Boolean = from in BOTTOM_BAR_TAB_ROUTES && to in BOTTOM_BAR_TAB_ROUTES
+
+@Composable
+private fun rememberPerformanceHolder(): PerformanceMetricsState.Holder {
+    val view = LocalView.current
+    return remember(view) {
+        PerformanceMetricsState.getHolderForHierarchy(view)
+    }
+}
