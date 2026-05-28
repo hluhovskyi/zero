@@ -19,4 +19,4 @@ Android library module. Server-side calls (feedback submission to a GCP Cloud Fu
 - `RemoteComponent` — public Dagger component, the only entry point
 - `feedback/` — `OkHttpFeedbackService` (impl) + `FeedbackRequest` / `FeedbackResponse` (HTTP body shapes)
 - `integrity/` — `IntegrityTokenProvider` interface + `PlayIntegrityTokenProvider` impl (wraps Google's `StandardIntegrityManager`)
-- `currencies/` — `RetrofitExchangeRateService` (impl of `ExchangeRateService`) + `FrankfurterApi` (Retrofit `@GET` interface) + `FrankfurterLatestResponse` (HTTP body shape). `latest()` returns the whole EUR-based table in one call; the app cross-rates locally. Frankfurter covers ~31 fiat currencies only — no crypto; failures return `null`, and the app's `CompositeCurrencyLoader` falls back to its persisted snapshot, then bundled rates.
+- `currencies/` — tiered `ExchangeRateService`: `FrankfurterExchangeRateService` (ECB-authoritative ~30 fiat) layered over `CurrencyApiExchangeRateService` (broad fiat + crypto) by `ChainedExchangeRateService`. All tiers must emit the **same base** (EUR); merging assumes that, so a tier in another base would silently produce wrong cross-rates.
