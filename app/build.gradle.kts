@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     id("zero.android.application")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 val versionProps =

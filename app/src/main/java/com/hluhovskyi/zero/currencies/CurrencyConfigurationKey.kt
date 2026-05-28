@@ -15,4 +15,10 @@ internal sealed class CurrencyConfigurationKey<Type>(
         name = "primary_currency",
         defaultValue = Id.Unknown,
     )
+
+    /** Serialized [com.hluhovskyi.zero.currencies.RateSnapshotStore.Stored]; empty when unset. */
+    object RateSnapshot : CurrencyConfigurationKey<String>(
+        name = "rate_snapshot",
+        defaultValue = "",
+    )
 }
