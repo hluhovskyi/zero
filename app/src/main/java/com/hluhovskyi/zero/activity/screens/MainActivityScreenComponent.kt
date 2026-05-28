@@ -25,7 +25,6 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
-import com.hluhovskyi.zero.backup.BackupDeepLinkSignal
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
@@ -185,7 +184,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val settingsComponentBuilder: SettingsComponent.Builder
         val backupDetailComponentBuilder: BackupDetailComponent.Builder
-        val backupDeepLinkSignal: BackupDeepLinkSignal
         val importComponentBuilder: ImportComponent.Builder
 
         val biometricLockUseCase: BiometricLockUseCase
@@ -293,7 +291,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
             navigationEntries: Set<@JvmSuppressWildcards NavigatorEntry>,
             bottomBarComponent: BottomBarComponent.Builder,
-            backupDeepLinkSignal: BackupDeepLinkSignal,
         ): ViewProvider = MainActivityScreenViewProvider(
             navController = navHostController,
             startDestination = Destinations.Home,
@@ -309,8 +306,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             },
             bottomSheetNavigator = bottomSheetNavigator,
             modalBottomSheetState = modalBottomSheetState,
-            deepLinkRequests = backupDeepLinkSignal.requests,
-            onBackupDeepLink = { navigator.navigateTo(Destinations.Backup) },
         )
 
         @Provides
@@ -966,7 +961,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: BackupDetailComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Backup) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Backup,
+            deepLinks = listOf("zero://backup"),
+        ) {
             componentBuilder
                 .onBackHandler { navigator.back() }
                 .logging(logger)

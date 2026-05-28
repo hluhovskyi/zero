@@ -29,13 +29,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.hluhovskyi.zero.activity.navigation.BundleArguments
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
-import kotlinx.coroutines.flow.Flow
 
 internal class MainActivityScreenViewProvider(
     private val navController: NavHostController,
@@ -44,8 +44,6 @@ internal class MainActivityScreenViewProvider(
     private val bottomBar: @Composable () -> Unit,
     private val bottomSheetNavigator: BottomSheetNavigator,
     private val modalBottomSheetState: ModalBottomSheetState,
-    private val deepLinkRequests: Flow<Unit>,
-    private val onBackupDeepLink: () -> Unit,
 ) : ViewProvider {
 
     @Composable
@@ -59,10 +57,6 @@ internal class MainActivityScreenViewProvider(
                     // Ignore
                 }
             }
-        }
-
-        LaunchedEffect(Unit) {
-            deepLinkRequests.collect { onBackupDeepLink() }
         }
 
         ModalBottomSheetLayout(
@@ -86,6 +80,9 @@ internal class MainActivityScreenViewProvider(
                             navArgument(name = argument.key) {
                                 nullable = argument.optional
                             }
+                        }
+                        val navDeepLinks = entry.deepLinks.map { pattern ->
+                            navDeepLink { uriPattern = pattern }
                         }
                         when (entry.displayOption) {
                             is NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet -> {
@@ -123,6 +120,7 @@ internal class MainActivityScreenViewProvider(
                                 composable(
                                     route = entry.route,
                                     arguments = navArguments,
+                                    deepLinks = navDeepLinks,
                                 ) { backStackEntry ->
                                     Box(
                                         modifier = Modifier

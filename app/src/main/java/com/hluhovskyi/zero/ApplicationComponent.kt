@@ -15,7 +15,6 @@ import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupApplicationComponent
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
-import com.hluhovskyi.zero.backup.BackupDeepLinkSignal
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.BackupNotificationPresenter
 import com.hluhovskyi.zero.backup.BackupScheduler
@@ -117,7 +116,6 @@ abstract class ApplicationComponent :
     abstract override val deviceInfo: DeviceInfo
     abstract override val syncEngine: SyncEngine
     abstract override val currentUserRepository: CurrentUserRepository
-    abstract override val backupDeepLinkSignal: BackupDeepLinkSignal
 
     interface Dependencies {
 
@@ -448,10 +446,6 @@ abstract class ApplicationComponent :
         @Provides
         internal fun backupNotificationPresenter(component: BackupApplicationComponent): BackupNotificationPresenter =
             component.backupNotificationPresenter
-
-        @Provides
-        internal fun backupDeepLinkSignal(component: BackupApplicationComponent): BackupDeepLinkSignal =
-            component.backupDeepLinkSignal
 
         @Provides
         @ApplicationScope

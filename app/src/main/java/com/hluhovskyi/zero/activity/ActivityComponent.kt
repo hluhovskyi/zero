@@ -10,7 +10,6 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
-import com.hluhovskyi.zero.backup.BackupDeepLinkSignal
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -138,7 +137,6 @@ abstract class ActivityComponent :
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
         val backupDetailComponentBuilder: BackupDetailComponent.Builder
-        val backupDeepLinkSignal: BackupDeepLinkSignal
         val presetsComponent: PresetsComponent
 
         val feedbackService: FeedbackService

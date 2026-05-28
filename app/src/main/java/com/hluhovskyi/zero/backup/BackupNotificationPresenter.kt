@@ -8,9 +8,9 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import android.R as AndroidR
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.activity.MainActivity
 import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Closeables
 import kotlinx.coroutines.CoroutineScope
@@ -22,10 +22,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.Closeable
 
-internal const val EXTRA_OPEN_SETTINGS_BACKUP = "OPEN_SETTINGS_BACKUP"
 private const val CHANNEL_ID = "backup-status"
 private const val NOTIFICATION_ID = 9_001
 private const val FAILURE_STRIKE_THRESHOLD = 3
+private const val BACKUP_DEEP_LINK_URI = "zero://backup"
 
 internal class BackupNotificationPresenter(
     private val context: Context,
@@ -70,9 +70,8 @@ internal class BackupNotificationPresenter(
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 
-        val openSettings = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra(EXTRA_OPEN_SETTINGS_BACKUP, true)
+        val openSettings = Intent(Intent.ACTION_VIEW, BACKUP_DEEP_LINK_URI.toUri()).apply {
+            setPackage(context.packageName)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,

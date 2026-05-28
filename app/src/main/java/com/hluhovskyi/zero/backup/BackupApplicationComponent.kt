@@ -19,7 +19,6 @@ internal abstract class BackupApplicationComponent {
 
     abstract val backupScheduler: BackupScheduler
     abstract val backupNotificationPresenter: BackupNotificationPresenter
-    abstract val backupDeepLinkSignal: BackupDeepLinkSignal
 
     interface Dependencies {
         val context: Context
@@ -55,9 +54,5 @@ internal abstract class BackupApplicationComponent {
             context = context,
             backupUseCase = backupUseCase,
         )
-
-        @Provides
-        @BackupApplicationScope
-        fun backupDeepLinkSignal(): BackupDeepLinkSignal = BackupDeepLinkSignal()
     }
 }
