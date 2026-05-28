@@ -101,7 +101,6 @@ android {
 kotlin {
     compilerOptions {
         optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
         optIn.add("androidx.compose.material.ExperimentalMaterialApi")
     }
 }

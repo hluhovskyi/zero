@@ -49,7 +49,7 @@ interface CurrencyComponent {
 
     companion object {
 
-        fun factory(
+        fun create(
             dependencies: Dependencies,
             ratesUri: Uri,
             overridesUri: Uri,

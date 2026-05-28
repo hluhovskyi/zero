@@ -20,7 +20,6 @@ android {
 kotlin {
     compilerOptions {
         optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
         optIn.add("androidx.compose.foundation.ExperimentalFoundationApi")
         optIn.add("androidx.compose.animation.ExperimentalAnimationApi")
     }

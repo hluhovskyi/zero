@@ -226,7 +226,7 @@ abstract class ApplicationComponent :
             incorrectStateDetector: IncorrectStateDetector,
             databaseComponent: DatabaseComponent,
             logger: Logger,
-        ): CurrencyComponent = CurrencyComponent.factory(
+        ): CurrencyComponent = CurrencyComponent.create(
             dependencies = object : CurrencyComponent.Dependencies {
                 override val resourceResolver = resourceResolver
                 override val localeProvider = localeProvider
