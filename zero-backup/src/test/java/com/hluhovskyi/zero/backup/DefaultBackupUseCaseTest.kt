@@ -10,6 +10,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -122,6 +124,36 @@ class DefaultBackupUseCaseTest {
         advanceUntilIdle()
         assertSame(BackupUseCase.Phase.Idle, useCase.state.first().phase)
         assertEquals(1, client.uploadCount)
+    }
+
+    @Test
+    fun `parallel BackupNow from worker and UI - one upload, both observers see Uploading then Idle`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val client = FakeBackupClient(uploadResult = success()).apply { uploadGate = gate }
+        val useCase = useCase(client = client)
+
+        val workerSeenPhases = mutableListOf<BackupUseCase.Phase>()
+        val uiSeenPhases = mutableListOf<BackupUseCase.Phase>()
+        val workerJob = useCase.state.onEach { workerSeenPhases += it.phase }.launchIn(this)
+        val uiJob = useCase.state.onEach { uiSeenPhases += it.phase }.launchIn(this)
+        runCurrent()
+
+        useCase.perform(BackupUseCase.Action.BackupNow) // simulate worker trigger
+        useCase.perform(BackupUseCase.Action.BackupNow) // simulate UI tap before first completes
+        runCurrent()
+
+        assertEquals(1, client.uploadCount)
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(1, client.uploadCount)
+        assertTrue("Worker observer saw Uploading", workerSeenPhases.any { it is BackupUseCase.Phase.Uploading })
+        assertTrue("UI observer saw Uploading", uiSeenPhases.any { it is BackupUseCase.Phase.Uploading })
+        assertSame(BackupUseCase.Phase.Idle, workerSeenPhases.last())
+        assertSame(BackupUseCase.Phase.Idle, uiSeenPhases.last())
+
+        workerJob.cancel()
+        uiJob.cancel()
     }
 
     @Test
