@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
-# Drives the running debug app into an "over-budget" state for UI verification,
-# then leaves it on the Budget screen with the over-budget dot showing on the tab.
+# Drives the running debug app into a budget state for UI verification, then leaves
+# it on the Budget screen. Both states seed a 100 Food & Drink expense and differ
+# only in the budget set against it:
+#   over   (default) — budget 50  -> 50 over  -> the over-budget tab dot shows
+#   normal           — budget 200 -> 100 left -> within budget, no dot
 #
-# Why: verifying a state-dependent widget (the over-budget dot) used to mean
-# hand-driving a 12-tap onboard -> add-expense -> set-budget flow every time.
-# This script encodes that flow once. Use it instead of clicking through by hand.
-#
-# Result state: Food & Drink spent 100 / budget 50 (50 over) for the current month.
+# Why: verifying a state-dependent widget used to mean hand-driving a 12-tap
+# onboard -> add-expense -> set-budget flow every time. This encodes it once.
 #
 # Prereqs: an emulator claimed (.emulator-serial) and the debug app installed
-# (./scripts/install-app.sh). Run: ./scripts/ui/seed-budget-over.sh
+# (./scripts/install-app.sh).
+# Usage: ./scripts/ui/seed-budget.sh [over|normal]
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
+
+MODE="${1:-over}"
+case "$MODE" in
+  over)   BUDGET="50";  DONE_PAT="over budget" ;;   # summary: "1 category over budget"
+  normal) BUDGET="200"; DONE_PAT="left" ;;          # category card: "100.00 left"
+  *) echo "Usage: $0 [over|normal]" >&2; exit 1 ;;
+esac
 
 PKG="com.hluhovskyi.zero"
 ADB="./scripts/ui/adb"
@@ -63,15 +71,15 @@ tap_txn_digit 1; tap_txn_digit 0; tap_txn_digit 0
 "$TAP_LABEL" "Save Transaction" >/dev/null
 wait_for "Add transaction"             # back on the transactions screen
 
-echo "▶ Setting Food & Drink budget to 50 (below the 100 spend)…"
+echo "▶ Setting Food & Drink budget to ${BUDGET} (spend is 100)…"
 "$TAP_LABEL" "Budget" >/dev/null
 wait_for "Food"                        # XML escapes & as &amp;, so match on "Food"
 "$TAP_LABEL" "Food & Drink" >/dev/null
 wait_for "Delete"                      # numpad's backspace key exposes content-desc="Delete"
-tap_budget_digit 5; tap_budget_digit 0
-tap_pct 50 84                          # "Set $50 — Next" commit (em-dash label, no clean match)
+i=0; while [ "$i" -lt "${#BUDGET}" ]; do tap_budget_digit "${BUDGET:$i:1}"; i=$((i + 1)); done
+tap_pct 50 84                          # "Set … — Next" commit (em-dash label, no clean match)
 sleep 0.5
 "$ADB" shell input keyevent 4          # dismiss the auto-advance (next-category) numpad sheet
-wait_for "over budget"                 # Budget screen summary now shows "1 category over budget"
+wait_for "$DONE_PAT"                    # over: "1 category over budget"; normal: "100.00 left"
 
-echo "✓ Over-budget state seeded — Budget tab now shows the dot."
+echo "✓ Seeded '${MODE}' budget state — Food & Drink 100 spent / ${BUDGET} budget."

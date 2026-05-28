@@ -117,9 +117,7 @@ Run all of the following. Fix any failure before opening the PR.
 ./gradlew testDebugUnitTest lintDebug 2>&1 | tail -25
 ```
 
-**Run efficiency** (these dominate token/time cost otherwise):
-- **Never poll a background task** — `run_in_background` auto-notifies on completion; don't `cat`/`Read` its output before the notification, and don't re-read an empty output.
-- **Acquire the emulator once**, at first UI need (Step 5), and hold it for all device work — don't acquire/release per check.
+**Acquire the emulator once**, at first UI need (Step 5), and hold it for all device work — don't acquire/release per check.
 
 ### UI inspection
 
