@@ -2,7 +2,8 @@ package com.hluhovskyi.zero.backup
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import com.hluhovskyi.zero.R
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
@@ -15,30 +16,31 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * Formats `at` as "just now" / "N minutes ago" / "N hours ago" / "N days ago".
  *
- * Computed once per `at` change; does not tick. Acceptable because the BackupUseCase emits
- * a fresh state on every transition, which retriggers the surrounding composable.
+ * The elapsed duration is captured once per `at` change (it doesn't tick), and the
+ * string is read via Compose's `stringResource`/`pluralStringResource` so a runtime
+ * locale change invalidates correctly. Tolerable for v1: BackupUseCase emits a fresh
+ * state on every transition, which retriggers the surrounding composable.
  */
 @Composable
 internal fun rememberBackupRelativeTime(at: LocalDateTime): String {
-    val context = LocalContext.current
-    return remember(at) {
+    val diff = remember(at) {
         val now = Clock.System.now()
         val atInstant = at.toInstant(TimeZone.currentSystemDefault())
-        val diff = now - atInstant
-        when {
-            diff < 1.minutes -> context.getString(R.string.backup_relative_just_now)
-            diff < 1.hours -> {
-                val m = diff.inWholeMinutes.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_minutes_ago, m, m)
-            }
-            diff < 1.days -> {
-                val h = diff.inWholeHours.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_hours_ago, h, h)
-            }
-            else -> {
-                val d = diff.inWholeDays.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_days_ago, d, d)
-            }
+        now - atInstant
+    }
+    return when {
+        diff < 1.minutes -> stringResource(R.string.backup_relative_just_now)
+        diff < 1.hours -> {
+            val m = diff.inWholeMinutes.toInt().coerceAtLeast(1)
+            pluralStringResource(R.plurals.backup_relative_minutes_ago, m, m)
+        }
+        diff < 1.days -> {
+            val h = diff.inWholeHours.toInt().coerceAtLeast(1)
+            pluralStringResource(R.plurals.backup_relative_hours_ago, h, h)
+        }
+        else -> {
+            val d = diff.inWholeDays.toInt().coerceAtLeast(1)
+            pluralStringResource(R.plurals.backup_relative_days_ago, d, d)
         }
     }
 }
