@@ -3,7 +3,9 @@ package com.hluhovskyi.zero.backup
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
+import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
 import javax.inject.Scope
@@ -34,11 +36,15 @@ abstract class BackupDetailComponent : AttachableViewComponent {
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerBackupDetailComponent.builder()
             .dependencies(dependencies)
+            .onBackHandler(OnBackHandler.Noop)
     }
 
     @dagger.Component.Builder
     interface Builder : Buildable<BackupDetailComponent> {
         fun dependencies(dependencies: Dependencies): Builder
+
+        @BindsInstance
+        fun onBackHandler(handler: OnBackHandler): Builder
     }
 
     @dagger.Module
@@ -49,9 +55,11 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         fun viewModel(
             backupUseCase: BackupUseCase,
             oauthTokenProvider: OAuthTokenProvider,
+            onBackHandler: OnBackHandler,
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
             oauthTokenProvider = oauthTokenProvider,
+            onBackHandler = onBackHandler,
         )
 
         @Provides

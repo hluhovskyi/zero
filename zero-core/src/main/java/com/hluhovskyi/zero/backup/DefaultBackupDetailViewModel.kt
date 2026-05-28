@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.backup
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.OnBackHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ import java.io.Closeable
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
     private val oauthTokenProvider: OAuthTokenProvider,
+    private val onBackHandler: OnBackHandler,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : BackupDetailViewModel {
 
@@ -46,6 +48,9 @@ internal class DefaultBackupDetailViewModel(
             is BackupDetailViewModel.Action.Disconnect -> coroutineScope.launch {
                 oauthTokenProvider.revoke()
                 mutableState.update { it.copy(accountLabel = null) }
+            }
+            is BackupDetailViewModel.Action.Back -> coroutineScope.launch(Dispatchers.Main) {
+                onBackHandler.onBack()
             }
             is BackupDetailViewModel.Action.SignInFeedbackShown -> {
                 mutableState.update { it.copy(signInFeedback = null) }

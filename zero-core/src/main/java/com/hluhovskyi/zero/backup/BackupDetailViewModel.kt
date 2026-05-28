@@ -13,6 +13,7 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         object BackupNow : Action
         object Restore : Action
         object Disconnect : Action
+        object Back : Action
         object SignInFeedbackShown : Action
     }
 
