@@ -1,31 +1,30 @@
 package com.hluhovskyi.zero.backup
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
-import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.OnBackHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.Closeable
 
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
     private val oauthTokenProvider: OAuthTokenProvider,
     private val onBackHandler: OnBackHandler,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-) : BackupDetailViewModel {
+    private val dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    BackupDetailViewModel {
 
     private val mutableState = MutableStateFlow(BackupDetailViewModel.State())
     override val state: Flow<BackupDetailViewModel.State> = mutableState
 
     override fun perform(action: BackupDetailViewModel.Action) {
         when (action) {
-            is BackupDetailViewModel.Action.Connect -> coroutineScope.launch {
+            is BackupDetailViewModel.Action.Connect -> scope.launch(dispatchers.io()) {
                 when (val result = oauthTokenProvider.signIn()) {
                     is OAuthTokenProvider.Result.Success ->
                         mutableState.update { it.copy(accountLabel = result.accountLabel) }
@@ -39,17 +38,17 @@ internal class DefaultBackupDetailViewModel(
                         }
                 }
             }
-            is BackupDetailViewModel.Action.BackupNow -> coroutineScope.launch {
+            is BackupDetailViewModel.Action.BackupNow -> scope.launch(dispatchers.io()) {
                 backupUseCase.perform(BackupUseCase.Action.BackupNow)
             }
             is BackupDetailViewModel.Action.Restore -> {
                 Timber.w("Restore not wired until Phase 5")
             }
-            is BackupDetailViewModel.Action.Disconnect -> coroutineScope.launch {
+            is BackupDetailViewModel.Action.Disconnect -> scope.launch(dispatchers.io()) {
                 oauthTokenProvider.revoke()
                 mutableState.update { it.copy(accountLabel = null) }
             }
-            is BackupDetailViewModel.Action.Back -> coroutineScope.launch(Dispatchers.Main) {
+            is BackupDetailViewModel.Action.Back -> scope.launch(dispatchers.main()) {
                 onBackHandler.onBack()
             }
             is BackupDetailViewModel.Action.SignInFeedbackShown -> {
@@ -58,8 +57,8 @@ internal class DefaultBackupDetailViewModel(
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
+    override fun attachOnMain() {
+        scope.launch(dispatchers.io()) {
             combine(
                 oauthTokenProvider.isSignedIn,
                 backupUseCase.state,

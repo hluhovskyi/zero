@@ -13,14 +13,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-/**
- * Formats `at` as "just now" / "N minutes ago" / "N hours ago" / "N days ago".
- *
- * The elapsed duration is captured once per `at` change (it doesn't tick), and the
- * string is read via Compose's `stringResource`/`pluralStringResource` so a runtime
- * locale change invalidates correctly. Tolerable for v1: BackupUseCase emits a fresh
- * state on every transition, which retriggers the surrounding composable.
- */
+/** Formats `at` as "just now" / "N minutes ago" / "N hours ago" / "N days ago". Recomputes only when `at` changes. */
 @Composable
 internal fun rememberBackupRelativeTime(at: LocalDateTime): String {
     val diff = remember(at) {
