@@ -8,7 +8,7 @@ interface TransactionsPreviewViewModel : ActionStateModel<TransactionsPreviewVie
 
     data class DisplayTransaction(
         val id: String,
-        val primaryText: String,
+        val primaryText: String?,
         val amount: String,
         val accountName: String,
         val date: String,
