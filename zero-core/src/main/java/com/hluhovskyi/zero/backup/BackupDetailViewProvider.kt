@@ -486,5 +486,4 @@ private fun backupErrorMessage(error: BackupError): String = when (error) {
 }
 
 @Composable
-private fun rememberRelativeTime(at: LocalDateTime?): String? =
-    at?.let { rememberBackupRelativeTime(it) }
+private fun rememberRelativeTime(at: LocalDateTime?): String? = at?.let { rememberBackupRelativeTime(it) }

@@ -68,7 +68,6 @@ abstract class BackupDetailComponent : AttachableViewComponent {
 
         @Provides
         @BackupDetailScope
-        fun viewProvider(viewModel: BackupDetailViewModel): ViewProvider =
-            BackupDetailViewProvider(viewModel = viewModel)
+        fun viewProvider(viewModel: BackupDetailViewModel): ViewProvider = BackupDetailViewProvider(viewModel = viewModel)
     }
 }
