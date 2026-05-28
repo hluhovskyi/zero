@@ -134,9 +134,10 @@ internal class DefaultDatabaseTestBridge(
             ),
         )
 
-        // Stamp into the near future so updatedDateTime deterministically beats the screen's
-        // attach-time clock read — the two race and "now" loses ~37% of the time. The list's
-        // live query surfaces rows whose updatedDateTime is after that captured attach time.
+        // Must be strictly in the future. The transaction list filters its live stream by
+        // `updatedDateTime > attachTime`, where `attachTime` is captured by the screen's IO
+        // coroutine that races this seed. A "now" stamp loses that race a meaningful share of
+        // the time and the row never renders; a future buffer makes the seed unambiguously win.
         val seededAt = (Clock.System.now() + 1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
         listOf("42" to "expense-42", "99" to "expense-99").forEach { (amount, id) ->
             transactionRepository.insert(
