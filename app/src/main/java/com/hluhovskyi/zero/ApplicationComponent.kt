@@ -14,7 +14,9 @@ import com.hluhovskyi.zero.auth.AuthComponent
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
+import com.hluhovskyi.zero.backup.BackupDeepLinkSignal
 import com.hluhovskyi.zero.backup.BackupDetailComponent
+import com.hluhovskyi.zero.backup.BackupNotificationPresenter
 import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.backup.DefaultBackupScheduler
@@ -115,6 +117,7 @@ abstract class ApplicationComponent :
     abstract override val deviceInfo: DeviceInfo
     abstract override val syncEngine: SyncEngine
     abstract override val currentUserRepository: CurrentUserRepository
+    abstract override val backupDeepLinkSignal: BackupDeepLinkSignal
 
     interface Dependencies {
 
@@ -583,6 +586,20 @@ internal object BackupAndroidModule {
     fun backupScheduler(
         workManagerScheduler: WorkManagerScheduler,
     ): BackupScheduler = DefaultBackupScheduler(workManagerScheduler)
+
+    @Provides
+    @ApplicationScope
+    fun backupNotificationPresenter(
+        context: Context,
+        backupUseCase: BackupUseCase,
+    ): BackupNotificationPresenter = BackupNotificationPresenter(
+        context = context,
+        backupUseCase = backupUseCase,
+    )
+
+    @Provides
+    @ApplicationScope
+    fun backupDeepLinkSignal(): BackupDeepLinkSignal = BackupDeepLinkSignal()
 }
 
 @dagger.Module
@@ -615,5 +632,10 @@ internal object CrashModule {
     fun attachable(
         crashComponent: CrashComponent,
         currentActivityTracker: CurrentActivityTracker,
-    ): Attachable = AttachApplicationComponent(crashComponent, currentActivityTracker)
+        backupNotificationPresenter: BackupNotificationPresenter,
+    ): Attachable = AttachApplicationComponent(
+        crashComponent = crashComponent,
+        currentActivityTracker = currentActivityTracker,
+        backupNotificationPresenter = backupNotificationPresenter,
+    )
 }

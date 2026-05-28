@@ -35,6 +35,7 @@ import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
+import kotlinx.coroutines.flow.Flow
 
 internal class MainActivityScreenViewProvider(
     private val navController: NavHostController,
@@ -43,6 +44,8 @@ internal class MainActivityScreenViewProvider(
     private val bottomBar: @Composable () -> Unit,
     private val bottomSheetNavigator: BottomSheetNavigator,
     private val modalBottomSheetState: ModalBottomSheetState,
+    private val deepLinkRequests: Flow<Unit>,
+    private val onBackupDeepLink: () -> Unit,
 ) : ViewProvider {
 
     @Composable
@@ -56,6 +59,10 @@ internal class MainActivityScreenViewProvider(
                     // Ignore
                 }
             }
+        }
+
+        LaunchedEffect(Unit) {
+            deepLinkRequests.collect { onBackupDeepLink() }
         }
 
         ModalBottomSheetLayout(
