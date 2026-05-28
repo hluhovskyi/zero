@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,13 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 internal class BackupDetailViewProvider(
     private val viewModel: BackupDetailViewModel,
@@ -492,35 +485,6 @@ private fun backupErrorMessage(error: BackupError): String = when (error) {
     is BackupError.Unknown -> stringResource(R.string.backup_error_unknown, error.message)
 }
 
-/**
- * Formats `at` as "just now" / "N minutes ago" / "N hours ago" / "N days ago".
- *
- * Computed once per `at` change; does not tick. Acceptable for v1 since the
- * BackupUseCase emits a fresh state on every transition, which retriggers the
- * surrounding composable.
- */
 @Composable
-private fun rememberRelativeTime(at: LocalDateTime?): String? {
-    if (at == null) return null
-    val context = LocalContext.current
-    return remember(at) {
-        val now = Clock.System.now()
-        val atInstant = at.toInstant(TimeZone.currentSystemDefault())
-        val diff = now - atInstant
-        when {
-            diff < 1.minutes -> context.getString(R.string.backup_relative_just_now)
-            diff < 1.hours -> {
-                val m = diff.inWholeMinutes.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_minutes_ago, m, m)
-            }
-            diff < 1.days -> {
-                val h = diff.inWholeHours.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_hours_ago, h, h)
-            }
-            else -> {
-                val d = diff.inWholeDays.toInt().coerceAtLeast(1)
-                context.resources.getQuantityString(R.plurals.backup_relative_days_ago, d, d)
-            }
-        }
-    }
-}
+private fun rememberRelativeTime(at: LocalDateTime?): String? =
+    at?.let { rememberBackupRelativeTime(it) }

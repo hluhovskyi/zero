@@ -13,6 +13,7 @@ import com.hluhovskyi.zero.auth.AuthComponent
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
+import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -94,6 +95,7 @@ private annotation class ApplicationScope
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
     AuthComponent.Dependencies,
+    BackupDetailComponent.Dependencies,
     CrashComponent.Dependencies,
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
@@ -451,6 +453,11 @@ abstract class ApplicationComponent :
         fun settingsComponentBuilder(
             component: ApplicationComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
+
+        @Provides
+        fun backupDetailComponentBuilder(
+            component: ApplicationComponent,
+        ): BackupDetailComponent.Builder = BackupDetailComponent.builder(component)
 
         @Provides
         fun activityComponentBuilder(

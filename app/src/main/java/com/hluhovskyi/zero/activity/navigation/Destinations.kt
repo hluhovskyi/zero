@@ -91,6 +91,7 @@ internal object Destinations {
     }
 
     object Settings : Destination by destinationOf("settings")
+    object Backup : Destination by destinationOf("backup")
     object Import : Destination by destinationOf("import")
     object Feedback : Destination by destinationOf("feedback")
 }
