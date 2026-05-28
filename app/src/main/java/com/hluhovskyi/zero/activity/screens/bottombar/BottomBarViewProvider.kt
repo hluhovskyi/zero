@@ -19,11 +19,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -53,6 +56,7 @@ internal fun BottomBarView(
             backgroundColor = ZeroTheme.colors.surfaceContainerLowest,
             elevation = 0.dp,
         ) {
+            val overBudgetDescription = stringResource(R.string.bottom_bar_over_budget_description)
             state.items.forEach { item ->
                 BottomNavigationItem(
                     selectedContentColor = ZeroTheme.colors.primary,
@@ -74,7 +78,8 @@ internal fun BottomBarView(
                             )
                             Box {
                                 imageLoader.View(
-                                    image = item.icon,
+                                    uri = item.iconUri,
+                                    contentDescription = stringResource(item.id.iconDescriptionRes()),
                                     modifier = Modifier.sizeIn(maxHeight = 24.dp),
                                     tint = iconTint,
                                 )
@@ -87,15 +92,33 @@ internal fun BottomBarView(
                                             .background(ZeroTheme.colors.surfaceContainerLowest, CircleShape)
                                             .padding(2.dp)
                                             .background(ZeroTheme.colors.error, CircleShape)
-                                            .semantics { contentDescription = "Over budget" },
+                                            .semantics { contentDescription = overBudgetDescription },
                                     )
                                 }
                             }
                         }
                     },
-                    label = { Text(text = item.name) },
+                    label = { Text(text = stringResource(item.id.labelRes())) },
                 )
             }
         }
     }
+}
+
+private fun Id.Known.labelRes(): Int = when (this) {
+    BottomBarViewModel.HomeId -> R.string.bottom_bar_home
+    BottomBarViewModel.AccountsId -> R.string.bottom_bar_accounts
+    BottomBarViewModel.BudgetId -> R.string.bottom_bar_budget
+    BottomBarViewModel.CategoriesId -> R.string.bottom_bar_categories
+    BottomBarViewModel.SettingsId -> R.string.bottom_bar_settings
+    else -> error("Unknown bottom bar item id: $value")
+}
+
+private fun Id.Known.iconDescriptionRes(): Int = when (this) {
+    BottomBarViewModel.HomeId -> R.string.bottom_bar_home_icon_description
+    BottomBarViewModel.AccountsId -> R.string.bottom_bar_accounts_icon_description
+    BottomBarViewModel.BudgetId -> R.string.bottom_bar_budget_icon_description
+    BottomBarViewModel.CategoriesId -> R.string.bottom_bar_categories_icon_description
+    BottomBarViewModel.SettingsId -> R.string.bottom_bar_settings_icon_description
+    else -> error("Unknown bottom bar item id: $value")
 }
