@@ -15,7 +15,9 @@ import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
+import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.DefaultBackupScheduler
 import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -138,6 +140,7 @@ abstract class ApplicationComponent :
             DatabaseModule::class,
             RemoteModule::class,
             AuthModule::class,
+            BackupAndroidModule::class,
         ],
     )
     object Module {
@@ -570,6 +573,16 @@ internal object RemoteModule {
     fun exchangeRateService(
         remoteComponent: RemoteComponent,
     ): ExchangeRateService = remoteComponent.exchangeRateService
+}
+
+@dagger.Module
+internal object BackupAndroidModule {
+
+    @Provides
+    @ApplicationScope
+    fun backupScheduler(
+        workManagerScheduler: WorkManagerScheduler,
+    ): BackupScheduler = DefaultBackupScheduler(workManagerScheduler)
 }
 
 @dagger.Module

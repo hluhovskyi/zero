@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -31,7 +32,9 @@ abstract class BackupDetailComponent : AttachableViewComponent {
 
     interface Dependencies {
         val backupUseCase: BackupUseCase
+        val backupScheduler: BackupScheduler
         val oauthTokenProvider: OAuthTokenProvider
+        val configurationRepository: ConfigurationRepository
         val dispatchers: DispatcherProvider
     }
 
@@ -56,12 +59,16 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         @BackupDetailScope
         fun viewModel(
             backupUseCase: BackupUseCase,
+            backupScheduler: BackupScheduler,
             oauthTokenProvider: OAuthTokenProvider,
+            configurationRepository: ConfigurationRepository,
             onBackHandler: OnBackHandler,
             dispatchers: DispatcherProvider,
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
+            backupScheduler = backupScheduler,
             oauthTokenProvider = oauthTokenProvider,
+            configurationRepository = configurationRepository,
             onBackHandler = onBackHandler,
             dispatchers = dispatchers,
         )

@@ -4,6 +4,9 @@ import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.config.observe
+import com.hluhovskyi.zero.config.write
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -13,7 +16,9 @@ import timber.log.Timber
 
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
+    private val backupScheduler: BackupScheduler,
     private val oauthTokenProvider: OAuthTokenProvider,
+    private val configurationRepository: ConfigurationRepository,
     private val onBackHandler: OnBackHandler,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
@@ -54,6 +59,9 @@ internal class DefaultBackupDetailViewModel(
             is BackupDetailViewModel.Action.SignInFeedbackShown -> {
                 mutableState.update { it.copy(signInFeedback = null) }
             }
+            is BackupDetailViewModel.Action.SetWifiOnly -> scope.launch(dispatchers.io()) {
+                configurationRepository.write(BackupConfigurationKey.WifiOnly, action.wifiOnly)
+            }
         }
     }
 
@@ -62,18 +70,26 @@ internal class DefaultBackupDetailViewModel(
             combine(
                 oauthTokenProvider.isSignedIn,
                 backupUseCase.state,
-            ) { isSignedIn, backup -> isSignedIn to backup }
-                .collect { (isSignedIn, backup) ->
-                    mutableState.update { current ->
-                        current.copy(
-                            isSignedIn = isSignedIn,
-                            phase = backup.phase,
-                            lastSuccessAt = backup.lastSuccessAt,
-                            lastError = backup.lastError,
-                            accountLabel = if (isSignedIn) current.accountLabel else null,
-                        )
-                    }
+                configurationRepository.observe(BackupConfigurationKey.WifiOnly),
+            ) { isSignedIn, backup, wifiOnly ->
+                Triple(isSignedIn, backup, wifiOnly)
+            }.collect { (isSignedIn, backup, wifiOnly) ->
+                mutableState.update { current ->
+                    current.copy(
+                        isSignedIn = isSignedIn,
+                        phase = backup.phase,
+                        lastSuccessAt = backup.lastSuccessAt,
+                        lastError = backup.lastError,
+                        accountLabel = if (isSignedIn) current.accountLabel else null,
+                        wifiOnly = wifiOnly,
+                    )
                 }
+                if (isSignedIn) {
+                    backupScheduler.enable(wifiOnly = wifiOnly)
+                } else {
+                    backupScheduler.disable()
+                }
+            }
         }
     }
 }
