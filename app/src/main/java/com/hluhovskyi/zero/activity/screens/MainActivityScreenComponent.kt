@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity.screens
 import android.content.Context
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
@@ -258,9 +259,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             startDestination = Destinations.Home,
             navigationEntries = navigationEntries,
             bottomBar = {
-                bottomBarComponent.navigator(navigator)
-                    .logging(logger)
-                    .AttachWithView()
+                // Rebuilt per navigator + non-retaining so it can't hold a stale NavController across rotation (ZERO-2).
+                val bottomBar = remember(navigator) {
+                    bottomBarComponent.navigator(navigator)
+                        .logging(logger)
+                        .build()
+                }
+                bottomBar.AttachWithView()
             },
             bottomSheetNavigator = bottomSheetNavigator,
             modalBottomSheetState = modalBottomSheetState,
