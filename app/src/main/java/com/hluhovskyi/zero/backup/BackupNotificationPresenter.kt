@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import android.R as AndroidR
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.activity.MainActivity
 import com.hluhovskyi.zero.common.Attachable
@@ -17,9 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal const val EXTRA_OPEN_SETTINGS_BACKUP = "OPEN_SETTINGS_BACKUP"
@@ -35,18 +35,22 @@ internal class BackupNotificationPresenter(
     override fun attach(): Closeable {
         ensureChannel()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        backupUseCase.state
-            .map { Pair(it.consecutiveFailures, it.lastError) }
-            .distinctUntilChanged()
-            .onEach { (failures, lastError) ->
-                if (failures >= FAILURE_STRIKE_THRESHOLD) {
-                    showFailureNotification(lastError)
-                } else {
-                    NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+        val job = scope.launch {
+            backupUseCase.state
+                .map { Pair(it.consecutiveFailures, it.lastError) }
+                .distinctUntilChanged()
+                .collect { (failures, lastError) ->
+                    if (failures >= FAILURE_STRIKE_THRESHOLD) {
+                        showFailureNotification(lastError)
+                    } else {
+                        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+                    }
                 }
-            }
-            .launchIn(scope)
-        return Closeables.from { scope.cancel() }
+        }
+        return Closeables.from {
+            job.cancel()
+            scope.cancel()
+        }
     }
 
     private fun ensureChannel() {
@@ -78,7 +82,7 @@ internal class BackupNotificationPresenter(
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setSmallIcon(AndroidR.drawable.stat_notify_error)
             .setContentTitle(context.getString(R.string.backup_notification_title))
             .setContentText(context.getString(bodyStringFor(error)))
             .setContentIntent(pendingIntent)
