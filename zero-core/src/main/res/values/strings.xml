@@ -124,6 +124,56 @@
     <string name="settings_backup_saved">Backup saved</string>
     <string name="settings_export_failed">Export failed: %1$s</string>
 
+    <!-- Backup -->
+    <string name="settings_section_backup">Backup</string>
+    <string name="settings_backup_row_title">Cloud Backup</string>
+    <string name="settings_backup_row_off">Off</string>
+    <string name="settings_backup_row_uploading">Backing up…</string>
+    <string name="settings_backup_row_restoring">Restoring…</string>
+    <string name="settings_backup_row_failed">Backup failed — Tap to retry</string>
+    <string name="settings_backup_row_last_at">Last backed up %1$s</string>
+    <string name="settings_backup_row_on">On</string>
+
+    <string name="backup_screen_title">Backup</string>
+    <string name="backup_back_description">Back</string>
+    <string name="backup_disconnected_title">Back up to the cloud</string>
+    <string name="backup_disconnected_body">Save a copy of your data to your Google Drive. Restore it on any device, anytime.</string>
+    <string name="backup_connect">Connect Google Drive</string>
+    <string name="backup_account_placeholder">Google Drive</string>
+    <string name="backup_now">Back up now</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_disconnect">Disconnect Google Drive</string>
+    <string name="backup_status_up_to_date">Up to date</string>
+    <string name="backup_status_last_at">Last backed up %1$s</string>
+    <string name="backup_status_never">No backups yet</string>
+    <string name="backup_status_uploading_title">Backing up…</string>
+    <string name="backup_status_uploading_body">Uploading your latest data to Google Drive.</string>
+    <string name="backup_status_restoring_title">Restoring…</string>
+    <string name="backup_status_restoring_body">Pulling your data from Google Drive.</string>
+    <string name="backup_status_failed_title">Backup failed</string>
+    <string name="backup_status_failed_retry">Retry</string>
+    <string name="backup_error_network">Couldn\'t reach Google Drive. Check your connection and try again.</string>
+    <string name="backup_error_auth_expired">Sign in to Google Drive again to keep backing up.</string>
+    <string name="backup_error_quota">Your Google Drive is full.</string>
+    <string name="backup_error_parse">We couldn\'t read your last backup.</string>
+    <string name="backup_error_unknown">Something went wrong. %1$s</string>
+    <string name="backup_sign_in_cancelled">Sign-in cancelled.</string>
+    <string name="backup_sign_in_failed">Sign-in failed. Please try again.</string>
+
+    <string name="backup_relative_just_now">just now</string>
+    <plurals name="backup_relative_minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="backup_relative_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="backup_relative_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+
     <!-- Import -->
     <string name="import_back_description">Back</string>
     <string name="import_nothing_to_import_title">Nothing to Import</string>

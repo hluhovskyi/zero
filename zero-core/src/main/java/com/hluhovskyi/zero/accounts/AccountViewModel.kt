@@ -4,8 +4,11 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import kotlinx.coroutines.flow.StateFlow
 
 interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action, AccountViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         data class Select(val accountId: Id.Known) : Action

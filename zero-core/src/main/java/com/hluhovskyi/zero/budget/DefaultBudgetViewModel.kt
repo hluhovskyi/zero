@@ -5,8 +5,8 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,7 +22,7 @@ internal class DefaultBudgetViewModel(
     BudgetViewModel {
 
     private val mutableState = MutableStateFlow(BudgetViewModel.State())
-    override val state: Flow<BudgetViewModel.State> = mutableState
+    override val state: StateFlow<BudgetViewModel.State> = mutableState
 
     private val monthOffset = MutableStateFlow(0)
 

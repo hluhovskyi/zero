@@ -5,9 +5,12 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
 interface BudgetViewModel : AttachableActionStateModel<BudgetViewModel.Action, BudgetViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         object SelectOlderMonth : Action

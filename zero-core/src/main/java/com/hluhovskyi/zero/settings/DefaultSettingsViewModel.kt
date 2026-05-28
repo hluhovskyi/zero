@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.settings
 
-import android.util.Log
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.common.Closeables
@@ -12,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,10 +21,10 @@ internal class DefaultSettingsViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val settingsCurrencyUseCase: SettingsCurrencyUseCase,
     private val onImportSelected: OnImportSelectedHandler,
+    private val onBackupSelected: OnBackupSelectedHandler,
     private val exportUseCase: ExportUseCase,
     private val biometricLockUseCase: BiometricLockUseCase,
     private val biometricAuthenticator: BiometricAuthenticator,
-    // TODO: remove in Phase 3 — only the temporary DEV backup button uses these.
     private val oauthTokenProvider: OAuthTokenProvider,
     private val backupUseCase: BackupUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
@@ -38,6 +37,9 @@ internal class DefaultSettingsViewModel(
         when (action) {
             is SettingsViewModel.Action.Import -> coroutineScope.launch(Dispatchers.Main) {
                 onImportSelected.onSelected()
+            }
+            is SettingsViewModel.Action.OpenBackup -> coroutineScope.launch(Dispatchers.Main) {
+                onBackupSelected.onSelected()
             }
             is SettingsViewModel.Action.Export -> coroutineScope.launch {
                 when (val result = exportUseCase.export(action.uri)) {
@@ -69,26 +71,6 @@ internal class DefaultSettingsViewModel(
             is SettingsViewModel.Action.BiometricFeedbackShown -> {
                 mutableState.update { it.copy(biometricFeedback = null) }
             }
-            // TODO: remove in Phase 3 (replaced by the real Backup detail screen).
-            is SettingsViewModel.Action.DevTestBackup -> coroutineScope.launch {
-                Log.d(DEV_BACKUP_TAG, "sign-in requested")
-                mutableState.update { it.copy(devBackupStatus = "Signing in…") }
-                when (val result = oauthTokenProvider.signIn()) {
-                    is OAuthTokenProvider.Result.Success -> {
-                        Log.d(DEV_BACKUP_TAG, "signed in as ${result.accountLabel}; backing up")
-                        mutableState.update { it.copy(devBackupStatus = "Signed in: ${result.accountLabel}. Backing up…") }
-                        backupUseCase.perform(BackupUseCase.Action.BackupNow)
-                    }
-                    is OAuthTokenProvider.Result.Failure -> {
-                        Log.w(DEV_BACKUP_TAG, "sign-in failed: ${result.error}")
-                        mutableState.update { it.copy(devBackupStatus = "Sign-in failed: ${result.error}") }
-                    }
-                    OAuthTokenProvider.Result.Cancelled -> {
-                        Log.d(DEV_BACKUP_TAG, "sign-in cancelled")
-                        mutableState.update { it.copy(devBackupStatus = "Sign-in cancelled") }
-                    }
-                }
-            }
         }
     }
 
@@ -116,22 +98,22 @@ internal class DefaultSettingsViewModel(
                     mutableState.update { it.copy(biometricLockEnabled = enabled) }
                 }
             }
-            // TODO: remove in Phase 3 — surfaces DEV backup transitions in logcat + snackbar.
             launch {
-                backupUseCase.state.collect { backup ->
-                    Log.d(
-                        DEV_BACKUP_TAG,
-                        "phase=${backup.phase} lastSuccessAt=${backup.lastSuccessAt} " +
-                            "lastError=${backup.lastError} failures=${backup.consecutiveFailures}",
+                combine(
+                    oauthTokenProvider.isSignedIn,
+                    backupUseCase.state,
+                ) { isSignedIn, backup ->
+                    SettingsViewModel.BackupSummary(
+                        isSignedIn = isSignedIn,
+                        phase = backup.phase,
+                        lastSuccessAt = backup.lastSuccessAt,
+                        lastError = backup.lastError,
+                        consecutiveFailures = backup.consecutiveFailures,
                     )
-                    mutableState.update { it.copy(devBackupStatus = "Backup: ${backup.phase}") }
+                }.collect { summary ->
+                    mutableState.update { it.copy(backup = summary) }
                 }
             }
         }
-    }
-
-    private companion object {
-        // TODO: remove in Phase 3.
-        const val DEV_BACKUP_TAG = "ZeroBackupDev"
     }
 }

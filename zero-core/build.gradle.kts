@@ -1,6 +1,7 @@
 plugins {
     id("zero.android.library.compose")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -26,6 +27,7 @@ kotlin {
 
 dependencies {
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.json)
     lintChecks(project(":lint-rules"))
     implementation(project(":zero-api"))
     implementation(project(":zero-sync"))
@@ -35,6 +37,8 @@ dependencies {
 
     implementation(libs.dagger.runtime)
     ksp(libs.dagger.compiler)
+
+    implementation(libs.timber)
 
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.ui)
