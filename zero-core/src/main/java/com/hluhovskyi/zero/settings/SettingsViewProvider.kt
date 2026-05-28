@@ -25,6 +25,7 @@ import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.MoveToInbox
@@ -91,6 +92,11 @@ private fun MoreView(viewModel: SettingsViewModel) {
         }
     }
 
+    // TODO: remove in Phase 3 — DEV backup button feedback.
+    LaunchedEffect(state.devBackupStatus) {
+        state.devBackupStatus?.let { snackbarHostState.showSnackbar(it) }
+    }
+
     LaunchedEffect(state.biometricFeedback) {
         when (state.biometricFeedback) {
             SettingsViewModel.BiometricFeedback.Unavailable -> {
@@ -153,6 +159,18 @@ private fun MoreView(viewModel: SettingsViewModel) {
                         },
                         checked = state.biometricLockEnabled,
                         onToggle = { viewModel.perform(SettingsViewModel.Action.ToggleBiometricLock) },
+                    )
+                }
+            }
+            // TODO: remove in Phase 3 — temporary entry point for the Drive backup smoke test.
+            item {
+                MoreSection(title = "DEV") {
+                    MoreRow(
+                        icon = Icons.Outlined.CloudUpload,
+                        primaryText = "DEV: Test backup",
+                        secondaryText = state.devBackupStatus ?: "Sign in + back up to Drive",
+                        onClick = { viewModel.perform(SettingsViewModel.Action.DevTestBackup) },
+                        showChevron = false,
                     )
                 }
             }

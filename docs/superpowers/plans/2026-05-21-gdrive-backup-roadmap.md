@@ -55,9 +55,9 @@ One Drive file per user: `zero-backup.json` in `appDataFolder`. Each backup mult
 
 Per `feedback_viewmodel_no_derivation`: the ViewModel does not sort, check, or transform `BackupUseCase.State`. If a derivation is needed, extend the use case's State; don't compute in the ViewModel.
 
-### OAuth client ID is a default, not a secret
+### No OAuth secrets or build-time config
 
-Per `feedback_ships_in_binary_not_secret`: the OAuth client ID ships in the binary anyway (Android public-client OAuth). Hardcode with env override via `buildConfigField`, like `FEEDBACK_ENDPOINT`. No secret infra.
+**(Revised in Phase 2 — supersedes the earlier "OAuth client ID is a default" note.)** Auth uses the Google Identity **Authorization API**, which identifies the app by its Android OAuth client (package + signing-cert SHA-1). Nothing OAuth-related ships in the binary: no client ID `buildConfigField`, no `driveOauthClientId`, no secret. The earlier plan to embed a Web client ID applied only to the abandoned sign-in / refresh-token flow (which a serverless public client can't do). See the spec's §Auth design-correction.
 
 ### Scope: `drive.appdata` only
 

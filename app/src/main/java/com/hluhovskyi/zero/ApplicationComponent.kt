@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Build
@@ -7,9 +8,13 @@ import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.activity.CurrentActivityTracker
+import com.hluhovskyi.zero.auth.AuthComponent
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -55,6 +60,7 @@ import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackService
+import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
@@ -64,6 +70,8 @@ import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
+import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
@@ -91,6 +99,7 @@ private annotation class ApplicationScope
 )
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
+    AuthComponent.Dependencies,
     CrashComponent.Dependencies,
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
@@ -128,6 +137,7 @@ abstract class ApplicationComponent :
             CrashModule::class,
             DatabaseModule::class,
             RemoteModule::class,
+            AuthModule::class,
         ],
     )
     object Module {
@@ -388,7 +398,29 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        fun backupClient(): BackupClient = BackupClient.Noop
+        fun currentActivityTracker(application: Application): CurrentActivityTracker = CurrentActivityTracker(application)
+
+        @Provides
+        @ApplicationScope
+        fun currentActivityProvider(
+            tracker: CurrentActivityTracker,
+        ): @JvmSuppressWildcards () -> Activity? = tracker
+
+        @Provides
+        @ApplicationScope
+        fun driveComponent(
+            httpExecutor: HttpExecutor,
+            oauthTokenProvider: OAuthTokenProvider,
+        ): DriveComponent = DriveComponent.factory(
+            object : DriveComponent.Dependencies {
+                override val httpExecutor = httpExecutor
+                override val oauthTokenProvider = oauthTokenProvider
+            },
+        ).create()
+
+        @Provides
+        @ApplicationScope
+        fun backupClient(driveComponent: DriveComponent): BackupClient = driveComponent.backupClient
 
         @Provides
         @ApplicationScope
@@ -407,6 +439,10 @@ abstract class ApplicationComponent :
 
         @Provides
         fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
+
+        @Provides
+        @ApplicationScope
+        fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
 
         @Provides
         @ApplicationScope
@@ -529,9 +565,29 @@ internal object RemoteModule {
 
     @Provides
     @ApplicationScope
+    fun httpExecutor(
+        remoteComponent: RemoteComponent,
+    ): HttpExecutor = remoteComponent.httpExecutor
+
+    @Provides
+    @ApplicationScope
     fun exchangeRateService(
         remoteComponent: RemoteComponent,
     ): ExchangeRateService = remoteComponent.exchangeRateService
+}
+
+@dagger.Module
+internal object AuthModule {
+
+    @Provides
+    @ApplicationScope
+    fun authComponent(component: ApplicationComponent): AuthComponent = AuthComponent.builder()
+        .dependencies(component)
+        .build()
+
+    @Provides
+    @ApplicationScope
+    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider = authComponent.googleOAuthTokenProvider
 }
 
 @dagger.Module
@@ -549,5 +605,6 @@ internal object CrashModule {
     @ApplicationScope
     fun attachable(
         crashComponent: CrashComponent,
-    ): Attachable = AttachApplicationComponent(crashComponent)
+        currentActivityTracker: CurrentActivityTracker,
+    ): Attachable = AttachApplicationComponent(crashComponent, currentActivityTracker)
 }
