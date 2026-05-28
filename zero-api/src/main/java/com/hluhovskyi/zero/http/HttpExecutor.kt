@@ -13,6 +13,7 @@ interface HttpExecutor {
 
         sealed interface Body {
             data class Json(val payload: String) : Body
+            data class Form(val fields: Map<String, String>) : Body
             data class Multipart(
                 val metadataJson: String,
                 val contentType: String,

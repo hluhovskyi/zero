@@ -116,6 +116,7 @@ dependencies {
     implementation(project(":zero-database"))
     implementation(project(":zero-sync"))
     implementation(project(":zero-backup"))
+    implementation(project(":zero-auth"))
     implementation(project(":zero-core"))
     implementation(project(":zero-crash"))
     implementation(project(":zero-image-loading"))
@@ -140,6 +141,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.compose.uiToolingPreview)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
     debugImplementation(libs.androidx.compose.uiTooling)
@@ -149,6 +151,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.compose.uiTestJunit4)
