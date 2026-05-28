@@ -91,7 +91,7 @@ private fun AccountView(
     amountFormatter: AmountFormatter,
     onAddAccount: OnAddAccountHandler,
 ) {
-    val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
+    val state by viewModel.state.collectAsState()
     val grouped = state.activeAccountsByCategory
     val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }

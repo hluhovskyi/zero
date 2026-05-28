@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.welcome
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.settings.OnImportSelectedHandler
 import com.hluhovskyi.zero.transactions.OnAddTransactionHandler
 import dagger.BindsInstance
@@ -28,7 +29,9 @@ abstract class WelcomeComponent : AttachableViewComponent {
     override val tag: String = TAG
     override fun attach(): Closeable = viewModel.attach()
 
-    interface Dependencies
+    interface Dependencies {
+        val dispatchers: DispatcherProvider
+    }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerWelcomeComponent.builder()
@@ -55,8 +58,10 @@ abstract class WelcomeComponent : AttachableViewComponent {
         @WelcomeScope
         fun viewModel(
             onImportSelected: OnImportSelectedHandler,
+            dispatchers: DispatcherProvider,
         ): WelcomeViewModel = DefaultWelcomeViewModel(
             onImportSelected = onImportSelected,
+            dispatchers = dispatchers,
         )
 
         @Provides

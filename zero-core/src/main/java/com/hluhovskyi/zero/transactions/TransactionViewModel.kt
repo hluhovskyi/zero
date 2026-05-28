@@ -6,11 +6,14 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 @Stable
 interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         data class SelectTransaction(val item: Item.Transaction) : Action

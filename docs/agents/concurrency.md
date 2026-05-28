@@ -36,6 +36,8 @@ override fun attach(): Closeable = Closeables.of {
 
 `Closeables.of { }` wraps the `Job` — calling `close()` cancels the job and all child coroutines. Compose's `AttachWithView()` handles this automatically via `DisposableEffect`.
 
+`BaseViewModel.attach()` is **reference-counted** (via `RefCountedAttachable`): `attachOnMain()` runs once on the first `attach()` and the scope is cancelled only when the last returned `Closeable` is closed. This makes `attach()` idempotent, so a component can be held by more than one caller at once — e.g. a session-long keep-warm `attach()` plus a per-display `AttachWithView()` — without double-subscribing or tearing down early while another holder is still attached.
+
 ## State Updates
 
 Always use `MutableStateFlow.update { }` with immutable `copy()`:
