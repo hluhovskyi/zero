@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import androidx.work.WorkManager
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
@@ -11,9 +12,11 @@ import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.activity.CurrentActivityTracker
 import com.hluhovskyi.zero.auth.AuthComponent
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.AttachBackupToNotifications
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
+import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -62,9 +65,13 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.imports.SnapshotParser
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
+import com.hluhovskyi.zero.notifications.AndroidNotifier
+import com.hluhovskyi.zero.notifications.Notifier
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+import com.hluhovskyi.zero.scheduling.WorkSchedulerComponent
 import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
 import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -107,6 +114,7 @@ abstract class ApplicationComponent :
     abstract val attachable: Attachable
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
+    abstract val workSchedulerComponent: WorkSchedulerComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
 
@@ -423,7 +431,38 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun notifier(context: Context): Notifier = AndroidNotifier(context)
+
+        @Provides
+        @ApplicationScope
+        internal fun workSchedulerComponent(
+            backupUseCase: BackupUseCase,
+            syncEngine: SyncEngine,
+            currentUserRepository: CurrentUserRepository,
+            workManagerScheduler: WorkManagerScheduler,
+        ): WorkSchedulerComponent = WorkSchedulerComponent.builder(
+            object : WorkSchedulerComponent.Dependencies {
+                override val backupUseCase = backupUseCase
+                override val syncEngine = syncEngine
+                override val currentUserRepository = currentUserRepository
+                override val workManagerScheduler = workManagerScheduler
+            },
+        ).build()
+
+        @Provides
+        internal fun backupScheduler(component: WorkSchedulerComponent): BackupScheduler = component.backupScheduler
+
+        @Provides
+        @ApplicationScope
         fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManager(context: Context): WorkManager = WorkManager.getInstance(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManagerScheduler(workManager: WorkManager): WorkManagerScheduler = WorkManagerScheduler(workManager)
 
         @Provides
         @ApplicationScope
@@ -590,7 +629,14 @@ internal object CrashModule {
     @Provides
     @ApplicationScope
     fun attachable(
+        context: Context,
         crashComponent: CrashComponent,
         currentActivityTracker: CurrentActivityTracker,
-    ): Attachable = AttachApplicationComponent(crashComponent, currentActivityTracker)
+        backupComponent: BackupComponent,
+        notifier: Notifier,
+    ): Attachable = AttachApplicationComponent(
+        crashComponent = crashComponent,
+        currentActivityTracker = currentActivityTracker,
+        backupNotifications = AttachBackupToNotifications(context, backupComponent, notifier),
+    )
 }

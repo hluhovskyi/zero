@@ -137,9 +137,18 @@ private fun TransactionCard(
         val isIncome = transaction.type == TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME
         val isTransfer = transaction.type == TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER
 
+        val fallbackLabel = when (transaction.type) {
+            TransactionsPreviewViewModel.DisplayTransaction.Type.EXPENSE ->
+                stringResource(R.string.transaction_type_expense)
+            TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME ->
+                stringResource(R.string.transaction_type_income)
+            TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER ->
+                stringResource(R.string.transaction_type_transfer)
+        }
+
         TransactionView(
             modifier = contentModifier,
-            primaryText = transaction.primaryText,
+            primaryText = transaction.primaryText ?: fallbackLabel,
             primaryAmount = transaction.amount,
             amountColor = if (isIncome) ZeroTheme.colors.transactionIncome else ZeroTheme.colors.onSurface,
             secondaryText = transaction.accountName,
