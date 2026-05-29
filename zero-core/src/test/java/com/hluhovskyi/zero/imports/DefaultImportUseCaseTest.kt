@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -35,6 +36,9 @@ import org.mockito.Mock
 import org.mockito.Mockito.lenient
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @RunWith(MockitoJUnitRunner::class)
@@ -254,6 +258,81 @@ class DefaultImportUseCaseTest {
     }
 
     @Test
+    fun `SelectFile imports immediately and reports RestoreSuccess when everything is new`() = runTest {
+        val snapshot = snapshotWith(
+            categories = listOf(syncCategory("c1", "Food")),
+            accounts = listOf(syncAccount("a1", "Wallet")),
+            transactions = listOf(syncTransaction("t1", accountId = "a1", categoryId = "c1")),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        verify(syncEngine).import(snapshot, userId)
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.RestoreSuccess) { "Expected RestoreSuccess but got $state" }
+        assertEquals(3, (state as ImportUseCase.State.RestoreSuccess).itemCount)
+    }
+
+    @Test
+    fun `SelectFile falls through to CategoriesReview when snapshot half-overlaps local data`() = runTest {
+        // One category matches an existing row; the rest is new -> conflict path, not the fast path.
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existingCategory(name = "Food"))))
+
+        val snapshot = snapshotWith(
+            categories = listOf(
+                syncCategory("c-match", "Food"),
+                syncCategory("c-fresh", "Travel"),
+            ),
+        )
+        stubParseAndDelta(snapshot)
+
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        useCase.perform(ImportUseCase.Action.SelectFile(testUri))
+        advanceUntilIdle()
+
+        verify(syncEngine, never()).import(any(), any())
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.CategoriesReview) { "Expected CategoriesReview but got $state" }
+    }
+
+    @Test
+    fun `SelectSource for a fileless source skips FilePicker and loads immediately`() = runTest {
+        val filelessSource = object : Source {
+            override val key = "drive"
+            override val requiresFile = false
+        }
+        val snapshot = snapshotWith(categories = listOf(syncCategory("c1", "Food")))
+        whenever(parser.source).thenReturn(filelessSource)
+        whenever(parser.parse(any())).thenReturn(snapshot)
+        whenever(syncEngine.delta(eq(snapshot), eq(userId))).thenReturn(snapshot)
+
+        val useCase = DefaultImportUseCase(
+            parsers = listOf(parser),
+            syncEngine = syncEngine,
+            currentUserRepository = currentUserRepository,
+            iconRepository = iconRepository,
+            colorRepository = colorRepository,
+            categoryRepository = categoryRepository,
+            accountRepository = accountRepository,
+            transactionRepository = transactionRepository,
+            onImportFinishedHandler = OnImportFinishedHandler.Noop,
+            coroutineScope = this,
+        )
+        useCase.perform(ImportUseCase.Action.SelectSource(filelessSource))
+        advanceUntilIdle()
+
+        // Never paused on the file picker; went straight to importing the all-new snapshot.
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.RestoreSuccess) { "Expected RestoreSuccess but got $state" }
+    }
+
+    @Test
     fun `ConfirmCategories with Merge remaps categoryId in transactions to existingId`() = runTest {
         val existing = CategoryRepository.Category(
             id = Id.Known("existing-cat"),
@@ -290,6 +369,10 @@ class DefaultImportUseCaseTest {
 
     @Test
     fun `ConfirmCategories with Skip drops category and its transactions`() = runTest {
+        // Existing match keeps us on the conflict path (otherwise the all-new fast path fires).
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existingCategory(name = "Food"))))
+
         val snapshot = snapshotWith(
             categories = listOf(syncCategory("c-skip", "Food")),
             transactions = listOf(syncTransaction("t1", accountId = "a1", categoryId = "c-skip")),
@@ -364,6 +447,10 @@ class DefaultImportUseCaseTest {
 
     @Test
     fun `ConfirmAccounts with Skip drops account and transactions referencing it`() = runTest {
+        // Existing match keeps us on the conflict path (otherwise the all-new fast path fires).
+        whenever(accountRepository.query(any<AccountRepository.Criteria>()))
+            .thenReturn(flowOf(listOf(existingAccount(name = "Wallet"))))
+
         val snapshot = snapshotWith(
             accounts = listOf(syncAccount("a-skip", "Wallet")),
             transactions = listOf(
@@ -395,6 +482,10 @@ class DefaultImportUseCaseTest {
 
     @Test
     fun `SetCategoryStrategy updates state without leaving CategoriesReview`() = runTest {
+        // Existing match keeps us on the conflict path (otherwise the all-new fast path fires).
+        whenever(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>()))
+            .thenReturn(flowOf(listOf(existingCategory(name = "Food"))))
+
         val snapshot = snapshotWith(categories = listOf(syncCategory("c1", "Food")))
         stubParseAndDelta(snapshot)
 
@@ -565,6 +656,24 @@ class DefaultImportUseCaseTest {
     }
 
     private val testDateTime = LocalDateTime(2024, 1, 1, 0, 0)
+
+    private fun existingCategory(name: String) = CategoryRepository.Category(
+        id = Id.Known("local-${name.lowercase()}"),
+        parentCategoryId = Id.Unknown,
+        name = name,
+        iconId = Id.Known("icon"),
+        colorId = Id.Known("color"),
+    )
+
+    private fun existingAccount(name: String) = AccountRepository.Account(
+        id = Id.Known("local-${name.lowercase()}"),
+        name = name,
+        currencyId = Id.Known("usd"),
+        iconId = Id.Known("icon"),
+        initialBalance = Amount(java.math.BigDecimal.ZERO),
+        category = AccountCategory.CASH,
+        details = null,
+    )
 
     private fun snapshotWith(
         categories: List<SyncCategory> = emptyList(),

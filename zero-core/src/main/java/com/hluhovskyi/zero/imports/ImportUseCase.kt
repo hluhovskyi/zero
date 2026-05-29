@@ -46,6 +46,10 @@ interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, Impor
         ) : State
 
         object UpToDate : State
+
+        /** Terminal state of the all-new fast path: the full snapshot was imported without review
+         *  because nothing in it overlapped local data. [itemCount] is the total restored entities. */
+        data class RestoreSuccess(val itemCount: Int) : State
     }
 
     object Noop : ImportUseCase {

@@ -18,5 +18,6 @@ interface ImportViewModel : ActionStateModel<ImportViewModel.Action, ImportViewM
         object AccountsReview : State
         object TransactionsPreview : State
         object UpToDate : State
+        data class RestoreSuccess(val itemCount: Int) : State
     }
 }

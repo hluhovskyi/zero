@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -20,6 +21,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,7 +78,8 @@ private fun ImportView(
     BackHandler(
         enabled = state !is ImportViewModel.State.SourceSelection &&
             state !is ImportViewModel.State.FilePicker &&
-            state !is ImportViewModel.State.UpToDate,
+            state !is ImportViewModel.State.UpToDate &&
+            state !is ImportViewModel.State.RestoreSuccess,
     ) {
         viewModel.perform(ImportViewModel.Action.Back)
     }
@@ -111,6 +115,67 @@ private fun ImportView(
         ImportViewModel.State.UpToDate -> UpToDateView(
             onDone = { viewModel.perform(ImportViewModel.Action.Back) },
         )
+        is ImportViewModel.State.RestoreSuccess -> RestoreSuccessView(
+            itemCount = (state as ImportViewModel.State.RestoreSuccess).itemCount,
+            onDone = { viewModel.perform(ImportViewModel.Action.Back) },
+        )
+    }
+}
+
+@Composable
+private fun RestoreSuccessView(itemCount: Int, onDone: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = stringResource(R.string.import_restore_success_content_description),
+                tint = ZeroTheme.colors.primaryContainer,
+                modifier = Modifier.size(72.dp),
+            )
+            Text(
+                text = stringResource(R.string.import_restore_success_title),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = ZeroTheme.colors.onSurface,
+                modifier = Modifier.padding(top = 24.dp),
+            )
+            Text(
+                text = pluralStringResource(
+                    R.plurals.import_restore_success_message,
+                    itemCount,
+                    itemCount,
+                ),
+                fontSize = 14.sp,
+                color = ZeroTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp).padding(bottom = 16.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(ZeroTheme.colors.primaryContainer)
+                    .clickable(onClick = onDone)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.import_done),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ZeroTheme.colors.onPrimary,
+                )
+            }
+        }
     }
 }
 
