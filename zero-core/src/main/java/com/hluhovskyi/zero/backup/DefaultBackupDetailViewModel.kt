@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
@@ -20,6 +19,7 @@ internal class DefaultBackupDetailViewModel(
     private val oauthTokenProvider: OAuthTokenProvider,
     private val configurationRepository: ConfigurationRepository,
     private val onBackHandler: OnBackHandler,
+    private val onRestoreSelectedHandler: OnRestoreSelectedHandler,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BackupDetailViewModel {
@@ -46,8 +46,8 @@ internal class DefaultBackupDetailViewModel(
             is BackupDetailViewModel.Action.BackupNow -> scope.launch(dispatchers.io()) {
                 backupUseCase.perform(BackupUseCase.Action.BackupNow)
             }
-            is BackupDetailViewModel.Action.Restore -> {
-                Timber.w("Restore not wired until Phase 5")
+            is BackupDetailViewModel.Action.Restore -> scope.launch(dispatchers.main()) {
+                onRestoreSelectedHandler.onSelected()
             }
             is BackupDetailViewModel.Action.Disconnect -> scope.launch(dispatchers.io()) {
                 oauthTokenProvider.revoke()
