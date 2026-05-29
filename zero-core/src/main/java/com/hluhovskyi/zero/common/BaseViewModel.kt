@@ -2,24 +2,27 @@ package com.hluhovskyi.zero.common
 
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import java.io.Closeable
-import kotlin.coroutines.CoroutineContext
 
 internal abstract class BaseViewModel(
     dispatchers: DispatcherProvider,
     logger: Logger = Logger.Noop,
-) : ScopedAttachable() {
+) : Attachable {
 
-    override val coroutineContext: CoroutineContext =
-        dispatchers.main() + CoroutineExceptionHandler { _, exception -> handleException(exception) }
+    private val closeableCoroutineScope: CloseableCoroutineScope = viewModelScope(
+        dispatchers = dispatchers,
+        rootExceptionHandler = CoroutineExceptionHandler { _, exception -> handleException(exception) },
+    )
+    protected val scope: CoroutineScope
+        get() = closeableCoroutineScope
 
-    private val refCounted = RefCountedAttachable(::openScope)
+    private val refCounted = RefCountedAttachable {
+        attachOnMain()
+        closeableCoroutineScope
+    }
 
-    final override fun attach(): Closeable = refCounted.attach()
-
-    final override fun onAttach() = attachOnMain()
-
-    private fun openScope(): Closeable = super.attach()
+    override fun attach(): Closeable = refCounted.attach()
 
     protected open fun attachOnMain() {
     }

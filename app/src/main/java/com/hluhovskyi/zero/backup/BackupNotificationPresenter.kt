@@ -2,17 +2,21 @@ package com.hluhovskyi.zero.backup
 
 import android.content.Context
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.common.ScopedAttachable
+import com.hluhovskyi.zero.common.Attachable
+import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.notifications.Importance
 import com.hluhovskyi.zero.notifications.Notification
 import com.hluhovskyi.zero.notifications.NotificationChannel
 import com.hluhovskyi.zero.notifications.Notifier
 import com.hluhovskyi.zero.notifications.TapAction
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
+import java.io.Closeable
 import android.R as AndroidR
 
 private const val CHANNEL_ID = "backup-status"
@@ -24,11 +28,9 @@ internal class BackupNotificationPresenter(
     private val context: Context,
     private val backupUseCase: BackupUseCase,
     private val notifier: Notifier,
-) : ScopedAttachable() {
+) : Attachable {
 
-    override val coroutineContext: CoroutineContext = Dispatchers.IO
-
-    override fun onAttach() {
+    override fun attach(): Closeable {
         notifier.ensureChannel(
             NotificationChannel(
                 id = CHANNEL_ID,
@@ -36,7 +38,8 @@ internal class BackupNotificationPresenter(
                 importance = Importance.DEFAULT,
             ),
         )
-        scope.launch {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val job = scope.launch {
             backupUseCase.state
                 .map { Pair(it.consecutiveFailures, it.lastError) }
                 .distinctUntilChanged()
@@ -47,6 +50,10 @@ internal class BackupNotificationPresenter(
                         notifier.cancel(NOTIFICATION_ID)
                     }
                 }
+        }
+        return Closeables.from {
+            job.cancel()
+            scope.cancel()
         }
     }
 
