@@ -182,12 +182,20 @@
     <string name="import_up_to_date_message">Your data is already up to date.</string>
     <string name="import_all_synced_message">All categories, accounts, and transactions from this backup are already in the app.</string>
     <string name="import_done">Done</string>
+    <string name="import_restore_success_title">Restore Complete</string>
+    <plurals name="import_restore_success_message">
+        <item quantity="one">Restored %d item</item>
+        <item quantity="other">Restored %d items</item>
+    </plurals>
+    <string name="import_restore_success_content_description">Restore complete</string>
     <string name="import_source_selection_title">Import Data</string>
     <string name="import_source_selection_subtitle">Choose a data source. Zero will preview what will be imported before anything is saved.</string>
     <string name="import_source_zero_backup_title">Zero Backup</string>
     <string name="import_source_zero_backup_description">Restore from a .zero backup file</string>
     <string name="import_source_zenmoney_title">ZenMoney CSV</string>
     <string name="import_source_zenmoney_description">Import transactions from a ZenMoney export</string>
+    <string name="import_source_drive_title">Google Drive</string>
+    <string name="import_source_drive_description">Restore from your Google Drive backup</string>
     <string name="import_source_more_coming_soon">More sources coming soon</string>
     <string name="import_accounts_review_title">Review Accounts</string>
     <string name="import_accounts_review_info">%1$d ACCOUNTS · %2$d TRANSACTIONS</string>

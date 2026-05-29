@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -125,8 +126,18 @@ private fun sourceCardConfig(source: Source): SourceCardConfig? = when (source.k
         title = stringResource(R.string.import_source_zenmoney_title),
         description = stringResource(R.string.import_source_zenmoney_description),
     )
+    // Key mirrors DriveSnapshotParser.KEY in zero-backup, which zero-core cannot depend on.
+    DRIVE_SOURCE_KEY -> SourceCardConfig(
+        icon = Icons.Filled.CloudDownload,
+        iconBg = ZeroTheme.colors.importMergeContainer,
+        iconTint = ZeroTheme.colors.primaryContainer,
+        title = stringResource(R.string.import_source_drive_title),
+        description = stringResource(R.string.import_source_drive_description),
+    )
     else -> null
 }
+
+private const val DRIVE_SOURCE_KEY = "drive"
 
 @Composable
 private fun SourceCard(source: Source, onClick: () -> Unit) {
