@@ -36,13 +36,7 @@ abstract class BaseE2eTest {
     val clearDataRule: TestRule = object : TestRule {
         override fun apply(base: Statement, description: Description): Statement = object : Statement() {
             override fun evaluate() {
-                runBlocking {
-                    container.database.clearData()
-                    // Re-seed presets so every test starts in the fresh-install baseline
-                    // (Food & Drink, Transport, default accounts). Production seeds these
-                    // on activity attach, which our lazy-launch harness defers until onX().
-                    container.database.seedPresets()
-                }
+                runBlocking { container.database.clearData() }
                 base.evaluate()
             }
         }

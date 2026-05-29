@@ -54,9 +54,8 @@ internal class DefaultDatabaseTestBridge(
 
     override suspend fun clearData() {
         cleanupJob.clearAllTables()
+        seedPresetsAction()
     }
-
-    override suspend fun seedPresets() = seedPresetsAction()
 
     override suspend fun seedDefaultSetup() {
         currentUserRepository.query().first()

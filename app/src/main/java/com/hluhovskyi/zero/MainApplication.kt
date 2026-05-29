@@ -2,7 +2,6 @@ package com.hluhovskyi.zero
 
 import android.app.Application
 import android.content.Context
-import com.hluhovskyi.zero.testbridge.DatabaseTestBridge
 import com.hluhovskyi.zero.testbridge.HasTestBridgeContainer
 import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import timber.log.Timber
@@ -23,20 +22,8 @@ internal class MainApplication :
             .build()
     }
 
-    override val testBridgeContainer: TestBridgeContainer by lazy {
-        val db = applicationComponent.databaseComponent
-        TestBridgeContainer(
-            database = DatabaseTestBridge(
-                cleanupJob = db.cleanupJob,
-                currentUserRepository = db.currentUserRepository,
-                accountRepository = db.accountRepository,
-                categoryRepository = db.categoryRepository,
-                transactionRepository = db.transactionRepository,
-                budgetRepository = db.budgetRepository,
-                seedPresets = { applicationComponent.presetsComponent.presetsUseCase.seed() },
-            ),
-        )
-    }
+    override val testBridgeContainer: TestBridgeContainer
+        get() = applicationComponent.testBridgeContainer
 
     private lateinit var attachCloseable: Closeable
 

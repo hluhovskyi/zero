@@ -1,14 +1,13 @@
 package com.hluhovskyi.zero.testbridge
 
 interface DatabaseTestBridge {
-    suspend fun clearData()
-
     /**
-     * Re-seeds the default preset categories and accounts (Food & Drink, Transport, ...).
-     * Production seeds these on activity attach; tests that bypass the activity for setup
-     * must call this after [clearData] to restore the fresh-install baseline.
+     * Resets to the fresh-install baseline: clears all tables and re-seeds the default
+     * preset categories and accounts (Food & Drink, Transport, ...). Production seeds those
+     * on activity attach; this bridge restores them itself so test bodies that bypass the
+     * activity for setup still start from the same baseline.
      */
-    suspend fun seedPresets()
+    suspend fun clearData()
 
     suspend fun seedDefaultSetup()
 
