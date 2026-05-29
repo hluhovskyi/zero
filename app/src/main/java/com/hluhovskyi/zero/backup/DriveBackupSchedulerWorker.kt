@@ -10,8 +10,7 @@ internal class DriveBackupSchedulerWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result =
-        (applicationContext as HasApplicationComponent).applicationComponent
-            .workSchedulerComponent
-            .performBackup()
+    override suspend fun doWork(): Result = (applicationContext as HasApplicationComponent).applicationComponent
+        .workSchedulerComponent
+        .performBackup()
 }

@@ -3,8 +3,8 @@ package com.hluhovskyi.zero
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import androidx.work.WorkManager
 import android.os.Build
+import androidx.work.WorkManager
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
