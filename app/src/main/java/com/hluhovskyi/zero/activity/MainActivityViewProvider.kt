@@ -36,10 +36,9 @@ internal class MainActivityViewProvider(
                 color = MaterialTheme.colors.background,
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // TODO: issue #213 — sheets should open at content height, not full-screen
                     val sheetState = rememberModalBottomSheetState(
                         initialValue = ModalBottomSheetValue.Hidden,
-                        skipHalfExpanded = true,
+                        skipHalfExpanded = false,
                     )
                     val bottomSheetNavigator = remember(sheetState) {
                         BottomSheetNavigator(sheetState)

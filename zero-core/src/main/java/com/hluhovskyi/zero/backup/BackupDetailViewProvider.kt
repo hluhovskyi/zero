@@ -21,6 +21,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -115,6 +117,12 @@ private fun BackupDetailBody(
                         onRestore = { onAction(BackupDetailViewModel.Action.Restore) },
                     )
                 }
+            }
+            item {
+                WifiOnlyToggleRow(
+                    wifiOnly = state.wifiOnly,
+                    onWifiOnlyChange = { wifiOnly -> onAction(BackupDetailViewModel.Action.SetWifiOnly(wifiOnly)) },
+                )
             }
             item { DisconnectButton(onClick = { onAction(BackupDetailViewModel.Action.Disconnect) }) }
             item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -419,6 +427,50 @@ private fun BackupPrimaryActions(
                 ),
             )
         }
+    }
+}
+
+@Composable
+private fun WifiOnlyToggleRow(
+    wifiOnly: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(ZeroTheme.colors.surfaceContainerLowest, RoundedCornerShape(18.dp))
+            .clickable { onWifiOnlyChange(!wifiOnly) }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.backup_mobile_data_title),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ZeroTheme.colors.onSurface,
+                ),
+            )
+            Text(
+                text = stringResource(R.string.backup_mobile_data_body),
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    color = ZeroTheme.colors.onSurfaceVariant,
+                    lineHeight = 18.sp,
+                ),
+            )
+        }
+        Switch(
+            checked = !wifiOnly,
+            onCheckedChange = { mobileDataAllowed -> onWifiOnlyChange(!mobileDataAllowed) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = ZeroTheme.colors.primaryContainer,
+                checkedTrackColor = ZeroTheme.colors.primaryContainerLight,
+            ),
+        )
     }
 }
 

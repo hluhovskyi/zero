@@ -25,4 +25,12 @@
 
     <!-- Feedback -->
     <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+
+    <!-- Backup failure notification -->
+    <string name="backup_notification_channel">Backup status</string>
+    <string name="backup_notification_title">Zero couldn\'t back up your data</string>
+    <string name="backup_notification_body_auth">Sign in to Google Drive again to keep backing up.</string>
+    <string name="backup_notification_body_network">Check your connection and try again.</string>
+    <string name="backup_notification_body_quota">Your Google Drive is full.</string>
+    <string name="backup_notification_body_generic">Tap to retry.</string>
 </resources>

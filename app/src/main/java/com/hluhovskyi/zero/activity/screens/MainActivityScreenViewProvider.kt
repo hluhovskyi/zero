@@ -30,6 +30,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.hluhovskyi.zero.activity.navigation.BundleArguments
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
@@ -88,6 +89,9 @@ internal class MainActivityScreenViewProvider(
                                 nullable = argument.optional
                             }
                         }
+                        val navDeepLinks = entry.deepLinks.map { pattern ->
+                            navDeepLink { uriPattern = pattern }
+                        }
                         when (entry.displayOption) {
                             is NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet -> {
                                 bottomSheet(
@@ -124,6 +128,7 @@ internal class MainActivityScreenViewProvider(
                                 composable(
                                     route = entry.route,
                                     arguments = navArguments,
+                                    deepLinks = navDeepLinks,
                                 ) { backStackEntry ->
                                     Box(
                                         modifier = Modifier
