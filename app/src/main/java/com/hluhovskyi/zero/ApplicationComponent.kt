@@ -118,8 +118,6 @@ abstract class ApplicationComponent :
     abstract val workSchedulerComponent: WorkSchedulerComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
-    abstract override val syncEngine: SyncEngine
-    abstract override val currentUserRepository: CurrentUserRepository
 
     interface Dependencies {
 
