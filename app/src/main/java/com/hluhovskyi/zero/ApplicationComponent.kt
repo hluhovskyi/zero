@@ -332,6 +332,7 @@ abstract class ApplicationComponent :
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            configurationRepository: ConfigurationRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
@@ -339,6 +340,7 @@ abstract class ApplicationComponent :
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            configurationRepository = configurationRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )

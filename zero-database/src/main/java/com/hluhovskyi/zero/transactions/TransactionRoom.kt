@@ -125,6 +125,55 @@ internal interface TransactionRoom {
     @Query(
         """
         SELECT categoryId,
+               COUNT(*) as transactionCount,
+               MAX(enteredDateTime) as lastUsedDateTime
+        FROM TransactionEntity
+        WHERE userId = :userId
+          AND categoryId IS NOT NULL
+          AND accountId = :accountId
+          AND deletedAt IS NULL
+        GROUP BY categoryId
+    """,
+    )
+    fun selectCategoryUsageStatisticByAccount(
+        userId: String,
+        accountId: String,
+    ): Flow<List<CategoryUsageStatistic>>
+
+    @Query(
+        """
+        SELECT categoryId,
+               COUNT(*) as transactionCount,
+               MAX(enteredDateTime) as lastUsedDateTime
+        FROM TransactionEntity
+        WHERE userId = :userId
+          AND categoryId IS NOT NULL
+          AND strftime('%m', enteredDateTime) = :month
+          AND deletedAt IS NULL
+        GROUP BY categoryId
+    """,
+    )
+    fun selectCategoryUsageStatisticByMonth(
+        userId: String,
+        month: String,
+    ): Flow<List<CategoryUsageStatistic>>
+
+    @Query(
+        """
+        SELECT categoryId,
+               AVG(ABS(amount_value)) AS averageAmount
+        FROM TransactionEntity
+        WHERE userId = :userId
+          AND categoryId IS NOT NULL
+          AND deletedAt IS NULL
+        GROUP BY categoryId
+    """,
+    )
+    fun selectCategoryAmountStatistic(userId: String): Flow<List<CategoryAmountStatistic>>
+
+    @Query(
+        """
+        SELECT categoryId,
                currencyId,
                SUM(amount_value) AS totalAmount,
                COUNT(*) AS transactionCount
