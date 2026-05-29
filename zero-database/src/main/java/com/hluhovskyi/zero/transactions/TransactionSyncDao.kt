@@ -16,6 +16,9 @@ internal interface TransactionSyncDao {
     @Query("SELECT * FROM TransactionEntity WHERE userId = :userId AND updatedDateTime > :since")
     suspend fun selectSince(userId: Id.Known, since: LocalDateTime): List<TransactionEntity>
 
+    @Query("SELECT MAX(updatedDateTime) FROM TransactionEntity WHERE userId = :userId")
+    suspend fun selectLastModifiedAt(userId: Id.Known): LocalDateTime?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun syncUpsert(entities: List<TransactionEntity>)
 }

@@ -13,6 +13,8 @@ internal class RoomTransactionSyncSource(
 
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncTransaction> = dao().selectSince(userId, since).map { it.toSyncModel() }
 
+    override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = dao().selectLastModifiedAt(userId)
+
     private fun TransactionEntity.toSyncModel() = SyncTransaction(
         id = id,
         type = when (type) {

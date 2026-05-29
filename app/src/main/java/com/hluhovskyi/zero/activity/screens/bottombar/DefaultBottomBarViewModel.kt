@@ -7,7 +7,6 @@ import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.common.AndroidUriResourceFactory
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -26,56 +25,30 @@ internal class DefaultBottomBarViewModel(
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : BottomBarViewModel {
 
-    private val homeId = Id.Known("home")
-    private val categoriesId = Id.Known("categories")
-    private val budgetId = Id.Known("budget")
-    private val accountsId = Id.Known("accounts")
-    private val settingsId = Id.Known("settings")
-
     private val bottomNavigationItems = listOf(
         BottomBarViewModel.Item(
-            id = homeId,
-            name = "Home",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_home_24"),
-                description = "Home icon",
-            ),
+            id = BottomBarViewModel.HomeId,
+            iconUri = androidUriResourceFactory.drawable("ic_home_24"),
             selected = false,
         ),
         BottomBarViewModel.Item(
-            id = accountsId,
-            name = "Accounts",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_accounts_24"),
-                description = "Accounts icon",
-            ),
+            id = BottomBarViewModel.AccountsId,
+            iconUri = androidUriResourceFactory.drawable("ic_accounts_24"),
             selected = false,
         ),
         BottomBarViewModel.Item(
-            id = budgetId,
-            name = "Budget",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_budget_24"),
-                description = "Budget icon",
-            ),
+            id = BottomBarViewModel.BudgetId,
+            iconUri = androidUriResourceFactory.drawable("ic_budget_24"),
             selected = false,
         ),
         BottomBarViewModel.Item(
-            id = categoriesId,
-            name = "Categories",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_categories_24"),
-                description = "Category icon",
-            ),
+            id = BottomBarViewModel.CategoriesId,
+            iconUri = androidUriResourceFactory.drawable("ic_categories_24"),
             selected = false,
         ),
         BottomBarViewModel.Item(
-            id = settingsId,
-            name = "Settings",
-            icon = Image(
-                uri = androidUriResourceFactory.drawable("ic_settings_24"),
-                description = "Settings icon",
-            ),
+            id = BottomBarViewModel.SettingsId,
+            iconUri = androidUriResourceFactory.drawable("ic_settings_24"),
             selected = false,
         ),
     )
@@ -89,11 +62,11 @@ internal class DefaultBottomBarViewModel(
         when (action) {
             is BottomBarViewModel.Action.SelectItem -> {
                 val destination = when (action.item.id) {
-                    homeId -> Destinations.Home
-                    categoriesId -> Destinations.Category.All
-                    accountsId -> Destinations.Account.All
-                    budgetId -> Destinations.Budget.All
-                    settingsId -> Destinations.Settings
+                    BottomBarViewModel.HomeId -> Destinations.Home
+                    BottomBarViewModel.CategoriesId -> Destinations.Category.All
+                    BottomBarViewModel.AccountsId -> Destinations.Account.All
+                    BottomBarViewModel.BudgetId -> Destinations.Budget.All
+                    BottomBarViewModel.SettingsId -> Destinations.Settings
                     else -> null
                 }
 
@@ -124,7 +97,7 @@ internal class DefaultBottomBarViewModel(
                                 bottomNavigationItems.map { item ->
                                     item.copy(
                                         selected = item.id == bottomBarId,
-                                        hasAlert = item.id == budgetId && isOver,
+                                        hasAlert = item.id == BottomBarViewModel.BudgetId && isOver,
                                     )
                                 }
                             } else {
@@ -137,11 +110,11 @@ internal class DefaultBottomBarViewModel(
     }
 
     private fun Destination.toBottomBarId(): Id = when (this.route) {
-        Destinations.Home.route -> homeId
-        Destinations.Category.All.route -> categoriesId
-        Destinations.Account.All.route -> accountsId
-        Destinations.Budget.All.route -> budgetId
-        Destinations.Settings.route -> settingsId
+        Destinations.Home.route -> BottomBarViewModel.HomeId
+        Destinations.Category.All.route -> BottomBarViewModel.CategoriesId
+        Destinations.Account.All.route -> BottomBarViewModel.AccountsId
+        Destinations.Budget.All.route -> BottomBarViewModel.BudgetId
+        Destinations.Settings.route -> BottomBarViewModel.SettingsId
         else -> Id.Unknown
     }
 }

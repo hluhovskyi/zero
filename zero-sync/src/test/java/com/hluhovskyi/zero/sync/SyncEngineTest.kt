@@ -241,6 +241,7 @@ class SyncEngineTest {
 private class FakeCategorySource(private val data: List<SyncCategory>) : EntitySyncSource<SyncCategory> {
     override suspend fun exportAll(userId: Id.Known) = data
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime) = data.filter { it.updatedDateTime > since }
+    override suspend fun lastModifiedAt(userId: Id.Known) = data.maxOfOrNull { it.updatedDateTime }
 }
 
 private class FakeCategorySink : EntitySyncSink<SyncCategory> {
@@ -253,6 +254,7 @@ private class FakeCategorySink : EntitySyncSink<SyncCategory> {
 private class FakeAccountSource(private val data: List<SyncAccount>) : EntitySyncSource<SyncAccount> {
     override suspend fun exportAll(userId: Id.Known) = data
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime) = data.filter { it.updatedDateTime > since }
+    override suspend fun lastModifiedAt(userId: Id.Known) = data.maxOfOrNull { it.updatedDateTime }
 }
 
 private class FakeAccountSink : EntitySyncSink<SyncAccount> {
@@ -262,6 +264,7 @@ private class FakeAccountSink : EntitySyncSink<SyncAccount> {
 private class FakeTransactionSource(private val data: List<SyncTransaction>) : EntitySyncSource<SyncTransaction> {
     override suspend fun exportAll(userId: Id.Known) = data
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime) = data.filter { it.updatedDateTime > since }
+    override suspend fun lastModifiedAt(userId: Id.Known) = data.maxOfOrNull { it.updatedDateTime }
 }
 
 private class FakeTransactionSink : EntitySyncSink<SyncTransaction> {
@@ -271,6 +274,7 @@ private class FakeTransactionSink : EntitySyncSink<SyncTransaction> {
 private class FakeBudgetSource(private val data: List<SyncBudget>) : EntitySyncSource<SyncBudget> {
     override suspend fun exportAll(userId: Id.Known) = data
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime) = data.filter { it.updatedDateTime > since }
+    override suspend fun lastModifiedAt(userId: Id.Known) = data.maxOfOrNull { it.updatedDateTime }
 }
 
 private class FakeBudgetSink : EntitySyncSink<SyncBudget> {

@@ -13,6 +13,8 @@ internal class RoomBudgetSyncSource(
 
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncBudget> = dao().selectSince(userId, since).map { it.toSyncModel() }
 
+    override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = dao().selectLastModifiedAt(userId)
+
     private fun BudgetEntity.toSyncModel() = SyncBudget(
         id = id,
         categoryId = categoryId,

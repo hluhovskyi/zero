@@ -57,6 +57,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            configurationRepository: ConfigurationRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
@@ -64,6 +65,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            configurationRepository = configurationRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )

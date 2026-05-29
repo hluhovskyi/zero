@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Identifiable
 import com.hluhovskyi.zero.common.Image
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
+import java.math.BigDecimal
 
 interface CategoriesQueryUseCase {
 
@@ -25,5 +26,6 @@ interface CategoriesQueryUseCase {
     sealed class RankSignal {
         data class AccountChanged(val accountId: Id.Known?) : RankSignal()
         data class DateChanged(val date: LocalDate?) : RankSignal()
+        data class AmountChanged(val amount: BigDecimal?) : RankSignal()
     }
 }
