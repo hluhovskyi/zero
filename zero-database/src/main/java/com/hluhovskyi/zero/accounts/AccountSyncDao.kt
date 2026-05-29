@@ -16,6 +16,9 @@ internal interface AccountSyncDao {
     @Query("SELECT * FROM AccountEntity WHERE userId = :userId AND updatedDateTime > :since")
     suspend fun selectSince(userId: Id.Known, since: LocalDateTime): List<AccountEntity>
 
+    @Query("SELECT MAX(updatedDateTime) FROM AccountEntity WHERE userId = :userId")
+    suspend fun selectLastModifiedAt(userId: Id.Known): LocalDateTime?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun syncUpsert(entities: List<AccountEntity>)
 }

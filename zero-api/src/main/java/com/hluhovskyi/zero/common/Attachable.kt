@@ -6,7 +6,7 @@ import java.io.Closeable
  * Lifecycle interface. [attach] starts subscriptions/coroutines and returns a [Closeable]
  * that cancels them. In Compose, `AttachWithView()` ties this to `DisposableEffect`.
  */
-interface Attachable {
+fun interface Attachable {
 
     fun attach(): Closeable
 

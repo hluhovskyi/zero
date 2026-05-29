@@ -10,6 +10,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -125,6 +127,36 @@ class DefaultBackupUseCaseTest {
     }
 
     @Test
+    fun `parallel BackupNow from worker and UI - one upload, both observers see Uploading then Idle`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val client = FakeBackupClient(uploadResult = success()).apply { uploadGate = gate }
+        val useCase = useCase(client = client)
+
+        val workerSeenPhases = mutableListOf<BackupUseCase.Phase>()
+        val uiSeenPhases = mutableListOf<BackupUseCase.Phase>()
+        val workerJob = useCase.state.onEach { workerSeenPhases += it.phase }.launchIn(this)
+        val uiJob = useCase.state.onEach { uiSeenPhases += it.phase }.launchIn(this)
+        runCurrent()
+
+        useCase.perform(BackupUseCase.Action.BackupNow) // simulate worker trigger
+        useCase.perform(BackupUseCase.Action.BackupNow) // simulate UI tap before first completes
+        runCurrent()
+
+        assertEquals(1, client.uploadCount)
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(1, client.uploadCount)
+        assertTrue("Worker observer saw Uploading", workerSeenPhases.any { it is BackupUseCase.Phase.Uploading })
+        assertTrue("UI observer saw Uploading", uiSeenPhases.any { it is BackupUseCase.Phase.Uploading })
+        assertSame(BackupUseCase.Phase.Idle, workerSeenPhases.last())
+        assertSame(BackupUseCase.Phase.Idle, uiSeenPhases.last())
+
+        workerJob.cancel()
+        uiJob.cancel()
+    }
+
+    @Test
     fun `RestoreLatest happy path - invokes callback with snapshot`() = runTest {
         val downloadedSnapshot = emptySnapshot.copy(userId = Id.Known("user-2"))
         val client = FakeBackupClient(
@@ -184,6 +216,7 @@ class DefaultBackupUseCaseTest {
         override suspend fun import(snapshot: SyncSnapshot, userId: Id.Known) = Unit
         override suspend fun loadSnapshot(uri: Uri.NonEmpty): SyncSnapshot = snapshot
         override suspend fun delta(snapshot: SyncSnapshot, userId: Id.Known): SyncSnapshot = snapshot
+        override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = null
     }
 
     private class FakeCurrentUserRepository(private val userId: Id.Known) : CurrentUserRepository {

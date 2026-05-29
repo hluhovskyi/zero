@@ -15,6 +15,7 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         object Disconnect : Action
         object Back : Action
         object SignInFeedbackShown : Action
+        data class SetWifiOnly(val wifiOnly: Boolean) : Action
     }
 
     data class State(
@@ -24,6 +25,7 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val lastSuccessAt: LocalDateTime? = null,
         val lastError: BackupError? = null,
         val signInFeedback: SignInFeedback? = null,
+        val wifiOnly: Boolean = true,
     )
 
     sealed interface SignInFeedback {
