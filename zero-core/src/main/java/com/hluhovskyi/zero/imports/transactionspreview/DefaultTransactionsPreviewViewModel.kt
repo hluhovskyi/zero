@@ -64,7 +64,7 @@ internal class DefaultTransactionsPreviewViewModel(
                 val category = categoryId?.let { categoryById[it] }
                 TransactionsPreviewViewModel.DisplayTransaction(
                     id = id.value,
-                    primaryText = categoryName ?: "Expense",
+                    primaryText = categoryName,
                     amount = "-${amountFormatter.format(Amount(amount.value.abs()), currencyId.value)}",
                     accountName = accountName,
                     date = date,
@@ -77,7 +77,7 @@ internal class DefaultTransactionsPreviewViewModel(
                 val category = categoryId?.let { categoryById[it] }
                 TransactionsPreviewViewModel.DisplayTransaction(
                     id = id.value,
-                    primaryText = categoryName ?: "Income",
+                    primaryText = categoryName,
                     amount = "+${amountFormatter.format(Amount(amount.value.abs()), currencyId.value)}",
                     accountName = accountName,
                     date = date,
@@ -88,7 +88,7 @@ internal class DefaultTransactionsPreviewViewModel(
             }
             is ImportTransaction.Transfer -> TransactionsPreviewViewModel.DisplayTransaction(
                 id = id.value,
-                primaryText = "Transfer",
+                primaryText = null,
                 amount = amountFormatter.format(Amount(amount.value.abs()), currencyId.value),
                 accountName = accountName,
                 date = date,
