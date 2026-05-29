@@ -12,11 +12,10 @@ import com.hluhovskyi.zero.activity.ActivityComponent
 import com.hluhovskyi.zero.activity.CurrentActivityTracker
 import com.hluhovskyi.zero.auth.AuthComponent
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
-import com.hluhovskyi.zero.backup.BackupApplicationComponent
+import com.hluhovskyi.zero.backup.AttachBackupToNotifications
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
-import com.hluhovskyi.zero.backup.BackupNotificationPresenter
 import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.backup.DriveComponent
@@ -434,24 +433,6 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
-        internal fun backupApplicationComponent(
-            context: Context,
-            backupUseCase: BackupUseCase,
-            notifier: Notifier,
-        ): BackupApplicationComponent = BackupApplicationComponent.builder(
-            object : BackupApplicationComponent.Dependencies {
-                override val context = context
-                override val backupUseCase = backupUseCase
-                override val notifier = notifier
-            },
-        ).build()
-
-        @Provides
-        internal fun backupNotificationPresenter(component: BackupApplicationComponent): BackupNotificationPresenter =
-            component.backupNotificationPresenter
-
-        @Provides
-        @ApplicationScope
         internal fun workSchedulerComponent(
             backupUseCase: BackupUseCase,
             syncEngine: SyncEngine,
@@ -646,12 +627,14 @@ internal object CrashModule {
     @Provides
     @ApplicationScope
     fun attachable(
+        context: Context,
         crashComponent: CrashComponent,
         currentActivityTracker: CurrentActivityTracker,
-        backupNotificationPresenter: BackupNotificationPresenter,
+        backupComponent: BackupComponent,
+        notifier: Notifier,
     ): Attachable = AttachApplicationComponent(
         crashComponent = crashComponent,
         currentActivityTracker = currentActivityTracker,
-        backupNotificationPresenter = backupNotificationPresenter,
+        backupNotifications = AttachBackupToNotifications(context, backupComponent, notifier),
     )
 }

@@ -3,6 +3,11 @@ package com.hluhovskyi.zero.backup
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+
+private const val FAILURE_STRIKE_THRESHOLD = 3
 
 interface BackupComponent {
 
@@ -14,6 +19,7 @@ interface BackupComponent {
     }
 
     val backupUseCase: BackupUseCase
+    val signal: Flow<BackupSignal>
 
     class Factory(private val dependencies: Dependencies) {
         fun create(): BackupComponent = DefaultBackupComponent(dependencies)
@@ -22,6 +28,11 @@ interface BackupComponent {
     companion object {
         fun factory(dependencies: Dependencies): Factory = Factory(dependencies)
     }
+}
+
+sealed interface BackupSignal {
+    data object Idle : BackupSignal
+    data class Failure(val error: BackupError?) : BackupSignal
 }
 
 internal class DefaultBackupComponent(dependencies: BackupComponent.Dependencies) : BackupComponent {
@@ -34,4 +45,14 @@ internal class DefaultBackupComponent(dependencies: BackupComponent.Dependencies
             coroutineScope = dependencies.backupCoroutineScope,
         )
     }
+
+    override val signal: Flow<BackupSignal> = backupUseCase.state
+        .map { state ->
+            if (state.consecutiveFailures >= FAILURE_STRIKE_THRESHOLD) {
+                BackupSignal.Failure(state.lastError)
+            } else {
+                BackupSignal.Idle
+            }
+        }
+        .distinctUntilChanged()
 }
