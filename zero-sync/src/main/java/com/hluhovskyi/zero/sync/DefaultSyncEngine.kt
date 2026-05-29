@@ -59,10 +59,10 @@ internal class DefaultSyncEngine(
     )
 
     override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = sequenceOf(
-        categoryPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
-        accountPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
-        transactionPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
-        budgetPipeline.source.exportAll(userId).maxOfOrNull { it.updatedDateTime },
+        categoryPipeline.source.lastModifiedAt(userId),
+        accountPipeline.source.lastModifiedAt(userId),
+        transactionPipeline.source.lastModifiedAt(userId),
+        budgetPipeline.source.lastModifiedAt(userId),
     ).filterNotNull().maxOrNull()
 
     private suspend fun <T : SyncEntity> mergePipeline(

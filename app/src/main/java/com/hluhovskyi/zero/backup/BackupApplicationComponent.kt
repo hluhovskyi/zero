@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.backup
 
 import android.content.Context
 import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+import com.hluhovskyi.zero.notifications.Notifier
 import dagger.Provides
 import javax.inject.Scope
 
@@ -17,13 +17,12 @@ internal annotation class BackupApplicationScope
 )
 internal abstract class BackupApplicationComponent {
 
-    abstract val backupScheduler: BackupScheduler
     abstract val backupNotificationPresenter: BackupNotificationPresenter
 
     interface Dependencies {
         val context: Context
         val backupUseCase: BackupUseCase
-        val workManagerScheduler: WorkManagerScheduler
+        val notifier: Notifier
     }
 
     companion object {
@@ -41,18 +40,14 @@ internal abstract class BackupApplicationComponent {
 
         @Provides
         @BackupApplicationScope
-        fun backupScheduler(
-            workManagerScheduler: WorkManagerScheduler,
-        ): BackupScheduler = DefaultBackupScheduler(workManagerScheduler)
-
-        @Provides
-        @BackupApplicationScope
         fun backupNotificationPresenter(
             context: Context,
             backupUseCase: BackupUseCase,
+            notifier: Notifier,
         ): BackupNotificationPresenter = BackupNotificationPresenter(
             context = context,
             backupUseCase = backupUseCase,
+            notifier = notifier,
         )
     }
 }

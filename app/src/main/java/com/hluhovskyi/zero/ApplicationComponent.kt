@@ -66,10 +66,13 @@ import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.imports.SnapshotParser
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
+import com.hluhovskyi.zero.notifications.AndroidNotifier
+import com.hluhovskyi.zero.notifications.Notifier
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
 import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+import com.hluhovskyi.zero.scheduling.WorkSchedulerComponent
 import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
 import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
@@ -112,6 +115,7 @@ abstract class ApplicationComponent :
     abstract val attachable: Attachable
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
+    abstract val workSchedulerComponent: WorkSchedulerComponent
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
     abstract override val syncEngine: SyncEngine
@@ -428,24 +432,44 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun notifier(context: Context): Notifier = AndroidNotifier(context)
+
+        @Provides
+        @ApplicationScope
         internal fun backupApplicationComponent(
             context: Context,
             backupUseCase: BackupUseCase,
-            workManagerScheduler: WorkManagerScheduler,
+            notifier: Notifier,
         ): BackupApplicationComponent = BackupApplicationComponent.builder(
             object : BackupApplicationComponent.Dependencies {
                 override val context = context
                 override val backupUseCase = backupUseCase
+                override val notifier = notifier
+            },
+        ).build()
+
+        @Provides
+        internal fun backupNotificationPresenter(component: BackupApplicationComponent): BackupNotificationPresenter =
+            component.backupNotificationPresenter
+
+        @Provides
+        @ApplicationScope
+        internal fun workSchedulerComponent(
+            backupUseCase: BackupUseCase,
+            syncEngine: SyncEngine,
+            currentUserRepository: CurrentUserRepository,
+            workManagerScheduler: WorkManagerScheduler,
+        ): WorkSchedulerComponent = WorkSchedulerComponent.builder(
+            object : WorkSchedulerComponent.Dependencies {
+                override val backupUseCase = backupUseCase
+                override val syncEngine = syncEngine
+                override val currentUserRepository = currentUserRepository
                 override val workManagerScheduler = workManagerScheduler
             },
         ).build()
 
         @Provides
-        internal fun backupScheduler(component: BackupApplicationComponent): BackupScheduler = component.backupScheduler
-
-        @Provides
-        internal fun backupNotificationPresenter(component: BackupApplicationComponent): BackupNotificationPresenter =
-            component.backupNotificationPresenter
+        internal fun backupScheduler(component: WorkSchedulerComponent): BackupScheduler = component.backupScheduler
 
         @Provides
         @ApplicationScope
