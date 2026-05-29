@@ -961,7 +961,10 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder: BackupDetailComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
-        ): NavigatorEntry = navigatorScope.buildable(Destinations.Backup) {
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Backup,
+            deepLinks = listOf("zero://backup"),
+        ) {
             componentBuilder
                 .onBackHandler { navigator.back() }
                 .logging(logger)

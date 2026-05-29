@@ -6,6 +6,7 @@ internal interface NavigatorEntry {
     val route: String
     val destination: Destination
     val displayOption: DisplayOption
+    val deepLinks: List<String>
     val view: @Composable (arguments: Arguments) -> Unit
 
     interface Arguments {

@@ -16,18 +16,21 @@ internal interface NavigatorScope {
     fun composable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        deepLinks: List<String> = emptyList(),
         view: @Composable Context.() -> Unit,
     ): NavigatorEntry
 
     fun buildable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        deepLinks: List<String> = emptyList(),
         view: Context.() -> Buildable<out AttachableViewComponent>,
     ): NavigatorEntry
 
     fun component(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        deepLinks: List<String> = emptyList(),
         view: Context.() -> AttachableViewComponent,
     ): NavigatorEntry
 }
@@ -40,33 +43,39 @@ internal class DefaultNavigatorScope(
     override fun composable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
+        deepLinks: List<String>,
         view: @Composable NavigatorScope.Context.() -> Unit,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
         displayOption = displayOption,
+        deepLinks = deepLinks,
         view = { arguments -> view(NavigatorContext(navigator, arguments)) },
     )
 
     override fun buildable(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
+        deepLinks: List<String>,
         view: NavigatorScope.Context.() -> Buildable<out AttachableViewComponent>,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
         displayOption = displayOption,
+        deepLinks = deepLinks,
         view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() },
     )
 
     override fun component(
         destination: Destination,
         displayOption: NavigatorEntry.DisplayOption,
+        deepLinks: List<String>,
         view: NavigatorScope.Context.() -> AttachableViewComponent,
     ): NavigatorEntry = ComposeNavigationEntry(
         route = navigationRouteResolver.resolveWithPlaceholders(destination),
         destination = destination,
         displayOption = displayOption,
+        deepLinks = deepLinks,
         view = { arguments -> view(NavigatorContext(navigator, arguments)).AttachWithView() },
     )
 
@@ -79,6 +88,7 @@ internal class DefaultNavigatorScope(
         override val route: String,
         override val destination: Destination,
         override val displayOption: NavigatorEntry.DisplayOption,
+        override val deepLinks: List<String>,
         override val view: @Composable (arguments: NavigatorEntry.Arguments) -> Unit,
     ) : NavigatorEntry
 }

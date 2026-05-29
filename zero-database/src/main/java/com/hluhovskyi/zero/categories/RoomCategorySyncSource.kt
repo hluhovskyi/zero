@@ -13,6 +13,8 @@ internal class RoomCategorySyncSource(
 
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncCategory> = dao().selectSince(userId, since).map { it.toSyncModel() }
 
+    override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = dao().selectLastModifiedAt(userId)
+
     private fun CategoryEntity.toSyncModel() = SyncCategory(
         id = id,
         name = name,
