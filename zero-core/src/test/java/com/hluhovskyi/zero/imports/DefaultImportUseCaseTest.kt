@@ -305,7 +305,6 @@ class DefaultImportUseCaseTest {
     fun `SelectSource for a fileless source skips FilePicker and loads immediately`() = runTest {
         val filelessSource = object : Source {
             override val key = "drive"
-            override val requiresFile = false
         }
         val snapshot = snapshotWith(categories = listOf(syncCategory("c1", "Food")))
         whenever(parser.source).thenReturn(filelessSource)
@@ -324,7 +323,7 @@ class DefaultImportUseCaseTest {
             onImportFinishedHandler = OnImportFinishedHandler.Noop,
             coroutineScope = this,
         )
-        useCase.perform(ImportUseCase.Action.SelectSource(filelessSource))
+        useCase.perform(ImportUseCase.Action.SelectSource(filelessSource, requiresFile = false))
         advanceUntilIdle()
 
         // Never paused on the file picker; went straight to importing the all-new snapshot.

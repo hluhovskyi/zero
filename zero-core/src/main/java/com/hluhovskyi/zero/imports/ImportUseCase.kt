@@ -11,7 +11,7 @@ import java.io.Closeable
 interface ImportUseCase : AttachableActionStateModel<ImportUseCase.Action, ImportUseCase.State> {
 
     sealed interface Action {
-        data class SelectSource(val source: Source) : Action
+        data class SelectSource(val source: Source, val requiresFile: Boolean = true) : Action
         data class SelectFile(val uri: Uri.NonEmpty) : Action
         data class SetCategoryStrategy(val id: Id.Known, val strategy: ResolveStrategy) : Action
         data class SetAccountStrategy(val id: Id.Known, val strategy: ResolveStrategy) : Action

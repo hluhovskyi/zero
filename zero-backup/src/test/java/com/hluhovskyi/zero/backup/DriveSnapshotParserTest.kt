@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.sync.SyncSnapshot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -32,11 +31,10 @@ class DriveSnapshotParserTest {
     )
 
     @Test
-    fun `source advertises the drive key and does not require a file`() {
+    fun `source advertises the drive key`() {
         val parser = DriveSnapshotParser(FakeBackupClient(), FakeOAuthTokenProvider(token = "tok"))
 
         assertEquals("drive", parser.source.key)
-        assertFalse(parser.source.requiresFile)
     }
 
     @Test

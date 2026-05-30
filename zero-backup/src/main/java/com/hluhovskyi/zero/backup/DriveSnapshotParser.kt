@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.first
 
 /**
  * Exposes the latest Google Drive backup as an import [Source]. The [uri] is ignored — the
- * snapshot is fetched from Drive via [backupClient] rather than read from a local file
- * (hence [DriveSource.requiresFile] is `false`). Format validation lives in the envelope
- * serializer the [backupClient] uses, so [download] already rejects unknown formats.
+ * snapshot is fetched from Drive via [backupClient] rather than read from a local file (the
+ * source-selection UI marks Drive as fileless and skips the picker). Format validation lives
+ * in the envelope serializer the [backupClient] uses, so [download] already rejects unknown formats.
  */
 class DriveSnapshotParser(
     private val backupClient: BackupClient,
@@ -46,7 +46,6 @@ class DriveSnapshotParser(
 
     private object DriveSource : Source {
         override val key: String = KEY
-        override val requiresFile: Boolean = false
     }
 
     companion object {

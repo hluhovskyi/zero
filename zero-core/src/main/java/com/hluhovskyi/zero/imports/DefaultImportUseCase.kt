@@ -63,7 +63,7 @@ internal class DefaultImportUseCase(
         when (action) {
             is ImportUseCase.Action.SelectSource -> {
                 mutableState.update { current -> current.copy(selectedSource = action.source) }
-                if (action.source.requiresFile) {
+                if (action.requiresFile) {
                     mutableState.update { it.copy(screen = ImportUseCase.State.FilePicker) }
                 } else {
                     // Fileless sources (e.g. Drive) fetch remotely; the URI is a traceable sentinel
