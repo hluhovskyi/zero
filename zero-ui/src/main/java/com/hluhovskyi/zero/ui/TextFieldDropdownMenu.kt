@@ -1,10 +1,11 @@
 package com.hluhovskyi.zero.ui
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +38,9 @@ fun <T> TextFieldDropdownMenu(
                 selectedItemIcon?.let { { it.invoke(item) } }
             },
             onValueChange = { },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -45,13 +48,12 @@ fun <T> TextFieldDropdownMenu(
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
+                    text = { menuItem(item) },
                     onClick = {
                         onItemSelected(item)
                         expanded = false
                     },
-                ) {
-                    menuItem(item)
-                }
+                )
             }
         }
     }

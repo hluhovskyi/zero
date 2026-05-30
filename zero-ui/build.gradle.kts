@@ -15,7 +15,7 @@ android {
 
 kotlin {
     compilerOptions {
-        optIn.add("androidx.compose.material.ExperimentalMaterialApi")
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
     }
 }
 
