@@ -31,6 +31,7 @@ fun DatabaseTestBridge(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
     budgetRepository: BudgetRepository,
+    seedPresets: suspend () -> Unit,
 ): DatabaseTestBridge = DefaultDatabaseTestBridge(
     cleanupJob = cleanupJob,
     currentUserRepository = currentUserRepository,
@@ -38,6 +39,7 @@ fun DatabaseTestBridge(
     categoryRepository = categoryRepository,
     transactionRepository = transactionRepository,
     budgetRepository = budgetRepository,
+    seedPresetsAction = seedPresets,
 )
 
 internal class DefaultDatabaseTestBridge(
@@ -47,10 +49,12 @@ internal class DefaultDatabaseTestBridge(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
+    private val seedPresetsAction: suspend () -> Unit,
 ) : DatabaseTestBridge {
 
     override suspend fun clearData() {
         cleanupJob.clearAllTables()
+        seedPresetsAction()
     }
 
     override suspend fun seedDefaultSetup() {
@@ -151,8 +155,8 @@ internal class DefaultDatabaseTestBridge(
     }
 
     override suspend fun seedBudgetOverScenario() {
-        // Triggering the user query materializes the default category presets
-        // (Food & Drink, Transport, ...) which the scenario below relies on.
+        // Presets are seeded by BaseE2eTest after clearData; this scenario relies on
+        // Food & Drink / Transport from that baseline.
         currentUserRepository.query().first()
 
         val currencyId = Id.Known("USD")

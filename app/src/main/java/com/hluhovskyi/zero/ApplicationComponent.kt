@@ -78,6 +78,8 @@ import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
+import com.hluhovskyi.zero.testbridge.DatabaseTestBridge
+import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
@@ -115,6 +117,7 @@ abstract class ApplicationComponent :
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
     abstract val workSchedulerComponent: WorkSchedulerComponent
+    abstract val testBridgeContainer: TestBridgeContainer
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
 
@@ -332,6 +335,7 @@ abstract class ApplicationComponent :
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            configurationRepository: ConfigurationRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
@@ -339,6 +343,7 @@ abstract class ApplicationComponent :
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            configurationRepository = configurationRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -355,6 +360,25 @@ abstract class ApplicationComponent :
             accountRepository = accountRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             configurationRepository = configurationRepository,
+        )
+
+        // E2e test seam — the bridge wraps clearData to also re-seed presets so each test
+        // starts in the fresh-install baseline without depending on activity-attach timing.
+        @Provides
+        @ApplicationScope
+        fun testBridgeContainer(
+            databaseComponent: DatabaseComponent,
+            presetsComponent: PresetsComponent,
+        ): TestBridgeContainer = TestBridgeContainer(
+            database = DatabaseTestBridge(
+                cleanupJob = databaseComponent.cleanupJob,
+                currentUserRepository = databaseComponent.currentUserRepository,
+                accountRepository = databaseComponent.accountRepository,
+                categoryRepository = databaseComponent.categoryRepository,
+                transactionRepository = databaseComponent.transactionRepository,
+                budgetRepository = databaseComponent.budgetRepository,
+                seedPresets = { presetsComponent.presetsUseCase.seed() },
+            ),
         )
 
         @Provides
