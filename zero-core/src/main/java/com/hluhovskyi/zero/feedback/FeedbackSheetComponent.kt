@@ -13,7 +13,7 @@ class FeedbackSheetComponent(
     deviceInfo: DeviceInfo,
     clock: Clock,
     isDebugBuild: Boolean,
-    errorMessageProvider: () -> String,
+    errorMessages: FeedbackErrorMessages,
     onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
     onFeedbackCloseHandler: OnFeedbackCloseHandler,
 ) : AttachableViewComponent {
@@ -31,7 +31,7 @@ class FeedbackSheetComponent(
             ),
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
             onFeedbackCloseHandler = onFeedbackCloseHandler,
-            errorMessageProvider = errorMessageProvider,
+            errorMessages = errorMessages,
             deviceInfo = deviceInfo,
         )
     }
