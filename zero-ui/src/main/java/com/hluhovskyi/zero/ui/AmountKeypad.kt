@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
@@ -48,6 +49,7 @@ fun AmountKeypad(
     value: String,
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    keyHeight: Dp = 50.dp,
 ) {
     val view = LocalView.current
     Column(modifier = modifier.fillMaxWidth()) {
@@ -60,7 +62,7 @@ fun AmountKeypad(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(56.dp)
+                            .height(keyHeight)
                             .clickable {
                                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                 onChange(handleAmountKeypadKey(value, key))

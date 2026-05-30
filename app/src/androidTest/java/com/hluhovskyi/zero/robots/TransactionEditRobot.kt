@@ -6,7 +6,6 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -17,10 +16,13 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
 
     fun fillExpense(amount: String, category: String, account: String): TransactionEditRobot {
         composeRule.apply {
-            // Focus the amount to reveal the inline keypad, then tap each character.
+            // Tap the amount to open the inline keypad, then tap each character.
+            // The amount label is itself clickable and can share text with a key once digits
+            // are typed (e.g. amount "4" vs the "4" key); the keypad renders below the label,
+            // so onLast() reliably picks the key.
             onNodeWithTag("TransactionEdit.amountField").performClick()
             amount.forEach { ch ->
-                onAllNodesWithText(ch.toString()).filter(hasClickAction()).onFirst().performClick()
+                onAllNodesWithText(ch.toString()).filter(hasClickAction()).onLast().performClick()
             }
             onNodeWithText(category).performClick()
             onNodeWithText("ACCOUNT").performClick()

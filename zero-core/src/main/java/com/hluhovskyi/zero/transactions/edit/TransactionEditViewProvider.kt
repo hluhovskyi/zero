@@ -286,6 +286,7 @@ private fun TransactionEditView(
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     value = state.amount,
                     onChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it)) },
+                    keyHeight = 58.dp,
                 )
             }
         }
