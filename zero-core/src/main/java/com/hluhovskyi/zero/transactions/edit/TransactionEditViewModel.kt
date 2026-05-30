@@ -7,8 +7,10 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
 
     sealed interface Action {
         data class ChangeTransactionType(val type: TransactionEditType) : Action
+        data class ChangeAmount(val amount: String) : Action
         data class ChangeDate(val date: LocalDateTime) : Action
         data class ChangeNotes(val notes: String) : Action
+        object PickCurrency : Action
         object Save : Action
         object Discard : Action
         object Delete : Action
@@ -22,6 +24,9 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         val selectedCategory: TransactionEditCategory? = null,
         val headerMode: HeaderMode = HeaderMode.New,
         val notes: String = "",
+        val amount: String = "",
+        val currencySymbol: String = "",
+        val canPickCurrency: Boolean = false,
     )
 
     sealed interface HeaderMode {
