@@ -14,6 +14,10 @@
 #   ./scripts/run-android-tests.sh --fast com.hluhovskyi.zero.ZeroE2eTest#batchSelectRemovesSelectedTransactions
 set -euo pipefail
 
+# Sentinel last-line verdict so stress loops can `grep STATUS:` instead of trusting
+# `$?` through a pipe — pipelines surface tail's exit (always 0), not ours.
+trap 'rc=$?; if [ "$rc" -eq 0 ]; then echo "STATUS: PASS"; else echo "STATUS: FAIL (exit $rc)"; fi' EXIT
+
 if [ ! -f .emulator-serial ]; then
   echo "No emulator claimed for this worktree (no .emulator-serial)." >&2
   echo "Run: ./scripts/emulator/acquire" >&2
@@ -34,7 +38,9 @@ done
 
 if [ "$FAST" -eq 0 ]; then
   echo "▶ Running :app:connectedDebugAndroidTest against $SERIAL..."
-  exec ./gradlew :app:connectedDebugAndroidTest ${ARGS[@]+"${ARGS[@]}"}
+  # No exec — let the EXIT trap fire so STATUS: lands on the last line.
+  ./gradlew :app:connectedDebugAndroidTest ${ARGS[@]+"${ARGS[@]}"}
+  exit $?
 fi
 
 RUNNER="com.hluhovskyi.zero.test/androidx.test.runner.AndroidJUnitRunner"
