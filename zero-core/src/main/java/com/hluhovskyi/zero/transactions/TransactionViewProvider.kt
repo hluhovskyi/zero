@@ -22,10 +22,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -504,25 +504,26 @@ private fun SelectionBar(
                 onDismissRequest = { menuExpanded = false },
             ) {
                 DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = null,
+                                tint = ZeroTheme.colors.error,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                text = stringResource(R.string.transaction_delete),
+                                color = ZeroTheme.colors.error,
+                            )
+                        }
+                    },
                     onClick = {
                         menuExpanded = false
                         onDelete()
                     },
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = null,
-                            tint = ZeroTheme.colors.error,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Text(
-                            text = stringResource(R.string.transaction_delete),
-                            color = ZeroTheme.colors.error,
-                        )
-                    }
-                }
+                )
             }
         }
     }

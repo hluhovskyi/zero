@@ -15,12 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
@@ -80,7 +79,7 @@ private fun TransactionEditView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.background),
+            .background(ZeroTheme.colors.surface),
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -112,45 +111,47 @@ private fun TransactionEditView(
                                     onDismissRequest = { menuExpanded = false },
                                 ) {
                                     DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.ContentCopy,
+                                                    contentDescription = null,
+                                                    tint = ZeroTheme.colors.onSurface,
+                                                    modifier = Modifier.size(18.dp),
+                                                )
+                                                Spacer(Modifier.width(8.dp))
+                                                Text(
+                                                    text = stringResource(R.string.transaction_duplicate),
+                                                    color = ZeroTheme.colors.onSurface,
+                                                )
+                                            }
+                                        },
                                         onClick = {
                                             menuExpanded = false
                                             viewModel.perform(TransactionEditViewModel.Action.Duplicate)
                                         },
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.ContentCopy,
-                                                contentDescription = null,
-                                                tint = ZeroTheme.colors.onSurface,
-                                                modifier = Modifier.size(18.dp),
-                                            )
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = stringResource(R.string.transaction_duplicate),
-                                                color = ZeroTheme.colors.onSurface,
-                                            )
-                                        }
-                                    }
+                                    )
                                     DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = null,
+                                                    tint = ZeroTheme.colors.error,
+                                                    modifier = Modifier.size(18.dp),
+                                                )
+                                                Spacer(Modifier.width(8.dp))
+                                                Text(
+                                                    text = stringResource(R.string.transaction_edit_delete),
+                                                    color = ZeroTheme.colors.error,
+                                                )
+                                            }
+                                        },
                                         onClick = {
                                             menuExpanded = false
                                             viewModel.perform(TransactionEditViewModel.Action.Delete)
                                         },
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = null,
-                                                tint = ZeroTheme.colors.error,
-                                                modifier = Modifier.size(18.dp),
-                                            )
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                text = stringResource(R.string.transaction_edit_delete),
-                                                color = ZeroTheme.colors.error,
-                                            )
-                                        }
-                                    }
+                                    )
                                 }
                             }
                         }

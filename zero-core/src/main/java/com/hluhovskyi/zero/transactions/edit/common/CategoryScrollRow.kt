@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.runtime.Composable
@@ -69,7 +68,7 @@ private fun ShowAllItem(onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CategoryIconView(
-            color = MaterialTheme.colors.surface,
+            color = ZeroTheme.colors.surface,
             size = 48.dp,
             contentPadding = 12.dp,
         ) {
@@ -123,7 +122,7 @@ private fun CategoryItem(
             text = category.name,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (isSelected) MaterialTheme.colors.primary else ZeroTheme.colors.onSurface,
+            color = if (isSelected) ZeroTheme.colors.primary else ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
