@@ -72,6 +72,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Distinct package so debug installs alongside a Play-store release build.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
