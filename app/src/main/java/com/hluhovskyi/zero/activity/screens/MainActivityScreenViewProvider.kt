@@ -85,15 +85,25 @@ internal class MainActivityScreenViewProvider(
                     enterTransition = {
                         slideInHorizontally(
                             animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            initialOffsetX = { it / 12 },
+                            initialOffsetX = { it / 8 },
                         ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
                     },
-                    exitTransition = { fadeOut(tween(NAV_TRANSITION_MILLIS)) },
-                    popEnterTransition = { fadeIn(tween(NAV_TRANSITION_MILLIS)) },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                            targetOffsetX = { -it / 8 },
+                        ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                            initialOffsetX = { -it / 8 },
+                        ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                    },
                     popExitTransition = {
                         slideOutHorizontally(
                             animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            targetOffsetX = { it / 12 },
+                            targetOffsetX = { it / 8 },
                         ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
                     },
                 ) {
