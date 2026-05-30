@@ -16,6 +16,7 @@ appcompat = "1.6.1"
 lifecycle = "2.10.0"
 navigationCompose = "2.9.5"
 materialIconsExtended = "1.7.8"
+material3 = "1.4.0"
 activityCompose = "1.13.0"
 desugar = "2.0.3"
 dagger = "2.56.2"
@@ -54,6 +55,7 @@ androidx-compose-uiToolingPreview = { module = "androidx.compose.ui:ui-tooling-p
 androidx-compose-uiTestJunit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose" }
 androidx-compose-uiTestManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 androidx-compose-materialNavigation = { module = "androidx.compose.material:material-navigation", version.ref = "compose" }
 androidx-compose-materialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version.ref = "compose" }

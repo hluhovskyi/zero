@@ -26,6 +26,7 @@ dependencies {
 
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIconsExtended)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
 
