@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncAccount
@@ -60,11 +61,15 @@ internal class DefaultImportUseCase(
 
     override fun perform(action: ImportUseCase.Action) {
         when (action) {
-            is ImportUseCase.Action.SelectSource -> mutableState.update { current ->
-                current.copy(
-                    selectedSource = action.source,
-                    screen = ImportUseCase.State.FilePicker,
-                )
+            is ImportUseCase.Action.SelectSource -> {
+                mutableState.update { current -> current.copy(selectedSource = action.source) }
+                if (action.requiresFile) {
+                    mutableState.update { it.copy(screen = ImportUseCase.State.FilePicker) }
+                } else {
+                    // Fileless sources (e.g. Drive) fetch remotely; the URI is a traceable sentinel
+                    // ignored by the parser. Skip the file picker and load immediately.
+                    perform(ImportUseCase.Action.SelectFile(Uri(FILELESS_SOURCE_URI) as Uri.NonEmpty))
+                }
             }
             is ImportUseCase.Action.SelectFile -> coroutineScope.launch {
                 mutableState.update { it.copy(screen = ImportUseCase.State.Loading) }
@@ -119,6 +124,18 @@ internal class DefaultImportUseCase(
                     if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
                         mutableState.update { current ->
                             current.copy(screen = ImportUseCase.State.UpToDate)
+                        }
+                        return@launch
+                    }
+                    val allNew = matchedCategoryByImportId.isEmpty() &&
+                        matchedAccountByImportId.isEmpty() &&
+                        duplicateTxIds.isEmpty() &&
+                        (delta.categories.isNotEmpty() || delta.accounts.isNotEmpty() || delta.transactions.isNotEmpty())
+                    if (allNew) {
+                        syncEngine.import(delta, userId)
+                        val itemCount = delta.categories.size + delta.accounts.size + delta.transactions.size
+                        mutableState.update { current ->
+                            current.copy(screen = ImportUseCase.State.RestoreSuccess(itemCount))
                         }
                         return@launch
                     }
@@ -236,6 +253,7 @@ internal class DefaultImportUseCase(
                     is ImportUseCase.State.Loading,
                     is ImportUseCase.State.CategoriesReview,
                     is ImportUseCase.State.UpToDate,
+                    is ImportUseCase.State.RestoreSuccess,
                     -> InternalState(
                         screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }),
                     )
@@ -488,5 +506,10 @@ internal class DefaultImportUseCase(
         if (existingSignatures.isEmpty()) return delta
         val filtered = delta.transactions.filterNot { it.toSignature() in existingSignatures }
         return delta.copy(transactions = filtered)
+    }
+
+    companion object {
+        /** Sentinel URI handed to fileless parsers (e.g. Drive), which ignore it. */
+        private const val FILELESS_SOURCE_URI = "drive://latest"
     }
 }
