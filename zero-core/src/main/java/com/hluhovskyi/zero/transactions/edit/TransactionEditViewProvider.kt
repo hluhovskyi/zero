@@ -30,16 +30,14 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -61,6 +59,7 @@ internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
     private val expenseIncomeComponent: Buildable<out AttachableViewComponent>,
     private val transferComponent: Buildable<out AttachableViewComponent>,
+    private val isNewTransaction: Boolean,
 ) : ViewProvider {
 
     @Composable
@@ -69,6 +68,7 @@ internal class TransactionEditViewProvider(
             viewModel = viewModel,
             expenseIncomeComponent = expenseIncomeComponent,
             transferComponent = transferComponent,
+            isNewTransaction = isNewTransaction,
         )
     }
 }
@@ -78,6 +78,7 @@ private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
     expenseIncomeComponent: Buildable<out AttachableViewComponent>,
     transferComponent: Buildable<out AttachableViewComponent>,
+    isNewTransaction: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
     var menuExpanded by remember { mutableStateOf(false) }
@@ -85,13 +86,9 @@ private fun TransactionEditView(
     val labelIncome = stringResource(R.string.transaction_type_income)
     val labelTransfer = stringResource(R.string.transaction_type_transfer)
 
-    // Keypad visibility follows the amount field's focus.
-    val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
-    var amountFocused by remember { mutableStateOf(false) }
-    val isNew = state.headerMode is TransactionEditViewModel.HeaderMode.New
-    LaunchedEffect(isNew) { if (isNew) focusRequester.requestFocus() }
-    BackHandler(enabled = amountFocused) { focusManager.clearFocus() }
+    // Keypad opens on tapping the amount; auto-opens for a brand-new transaction.
+    var keypadVisible by rememberSaveable { mutableStateOf(isNewTransaction) }
+    BackHandler(enabled = keypadVisible) { keypadVisible = false }
 
     Column(
         modifier = Modifier
@@ -200,9 +197,7 @@ private fun TransactionEditView(
             label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
             amount = state.amount,
             currencySymbol = state.currencySymbol,
-            focusRequester = focusRequester,
-            onFocusChanged = { amountFocused = it },
-            readOnly = true,
+            onClick = { keypadVisible = true },
             onCurrencyClick = if (state.canPickCurrency) {
                 { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
             } else {
@@ -283,7 +278,7 @@ private fun TransactionEditView(
                 expanded = true,
                 text = stringResource(R.string.transaction_edit_save),
             )
-            AnimatedVisibility(visible = amountFocused) {
+            AnimatedVisibility(visible = keypadVisible) {
                 AmountKeypad(
                     modifier = Modifier
                         .fillMaxWidth()

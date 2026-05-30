@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -61,10 +60,7 @@ fun AmountKeypad(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
-                            // Keys must never take focus — otherwise a tap would steal focus
-                            // from the amount field and dismiss the focus-driven keypad.
-                            .focusProperties { canFocus = false }
+                            .height(56.dp)
                             .clickable {
                                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                 onChange(handleAmountKeypadKey(value, key))
