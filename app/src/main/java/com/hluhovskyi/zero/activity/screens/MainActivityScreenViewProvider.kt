@@ -83,28 +83,44 @@ internal class MainActivityScreenViewProvider(
                     navController = navController,
                     startDestination = startDestination.route,
                     enterTransition = {
-                        slideInHorizontally(
-                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            initialOffsetX = { it / 8 },
-                        ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                            fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        } else {
+                            slideInHorizontally(
+                                animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                                initialOffsetX = { it / 8 },
+                            ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        }
                     },
                     exitTransition = {
-                        slideOutHorizontally(
-                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            targetOffsetX = { -it / 8 },
-                        ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                            fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        } else {
+                            slideOutHorizontally(
+                                animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                                targetOffsetX = { -it / 8 },
+                            ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        }
                     },
                     popEnterTransition = {
-                        slideInHorizontally(
-                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            initialOffsetX = { -it / 8 },
-                        ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                            fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        } else {
+                            slideInHorizontally(
+                                animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                                initialOffsetX = { -it / 8 },
+                            ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                        }
                     },
                     popExitTransition = {
-                        slideOutHorizontally(
-                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
-                            targetOffsetX = { it / 8 },
-                        ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        if (isTabSwitch(initialState.destination.route, targetState.destination.route)) {
+                            fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        } else {
+                            slideOutHorizontally(
+                                animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                                targetOffsetX = { it / 8 },
+                            ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                        }
                     },
                 ) {
                     navigationEntries.forEach { entry ->
@@ -177,3 +193,8 @@ internal class MainActivityScreenViewProvider(
 }
 
 private const val NAV_TRANSITION_MILLIS = 180
+
+private val BOTTOM_BAR_TAB_ROUTES = setOf("home", "accounts", "categories", "budget", "settings")
+
+private fun isTabSwitch(from: String?, to: String?): Boolean =
+    from in BOTTOM_BAR_TAB_ROUTES && to in BOTTOM_BAR_TAB_ROUTES
