@@ -9,7 +9,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -75,7 +74,7 @@ class DefaultFeedbackViewModelTest {
         reportFormatter = formatter,
         onFeedbackSubmittedHandler = submittedHandler,
         onFeedbackCloseHandler = closeHandler,
-        errorMessageProvider = { "error" },
+        errorMessages = { reason -> "error:${reason::class.simpleName}" },
         deviceInfo = deviceInfo,
         coroutineScope = scope,
     )
@@ -83,7 +82,7 @@ class DefaultFeedbackViewModelTest {
     @Test
     fun `UpdateDescription updates state and clears prior error`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Network))
         val handler = RecordingSubmittedHandler()
         val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
 
@@ -130,9 +129,9 @@ class DefaultFeedbackViewModelTest {
     }
 
     @Test
-    fun `Failure sets error message preserves description and does not invoke handler`() = runTest {
+    fun `Failure maps reason to message preserves description and does not invoke handler`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Server(503)))
         val handler = RecordingSubmittedHandler()
         val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
 
@@ -145,7 +144,7 @@ class DefaultFeedbackViewModelTest {
         val state = viewModel.state.first()
         assertFalse(state.isSubmitting)
         assertEquals("typed text", state.description)
-        assertNotNull(state.errorMessage)
+        assertEquals("error:Server", state.errorMessage)
     }
 
     @Test
