@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.backup
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.http.HttpExecutor
+import com.hluhovskyi.zero.imports.SnapshotParser
 
 /**
  * Manual DI factory for Drive-specific backup impls (sibling of the backend-agnostic
@@ -15,7 +16,7 @@ interface DriveComponent {
     }
 
     val backupClient: BackupClient
-    // driveSnapshotParser added in Phase 5
+    val driveSnapshotParser: SnapshotParser
 
     class Factory(
         private val dependencies: Dependencies,
@@ -41,12 +42,21 @@ internal class DefaultDriveComponent(
 
     private val envelopeSerializer = BackupEnvelopeSerializer()
 
+    private val oauthTokenProvider = dependencies.oauthTokenProvider
+
     override val backupClient: BackupClient by lazy {
         DriveBackupClient(
             httpExecutor = dependencies.httpExecutor,
-            oauthTokenProvider = dependencies.oauthTokenProvider,
+            oauthTokenProvider = oauthTokenProvider,
             envelopeSerializer = envelopeSerializer,
             baseUrl = baseUrl,
+        )
+    }
+
+    override val driveSnapshotParser: SnapshotParser by lazy {
+        DriveSnapshotParser(
+            backupClient = backupClient,
+            oauthTokenProvider = oauthTokenProvider,
         )
     }
 }

@@ -498,6 +498,7 @@ abstract class ApplicationComponent :
             idGenerator: IdGenerator,
             logger: Logger,
             resourceResolver: ResourceResolver,
+            driveComponent: DriveComponent,
         ): ImportComponent.Builder {
             val parsers: List<SnapshotParser> = listOf(
                 ZeroBackupParser(syncEngine = syncEngine),
@@ -507,6 +508,7 @@ abstract class ApplicationComponent :
                     clock = clock,
                     logger = logger,
                 ),
+                driveComponent.driveSnapshotParser,
             )
             return ImportComponent.builder(component)
                 .parsers(parsers)

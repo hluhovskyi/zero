@@ -42,6 +42,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerBackupDetailComponent.builder()
             .dependencies(dependencies)
             .onBackHandler(OnBackHandler.Noop)
+            .onRestoreSelectedHandler(OnRestoreSelectedHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -50,6 +51,9 @@ abstract class BackupDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onBackHandler(handler: OnBackHandler): Builder
+
+        @BindsInstance
+        fun onRestoreSelectedHandler(handler: OnRestoreSelectedHandler): Builder
     }
 
     @dagger.Module
@@ -63,6 +67,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
             oauthTokenProvider: OAuthTokenProvider,
             configurationRepository: ConfigurationRepository,
             onBackHandler: OnBackHandler,
+            onRestoreSelectedHandler: OnRestoreSelectedHandler,
             dispatchers: DispatcherProvider,
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
@@ -70,6 +75,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
             oauthTokenProvider = oauthTokenProvider,
             configurationRepository = configurationRepository,
             onBackHandler = onBackHandler,
+            onRestoreSelectedHandler = onRestoreSelectedHandler,
             dispatchers = dispatchers,
         )
 

@@ -967,6 +967,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .onBackHandler { navigator.back() }
+                .onRestoreSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .logging(logger)
         }
 

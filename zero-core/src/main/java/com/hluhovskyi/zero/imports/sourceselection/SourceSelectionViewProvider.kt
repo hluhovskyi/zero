@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -91,7 +92,9 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
             items(state.sources, key = { it.key }) { source ->
                 SourceCard(
                     source = source,
-                    onClick = { viewModel.perform(SourceSelectionViewModel.Action.SelectSource(source)) },
+                    onClick = { requiresFile ->
+                        viewModel.perform(SourceSelectionViewModel.Action.SelectSource(source, requiresFile))
+                    },
                 )
             }
             item(key = "hint") {
@@ -107,6 +110,9 @@ private data class SourceCardConfig(
     val iconTint: Color,
     val title: String,
     val description: String,
+    /** Whether tapping this source opens the file picker. Fileless sources (Drive) fetch
+     *  remotely, so the selection skips straight to loading. */
+    val requiresFile: Boolean = true,
 )
 
 @Composable
@@ -125,18 +131,29 @@ private fun sourceCardConfig(source: Source): SourceCardConfig? = when (source.k
         title = stringResource(R.string.import_source_zenmoney_title),
         description = stringResource(R.string.import_source_zenmoney_description),
     )
+    // Key mirrors DriveSnapshotParser.KEY in zero-backup, which zero-core cannot depend on.
+    DRIVE_SOURCE_KEY -> SourceCardConfig(
+        icon = Icons.Filled.CloudDownload,
+        iconBg = ZeroTheme.colors.importMergeContainer,
+        iconTint = ZeroTheme.colors.primaryContainer,
+        title = stringResource(R.string.import_source_drive_title),
+        description = stringResource(R.string.import_source_drive_description),
+        requiresFile = false,
+    )
     else -> null
 }
 
+private const val DRIVE_SOURCE_KEY = "drive"
+
 @Composable
-private fun SourceCard(source: Source, onClick: () -> Unit) {
+private fun SourceCard(source: Source, onClick: (requiresFile: Boolean) -> Unit) {
     val config = sourceCardConfig(source) ?: return
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(ZeroTheme.colors.surfaceContainerLowest)
-            .clickable(onClick = onClick, onClickLabel = config.title)
+            .clickable(onClick = { onClick(config.requiresFile) }, onClickLabel = config.title)
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
