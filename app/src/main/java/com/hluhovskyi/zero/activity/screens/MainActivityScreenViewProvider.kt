@@ -196,5 +196,4 @@ private const val NAV_TRANSITION_MILLIS = 180
 
 private val BOTTOM_BAR_TAB_ROUTES = setOf("home", "accounts", "categories", "budget", "settings")
 
-private fun isTabSwitch(from: String?, to: String?): Boolean =
-    from in BOTTOM_BAR_TAB_ROUTES && to in BOTTOM_BAR_TAB_ROUTES
+private fun isTabSwitch(from: String?, to: String?): Boolean = from in BOTTOM_BAR_TAB_ROUTES && to in BOTTOM_BAR_TAB_ROUTES
