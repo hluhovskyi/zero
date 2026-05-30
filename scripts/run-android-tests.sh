@@ -43,10 +43,10 @@ if [ "$FAST" -eq 0 ]; then
   exit $?
 fi
 
-RUNNER="com.hluhovskyi.zero.test/androidx.test.runner.AndroidJUnitRunner"
+RUNNER="com.hluhovskyi.zero.debug.test/androidx.test.runner.AndroidJUnitRunner"
 
 # The fast path runs what's installed — it does NOT build or install anything.
-if ! adb shell pm list instrumentation 2>/dev/null | grep -q "com.hluhovskyi.zero.test"; then
+if ! adb shell pm list instrumentation 2>/dev/null | grep -q "com.hluhovskyi.zero.debug.test"; then
   echo "✗ Test instrumentation not installed on $SERIAL — --fast can't build or install for you." >&2
   echo "  Install both APKs first:" >&2
   echo "    ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest" >&2

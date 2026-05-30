@@ -24,14 +24,14 @@ internal class OkHttpFeedbackService(
     override suspend fun submit(report: FeedbackReport): FeedbackSubmitResult = withContext(Dispatchers.IO) {
         if (endpoint.isBlank()) {
             Timber.w("OkHttpFeedbackService: endpoint not configured")
-            return@withContext FeedbackSubmitResult.Failure
+            return@withContext FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.NotConfigured)
         }
 
         val nonce = generateNonce()
         val token = tokenProvider.getToken(nonce)
         if (token == null) {
             Timber.w("OkHttpFeedbackService: integrity token unavailable")
-            return@withContext FeedbackSubmitResult.Failure
+            return@withContext FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Unverified)
         }
 
         val payload = json.encodeToString(
@@ -56,12 +56,12 @@ internal class OkHttpFeedbackService(
                     FeedbackSubmitResult.Success(parsed.issueUrl)
                 } else {
                     Timber.w("OkHttpFeedbackService: server returned ${response.code}")
-                    FeedbackSubmitResult.Failure
+                    FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Server(response.code))
                 }
             }
         } catch (e: IOException) {
             Timber.w(e, "OkHttpFeedbackService: network error")
-            FeedbackSubmitResult.Failure
+            FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Network)
         }
     }
 

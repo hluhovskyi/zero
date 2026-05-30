@@ -9,7 +9,6 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -54,7 +53,7 @@ class OkHttpFeedbackServiceTest {
 
         val result = service.submit(report)
 
-        assertEquals(FeedbackSubmitResult.Failure, result)
+        assertEquals(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.NotConfigured), result)
         assertEquals(0, server.requestCount)
     }
 
@@ -64,38 +63,38 @@ class OkHttpFeedbackServiceTest {
 
         val result = service.submit(report)
 
-        assertEquals(FeedbackSubmitResult.Failure, result)
+        assertEquals(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Unverified), result)
         assertEquals(0, server.requestCount)
     }
 
     @Test
-    fun `401 returns Failure`() = runTest {
+    fun `401 returns Failure with Server reason carrying the code`() = runTest {
         server.enqueue(MockResponse().setResponseCode(401).setBody(""))
         val service = service(endpoint = server.url("/").toString(), token = "tok")
 
         val result = service.submit(report)
 
-        assertEquals(FeedbackSubmitResult.Failure, result)
+        assertEquals(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Server(401)), result)
     }
 
     @Test
-    fun `500 returns Failure`() = runTest {
+    fun `500 returns Failure with Server reason carrying the code`() = runTest {
         server.enqueue(MockResponse().setResponseCode(500).setBody(""))
         val service = service(endpoint = server.url("/").toString(), token = "tok")
 
         val result = service.submit(report)
 
-        assertEquals(FeedbackSubmitResult.Failure, result)
+        assertEquals(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Server(500)), result)
     }
 
     @Test
-    fun `socket reset returns Failure`() = runTest {
+    fun `socket reset returns Failure with Network reason`() = runTest {
         server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
         val service = service(endpoint = server.url("/").toString(), token = "tok")
 
         val result = service.submit(report)
 
-        assertTrue(result is FeedbackSubmitResult.Failure)
+        assertEquals(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Network), result)
     }
 
     private fun service(endpoint: String, token: String?): OkHttpFeedbackService = OkHttpFeedbackService(

@@ -98,7 +98,18 @@ internal abstract class FeedbackComponent : Attachable {
 
         @Provides
         @FeedbackScope
-        fun errorMessageProvider(context: Context): () -> String = { context.getString(R.string.feedback_error_generic) }
+        fun errorMessages(context: Context): FeedbackErrorMessages = FeedbackErrorMessages { reason ->
+            when (reason) {
+                FeedbackSubmitResult.Failure.Reason.NotConfigured ->
+                    context.getString(R.string.feedback_error_not_configured)
+                FeedbackSubmitResult.Failure.Reason.Unverified ->
+                    context.getString(R.string.feedback_error_unverified)
+                is FeedbackSubmitResult.Failure.Reason.Server ->
+                    context.getString(R.string.feedback_error_server, reason.code)
+                FeedbackSubmitResult.Failure.Reason.Network ->
+                    context.getString(R.string.feedback_error_network)
+            }
+        }
 
         @Provides
         @FeedbackScope
@@ -115,7 +126,7 @@ internal abstract class FeedbackComponent : Attachable {
             deviceInfo: DeviceInfo,
             clock: Clock,
             isDebugBuild: Boolean,
-            errorMessageProvider: () -> String,
+            errorMessages: FeedbackErrorMessages,
             onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
             onFeedbackCloseHandler: OnFeedbackCloseHandler,
         ): FeedbackSheetComponent = FeedbackSheetComponent(
@@ -124,7 +135,7 @@ internal abstract class FeedbackComponent : Attachable {
             deviceInfo = deviceInfo,
             clock = clock,
             isDebugBuild = isDebugBuild,
-            errorMessageProvider = errorMessageProvider,
+            errorMessages = errorMessages,
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
             onFeedbackCloseHandler = onFeedbackCloseHandler,
         )

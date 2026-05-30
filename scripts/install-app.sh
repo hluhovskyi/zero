@@ -5,7 +5,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 APK="app/build/outputs/apk/debug/app-debug.apk"
-PKG="com.hluhovskyi.zero"
+PKG="com.hluhovskyi.zero.debug"
 
 echo "▶ assembleDebug..."
 ./gradlew :app:assembleDebug

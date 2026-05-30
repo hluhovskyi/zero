@@ -22,7 +22,7 @@ case "$MODE" in
   *) echo "Usage: $0 [over|normal]" >&2; exit 1 ;;
 esac
 
-PKG="com.hluhovskyi.zero"
+PKG="com.hluhovskyi.zero.debug"
 ADB="./scripts/ui/adb"
 TAP_LABEL="./scripts/ui/tap-label.sh"
 
