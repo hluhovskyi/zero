@@ -64,8 +64,8 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.budget.NumPad
 import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
@@ -282,7 +282,7 @@ private fun InlineNumpadOverlay(
                     onRemove = { viewModel.perform(BudgetViewModel.Action.TapRemove) },
                 )
                 InlineAmountDisplay(state.editingAmountText)
-                NumPad(
+                AmountKeypad(
                     value = state.editingAmountText,
                     onChange = { viewModel.perform(BudgetViewModel.Action.ChangeEditAmount(it)) },
                     modifier = Modifier.padding(top = 8.dp),
