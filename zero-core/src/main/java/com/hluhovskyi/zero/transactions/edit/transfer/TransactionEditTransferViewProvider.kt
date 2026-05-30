@@ -19,14 +19,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -41,7 +38,6 @@ import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
-import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
@@ -69,38 +65,17 @@ private fun TransactionEditTransferView(
     shouldFocus: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditTransferViewModel.State())
-    val focusRequester = remember { FocusRequester() }
-
-    if (shouldFocus) {
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
-    }
 
     Column(
         modifier = Modifier
             .padding(horizontal = 24.dp)
             .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
-        // Amount display
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, bottom = 24.dp),
-            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-            amount = state.amount,
-            currencySymbol = state.sourceCurrencySymbol,
-            focusRequester = focusRequester,
-            onAmountChange = {
-                viewModel.perform(TransactionEditTransferViewModel.Action.ChangeAmount(it))
-            },
-        )
-
         // Rate mode pill
         RateModePill(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(top = 32.dp, bottom = 24.dp),
             state = state,
             onCycleMode = {
                 viewModel.perform(TransactionEditTransferViewModel.Action.CycleRateMode)

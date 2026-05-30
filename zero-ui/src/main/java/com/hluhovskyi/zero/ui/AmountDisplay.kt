@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -41,15 +42,26 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
+/**
+ * Amount field with a left-pinned currency and a right-aligned value.
+ *
+ * Two modes:
+ *  - editable (default): types via the system numeric keyboard, reports edits through [onAmountChange].
+ *  - [readOnly] = true: focusable with a blinking cursor but **no** system IME — the value is driven
+ *    externally (e.g. an inline keypad). Focus changes are reported through [onFocusChanged] so the
+ *    caller can show/hide that keypad.
+ */
 @Composable
 fun AmountDisplay(
     modifier: Modifier = Modifier,
     amount: String,
     currencySymbol: String,
-    focusRequester: FocusRequester,
-    onAmountChange: (String) -> Unit,
-    onCurrencyClick: (() -> Unit)? = null,
     label: String,
+    focusRequester: FocusRequester,
+    onAmountChange: (String) -> Unit = {},
+    onFocusChanged: (Boolean) -> Unit = {},
+    readOnly: Boolean = false,
+    onCurrencyClick: (() -> Unit)? = null,
 ) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
@@ -112,17 +124,20 @@ fun AmountDisplay(
                 }
             }
 
-            // Amount right-aligned, independent of currency position
+            // Amount right-aligned, independent of currency position. When read-only the keypad
+            // owns the value and Compose does not open the software keyboard.
             BasicTextField(
                 value = textFieldValue,
                 onValueChange = {
                     textFieldValue = it
                     onAmountChange(it.text)
                 },
+                readOnly = readOnly,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 70.dp)
                     .focusRequester(focusRequester)
+                    .onFocusChanged { onFocusChanged(it.isFocused) }
                     .testTag("TransactionEdit.amountField"),
                 textStyle = TextStyle(
                     fontSize = 56.sp,
