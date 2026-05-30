@@ -4,7 +4,7 @@
 
 **Goal:** Replace the system numeric keyboard on the New/Edit Transaction screen with an in-app inline keypad that is docked at the bottom, drives the amount field, gives native-style haptic feedback, and is the *same* shared component the Budget screens already use.
 
-**Architecture:** Promote the existing budget `NumPad` (zero-ui) into a shared `AmountKeypad` with haptics, used by both Budget and Transaction. On the Transaction screen, **lift the amount display up to the parent `TransactionEditView`** (it already shares the `TransactionEditUseCase` instance with its children), pin header + segmented toggle + amount at the top, scroll the rest, and dock the FAB-on-top-of-keypad cluster at the bottom. The amount display becomes a tap-to-focus, caret-only label (no system IME); the keypad edits the amount via `ChangeAmount`.
+**Architecture:** Promote the existing budget `NumPad` (zero-ui) into a shared `AmountKeypad` with haptics, used by both Budget and Transaction. On the Transaction screen, **lift the amount display up to the parent `TransactionEditView`** (it already shares the `TransactionEditUseCase` instance with its children), pin header + segmented toggle + amount at the top, scroll the rest, and dock the FAB above the keypad at the bottom. **Keypad visibility follows the amount field's focus** — the amount is a `readOnly` `BasicTextField` (focusable, no system IME, natural blinking cursor); when it gains focus the keypad slides in, when focus leaves (tap Notes/selector/Back) it hides. There is **no persistent bottom bar** — when the keypad is hidden, only the FAB remains. The keypad edits the amount via `ChangeAmount`.
 
 **Tech Stack:** Kotlin, Jetpack Compose, Dagger, existing `TransactionEditUseCase` state machine.
 
@@ -16,15 +16,16 @@ In scope (maps to the 7 requirements):
 1. Minimal keypad only — digits `1-9 . 0 ⌫`, **no calculator operators** (the existing `NumPad` is already exactly this layout).
 2. Native-style haptic feedback on every key press (`HapticFeedbackConstants.KEYBOARD_TAP`).
 3. Keypad is fixed (non-scrollable); only the form above it scrolls.
-4. The Save FAB is pinned directly on top of the keypad.
+4. The Save FAB sits directly on top of the keypad (and is the only bottom affordance — **no save/bottom bar**).
 5. One shared component reused by Budget + Transaction (moved into a general `zero-ui` package).
 6. Keypad wired to amount entry (`TransactionEditUseCase.Action.ChangeAmount`).
-7. On **Edit** (bottom sheet) the keypad appears only after the user taps the amount; on **New** (full screen) it auto-shows.
+7. Visibility follows **amount-field focus**: focus the amount → keypad shows; focus leaves → keypad hides. New transaction auto-focuses the amount (keypad shows on open); editing starts unfocused (keypad hidden until the amount is tapped). It is **not** a modal bottom sheet — it renders inline.
 
 Non-goals (explicitly out of scope, leave as-is):
 - The Transfer screen's **rate** and **target-amount** fields keep their existing system `Decimal` keyboards. The inline keypad drives only the primary/source amount.
 - No calculator/expression mode (requirement #1 — "without calculator signs right now").
-- Auto-expanding the Edit bottom sheet to full height when the keypad opens — the keypad renders within the current sheet height; the sheet is already drag-expandable. (Known minor limitation; note in PR.)
+- No change to how the Edit-transaction screen is presented (it remains the existing modal sheet at the nav layer). The keypad itself is never a bottom sheet. If the keypad feels cramped inside a half-expanded edit sheet, that is a follow-up (the sheet is already drag-expandable).
+- Tapping a selector (category/date/account) moves focus off the amount and therefore hides the keypad — this is the intended focus-follows behaviour, not a bug.
 
 ---
 
@@ -33,7 +34,7 @@ Non-goals (explicitly out of scope, leave as-is):
 **zero-ui (shared component):**
 - Rename/move `zero-ui/.../ui/budget/NumPad.kt` → `zero-ui/.../ui/AmountKeypad.kt` (package `com.hluhovskyi.zero.ui`, composable `AmountKeypad`, internal fn `handleAmountKeypadKey`), add haptics.
 - Rename/move test `zero-ui/.../ui/budget/NumPadTest.kt` → `zero-ui/.../ui/AmountKeypadTest.kt`.
-- Modify `zero-ui/.../ui/AmountDisplay.kt` → tap-to-focus caret label, no system IME.
+- Modify `zero-ui/.../ui/AmountDisplay.kt` → focusable read-only field (reports focus up), no system IME.
 
 **zero-core (budget call sites — import update only):**
 - `zero-core/.../budget/BudgetViewProvider.kt`
@@ -128,6 +129,7 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -174,6 +176,9 @@ fun AmountKeypad(
                         modifier = Modifier
                             .weight(1f)
                             .height(50.dp)
+                            // Keys must never take focus — otherwise a tap would steal focus
+                            // from the amount field and dismiss the focus-driven keypad.
+                            .focusProperties { canFocus = false }
                             .clickable {
                                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                 onChange(handleAmountKeypadKey(value, key))
@@ -248,12 +253,14 @@ git commit -m "refactor(budget): use shared AmountKeypad"
 
 ---
 
-## Task 3: Make `AmountDisplay` a tap-to-focus caret label (no system IME)
+## Task 3: Make `AmountDisplay` a focusable, IME-suppressed amount field
 
 **Files:**
 - Modify: `zero-ui/src/main/java/com/hluhovskyi/zero/ui/AmountDisplay.kt`
 
-The amount is now edited by the keypad, not typed. `AmountDisplay` becomes a read-only, tappable label showing the formatted amount with a blinking caret when `active`. It is the **only** caller-facing amount field, used by the parent `TransactionEditView`. New signature drops `focusRequester`/`onAmountChange`, adds `active` + `onClick`. Keep the `testTag("TransactionEdit.amountField")` for robots.
+The amount is now edited by the keypad, not the system IME — but we still want real **focus** semantics so the parent can show/hide the keypad based on focus. The trick: keep a `BasicTextField` but mark it `readOnly = true`. A read-only field is focusable and shows its blinking cursor, but Compose does **not** open the software keyboard for it. The keypad drives the value via `ChangeAmount`; `onValueChange` is a no-op. The field reports focus changes up via `onFocusChanged`, and the parent owns the `FocusRequester` (for auto-focus on New).
+
+This is a small diff from today's `AmountDisplay`: add `readOnly = true`, add `.onFocusChanged { onFocusChanged(it.isFocused) }`, drop `onAmountChange`/`keyboardOptions`. Keep the `focusRequester` param, the `testTag("TransactionEdit.amountField")`, the placeholder, and the right-aligned 56sp style.
 
 Note: confirm `AmountDisplay` has no callers outside the two transaction view providers being refactored:
 `grep -rn "AmountDisplay(" --include=*.kt . | grep -v build/`. Expected: only `common/TransactionEditExpenseIncomeViewProvider.kt` and `transfer/TransactionEditTransferViewProvider.kt` (both removed in Task 5) — i.e. after this plan only the parent calls it.
@@ -263,38 +270,40 @@ Note: confirm `AmountDisplay` has no callers outside the two transaction view pr
 ```kotlin
 package com.hluhovskyi.zero.ui
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -307,11 +316,19 @@ fun AmountDisplay(
     amount: String,
     currencySymbol: String,
     label: String,
-    active: Boolean,
-    onClick: () -> Unit,
+    focusRequester: FocusRequester,
+    onFocusChanged: (Boolean) -> Unit,
     onCurrencyClick: (() -> Unit)? = null,
 ) {
-    val empty = amount.isEmpty() || amount == "0"
+    // Read-only field: keypad owns the value, so mirror `amount` in and ignore edits.
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
+    }
+    LaunchedEffect(amount) {
+        if (textFieldValue.text != amount) {
+            textFieldValue = textFieldValue.copy(text = amount, selection = TextRange(amount.length))
+        }
+    }
 
     Column(
         modifier = modifier,
@@ -364,67 +381,45 @@ fun AmountDisplay(
                 }
             }
 
-            // Amount right-aligned, tap to (re)open the keypad
-            Row(
+            // Read-only amount field: focusable + blinking cursor, but no system IME.
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { /* read-only: keypad drives the value */ },
+                readOnly = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 70.dp)
-                    .clickable(onClick = onClick)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { onFocusChanged(it.isFocused) }
                     .testTag("TransactionEdit.amountField"),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = if (empty) stringResource(R.string.amount_display_placeholder) else amount,
+                textStyle = TextStyle(
                     fontSize = 56.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (empty) {
-                        MaterialTheme.colors.primary.copy(alpha = 0.3f)
-                    } else {
-                        MaterialTheme.colors.primary
-                    },
+                    color = MaterialTheme.colors.primary,
                     textAlign = TextAlign.Right,
-                )
-                if (active) {
-                    BlinkingCaret()
-                }
-            }
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                singleLine = true,
+                decorationBox = { innerTextField ->
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.amount_display_placeholder),
+                            fontSize = 56.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    innerTextField()
+                },
+            )
         }
     }
 }
-
-@Composable
-private fun BlinkingCaret() {
-    val transition = rememberInfiniteTransition(label = "caret")
-    val alpha by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 1100
-                1f at 0
-                1f at 549
-                0f at 550
-                0f at 1100
-            },
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "caret-alpha",
-    )
-    Spacer(Modifier.width(3.dp))
-    Box(
-        modifier = Modifier
-            .padding(bottom = 6.dp)
-            .height(44.dp)
-            .width(3.dp)
-            .graphicsLayer { this.alpha = alpha }
-            .alpha(alpha)
-            .background(MaterialTheme.colors.primary, RoundedCornerShape(2.dp)),
-    )
-}
 ```
 
-(`amount` here is the raw `state.amount` string; thousands grouping is not introduced — keep parity with today's display which showed the raw typed string.)
+(`amount` here is the raw `state.amount` string; thousands grouping is not introduced — keep parity with today's display which showed the raw typed string. If a `readOnly` field unexpectedly still surfaces the IME on the target Compose version, fall back to keeping the field editable but wiring `keyboardOptions`/`PlatformImeOptions` to suppress it — verify on device in Task 8.)
 
 - [ ] **Step 2: Compile zero-ui**
 
@@ -562,16 +557,18 @@ git commit -m "refactor(transactions): remove per-child AmountDisplay (lifting t
 Replace the `Box { LazyColumn(fillMaxSize) ; ZeroFab(BottomEnd) }` with a vertical `Column`:
 1. **Pinned top cluster** (not scrolling): `ModalHeader` + `SegmentedToggle` + `AmountDisplay`.
 2. **Scrolling middle** (`LazyColumn`, `Modifier.weight(1f)`): the type-specific component (`expenseIncomeComponent`/`transferComponent` via `AttachWithView()`) + the Notes card.
-3. **Pinned bottom cluster** (not scrolling): the `ZeroFab` (end-aligned) directly above an `AnimatedVisibility(keypadVisible) { AmountKeypad(...) }`. Apply `Modifier.navigationBarsPadding()` to this cluster so the keypad clears the system nav bar on the full-screen (New) case.
+3. **Pinned bottom cluster** (not scrolling): the `ZeroFab` (end-aligned) directly above an `AnimatedVisibility(amountFocused) { AmountKeypad(...) }`. Apply `Modifier.navigationBarsPadding()` to this cluster so the keypad clears the system nav bar on the full-screen (New) case.
 
-Keypad visibility:
-- `var keypadVisible by rememberSaveable { mutableStateOf(state.headerMode is HeaderMode.New) }` — auto-shown for New, hidden for Edit/Duplicate until the amount is tapped. (Seed it once; `rememberSaveable` survives config change.)
-- `AmountDisplay(active = keypadVisible, onClick = { keypadVisible = true }, ...)`.
-- `BackHandler(enabled = keypadVisible) { keypadVisible = false }` — back dismisses the keypad first (see memory: inline overlays need BackHandler).
+Keypad visibility = **amount-field focus** (requirement: "matter of focus on amount to show / hide"):
+- `var amountFocused by remember { mutableStateOf(false) }` — fed by `AmountDisplay`'s `onFocusChanged`.
+- `val focusRequester = remember { FocusRequester() }` — owned by the parent, passed to `AmountDisplay`.
+- Auto-focus on New: `val isNew = state.headerMode is HeaderMode.New; LaunchedEffect(isNew) { if (isNew) focusRequester.requestFocus() }` (mirrors the existing autofocus-on-New behaviour, PR #288).
+- `BackHandler(enabled = amountFocused) { focusManager.clearFocus() }` — back clears focus, which hides the keypad (see memory: inline overlays need BackHandler). `val focusManager = LocalFocusManager.current`.
+- Tapping the amount focuses the read-only field (default `BasicTextField` behaviour) → keypad shows. Tapping Notes / a selector moves focus away → keypad hides. The keypad keys themselves are `canFocus = false` (Task 1) so digit taps never blur the amount.
 
 Wire the keypad and currency to the parent VM:
 - `AmountKeypad(value = state.amount, onChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it)) })`
-- `AmountDisplay(onCurrencyClick = if (state.canPickCurrency) ({ viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }) else null, currencySymbol = state.currencySymbol, amount = state.amount, label = stringResource(R.string.transaction_edit_amount_display_label).uppercase())`
+- `AmountDisplay(focusRequester = focusRequester, onFocusChanged = { amountFocused = it }, onCurrencyClick = if (state.canPickCurrency) ({ viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }) else null, currencySymbol = state.currencySymbol, amount = state.amount, label = stringResource(R.string.transaction_edit_amount_display_label).uppercase())`
 
 - [ ] **Step 1: Rewrite the `TransactionEditView` composable body**
 
@@ -613,8 +610,8 @@ Column(
         label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
         amount = state.amount,
         currencySymbol = state.currencySymbol,
-        active = keypadVisible,
-        onClick = { keypadVisible = true },
+        focusRequester = focusRequester,
+        onFocusChanged = { amountFocused = it },
         onCurrencyClick = if (state.canPickCurrency) {
             { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
         } else {
@@ -655,7 +652,7 @@ Column(
             expanded = true,
             text = stringResource(R.string.transaction_edit_save),
         )
-        AnimatedVisibility(visible = keypadVisible) {
+        AnimatedVisibility(visible = amountFocused) {
             AmountKeypad(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -669,16 +666,18 @@ Column(
 }
 ```
 
-Add the keypad-visibility state + BackHandler near the top of the composable (after `state` is collected):
+Add the focus state + auto-focus + BackHandler near the top of the composable (after `state` is collected):
 
 ```kotlin
-var keypadVisible by rememberSaveable {
-    mutableStateOf(state.headerMode is TransactionEditViewModel.HeaderMode.New)
-}
-BackHandler(enabled = keypadVisible) { keypadVisible = false }
+val focusRequester = remember { FocusRequester() }
+val focusManager = LocalFocusManager.current
+var amountFocused by remember { mutableStateOf(false) }
+val isNew = state.headerMode is TransactionEditViewModel.HeaderMode.New
+LaunchedEffect(isNew) { if (isNew) focusRequester.requestFocus() }
+BackHandler(enabled = amountFocused) { focusManager.clearFocus() }
 ```
 
-New imports to add: `androidx.activity.compose.BackHandler`, `androidx.compose.animation.AnimatedVisibility`, `androidx.compose.foundation.layout.navigationBarsPadding`, `androidx.compose.runtime.saveable.rememberSaveable`, `androidx.compose.runtime.mutableStateOf`/`getValue`/`setValue` (already partially present), `com.hluhovskyi.zero.ui.AmountDisplay`, `com.hluhovskyi.zero.ui.AmountKeypad`. Remove now-unused `BasicTextField`-for-amount-only imports if they become unused (Notes still uses `BasicTextField`, so keep it).
+New imports to add: `androidx.activity.compose.BackHandler`, `androidx.compose.animation.AnimatedVisibility`, `androidx.compose.foundation.layout.navigationBarsPadding`, `androidx.compose.runtime.LaunchedEffect`, `androidx.compose.runtime.mutableStateOf`/`getValue`/`setValue` (already partially present), `androidx.compose.runtime.remember`, `androidx.compose.ui.focus.FocusRequester`, `androidx.compose.ui.platform.LocalFocusManager`, `com.hluhovskyi.zero.ui.AmountDisplay`, `com.hluhovskyi.zero.ui.AmountKeypad`. Remove now-unused `BasicTextField`-for-amount-only imports if they become unused (Notes still uses `BasicTextField`, so keep it).
 
 - [ ] **Step 2: Compile**
 
@@ -753,8 +752,9 @@ Run: `./scripts/emulator/acquire` then `./scripts/install-app.sh`.
 - [ ] **Step 4: UI inspection via `android-ui-inspector`**
 
 Verify on device (use `./scripts/ui/open-screen.sh` to reach New Transaction, and open an existing transaction for the Edit case):
-- **New Transaction (full screen):** keypad is visible on open (autofocus), docked at the bottom, FAB sits directly above it, amount + header + toggle are pinned, the category/date/account/notes area scrolls beneath. Tapping digits updates the pinned amount. Backspace works. Haptic fires on tap (device-dependent; confirm no crash).
-- **Edit existing transaction (bottom sheet):** keypad is hidden on open; tapping the amount reveals it; system back hides the keypad (not the sheet) while it is visible.
+- **New Transaction (full screen):** keypad is visible on open (amount auto-focused), docked at the bottom, FAB sits directly above it, amount + header + toggle are pinned, the category/date/account/notes area scrolls beneath. Tapping digits updates the pinned amount **without dismissing the keypad** (verifies `canFocus = false`). Backspace works. Haptic fires on tap (device-dependent; confirm no crash). **No system keyboard appears** for the amount.
+- **Focus show/hide:** tapping the amount shows the keypad; tapping the Notes field hides the inline keypad (and shows the system keyboard for notes); system Back hides the keypad while it is visible.
+- **Edit existing transaction:** keypad is hidden on open; tapping the amount reveals it.
 - **Budget Set/Edit/Over:** keypad still renders and edits correctly (regression check of the shared component).
 
 Capture bounds with `./scripts/ui/dump-ui.sh` to confirm the keypad is non-scrolling and the FAB rect is immediately above the keypad rect.
@@ -771,6 +771,6 @@ Capture bounds with `./scripts/ui/dump-ui.sh` to confirm the keypad is non-scrol
 - **#4 FAB on top of keypad** → Task 6 `Column { ZeroFab; AmountKeypad }`. ✅
 - **#5 reused with budget / moved to ui component** → Tasks 1-2 shared `AmountKeypad` in `zero-ui`, budget call sites updated. ✅
 - **#6 connected to amount entry** → Tasks 4+6 `ChangeAmount` → `TransactionEditUseCase`. ✅
-- **#7 appears on tapping amount when editing** → Task 6 `keypadVisible` seeded by `HeaderMode.New`, set true on amount tap. ✅
-- **Type consistency:** `handleAmountKeypadKey`, `AmountKeypad`, `AmountDisplay(active,onClick)`, `Action.ChangeAmount/PickCurrency`, `State.amount/currencySymbol/canPickCurrency` are used identically across tasks. ✅
+- **#7 focus-driven show/hide** → Task 6 keypad visible iff `amountFocused`; New auto-focuses via `FocusRequester`, editing stays unfocused until the amount is tapped; keypad keys are `canFocus = false` so digit taps don't dismiss it. ✅
+- **Type consistency:** `handleAmountKeypadKey`, `AmountKeypad`, `AmountDisplay(focusRequester,onFocusChanged)`, `Action.ChangeAmount/PickCurrency`, `State.amount/currencySymbol/canPickCurrency` are used identically across tasks. ✅
 - **Placeholder scan:** no TBD/TODO; the one conditional (VM test only if a `Default*ViewModelTest` precedent exists) has an explicit fallback. ✅
