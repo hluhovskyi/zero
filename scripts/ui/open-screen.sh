@@ -16,8 +16,10 @@
 # brittle if labels change. If you need a new shortcut often, add a case here.
 
 SCREEN="${1:-}"
-PACKAGE="com.hluhovskyi.zero"
-ACTIVITY=".activity.MainActivity"
+PACKAGE="com.hluhovskyi.zero.debug"
+# Fully-qualified: the class lives in the namespace (com.hluhovskyi.zero),
+# which the .debug applicationIdSuffix does not change.
+ACTIVITY="com.hluhovskyi.zero.activity.MainActivity"
 
 DIR="$(dirname "$0")"
 ADB="$DIR/adb"
