@@ -1,8 +1,12 @@
 package com.hluhovskyi.zero.activity.screens
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -78,10 +82,20 @@ internal class MainActivityScreenViewProvider(
                     modifier = Modifier.padding(innerPadding),
                     navController = navController,
                     startDestination = startDestination.route,
-                    enterTransition = { EnterTransition.None },
-                    exitTransition = { ExitTransition.None },
-                    popEnterTransition = { EnterTransition.None },
-                    popExitTransition = { ExitTransition.None },
+                    enterTransition = {
+                        slideInHorizontally(
+                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                            initialOffsetX = { it / 12 },
+                        ) + fadeIn(tween(NAV_TRANSITION_MILLIS))
+                    },
+                    exitTransition = { fadeOut(tween(NAV_TRANSITION_MILLIS)) },
+                    popEnterTransition = { fadeIn(tween(NAV_TRANSITION_MILLIS)) },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            animationSpec = tween(NAV_TRANSITION_MILLIS, easing = FastOutSlowInEasing),
+                            targetOffsetX = { it / 12 },
+                        ) + fadeOut(tween(NAV_TRANSITION_MILLIS))
+                    },
                 ) {
                     navigationEntries.forEach { entry ->
                         val navArguments = entry.destination.arguments.map { argument ->
@@ -151,3 +165,5 @@ internal class MainActivityScreenViewProvider(
         }
     }
 }
+
+private const val NAV_TRANSITION_MILLIS = 180
