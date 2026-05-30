@@ -629,7 +629,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Budget.Edit,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
@@ -653,7 +653,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Budget.Over,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Over.CategoryId))
