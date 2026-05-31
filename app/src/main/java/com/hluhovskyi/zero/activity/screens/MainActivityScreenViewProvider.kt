@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
@@ -74,7 +73,7 @@ internal class MainActivityScreenViewProvider(
         ModalBottomSheetLayout(
             bottomSheetNavigator = bottomSheetNavigator,
             sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            sheetBackgroundColor = MaterialTheme.colors.background,
+            sheetBackgroundColor = ZeroTheme.colors.surface,
             scrimColor = ZeroTheme.colors.scrim,
         ) {
             Scaffold(bottomBar = { if (!isKeyboardVisible) bottomBar() }) { innerPadding ->
