@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -319,7 +319,7 @@ private fun ArchivedFooter(
             .padding(horizontal = 16.dp)
             .padding(top = 20.dp, bottom = 24.dp),
     ) {
-        Divider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
+        HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
