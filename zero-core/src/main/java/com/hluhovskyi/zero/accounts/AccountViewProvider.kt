@@ -22,17 +22,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -319,7 +319,7 @@ private fun ArchivedFooter(
             .padding(horizontal = 16.dp)
             .padding(top = 20.dp, bottom = 24.dp),
     ) {
-        Divider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
+        HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -556,35 +556,41 @@ private fun AccountRow(
             expanded = menuExpanded,
             onDismissRequest = onMenuDismiss,
         ) {
-            DropdownMenuItem(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.account_detail_edit))
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.account_detail_edit)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = onEditClick,
+            )
             if (account.archivedAt == null) {
-                DropdownMenuItem(onClick = onArchiveClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Archive,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.account_detail_archive))
-                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.account_detail_archive)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Archive,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = onArchiveClick,
+                )
             } else {
-                DropdownMenuItem(onClick = onUnarchiveClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Unarchive,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.account_detail_unarchive))
-                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.account_detail_unarchive)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Unarchive,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = onUnarchiveClick,
+                )
             }
         }
     }

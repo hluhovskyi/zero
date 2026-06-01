@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.Text
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,16 +52,21 @@ internal fun BottomBarView(
 ) {
     val state by viewModel.state.collectAsState(initial = BottomBarViewModel.State())
     if (state.items.isNotEmpty()) {
-        BottomNavigation(
+        NavigationBar(
             modifier = Modifier.height(72.dp),
-            backgroundColor = ZeroTheme.colors.surfaceContainerLowest,
-            elevation = 0.dp,
+            containerColor = ZeroTheme.colors.surfaceContainerLowest,
+            tonalElevation = 0.dp,
         ) {
             val overBudgetDescription = stringResource(R.string.bottom_bar_over_budget_description)
             state.items.forEach { item ->
-                BottomNavigationItem(
-                    selectedContentColor = ZeroTheme.colors.primary,
-                    unselectedContentColor = ZeroTheme.colors.outline,
+                NavigationBarItem(
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = ZeroTheme.colors.primary,
+                        unselectedIconColor = ZeroTheme.colors.outline,
+                        selectedTextColor = ZeroTheme.colors.primary,
+                        unselectedTextColor = ZeroTheme.colors.outline,
+                        indicatorColor = Color.Transparent,
+                    ),
                     alwaysShowLabel = true,
                     selected = item.selected,
                     onClick = { viewModel.perform(BottomBarViewModel.Action.SelectItem(item)) },

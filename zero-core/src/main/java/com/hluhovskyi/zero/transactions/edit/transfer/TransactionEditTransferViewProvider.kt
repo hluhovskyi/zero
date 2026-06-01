@@ -13,11 +13,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -169,7 +168,7 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                         modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
@@ -182,10 +181,10 @@ private fun RateModePill(
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    cursorBrush = SolidColor(ZeroTheme.colors.primary),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         if (mode.rate.isEmpty()) {
@@ -228,7 +227,7 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                         modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
@@ -241,10 +240,10 @@ private fun RateModePill(
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    cursorBrush = SolidColor(ZeroTheme.colors.primary),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         Row(
