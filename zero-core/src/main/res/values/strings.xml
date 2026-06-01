@@ -298,6 +298,9 @@
     <string name="feedback_hint_other">Tell us what\'s on your mind…</string>
     <string name="feedback_close">Close</string>
     <string name="feedback_char_counter">%1$d/1000</string>
+    <string name="feedback_sent_title">Feedback sent</string>
+    <string name="feedback_sent_body">Thanks — we\'ll review it within a few days. We may follow up by email if we need more detail.</string>
+    <string name="feedback_done">Done</string>
 
     <!-- Home / Welcome -->
     <string name="home_title">Zero</string>

@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,6 +74,12 @@ private val TYPES = listOf(
 @Composable
 private fun FeedbackView(viewModel: FeedbackViewModel) {
     val state by viewModel.state.collectAsState(initial = FeedbackViewModel.State())
+
+    if (state.submitted) {
+        SentView(onDone = { viewModel.perform(FeedbackViewModel.Action.Done) })
+        return
+    }
+
     val colors = ZeroTheme.colors
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -127,6 +135,61 @@ private fun FeedbackView(viewModel: FeedbackViewModel) {
             expanded = true,
             text = stringResource(R.string.feedback_submit),
         )
+    }
+}
+
+@Composable
+private fun SentView(onDone: () -> Unit) {
+    val colors = ZeroTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(colors.secondaryContainer, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                tint = colors.secondary,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.feedback_sent_title),
+            style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = colors.primary),
+            modifier = Modifier.padding(top = 20.dp, bottom = 6.dp),
+        )
+        Text(
+            text = stringResource(R.string.feedback_sent_body),
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = colors.onSurfaceVariant,
+                lineHeight = 21.sp,
+                textAlign = TextAlign.Center,
+            ),
+        )
+        Spacer(Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.primaryContainer, shape = RoundedCornerShape(16.dp))
+                .clickable { onDone() }
+                .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.feedback_done),
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.onPrimary),
+            )
+        }
+        Spacer(Modifier.height(32.dp))
     }
 }
 
