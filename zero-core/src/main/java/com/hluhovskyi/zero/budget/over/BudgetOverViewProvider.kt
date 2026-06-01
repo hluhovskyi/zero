@@ -49,8 +49,8 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.budget.NumPad
 import com.hluhovskyi.zero.ui.common.toCompose
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
@@ -559,7 +559,7 @@ private fun IncreaseContent(
             amount = amountFormatter.format(newBudgeted),
             highlight = amountText != "0",
         )
-        NumPad(
+        AmountKeypad(
             value = amountText,
             onChange = onAmountChange,
             modifier = Modifier.padding(top = 4.dp),

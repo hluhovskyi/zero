@@ -40,26 +40,26 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
+/**
+ * Amount field with a left-pinned currency and a right-aligned value.
+ *
+ * Two modes:
+ *  - tap mode ([onClick] non-null): a read-only label; tapping it asks the caller to open an
+ *    in-app keypad. No system IME. The value is driven externally (e.g. the inline keypad).
+ *  - editable mode (default): types via the system numeric keyboard, reporting edits through
+ *    [onAmountChange]; the caller supplies a [focusRequester].
+ */
 @Composable
 fun AmountDisplay(
     modifier: Modifier = Modifier,
     amount: String,
     currencySymbol: String,
-    focusRequester: FocusRequester,
-    onAmountChange: (String) -> Unit,
-    onCurrencyClick: (() -> Unit)? = null,
     label: String,
+    focusRequester: FocusRequester? = null,
+    onAmountChange: (String) -> Unit = {},
+    onClick: (() -> Unit)? = null,
+    onCurrencyClick: (() -> Unit)? = null,
 ) {
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
-    }
-
-    LaunchedEffect(amount) {
-        if (textFieldValue.text != amount) {
-            textFieldValue = textFieldValue.copy(text = amount, selection = TextRange(amount.length))
-        }
-    }
-
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,41 +111,86 @@ fun AmountDisplay(
                 }
             }
 
-            // Amount right-aligned, independent of currency position
-            BasicTextField(
-                value = textFieldValue,
-                onValueChange = {
-                    textFieldValue = it
-                    onAmountChange(it.text)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 70.dp)
-                    .focusRequester(focusRequester)
-                    .testTag("TransactionEdit.amountField"),
-                textStyle = TextStyle(
-                    fontSize = 56.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = ZeroTheme.colors.primary,
-                    textAlign = TextAlign.Right,
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                cursorBrush = SolidColor(ZeroTheme.colors.primary),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    if (textFieldValue.text.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.amount_display_placeholder),
-                            fontSize = 56.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = ZeroTheme.colors.primary.copy(alpha = 0.3f),
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                    innerTextField()
-                },
-            )
+            if (onClick != null) {
+                ReadOnlyAmount(
+                    amount = amount,
+                    onClick = onClick,
+                )
+            } else {
+                EditableAmount(
+                    amount = amount,
+                    focusRequester = focusRequester,
+                    onAmountChange = onAmountChange,
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun ReadOnlyAmount(amount: String, onClick: () -> Unit) {
+    val empty = amount.isEmpty() || amount == "0"
+    Text(
+        text = if (empty) stringResource(R.string.amount_display_placeholder) else amount,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 70.dp)
+            .clickable(onClick = onClick)
+            .testTag("TransactionEdit.amountField"),
+        fontSize = 56.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = if (empty) ZeroTheme.colors.primary.copy(alpha = 0.3f) else ZeroTheme.colors.primary,
+        textAlign = TextAlign.Right,
+    )
+}
+
+@Composable
+private fun EditableAmount(
+    amount: String,
+    focusRequester: FocusRequester?,
+    onAmountChange: (String) -> Unit,
+) {
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = amount, selection = TextRange(amount.length)))
+    }
+    LaunchedEffect(amount) {
+        if (textFieldValue.text != amount) {
+            textFieldValue = textFieldValue.copy(text = amount, selection = TextRange(amount.length))
+        }
+    }
+
+    BasicTextField(
+        value = textFieldValue,
+        onValueChange = {
+            textFieldValue = it
+            onAmountChange(it.text)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 70.dp)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .testTag("TransactionEdit.amountField"),
+        textStyle = TextStyle(
+            fontSize = 56.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = ZeroTheme.colors.primary,
+            textAlign = TextAlign.Right,
+        ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        cursorBrush = SolidColor(ZeroTheme.colors.primary),
+        singleLine = true,
+        decorationBox = { innerTextField ->
+            if (textFieldValue.text.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.amount_display_placeholder),
+                    fontSize = 56.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = ZeroTheme.colors.primary.copy(alpha = 0.3f),
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            innerTextField()
+        },
+    )
 }

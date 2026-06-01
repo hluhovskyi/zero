@@ -187,11 +187,13 @@ abstract class TransactionEditComponent :
             viewModel: TransactionEditViewModel,
             expenseIncomeComponentBuilder: TransactionEditExpenseIncomeComponent.Builder,
             transferComponentBuilder: TransactionEditTransferComponent.Builder,
+            transactionId: Id,
             logger: Logger,
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
             expenseIncomeComponent = expenseIncomeComponentBuilder.logging(logger),
             transferComponent = transferComponentBuilder.logging(logger),
+            isNewTransaction = transactionId is Id.Unknown,
         )
 
         @Provides

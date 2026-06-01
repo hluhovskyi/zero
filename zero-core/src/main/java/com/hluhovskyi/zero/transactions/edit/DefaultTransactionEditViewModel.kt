@@ -44,6 +44,17 @@ internal class DefaultTransactionEditViewModel(
                     is TransactionEditUseCase.State.Income -> state.notes
                     is TransactionEditUseCase.State.Transfer -> state.notes
                 },
+                amount = when (state) {
+                    is TransactionEditUseCase.State.Expense -> state.amount
+                    is TransactionEditUseCase.State.Income -> state.amount
+                    is TransactionEditUseCase.State.Transfer -> state.amount
+                },
+                currencySymbol = when (state) {
+                    is TransactionEditUseCase.State.Expense -> state.selectedCurrency?.currencySymbol ?: ""
+                    is TransactionEditUseCase.State.Income -> state.selectedCurrency?.currencySymbol ?: ""
+                    is TransactionEditUseCase.State.Transfer -> state.sourceCurrencySymbol
+                },
+                canPickCurrency = state !is TransactionEditUseCase.State.Transfer,
             )
         }
 
@@ -51,6 +62,12 @@ internal class DefaultTransactionEditViewModel(
         val useCaseAction = when (action) {
             is TransactionEditViewModel.Action.ChangeTransactionType ->
                 TransactionEditUseCase.Action.SwitchTransaction(action.type)
+
+            is TransactionEditViewModel.Action.ChangeAmount ->
+                TransactionEditUseCase.Action.ChangeAmount(action.amount)
+
+            is TransactionEditViewModel.Action.PickCurrency ->
+                TransactionEditUseCase.Action.ShowAllCurrencies
 
             is TransactionEditViewModel.Action.ChangeDate ->
                 TransactionEditUseCase.Action.ChangeDate(action.date)

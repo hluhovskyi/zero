@@ -7,19 +7,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 
@@ -46,39 +42,16 @@ private fun TransactionEditExpenseIncomeView(
     shouldFocus: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditExpenseIncomeViewModel.State())
-    val focusRequester = remember { FocusRequester() }
-
-    if (shouldFocus) {
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
-    }
 
     Column(
         modifier = Modifier
             .padding(horizontal = 24.dp)
             .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, bottom = 40.dp),
-            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-            amount = state.amount,
-            currencySymbol = state.selectedCurrency?.currencySymbol ?: "",
-            focusRequester = focusRequester,
-            onAmountChange = {
-                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeAmount(it))
-            },
-            onCurrencyClick = {
-                viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ShowAllCurrencies)
-            },
-        )
-
         CategoryScrollRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp),
+                .padding(top = 8.dp, bottom = 32.dp),
             imageLoader = imageLoader,
             categories = state.categories,
             selectedCategory = state.selectedCategory,

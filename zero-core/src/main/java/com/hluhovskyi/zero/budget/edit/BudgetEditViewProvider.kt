@@ -36,8 +36,8 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.CategoryIconView
-import com.hluhovskyi.zero.ui.budget.NumPad
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import java.math.BigDecimal
@@ -181,8 +181,8 @@ private fun BudgetEditSheet(
             }
         }
 
-        // NumPad — weight(1f) fills remaining height so CTA stays pinned at bottom
-        NumPad(
+        // AmountKeypad — weight(1f) fills remaining height so CTA stays pinned at bottom
+        AmountKeypad(
             modifier = Modifier.weight(1f),
             value = state.amountText,
             onChange = { viewModel.perform(BudgetEditViewModel.Action.ChangeAmount(it)) },

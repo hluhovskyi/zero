@@ -1,5 +1,6 @@
-package com.hluhovskyi.zero.ui.budget
+package com.hluhovskyi.zero.ui
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,9 +15,11 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
@@ -24,7 +27,7 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val KEYS = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫")
 
-internal fun handleNumPadKey(value: String, key: String): String = when {
+internal fun handleAmountKeypadKey(value: String, key: String): String = when {
     key == "⌫" -> if (value.length <= 1) "0" else value.dropLast(1)
     key == "." -> if (value.contains(".")) value else "$value."
     else -> {
@@ -42,11 +45,13 @@ internal fun handleNumPadKey(value: String, key: String): String = when {
 }
 
 @Composable
-fun NumPad(
+fun AmountKeypad(
     value: String,
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    keyHeight: Dp = 50.dp,
 ) {
+    val view = LocalView.current
     Column(modifier = modifier.fillMaxWidth()) {
         KEYS.chunked(3).forEach { row ->
             Row(
@@ -57,8 +62,11 @@ fun NumPad(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
-                            .clickable { onChange(handleNumPadKey(value, key)) },
+                            .height(keyHeight)
+                            .clickable {
+                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                onChange(handleAmountKeypadKey(value, key))
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (key == "⌫") {
