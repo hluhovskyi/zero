@@ -36,6 +36,7 @@ internal class DefaultFeedbackViewModel(
                 it.copy(type = action.type)
             }
             FeedbackViewModel.Action.Submit -> submit()
+            FeedbackViewModel.Action.Done -> onFeedbackSubmittedHandler.onFeedbackSubmitted()
             FeedbackViewModel.Action.Close -> onFeedbackCloseHandler.onFeedbackClose()
         }
     }
@@ -53,8 +54,7 @@ internal class DefaultFeedbackViewModel(
             val report = reportFormatter.format(previous.type, previous.description, breadcrumbs.snapshot())
             when (val result = feedbackService.submit(report)) {
                 is FeedbackSubmitResult.Success -> {
-                    mutableState.update { it.copy(isSubmitting = false) }
-                    onFeedbackSubmittedHandler.onFeedbackSubmitted()
+                    mutableState.update { it.copy(isSubmitting = false, submitted = true) }
                 }
                 is FeedbackSubmitResult.Failure -> {
                     mutableState.update {

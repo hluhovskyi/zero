@@ -27,7 +27,7 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val KEYS = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫")
 
-internal fun handleAmountKeypadKey(value: String, key: String): String = when {
+internal fun handleAmountKeypadKey(value: String, key: String, maxDecimals: Int = 2): String = when {
     key == "⌫" -> if (value.length <= 1) "0" else value.dropLast(1)
     key == "." -> if (value.contains(".")) value else "$value."
     else -> {
@@ -35,7 +35,7 @@ internal fun handleAmountKeypadKey(value: String, key: String): String = when {
             key
         } else {
             val dotIndex = value.indexOf('.')
-            if (dotIndex >= 0 && value.length - dotIndex - 1 >= 2) {
+            if (dotIndex >= 0 && value.length - dotIndex - 1 >= maxDecimals) {
                 value
             } else {
                 "$value$key"
@@ -50,6 +50,7 @@ fun AmountKeypad(
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     keyHeight: Dp = 50.dp,
+    maxDecimals: Int = 2,
 ) {
     val view = LocalView.current
     Column(modifier = modifier.fillMaxWidth()) {
@@ -65,7 +66,7 @@ fun AmountKeypad(
                             .height(keyHeight)
                             .clickable {
                                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                onChange(handleAmountKeypadKey(value, key))
+                                onChange(handleAmountKeypadKey(value, key, maxDecimals))
                             },
                         contentAlignment = Alignment.Center,
                     ) {
