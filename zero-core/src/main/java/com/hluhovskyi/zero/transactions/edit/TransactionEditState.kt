@@ -1,0 +1,33 @@
+package com.hluhovskyi.zero.transactions.edit
+
+import kotlinx.datetime.LocalDateTime
+
+/**
+ * The single in-progress edit store. `Default*` collaborators (use case, saver, loader) are
+ * functions over this one model — no projection DTOs.
+ */
+internal data class TransactionEditState(
+    val transactionType: TransactionEditType = TransactionEditType.EXPENSE,
+    val accounts: List<TransactionEditAccount> = emptyList(),
+    val selectedAccount: TransactionEditAccount? = null,
+    val targetAccounts: List<TransactionEditAccount> = emptyList(),
+    val selectedTargetAccount: TransactionEditAccount? = null,
+    val allCategories: List<TransactionEditCategory> = emptyList(),
+    val selectedCategory: TransactionEditCategory? = null,
+    val currencies: List<TransactionEditCurrency> = emptyList(),
+    val selectedCurrency: TransactionEditCurrency? = null,
+    val localDateTime: LocalDateTime? = null,
+    val manuallyChangedCurrency: Boolean = false,
+    val amount: String = "",
+    val rate: String = "",
+    val rateAuto: Boolean = true,
+    val targetAmount: String = "",
+    val notes: String = "",
+    val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
+) {
+    /** Symbol of [account]'s currency, or "" if unresolved. */
+    fun currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
+
+    /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
+    fun receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) receivedAmount(from, rate) else targetAmount
+}

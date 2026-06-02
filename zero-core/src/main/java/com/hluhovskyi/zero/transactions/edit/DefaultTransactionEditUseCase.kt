@@ -3,19 +3,14 @@ package com.hluhovskyi.zero.transactions.edit
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryType
-import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.IdGenerator
-import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
-import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.common.joinIdsToString
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.localDateTime
-import com.hluhovskyi.zero.common.toBigDecimalOrZero
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -34,10 +29,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
 import java.io.Closeable
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 private const val TAG = "DefaultTransactionEditUseCase"
 
@@ -51,7 +44,8 @@ internal class DefaultTransactionEditUseCase(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val transactionRepository: TransactionRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
-    private val idGenerator: IdGenerator,
+    private val saver: TransactionEditSaver,
+    private val loader: TransactionEditLoader,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
@@ -60,14 +54,13 @@ internal class DefaultTransactionEditUseCase(
     private val transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
-    private val incorrectStateDetector: IncorrectStateDetector,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
     logger: Logger,
 ) : TransactionEditUseCase {
 
     private val logger = logger.withTag(TAG)
 
-    private val mutableState = MutableStateFlow(CompositeState())
+    private val mutableState = MutableStateFlow(TransactionEditState())
     override val state: Flow<TransactionEditUseCase.State> = mutableState
         .map { state ->
             val date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
@@ -258,95 +251,9 @@ internal class DefaultTransactionEditUseCase(
                 ?: (transactionId as? Id.Known)
             if (loadFromId != null) {
                 launch {
-                    incorrectStateDetector.asyncRequireNonNull(
-                        value = transactionRepository.query(
-                            TransactionRepository.Criteria.ById(
-                                loadFromId,
-                            ),
-                        )
-                            .firstOrNull(),
-                        message = "Transaction is not resolved with id=$loadFromId",
-                    ) { transaction ->
-                        logger.d("attach, transaction loading is finished, transactionId=${transaction.id}")
-
-                        mutableState
-                            .filter { state ->
-                                state.accounts.isNotEmpty() &&
-                                    state.allCategories.isNotEmpty() &&
-                                    state.currencies.isNotEmpty()
-                            }
-                            .take(1)
-                            .collect()
-
-                        logger.d("attach, required data for state is loaded")
-                        mutableState.update { state ->
-                            val accountToSelect =
-                                state.accounts.firstOrNull { it.id == transaction.accountId }
-                            val currencyToSelect =
-                                state.currencies.firstOrNull { it.id == transaction.currencyId }
-                            val snapshot = if (duplicateFromTransactionId is Id.Known) {
-                                TransactionEditUseCase.SourceSnapshot(
-                                    amount = transaction.amount.value.toString(),
-                                    date = transaction.dateTime,
-                                    currencySymbol = currencyToSelect?.currencySymbol.orEmpty(),
-                                )
-                            } else {
-                                null
-                            }
-                            val partialState = state.copy(
-                                amount = transaction.amount.value.toString(),
-                                selectedCurrency = currencyToSelect ?: state.selectedCurrency,
-                                selectedAccount = accountToSelect ?: state.selectedAccount,
-                                localDateTime = transaction.dateTime,
-                                notes = transaction.notes.orEmpty(),
-                                sourceSnapshot = snapshot,
-                            )
-
-                            when (transaction) {
-                                is TransactionRepository.Transaction.Expense -> {
-                                    val (categoryToSelect, reorderedCategories) =
-                                        resolveCategoryForEdit(state.allCategories, transaction.categoryId)
-
-                                    partialState.copy(
-                                        transactionType = TransactionEditType.EXPENSE,
-                                        allCategories = reorderedCategories,
-                                        selectedCategory = categoryToSelect
-                                            ?: state.selectedCategory,
-                                        rate = transaction.rate.value.toString(),
-                                        rateAuto = false,
-                                    )
-                                }
-
-                                is TransactionRepository.Transaction.Income -> {
-                                    val (categoryToSelect, reorderedCategories) =
-                                        resolveCategoryForEdit(state.allCategories, transaction.categoryId)
-
-                                    partialState.copy(
-                                        transactionType = TransactionEditType.INCOME,
-                                        allCategories = reorderedCategories,
-                                        selectedCategory = categoryToSelect
-                                            ?: state.selectedCategory,
-                                        rate = transaction.rate.value.toString(),
-                                        rateAuto = false,
-                                    )
-                                }
-
-                                is TransactionRepository.Transaction.Transfer -> {
-                                    val targetAccountToSelect =
-                                        state.accounts.firstOrNull { it.id == transaction.targetAccount }
-                                    val toAmount = transaction.targetAmount.value.toString()
-
-                                    partialState.copy(
-                                        transactionType = TransactionEditType.TRANSFER,
-                                        selectedTargetAccount = targetAccountToSelect,
-                                        targetAmount = toAmount,
-                                        rate = rateFromAmounts(partialState.amount, toAmount) ?: "1",
-                                        rateAuto = false,
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    awaitReferenceData()
+                    loader.load(loadFromId, duplicateFromTransactionId is Id.Known, mutableState.value)
+                        ?.let { mutableState.value = it }
                 }
             }
 
@@ -533,7 +440,7 @@ internal class DefaultTransactionEditUseCase(
 
     private data class RateKey(val pair: Pair<Id.Known?, Id.Known?>, val auto: Boolean)
 
-    private fun CompositeState.currencyPair(): Pair<Id.Known?, Id.Known?> = if (transactionType == TransactionEditType.TRANSFER) {
+    private fun TransactionEditState.currencyPair(): Pair<Id.Known?, Id.Known?> = if (transactionType == TransactionEditType.TRANSFER) {
         selectedAccount?.currencyId to selectedTargetAccount?.currencyId
     } else {
         selectedCurrency?.id to selectedAccount?.currencyId
@@ -547,67 +454,8 @@ internal class DefaultTransactionEditUseCase(
 
     private fun save() {
         coroutineScope.launch(context = Dispatchers.IO) {
-            val state = mutableState.value
-            val transactionId = (transactionId as? Id.Known) ?: idGenerator()
-            val dateTime = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
-            val account = state.selectedAccount ?: return@launch // TODO: Validation message
-
-            val transaction = when (state.transactionType) {
-                TransactionEditType.EXPENSE -> {
-                    val category = state.selectedCategory ?: return@launch
-                    val currency = state.selectedCurrency
-
-                    TransactionRepository.Transaction.Expense(
-                        id = transactionId,
-                        amount = Amount(state.amount.toBigDecimalOrNull()),
-                        accountId = account.id,
-                        currencyId = currency?.id ?: account.currencyId,
-                        categoryId = category.id,
-                        dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        rate = Rate(state.rate.toBigDecimalOrNull()),
-                        notes = state.notes.ifBlank { null },
-                    )
-                }
-
-                TransactionEditType.INCOME -> {
-                    val category = state.selectedCategory ?: return@launch
-                    val currency = state.selectedCurrency
-
-                    TransactionRepository.Transaction.Income(
-                        id = transactionId,
-                        amount = Amount(state.amount.toBigDecimalOrNull()),
-                        accountId = account.id,
-                        currencyId = currency?.id ?: account.currencyId,
-                        categoryId = category.id,
-                        dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        rate = Rate(state.rate.toBigDecimalOrNull()),
-                        notes = state.notes.ifBlank { null },
-                    )
-                }
-
-                TransactionEditType.TRANSFER -> {
-                    val targetAccount = state.selectedTargetAccount ?: return@launch
-
-                    val sourceAmount = Amount(state.amount.toBigDecimalOrNull())
-                    val computedTargetAmount = Amount(state.targetAmount.toBigDecimalOrNull())
-
-                    TransactionRepository.Transaction.Transfer(
-                        id = transactionId,
-                        amount = sourceAmount,
-                        accountId = account.id,
-                        currencyId = account.currencyId,
-                        targetAccount = targetAccount.id,
-                        dateTime = dateTime,
-                        updatedDateTime = clock.localDateTime(zoneProvider.timeZone()),
-                        targetAmount = computedTargetAmount,
-                        notes = state.notes.ifBlank { null },
-                    )
-                }
-            }
-
-            transactionRepository.insert(transaction)
+            val saved = saver.save(mutableState.value) ?: return@launch // TODO: Validation message
+            logger.d("saved transactionId=$saved")
             launch(context = Dispatchers.Main) {
                 onTransactionSavedHandler.onSaved()
             }
@@ -624,65 +472,11 @@ internal class DefaultTransactionEditUseCase(
         }
     }
 
-    private fun resolveCategoryForEdit(
-        categories: List<TransactionEditCategory>,
-        categoryId: Id.Known,
-    ): Pair<TransactionEditCategory?, List<TransactionEditCategory>> {
-        val categoryToSelect = categories.firstOrNull { it.id == categoryId }
-        val reorderedCategories = if (categoryToSelect != null) {
-            listOf(categoryToSelect) + categories.filter { it.id != categoryToSelect.id }
-        } else {
-            categories
-        }
-        return categoryToSelect to reorderedCategories
-    }
-
-    /** The auto-derived rate, money-scaled to a clean string. */
-    private fun BigDecimal.toRateString() = setScale(MONEY_RATE_SCALE, RoundingMode.HALF_UP)
-        .stripTrailingZeros()
-        .toPlainString()
-
-    /** rate = to ÷ from (MONEY_RATE_SCALE). Returns null when `from` is 0/blank so the caller keeps the old rate. */
-    private fun rateFromAmounts(from: String, to: String): String? {
-        val source = from.toBigDecimalOrNull() ?: return null
-        if (source.signum() == 0) return null
-        return to.toBigDecimalOrZero().divide(source, MONEY_RATE_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-    }
-
-    private data class CompositeState(
-        val transactionType: TransactionEditType = TransactionEditType.EXPENSE,
-        val accounts: List<TransactionEditAccount> = emptyList(),
-        val selectedAccount: TransactionEditAccount? = null,
-        val targetAccounts: List<TransactionEditAccount> = emptyList(),
-        val selectedTargetAccount: TransactionEditAccount? = null,
-        val allCategories: List<TransactionEditCategory> = emptyList(),
-        val selectedCategory: TransactionEditCategory? = null,
-        val currencies: List<TransactionEditCurrency> = emptyList(),
-        val selectedCurrency: TransactionEditCurrency? = null,
-        val localDateTime: LocalDateTime? = null,
-        val manuallyChangedCurrency: Boolean = false,
-        val amount: String = "",
-        val rate: String = "",
-        val rateAuto: Boolean = true,
-        val targetAmount: String = "",
-        val notes: String = "",
-        val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
-    ) {
-        /** Symbol of [account]'s currency, or "" if unresolved. */
-        fun currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
-
-        /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
-        fun receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) {
-            (from.toBigDecimalOrZero() * rate.toBigDecimalOrZero())
-                .setScale(MONEY_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-        } else {
-            targetAmount
-        }
-    }
-
-    private companion object {
-        /** Decimal places kept for stored money amounts and the conversion rate. */
-        private const val MONEY_SCALE = 2
-        private const val MONEY_RATE_SCALE = 6
+    /** Suspends until accounts, categories, and currencies have all loaded. */
+    private suspend fun awaitReferenceData() {
+        mutableState
+            .filter { it.accounts.isNotEmpty() && it.allCategories.isNotEmpty() && it.currencies.isNotEmpty() }
+            .take(1)
+            .collect()
     }
 }

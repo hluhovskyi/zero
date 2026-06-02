@@ -125,14 +125,14 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             currencyRepository: CurrencyRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             transactionRepository: TransactionRepository,
-            idGenerator: IdGenerator,
+            saver: TransactionEditSaver,
+            loader: TransactionEditLoader,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
             onDuplicateHandler: OnDuplicateHandler,
             transactionEditCategoryUseCase: TransactionEditCategoryUseCase,
             transactionEditCurrencyUseCase: TransactionEditCurrencyUseCase,
-            incorrectStateDetector: IncorrectStateDetector,
             clock: Clock,
             zoneProvider: ZoneProvider,
             logger: Logger,
@@ -146,17 +146,43 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             currencyConvertUseCase = currencyConvertUseCase,
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
-            idGenerator = idGenerator,
+            saver = saver,
+            loader = loader,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
             onDuplicateHandler = onDuplicateHandler,
             transactionEditCategoryUseCase = transactionEditCategoryUseCase,
             transactionEditCurrencyUseCase = transactionEditCurrencyUseCase,
-            incorrectStateDetector = incorrectStateDetector,
             clock = clock,
             zoneProvider = zoneProvider,
             logger = logger,
+        )
+
+        @Provides
+        @TransactionEditScope
+        fun saver(
+            transactionId: Id,
+            transactionRepository: TransactionRepository,
+            idGenerator: IdGenerator,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
+        ): TransactionEditSaver = DefaultTransactionEditSaver(
+            transactionId = transactionId,
+            transactionRepository = transactionRepository,
+            idGenerator = idGenerator,
+            clock = clock,
+            zoneProvider = zoneProvider,
+        )
+
+        @Provides
+        @TransactionEditScope
+        fun loader(
+            transactionRepository: TransactionRepository,
+            incorrectStateDetector: IncorrectStateDetector,
+        ): TransactionEditLoader = DefaultTransactionEditLoader(
+            transactionRepository = transactionRepository,
+            incorrectStateDetector = incorrectStateDetector,
         )
 
         @Provides
