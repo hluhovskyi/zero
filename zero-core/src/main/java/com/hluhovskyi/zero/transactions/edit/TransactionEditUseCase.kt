@@ -36,6 +36,9 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
 
     sealed interface State {
 
+        val amount: String
+        val rate: String
+        val editTarget: TransactionEditFocusTarget
         val date: LocalDateTime
         val sourceSnapshot: SourceSnapshot?
 
@@ -46,10 +49,10 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCategory: TransactionEditCategory? = null,
             val currencies: List<TransactionEditCurrency> = emptyList(),
             val selectedCurrency: TransactionEditCurrency? = null,
-            val amount: String = "",
-            val rate: String = "",
+            override val amount: String = "",
+            override val rate: String = "",
             val rateAuto: Boolean = true,
-            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
             val convertedAmountText: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
@@ -63,10 +66,10 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCategory: TransactionEditCategory? = null,
             val currencies: List<TransactionEditCurrency> = emptyList(),
             val selectedCurrency: TransactionEditCurrency? = null,
-            val amount: String = "",
-            val rate: String = "",
+            override val amount: String = "",
+            override val rate: String = "",
             val rateAuto: Boolean = true,
-            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
             val convertedAmountText: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
@@ -78,11 +81,11 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedAccount: TransactionEditAccount? = null,
             val targetAccounts: List<TransactionEditAccount> = emptyList(),
             val selectedTargetAccount: TransactionEditAccount? = null,
-            val amount: String = "",
+            override val amount: String = "",
             val targetAmount: String = "",
-            val rate: String = "",
+            override val rate: String = "",
             val rateAuto: Boolean = true,
-            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
             val sourceCurrencySymbol: String = "",
             val targetCurrencySymbol: String = "",
             val notes: String = "",
