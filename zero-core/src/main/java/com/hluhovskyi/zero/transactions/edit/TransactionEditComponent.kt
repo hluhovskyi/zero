@@ -125,8 +125,8 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             currencyRepository: CurrencyRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             transactionRepository: TransactionRepository,
-            saver: TransactionEditSaver,
-            loader: TransactionEditLoader,
+            idGenerator: IdGenerator,
+            incorrectStateDetector: IncorrectStateDetector,
             onTransactionSavedHandler: OnTransactionSavedHandler,
             onEditCategoriesHandler: OnEditCategoriesHandler,
             onDiscardHandler: OnDiscardHandler,
@@ -146,8 +146,8 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             currencyConvertUseCase = currencyConvertUseCase,
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
-            saver = saver,
-            loader = loader,
+            idGenerator = idGenerator,
+            incorrectStateDetector = incorrectStateDetector,
             onTransactionSavedHandler = onTransactionSavedHandler,
             onEditCategoriesHandler = onEditCategoriesHandler,
             onDiscardHandler = onDiscardHandler,
@@ -157,32 +157,6 @@ abstract class TransactionEditComponent : AttachableViewComponent {
             clock = clock,
             zoneProvider = zoneProvider,
             logger = logger,
-        )
-
-        @Provides
-        @TransactionEditScope
-        fun saver(
-            transactionId: Id,
-            transactionRepository: TransactionRepository,
-            idGenerator: IdGenerator,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
-        ): TransactionEditSaver = DefaultTransactionEditSaver(
-            transactionId = transactionId,
-            transactionRepository = transactionRepository,
-            idGenerator = idGenerator,
-            clock = clock,
-            zoneProvider = zoneProvider,
-        )
-
-        @Provides
-        @TransactionEditScope
-        fun loader(
-            transactionRepository: TransactionRepository,
-            incorrectStateDetector: IncorrectStateDetector,
-        ): TransactionEditLoader = DefaultTransactionEditLoader(
-            transactionRepository = transactionRepository,
-            incorrectStateDetector = incorrectStateDetector,
         )
 
         @Provides

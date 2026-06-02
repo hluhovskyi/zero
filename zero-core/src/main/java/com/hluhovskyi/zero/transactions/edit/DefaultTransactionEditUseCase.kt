@@ -5,6 +5,8 @@ import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.IdGenerator
+import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.common.joinIdsToString
@@ -44,8 +46,8 @@ internal class DefaultTransactionEditUseCase(
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val transactionRepository: TransactionRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
-    private val saver: TransactionEditSaver,
-    private val loader: TransactionEditLoader,
+    private val idGenerator: IdGenerator,
+    private val incorrectStateDetector: IncorrectStateDetector,
     private val onTransactionSavedHandler: OnTransactionSavedHandler,
     private val onEditCategoriesHandler: OnEditCategoriesHandler,
     private val onDiscardHandler: OnDiscardHandler,
@@ -63,56 +65,31 @@ internal class DefaultTransactionEditUseCase(
     private val mutableState = MutableStateFlow(TransactionEditState())
     override val state: Flow<TransactionEditUseCase.State> = mutableState
         .map { state ->
-            val date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
-            when (state.transactionType) {
-                TransactionEditType.EXPENSE -> TransactionEditUseCase.State.Expense(
-                    accounts = state.accounts,
-                    selectedAccount = state.selectedAccount,
-                    categories = state.allCategories.filter { it.type == CategoryType.EXPENSE },
-                    selectedCategory = state.selectedCategory?.takeIf { it.type == CategoryType.EXPENSE },
-                    currencies = state.currencies,
-                    selectedCurrency = state.selectedCurrency,
-                    amount = state.amount,
-                    rate = state.rate,
-                    rateAuto = state.rateAuto,
-                    notes = state.notes,
-                    date = date,
-                    sourceSnapshot = state.sourceSnapshot,
-                )
-
-                TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
-                    accounts = state.accounts,
-                    selectedAccount = state.selectedAccount,
-                    categories = state.allCategories.filter { it.type == CategoryType.INCOME },
-                    selectedCategory = state.selectedCategory?.takeIf { it.type == CategoryType.INCOME },
-                    currencies = state.currencies,
-                    selectedCurrency = state.selectedCurrency,
-                    amount = state.amount,
-                    rate = state.rate,
-                    rateAuto = state.rateAuto,
-                    notes = state.notes,
-                    date = date,
-                    sourceSnapshot = state.sourceSnapshot,
-                )
-
-                TransactionEditType.TRANSFER -> TransactionEditUseCase.State.Transfer(
-                    accounts = state.accounts,
-                    selectedAccount = state.selectedAccount,
-                    targetAccounts = state.targetAccounts,
-                    selectedTargetAccount = state.selectedTargetAccount,
-                    amount = state.amount,
-                    targetAmount = state.targetAmount,
-                    rate = state.rate,
-                    rateAuto = state.rateAuto,
-                    currencies = state.currencies,
-                    sourceCurrencySymbol = state.currencySymbolOf(state.selectedAccount),
-                    targetCurrencySymbol = state.currencySymbolOf(state.selectedTargetAccount),
-                    notes = state.notes,
-                    date = date,
-                    sourceSnapshot = state.sourceSnapshot,
-                )
+            val categoryType = when (state.transactionType) {
+                TransactionEditType.EXPENSE -> CategoryType.EXPENSE
+                TransactionEditType.INCOME -> CategoryType.INCOME
+                TransactionEditType.TRANSFER -> null
             }
+            TransactionEditUseCase.State(
+                transactionType = state.transactionType,
+                accounts = state.accounts,
+                selectedAccount = state.selectedAccount,
+                targetAccounts = state.targetAccounts,
+                selectedTargetAccount = state.selectedTargetAccount,
+                categories = categoryType?.let { type -> state.allCategories.filter { it.type == type } }.orEmpty(),
+                selectedCategory = state.selectedCategory?.takeIf { it.type == categoryType },
+                currencies = state.currencies,
+                selectedCurrency = state.selectedCurrency,
+                amount = state.amount,
+                rate = state.rate,
+                rateAuto = state.rateAuto,
+                targetAmount = state.targetAmount,
+                notes = state.notes,
+                date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                sourceSnapshot = state.sourceSnapshot,
+            )
         }
+        .distinctUntilChanged()
 
     override fun perform(action: TransactionEditUseCase.Action) {
         logger.d("perform=$action")
@@ -252,8 +229,14 @@ internal class DefaultTransactionEditUseCase(
             if (loadFromId != null) {
                 launch {
                     awaitReferenceData()
-                    val transaction = loader.fetch(loadFromId) ?: return@launch
-                    mutableState.update { loader.seed(it, transaction, duplicateFromTransactionId is Id.Known) }
+                    val transaction = transactionRepository
+                        .query(TransactionRepository.Criteria.ById(loadFromId))
+                        .firstOrNull()
+                    if (transaction == null) {
+                        incorrectStateDetector.assert("Transaction is not resolved with id=$loadFromId")
+                        return@launch
+                    }
+                    mutableState.update { seedEditState(it, transaction, duplicateFromTransactionId is Id.Known) }
                 }
             }
 
@@ -454,8 +437,10 @@ internal class DefaultTransactionEditUseCase(
 
     private fun save() {
         coroutineScope.launch(context = Dispatchers.IO) {
-            val saved = saver.save(mutableState.value) ?: return@launch // TODO: Validation message
-            logger.d("saved transactionId=$saved")
+            val id = (transactionId as? Id.Known) ?: idGenerator()
+            val transaction = buildTransaction(mutableState.value, id, clock.localDateTime(zoneProvider.timeZone()))
+                ?: return@launch // TODO: Validation message
+            transactionRepository.insert(transaction)
             launch(context = Dispatchers.Main) {
                 onTransactionSavedHandler.onSaved()
             }

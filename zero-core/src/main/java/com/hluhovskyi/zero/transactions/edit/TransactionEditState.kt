@@ -25,9 +25,6 @@ internal data class TransactionEditState(
     val notes: String = "",
     val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
 ) {
-    /** Symbol of [account]'s currency, or "" if unresolved. */
-    fun currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
-
     /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
     fun receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) receivedAmount(from, rate) else targetAmount
 }

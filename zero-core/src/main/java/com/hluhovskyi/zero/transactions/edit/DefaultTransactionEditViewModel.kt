@@ -23,27 +23,24 @@ internal class DefaultTransactionEditViewModel(
     override val state: Flow<TransactionEditViewModel.State> =
         combine(useCase.state, keypadFocus) { state, focus ->
             TransactionEditViewModel.State(
-                selectedTransactionType = state.type,
+                selectedTransactionType = state.transactionType,
                 headerMode = headerMode(state),
                 notes = state.notes,
                 amount = state.amount,
                 rate = state.rate,
-                targetAmount = (state as? TransactionEditUseCase.State.Transfer)?.targetAmount.orEmpty(),
+                targetAmount = state.targetAmount,
                 currencySymbol = state.sourceCurrencySymbol(),
-                canPickCurrency = state !is TransactionEditUseCase.State.Transfer,
-                keypadTarget = if (state.hasFx) focus else TransactionEditFocusTarget.Amount,
+                canPickCurrency = state.transactionType != TransactionEditType.TRANSFER,
+                keypadTarget = if (state.hasFx()) focus else TransactionEditFocusTarget.Amount,
             )
         }.distinctUntilChanged()
 
     override val form: Flow<TransactionEditViewModel.Form> =
         combine(useCase.state, keypadFocus) { state, focus ->
-            val keypadTarget = if (state.hasFx) focus else TransactionEditFocusTarget.Amount
-            when (state) {
-                is TransactionEditUseCase.State.Expense ->
-                    expenseIncomeForm(state, state.categories, state.selectedCategory, keypadTarget)
-                is TransactionEditUseCase.State.Income ->
-                    expenseIncomeForm(state, state.categories, state.selectedCategory, keypadTarget)
-                is TransactionEditUseCase.State.Transfer -> transferForm(state, keypadTarget)
+            val keypadTarget = if (state.hasFx()) focus else TransactionEditFocusTarget.Amount
+            when (state.transactionType) {
+                TransactionEditType.EXPENSE, TransactionEditType.INCOME -> expenseIncomeForm(state, keypadTarget)
+                TransactionEditType.TRANSFER -> transferForm(state, keypadTarget)
             }
         }.distinctUntilChanged()
 
@@ -100,13 +97,11 @@ internal class DefaultTransactionEditViewModel(
 
     private fun expenseIncomeForm(
         state: TransactionEditUseCase.State,
-        categories: List<TransactionEditCategory>,
-        selectedCategory: TransactionEditCategory?,
         keypadTarget: TransactionEditFocusTarget,
     ): TransactionEditViewModel.Form.ExpenseIncome {
         val accountCurrency = state.currencies.firstOrNull { it.id == state.selectedAccount?.currencyId }
         val targetSymbol = accountCurrency?.currencySymbol.orEmpty()
-        val converted = if (state.hasFx) {
+        val converted = if (state.hasFx()) {
             "≈ " + amountFormatter.format(
                 Amount(state.amount.toBigDecimalOrNull()).withRate(Rate(state.rate.toBigDecimalOrNull())),
                 targetSymbol,
@@ -117,32 +112,32 @@ internal class DefaultTransactionEditViewModel(
         return TransactionEditViewModel.Form.ExpenseIncome(
             accounts = state.accounts,
             selectedAccount = state.selectedAccount,
-            hasFx = state.hasFx,
+            hasFx = state.hasFx(),
             rate = state.rate,
             rateAuto = state.rateAuto,
             keypadTarget = keypadTarget,
             sourceCurrencySymbol = state.sourceCurrencySymbol(),
             targetCurrencySymbol = targetSymbol,
             date = state.date,
-            categories = categories,
-            selectedCategory = selectedCategory,
+            categories = state.categories,
+            selectedCategory = state.selectedCategory,
             convertedAmountText = converted,
             targetCurrencyName = accountCurrency?.name.orEmpty(),
         )
     }
 
     private fun transferForm(
-        state: TransactionEditUseCase.State.Transfer,
+        state: TransactionEditUseCase.State,
         keypadTarget: TransactionEditFocusTarget,
     ): TransactionEditViewModel.Form.Transfer = TransactionEditViewModel.Form.Transfer(
         accounts = state.accounts,
         selectedAccount = state.selectedAccount,
-        hasFx = state.hasFx,
+        hasFx = state.hasFx(),
         rate = state.rate,
         rateAuto = state.rateAuto,
         keypadTarget = keypadTarget,
-        sourceCurrencySymbol = state.sourceCurrencySymbol,
-        targetCurrencySymbol = state.targetCurrencySymbol,
+        sourceCurrencySymbol = state.sourceCurrencySymbol(),
+        targetCurrencySymbol = state.targetCurrencySymbol(),
         date = state.date,
         targetAccounts = state.targetAccounts,
         selectedTargetAccount = state.selectedTargetAccount,
@@ -172,32 +167,30 @@ internal class DefaultTransactionEditViewModel(
         }
     }
 
-    private fun TransactionEditUseCase.State.sourceCurrencySymbol(): String = when (this) {
-        is TransactionEditUseCase.State.Expense -> selectedCurrency?.currencySymbol.orEmpty()
-        is TransactionEditUseCase.State.Income -> selectedCurrency?.currencySymbol.orEmpty()
-        is TransactionEditUseCase.State.Transfer -> sourceCurrencySymbol
+    // Source = tx currency (expense/income) or from-account currency (transfer).
+    private fun TransactionEditUseCase.State.sourceCurrencySymbol(): String = if (transactionType == TransactionEditType.TRANSFER) {
+        currencySymbolOf(selectedAccount)
+    } else {
+        selectedCurrency?.currencySymbol.orEmpty()
     }
 
-    private val TransactionEditUseCase.State.type: TransactionEditType
-        get() = when (this) {
-            is TransactionEditUseCase.State.Expense -> TransactionEditType.EXPENSE
-            is TransactionEditUseCase.State.Income -> TransactionEditType.INCOME
-            is TransactionEditUseCase.State.Transfer -> TransactionEditType.TRANSFER
-        }
+    // Target = account currency (expense/income) or to-account currency (transfer).
+    private fun TransactionEditUseCase.State.targetCurrencySymbol(): String = if (transactionType == TransactionEditType.TRANSFER) {
+        currencySymbolOf(selectedTargetAccount)
+    } else {
+        currencySymbolOf(selectedAccount)
+    }
 
     /** Whether the source and destination currencies differ, so the conversion UI should show. */
-    private val TransactionEditUseCase.State.hasFx: Boolean
-        get() = when (this) {
-            is TransactionEditUseCase.State.Expense -> currenciesDiffer(selectedCurrency, selectedAccount)
-            is TransactionEditUseCase.State.Income -> currenciesDiffer(selectedCurrency, selectedAccount)
-            is TransactionEditUseCase.State.Transfer ->
-                selectedAccount != null &&
-                    selectedTargetAccount != null &&
-                    selectedAccount.currencyId != selectedTargetAccount.currencyId
-        }
+    private fun TransactionEditUseCase.State.hasFx(): Boolean = if (transactionType == TransactionEditType.TRANSFER) {
+        selectedAccount != null &&
+            selectedTargetAccount != null &&
+            selectedAccount.currencyId != selectedTargetAccount.currencyId
+    } else {
+        selectedCurrency != null &&
+            selectedAccount != null &&
+            selectedCurrency.id != selectedAccount.currencyId
+    }
 
-    private fun currenciesDiffer(
-        currency: TransactionEditCurrency?,
-        account: TransactionEditAccount?,
-    ): Boolean = currency != null && account != null && currency.id != account.currencyId
+    private fun TransactionEditUseCase.State.currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
 }

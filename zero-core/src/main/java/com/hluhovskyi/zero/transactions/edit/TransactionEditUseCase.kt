@@ -31,65 +31,29 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         data class ChangeNotes(val notes: String) : Action
     }
 
-    sealed interface State {
-
-        val amount: String
-        val rate: String
-        val rateAuto: Boolean
-        val notes: String
-        val accounts: List<TransactionEditAccount>
-        val selectedAccount: TransactionEditAccount?
-        val currencies: List<TransactionEditCurrency>
-        val date: LocalDateTime
-        val sourceSnapshot: SourceSnapshot?
-
-        data class Expense(
-            override val accounts: List<TransactionEditAccount> = emptyList(),
-            override val selectedAccount: TransactionEditAccount? = null,
-            val categories: List<TransactionEditCategory> = emptyList(),
-            val selectedCategory: TransactionEditCategory? = null,
-            override val currencies: List<TransactionEditCurrency> = emptyList(),
-            val selectedCurrency: TransactionEditCurrency? = null,
-            override val amount: String = "",
-            override val rate: String = "",
-            override val rateAuto: Boolean = true,
-            override val notes: String = "",
-            override val date: LocalDateTime,
-            override val sourceSnapshot: SourceSnapshot? = null,
-        ) : State
-
-        data class Income(
-            override val accounts: List<TransactionEditAccount> = emptyList(),
-            override val selectedAccount: TransactionEditAccount? = null,
-            val categories: List<TransactionEditCategory> = emptyList(),
-            val selectedCategory: TransactionEditCategory? = null,
-            override val currencies: List<TransactionEditCurrency> = emptyList(),
-            val selectedCurrency: TransactionEditCurrency? = null,
-            override val amount: String = "",
-            override val rate: String = "",
-            override val rateAuto: Boolean = true,
-            override val notes: String = "",
-            override val date: LocalDateTime,
-            override val sourceSnapshot: SourceSnapshot? = null,
-        ) : State
-
-        data class Transfer(
-            override val accounts: List<TransactionEditAccount> = emptyList(),
-            override val selectedAccount: TransactionEditAccount? = null,
-            val targetAccounts: List<TransactionEditAccount> = emptyList(),
-            val selectedTargetAccount: TransactionEditAccount? = null,
-            override val amount: String = "",
-            val targetAmount: String = "",
-            override val rate: String = "",
-            override val rateAuto: Boolean = true,
-            override val currencies: List<TransactionEditCurrency> = emptyList(),
-            val sourceCurrencySymbol: String = "",
-            val targetCurrencySymbol: String = "",
-            override val notes: String = "",
-            override val date: LocalDateTime,
-            override val sourceSnapshot: SourceSnapshot? = null,
-        ) : State
-    }
+    /**
+     * One flat read model. The per-type *shape* the View switches on lives at the ViewModel's
+     * `Form`; here `transactionType` is just a field. Category lists are empty / null for transfer;
+     * target-account fields are empty / null for expense and income.
+     */
+    data class State(
+        val transactionType: TransactionEditType = TransactionEditType.EXPENSE,
+        val accounts: List<TransactionEditAccount> = emptyList(),
+        val selectedAccount: TransactionEditAccount? = null,
+        val targetAccounts: List<TransactionEditAccount> = emptyList(),
+        val selectedTargetAccount: TransactionEditAccount? = null,
+        val categories: List<TransactionEditCategory> = emptyList(),
+        val selectedCategory: TransactionEditCategory? = null,
+        val currencies: List<TransactionEditCurrency> = emptyList(),
+        val selectedCurrency: TransactionEditCurrency? = null,
+        val amount: String = "",
+        val rate: String = "",
+        val rateAuto: Boolean = true,
+        val targetAmount: String = "",
+        val notes: String = "",
+        val date: LocalDateTime,
+        val sourceSnapshot: SourceSnapshot? = null,
+    )
 
     /**
      * Snapshot of the source transaction captured once at load time. Used by the duplicate flow
