@@ -227,7 +227,25 @@ Add Tests 8-14:
 - Test 13: gate-2 not satisfied path (verified but no approval → no merge)
 - Test 14: emulator-busy path (acquire fails → exit, retry next tick)
 
-### Task 10 — Pre-merge self-review
+### Task 10 — Parallel-worker support via `ANDROID_SERIAL`
+
+**Edit:** `scripts/emulator/acquire`
+
+Add an early-return: if `ANDROID_SERIAL` is set in the environment, log
+`"acquire: using pinned $ANDROID_SERIAL, skipping flock"` to stderr and exit 0
+without taking the flock. The pinned emulator is the user's responsibility (they
+chose the serial; they're committing to keep it up).
+
+**No other changes needed** — `./scripts/ui/adb` already forwards
+`ANDROID_SERIAL`, and `claude -p` inherits the parent environment so spawned
+sub-sessions get the same serial without explicit threading.
+
+**Smoke test:** run two watchers in two terminals with different `ANDROID_SERIAL`
+values, against two running AVDs. Confirm they don't block each other on acquire
+and that each posts its screenshot from the correct emulator (PR comment
+includes the serial in the verdict).
+
+### Task 11 — Pre-merge self-review
 
 Run all unit-test scripts: `bash scripts/agent/tests/*.sh`.
 

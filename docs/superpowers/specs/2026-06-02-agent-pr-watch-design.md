@@ -146,6 +146,36 @@ Heuristics like "does this touch UI code?" are too easy to fool. Default to
 verify; cost of a wasted emulator run is much smaller than cost of merging a
 broken build.
 
+### Parallel workers — one emulator per worker
+
+Both watchers (`/agent-poll` and `/agent-pr-watch`) and the per-issue/per-PR
+sub-sessions honor `ANDROID_SERIAL`:
+
+- When set → the worker uses that exact emulator and skips flock-based acquire.
+  No contention with other workers; safe to run in parallel.
+- When unset → falls back to today's flock acquire on the default emulator.
+
+Lets a user start, e.g.:
+
+```
+# Terminal 1 — picks up new issues
+ANDROID_SERIAL=emulator-5554 /loop 10m /agent-poll
+
+# Terminal 2 — babysits existing PRs
+ANDROID_SERIAL=emulator-5556 /loop 10m /agent-pr-watch
+```
+
+…without coordination. The `scripts/ui/adb` wrapper already forwards
+`ANDROID_SERIAL` to `adb`, so only `./scripts/emulator/acquire` needs a small
+"if `ANDROID_SERIAL` is set, no-op and exit 0" branch.
+
+The spawned sub-sessions (`/agent-do`, `/agent-pr-fix`, `/agent-pr-verify`)
+inherit the parent's environment, so the serial propagates automatically.
+
+Note: this doesn't multi-thread within a single watcher tick — each watcher
+is still strictly serial (one issue/PR per tick). Parallelism comes from
+running multiple watchers, each pinned to its own emulator.
+
 ### Verify session (`/agent-pr-verify <N>`)
 
 Spawned as a `claude -p` process when the watcher needs to re-verify a PR. The
