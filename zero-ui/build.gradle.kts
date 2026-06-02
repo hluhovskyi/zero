@@ -15,7 +15,7 @@ android {
 
 kotlin {
     compilerOptions {
-        optIn.add("androidx.compose.material.ExperimentalMaterialApi")
+        optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
     }
 }
 
@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIconsExtended)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
 
