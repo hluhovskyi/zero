@@ -154,6 +154,66 @@ internal class DefaultDatabaseTestBridge(
         }
     }
 
+    override suspend fun seedFxAccounts() {
+        currentUserRepository.query().first()
+
+        val iconId = IconRepository.unknownCategoryIconId()
+        val colorId = Id.Known("blue")
+        val usd = Id.Known("USD")
+        val eur = Id.Known("EUR")
+        val walletId = Id.Known("test-account")
+        val revolutId = Id.Known("test-account-eur")
+        val categoryId = Id.Known("test-category")
+        val epoch = LocalDateTime(2020, 1, 1, 0, 0)
+
+        accountRepository.insert(
+            AccountRepository.AccountInsert(
+                id = walletId,
+                name = "Wallet",
+                currencyId = usd,
+                iconId = iconId,
+                colorId = colorId,
+                initialBalance = Amount(BigDecimal.ZERO),
+                category = AccountCategory.CASH,
+            ),
+        )
+        accountRepository.insert(
+            AccountRepository.AccountInsert(
+                id = revolutId,
+                name = "Revolut",
+                currencyId = eur,
+                iconId = iconId,
+                colorId = colorId,
+                initialBalance = Amount(BigDecimal.ZERO),
+                category = AccountCategory.CASH,
+            ),
+        )
+
+        categoryRepository.insert(
+            CategoryRepository.CategoryInsert(
+                id = categoryId,
+                parentCategoryId = Id.Unknown,
+                name = "Food",
+                iconId = iconId,
+                colorId = colorId,
+                type = CategoryType.EXPENSE,
+            ),
+        )
+
+        transactionRepository.insert(
+            TransactionRepository.Transaction.Expense(
+                id = Id.Known("bootstrap"),
+                amount = Amount(BigDecimal.ONE),
+                accountId = walletId,
+                currencyId = usd,
+                dateTime = epoch,
+                updatedDateTime = epoch,
+                categoryId = categoryId,
+                rate = Rate.Same,
+            ),
+        )
+    }
+
     override suspend fun seedBudgetOverScenario() {
         // Presets are seeded by BaseE2eTest after clearData; this scenario relies on
         // Food & Drink / Transport from that baseline.

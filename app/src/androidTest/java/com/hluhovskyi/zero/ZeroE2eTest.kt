@@ -62,6 +62,26 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun foreignCurrencyExpenseShowsConversionCard() {
+        seedDefaultSetup()
+        onTransactions()
+            .tapAddTransaction()
+            .openCurrencyPicker(currentSymbol = "$")
+            .pickCurrencyByName("Euro")
+            .assertConversionVisible(convertsToCurrency = "US Dollar")
+    }
+
+    @Test
+    fun crossCurrencyTransferShowsFromToAmountsAndRate() {
+        seedFxAccounts()
+        onTransactions()
+            .tapAddTransaction()
+            .switchToTransfer()
+            .selectToAccount("Revolut")
+            .assertTransferConversionVisible()
+    }
+
+    @Test
     fun setBudgetForCategoryPersistsAndHidesEmptyCallout() {
         seedDefaultSetup()
         onBudget()
