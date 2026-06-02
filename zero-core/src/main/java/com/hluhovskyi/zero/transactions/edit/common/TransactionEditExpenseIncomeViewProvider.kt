@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.transactions.edit.TransactionEditFocusTarget
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 
@@ -48,6 +49,27 @@ private fun TransactionEditExpenseIncomeView(
             .padding(horizontal = 24.dp)
             .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
+        AnimatedVisibility(visible = state.showRate) {
+            TransactionEditRateField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                sourceCurrencySymbol = state.txCurrencySymbol,
+                targetCurrencySymbol = state.accountCurrencySymbol,
+                rate = state.rate,
+                rateAuto = state.rateAuto,
+                focused = state.editTarget == TransactionEditFocusTarget.Rate,
+                onFocus = {
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.FocusRate)
+                },
+                onReset = {
+                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ResetRate)
+                },
+                convertedAmountText = state.convertedAmountText,
+                convertedCurrencyName = state.accountCurrencyName,
+            )
+        }
+
         CategoryScrollRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,18 +107,6 @@ private fun TransactionEditExpenseIncomeView(
                 nameMapping = { it.name },
                 onItemSelected = {
                     viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.SelectAccount(it))
-                },
-            )
-        }
-
-        AnimatedVisibility(visible = state.showRate) {
-            TransactionEditRateTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                rate = state.rate,
-                onValueChange = { rate ->
-                    viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ChangeRate(rate))
                 },
             )
         }

@@ -265,6 +265,11 @@
     <string name="transaction_edit_edit_categories_description">Edit categories</string>
     <string name="transaction_edit_currency_label">Currency</string>
     <string name="transaction_edit_rate_label">Rate</string>
+    <string name="transaction_edit_exchange_rate">Exchange rate</string>
+    <string name="transaction_edit_converts_to">Converts to</string>
+    <string name="transaction_edit_rate_reset">Reset</string>
+    <string name="transfer_edit_from_amount">From amount</string>
+    <string name="transfer_edit_to_amount">To amount</string>
     <string name="transaction_edit_show_all_categories_description">Show all categories</string>
     <string name="transaction_edit_all_categories">All</string>
 

@@ -2,7 +2,6 @@ package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Closeables
-import com.hluhovskyi.zero.common.Rate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDateTime
@@ -25,8 +24,10 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         object Delete : Action
         object Duplicate : Action
         data class ChangeTargetAmount(val amount: String) : Action
-        data class ChangeTransferRate(val rate: String) : Action
-        object CycleTransferRateMode : Action
+        object FocusAmount : Action
+        object FocusRate : Action
+        object FocusReceived : Action
+        object ResetRate : Action
         object SwapAccounts : Action
         object ShowAllCategories : Action
         object ShowAllCurrencies : Action
@@ -47,6 +48,9 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            val rateAuto: Boolean = true,
+            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            val convertedAmountText: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
@@ -61,6 +65,9 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedCurrency: TransactionEditCurrency? = null,
             val amount: String = "",
             val rate: String = "",
+            val rateAuto: Boolean = true,
+            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            val convertedAmountText: String = "",
             val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
@@ -73,7 +80,9 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             val selectedTargetAccount: TransactionEditAccount? = null,
             val amount: String = "",
             val targetAmount: String = "",
-            val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
+            val rate: String = "",
+            val rateAuto: Boolean = true,
+            val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
             val sourceCurrencySymbol: String = "",
             val targetCurrencySymbol: String = "",
             val notes: String = "",

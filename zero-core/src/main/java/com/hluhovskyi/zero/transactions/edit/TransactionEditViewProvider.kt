@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,7 +49,7 @@ import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.AmountDisplay
+import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAmountField
 import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
@@ -89,6 +90,13 @@ private fun TransactionEditView(
     // Keypad opens on tapping the amount; auto-opens for a brand-new transaction.
     var keypadVisible by rememberSaveable { mutableStateOf(isNewTransaction) }
     BackHandler(enabled = keypadVisible) { keypadVisible = false }
+
+    // Transfer has no pinned hero amount to tap, so the keypad stays open while on that tab.
+    LaunchedEffect(state.selectedTransactionType) {
+        if (state.selectedTransactionType == TransactionEditType.TRANSFER) {
+            keypadVisible = true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -188,22 +196,30 @@ private fun TransactionEditView(
             },
         )
 
-        // ── Pinned: amount (tap to focus → keypad shows) ──
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(top = 16.dp, bottom = 8.dp),
-            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-            amount = state.amount,
-            currencySymbol = state.currencySymbol,
-            onClick = { keypadVisible = true },
-            onCurrencyClick = if (state.canPickCurrency) {
-                { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
-            } else {
-                null
-            },
-        )
+        // ── Pinned: amount (tap to focus → keypad shows). Hidden on transfer, which renders its
+        // own From/To amount fields in the scrolling form. ──
+        if (state.selectedTransactionType != TransactionEditType.TRANSFER) {
+            TransactionEditAmountField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 16.dp, bottom = 8.dp),
+                caption = stringResource(R.string.transaction_edit_amount_display_label),
+                currencySymbol = state.currencySymbol,
+                value = state.amount,
+                focused = state.editTarget == TransactionEditFocusTarget.Amount,
+                hero = true,
+                onFocus = {
+                    keypadVisible = true
+                    viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
+                },
+                onCurrencyClick = if (state.canPickCurrency) {
+                    { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+                } else {
+                    null
+                },
+            )
+        }
 
         // ── Scrolling: type-specific form + notes ──
         LazyColumn(
@@ -279,13 +295,28 @@ private fun TransactionEditView(
                 text = stringResource(R.string.transaction_edit_save),
             )
             AnimatedVisibility(visible = keypadVisible) {
+                val target = state.editTarget
                 AmountKeypad(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(ZeroTheme.colors.surfaceContainerLow)
                         .padding(horizontal = 8.dp, vertical = 8.dp),
-                    value = state.amount,
-                    onChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it)) },
+                    value = when (target) {
+                        TransactionEditFocusTarget.Rate -> state.rate
+                        TransactionEditFocusTarget.Received -> state.targetAmount
+                        TransactionEditFocusTarget.Amount -> state.amount
+                    },
+                    onChange = {
+                        when (target) {
+                            TransactionEditFocusTarget.Rate ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
+                            TransactionEditFocusTarget.Received ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
+                            TransactionEditFocusTarget.Amount ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
+                        }
+                    },
+                    maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
                     keyHeight = 58.dp,
                 )
             }

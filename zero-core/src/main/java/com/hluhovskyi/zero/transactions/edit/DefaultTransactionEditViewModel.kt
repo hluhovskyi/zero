@@ -54,6 +54,20 @@ internal class DefaultTransactionEditViewModel(
                     is TransactionEditUseCase.State.Income -> state.selectedCurrency?.currencySymbol ?: ""
                     is TransactionEditUseCase.State.Transfer -> state.sourceCurrencySymbol
                 },
+                rate = when (state) {
+                    is TransactionEditUseCase.State.Expense -> state.rate
+                    is TransactionEditUseCase.State.Income -> state.rate
+                    is TransactionEditUseCase.State.Transfer -> state.rate
+                },
+                targetAmount = when (state) {
+                    is TransactionEditUseCase.State.Transfer -> state.targetAmount
+                    else -> ""
+                },
+                editTarget = when (state) {
+                    is TransactionEditUseCase.State.Expense -> state.editTarget
+                    is TransactionEditUseCase.State.Income -> state.editTarget
+                    is TransactionEditUseCase.State.Transfer -> state.editTarget
+                },
                 canPickCurrency = state !is TransactionEditUseCase.State.Transfer,
             )
         }
@@ -65,6 +79,15 @@ internal class DefaultTransactionEditViewModel(
 
             is TransactionEditViewModel.Action.ChangeAmount ->
                 TransactionEditUseCase.Action.ChangeAmount(action.amount)
+
+            is TransactionEditViewModel.Action.ChangeRate ->
+                TransactionEditUseCase.Action.ChangeRate(action.rate)
+
+            is TransactionEditViewModel.Action.ChangeTargetAmount ->
+                TransactionEditUseCase.Action.ChangeTargetAmount(action.amount)
+
+            is TransactionEditViewModel.Action.FocusAmount ->
+                TransactionEditUseCase.Action.FocusAmount
 
             is TransactionEditViewModel.Action.PickCurrency ->
                 TransactionEditUseCase.Action.ShowAllCurrencies
