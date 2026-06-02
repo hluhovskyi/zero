@@ -1,25 +1,26 @@
-# Transaction-edit FX UX — ConversionCard + live-linked transfer — Implementation Plan
+# Transaction-edit FX UX — unified Exchange-rate field — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Match the Claude Design FX UX on the transaction edit screen — expense/income get the
-ConversionCard (live "converts to" + editable rate with auto/reset); transfer gets live-linked
-"You send" / rate / "You get" fields (drop the 3-mode cycle). Both driven by the inline keypad.
+**Goal:** Match the Claude Design FX UX on the transaction edit screen with one shared boxed
+**Exchange-rate** tile. Expense/income show it (rate row + "Converts to" line) under the amount;
+transfer shows "From amount"/"To amount" fields + the same tile (no converted line), all live-linked
+through the rate. Both driven by the inline keypad.
 
 **Architecture:** Rate lives in the shared `TransactionEditUseCase` (single source of truth for the
 parent `TransactionEditViewModel` and the child expense-income / transfer VMs) as `rate: String` +
 `rateAuto: Boolean`, auto-derived from the active currency pair via `CurrencyConvertUseCase` by one
 reactive collector. A `TransactionEditFocusTarget` (Amount / Rate / Received) routes the inline
-`AmountKeypad`. Transfer keeps `amount` + `targetAmount` live-linked through the rate. The old
-`TransferRateMode` (Default/CustomRate/CustomAmount) is removed.
+`AmountKeypad`. Transfer keeps `amount` + `targetAmount` live-linked. The old `TransferRateMode` is
+removed.
 
 **Tech Stack:** Kotlin, Jetpack Compose (Material + ZeroTheme tokens), Dagger, coroutines/Flow.
 
 **Spec:** `docs/superpowers/specs/2026-05-31-expense-income-conversion-card-design.md`
 
 Read first: `zero-core/AGENTS.md` (rule 7 — ViewProvider runs no derivation). Before writing
-composables, grep `ZeroColors` for exact token names (`surfaceContainerLow`, `surfaceContainerHigh`,
-`surfaceContainer`, `primaryContainer`, `onSurfaceVariant`, `outline`, `surface`).
+composables, grep `ZeroColors` for exact token names (`surfaceContainerLow`, `surfaceContainer`,
+`surface`, `primaryContainer`, `onSurfaceVariant`, `outline`).
 
 ---
 
@@ -43,26 +44,13 @@ fun `digit rejected past sixth decimal place`() {
 }
 ```
 
-- [ ] **Step 2: Run, verify fail** — `./gradlew :zero-ui:testDebugUnitTest --tests "*AmountKeypadTest*"` → FAIL (no `maxDecimals`).
+- [ ] **Step 2: Run, verify fail** — `./gradlew :zero-ui:testDebugUnitTest --tests "*AmountKeypadTest*"` → FAIL.
 
-- [ ] **Step 3: Implement.** Add `maxDecimals: Int = 2` to `handleAmountKeypadKey` and use it in the cap check; add `maxDecimals: Int = 2` to the `AmountKeypad` composable (after `keyHeight`) and pass it into the handler call:
+- [ ] **Step 3: Implement.** Add `maxDecimals: Int = 2` to `handleAmountKeypadKey` and use it in the cap check; add `maxDecimals: Int = 2` to the `AmountKeypad` composable (after `keyHeight`) and pass it into the handler call `onChange(handleAmountKeypadKey(value, key, maxDecimals))`:
 
 ```kotlin
-internal fun handleAmountKeypadKey(value: String, key: String, maxDecimals: Int = 2): String = when {
-    key == "⌫" -> if (value.length <= 1) "0" else value.dropLast(1)
-    key == "." -> if (value.contains(".")) value else "$value."
-    else -> {
-        if (value == "0") {
-            key
-        } else {
-            val dotIndex = value.indexOf('.')
-            if (dotIndex >= 0 && value.length - dotIndex - 1 >= maxDecimals) value else "$value$key"
-        }
-    }
-}
+if (dotIndex >= 0 && value.length - dotIndex - 1 >= maxDecimals) value else "$value$key"
 ```
-
-In `AmountKeypad`, change the key handler to `onChange(handleAmountKeypadKey(value, key, maxDecimals))`.
 
 - [ ] **Step 4: Run, verify pass** (same command). All PASS.
 - [ ] **Step 5: Commit** `feat: AmountKeypad supports configurable maxDecimals`.
@@ -87,7 +75,7 @@ enum class TransactionEditFocusTarget {
 }
 ```
 
-- [ ] **Step 2: Commit** `feat: add TransactionEditFocusTarget enum` (compiles standalone).
+- [ ] **Step 2: Commit** `feat: add TransactionEditFocusTarget enum`.
 
 ---
 
@@ -105,7 +93,7 @@ object FocusReceived : Action
 object ResetRate : Action
 ```
 
-Keep `ChangeAmount`, `ChangeRate`, `ChangeTargetAmount` (the last is the transfer "received" edit).
+Keep `ChangeAmount`, `ChangeRate`, `ChangeTargetAmount`.
 
 - [ ] **Step 2: Expense/Income state.** Add to both `State.Expense` and `State.Income`:
 
@@ -115,30 +103,18 @@ val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
 val convertedAmountText: String = "",
 ```
 
-- [ ] **Step 3: Transfer state.** Replace `transferRateMode` with rate fields:
+- [ ] **Step 3: Transfer state.** Replace `transferRateMode` with:
 
 ```kotlin
-data class Transfer(
-    val accounts: List<TransactionEditAccount> = emptyList(),
-    val selectedAccount: TransactionEditAccount? = null,
-    val targetAccounts: List<TransactionEditAccount> = emptyList(),
-    val selectedTargetAccount: TransactionEditAccount? = null,
-    val amount: String = "",
-    val targetAmount: String = "",
-    val rate: String = "",
-    val rateAuto: Boolean = true,
-    val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
-    val sourceCurrencySymbol: String = "",
-    val targetCurrencySymbol: String = "",
-    val notes: String = "",
-    override val date: LocalDateTime,
-    override val sourceSnapshot: SourceSnapshot? = null,
-) : State
+val rate: String = "",
+val rateAuto: Boolean = true,
+val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
 ```
 
-Remove the now-unused `import ...Rate` if the interface no longer references it (keep if still used).
+Keep `amount`, `targetAmount`, `sourceCurrencySymbol`, `targetCurrencySymbol`, etc. Remove the
+`Rate` import if no longer referenced.
 
-- [ ] **Step 4: Compile** — expected FAIL in `DefaultTransactionEditUseCase` + VMs (next tasks). Commit together with Task 4.
+- [ ] **Step 4:** Commit together with Task 4 (compiles together).
 
 ---
 
@@ -147,11 +123,11 @@ Remove the now-unused `import ...Rate` if the interface no longer references it 
 **Files:**
 - Modify: `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/DefaultTransactionEditUseCase.kt`
 - Delete: `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/TransferRateMode.kt`
-- Modify (DI): `zero-core/src/main/java/com/hluhovskyi/zero/transactions/edit/TransactionEditComponent.kt` if needed (AmountFormatter binding — the parent VM already receives one, so the binding exists; pass it to the use case).
+- Modify (DI if needed): `.../TransactionEditComponent.kt` (`AmountFormatter` already in this graph — the parent VM receives one; thread it to the use case).
 
-- [ ] **Step 1: Inject `AmountFormatter`.** Add `private val amountFormatter: AmountFormatter,` to the constructor; import `com.hluhovskyi.zero.common.AmountFormatter`, `com.hluhovskyi.zero.common.Amount`. Confirm `TransactionEditComponent`/`MainActivityScreenComponent` provide the use case its deps and thread the formatter through.
+- [ ] **Step 1: Inject `AmountFormatter`.** Add `private val amountFormatter: AmountFormatter,`; import `...common.AmountFormatter`, `...common.Amount`.
 
-- [ ] **Step 2: CompositeState.** Replace `transferRateMode` with shared fields:
+- [ ] **Step 2: CompositeState.** Replace `transferRateMode` with:
 
 ```kotlin
 val rate: String = "",
@@ -172,8 +148,7 @@ private fun String.divByRate(rate: String): String {
 }
 ```
 
-- [ ] **Step 4: State mapping.** In the `Expense`/`Income` branches, compute and pass the converted
-text + effective target (see prior revision — unchanged):
+- [ ] **Step 4: State mapping.** `Expense`/`Income` branches compute converted text + effective target:
 
 ```kotlin
 val currenciesDiffer = state.selectedCurrency != null && state.selectedAccount != null &&
@@ -191,41 +166,33 @@ val effectiveTarget = if (currenciesDiffer) state.editTarget else TransactionEdi
 ```
 
 Pass `rate = state.rate, rateAuto = state.rateAuto, editTarget = effectiveTarget,
-convertedAmountText = convertedText` into both. In the `Transfer` branch, pass `rate = state.rate,
-rateAuto = state.rateAuto, editTarget = state.editTarget` and the existing `targetAmount` /
-symbols; drop `transferRateMode`.
+convertedAmountText = convertedText` into both. The `Transfer` branch passes `rate = state.rate,
+rateAuto = state.rateAuto, editTarget = state.editTarget` and the existing `targetAmount` / symbols;
+drop `transferRateMode`.
 
-- [ ] **Step 5: `perform` handlers.** Replace the relevant branches:
+- [ ] **Step 5: `perform` handlers** (replace the relevant branches; remove `CycleTransferRateMode`
+and `ChangeTransferRate`):
 
 ```kotlin
 is TransactionEditUseCase.Action.ChangeAmount -> mutableState.update { s ->
-    val received = if (s.transactionType == TransactionEditType.TRANSFER) s.amount.let { _ -> action.amount.timesRate(s.rate) } else s.targetAmount
+    val received = if (s.transactionType == TransactionEditType.TRANSFER) action.amount.timesRate(s.rate) else s.targetAmount
     s.copy(amount = action.amount, targetAmount = received, editTarget = TransactionEditFocusTarget.Amount)
 }
-
 is TransactionEditUseCase.Action.ChangeRate -> mutableState.update { s ->
     val received = if (s.transactionType == TransactionEditType.TRANSFER) s.amount.timesRate(action.rate) else s.targetAmount
     s.copy(rate = action.rate, rateAuto = false, targetAmount = received)
 }
-
 is TransactionEditUseCase.Action.ChangeTargetAmount -> mutableState.update { s ->
     s.copy(targetAmount = action.amount, amount = action.amount.divByRate(s.rate), editTarget = TransactionEditFocusTarget.Received)
 }
-
-is TransactionEditUseCase.Action.FocusAmount ->
-    mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Amount) }
-is TransactionEditUseCase.Action.FocusRate ->
-    mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Rate) }
-is TransactionEditUseCase.Action.FocusReceived ->
-    mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Received) }
-is TransactionEditUseCase.Action.ResetRate -> resetRate()
+is TransactionEditUseCase.Action.FocusAmount -> mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Amount) }
+is TransactionEditUseCase.Action.FocusRate -> mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Rate) }
+is TransactionEditUseCase.Action.FocusReceived -> mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Received) }
+is TransactionEditUseCase.Action.ResetRate -> mutableState.update { it.copy(rateAuto = true, editTarget = TransactionEditFocusTarget.Amount) }
 ```
 
-Remove the `CycleTransferRateMode` and `ChangeTransferRate` branches.
-
-- [ ] **Step 6: `selectAccount` / `SelectTargetAccount` / `swapAccounts`.** Drop the eager
-`fetchRateIfTransfer` calls; just update the account selection and reset to auto so the collector
-re-derives:
+- [ ] **Step 6: Account selection / swap.** Drop the eager `fetchRateIfTransfer` calls; just update
+selection and reset to auto so the collector re-derives:
 
 ```kotlin
 private fun selectAccount(action: TransactionEditUseCase.Action.SelectAccount) {
@@ -233,32 +200,19 @@ private fun selectAccount(action: TransactionEditUseCase.Action.SelectAccount) {
 }
 ```
 
-For `SelectTargetAccount` (inline in `perform`): `mutableState.update { it.copy(selectedTargetAccount = action.account, rateAuto = true, editTarget = TransactionEditFocusTarget.Amount) }`.
-For `swapAccounts()`: swap source/target and set `rateAuto = true, editTarget = Amount`. Remove
-`fetchRateIfTransfer`, `cycleTransferRateMode`, and (if now unused) keep `fetchRate` only if the
-collector uses it — the collector calls `currencyConvertUseCase.getRate` directly, so `fetchRate`
-/`fetchRateIfTransfer` can be deleted.
+Same shape for `SelectTargetAccount` (inline) and `swapAccounts()` (swap source/target +
+`rateAuto = true, editTarget = Amount`). Delete `cycleTransferRateMode()`, `fetchRateIfTransfer`,
+and `fetchRate` (the collector calls `currencyConvertUseCase.getRate` directly).
 
-- [ ] **Step 7: Reset + reactive auto-derive.**
-
-```kotlin
-private fun resetRate() {
-    mutableState.update { it.copy(rateAuto = true, editTarget = TransactionEditFocusTarget.Amount) }
-    // collector re-derives the rate + received from the pair
-}
-```
-
-Add a `launch { }` inside `attach()` (alongside the other launches) — one collector for both modes:
+- [ ] **Step 7: Reactive auto-derive** — one collector inside `attach()` for both modes:
 
 ```kotlin
 launch {
     mutableState
         .map { s ->
             val pair = when (s.transactionType) {
-                TransactionEditType.TRANSFER ->
-                    s.selectedAccount?.currencyId to s.selectedTargetAccount?.currencyId
-                else ->
-                    (s.selectedCurrency?.id as Id?) to (s.selectedAccount?.currencyId as Id?)
+                TransactionEditType.TRANSFER -> s.selectedAccount?.currencyId to s.selectedTargetAccount?.currencyId
+                else -> (s.selectedCurrency?.id as Id?) to (s.selectedAccount?.currencyId as Id?)
             }
             Triple(s.transactionType, pair.first, pair.second)
         }
@@ -276,37 +230,32 @@ launch {
 }
 ```
 
-(`selectedCurrency.id` and `account.currencyId` are both `Id.Known`; the `as Id?`/`as Id.Known`
-casts keep the `when` arms type-aligned.)
+(`selectedCurrency.id` and `account.currencyId` are both `Id.Known`; the casts keep the `when` arms
+type-aligned.)
 
-- [ ] **Step 8: Load (edit mode).** In `attach()` where a saved transaction is loaded: for
-`Expense`/`Income`, keep `rate = transaction.rate.value.toString()` and set `rateAuto = false`
-(a saved rate is explicit). For `Transfer`, set `rate`/`targetAmount` from the saved transfer
-(`targetAmount = transaction.targetAmount.value.toString()`, derive `rate` = target ÷ amount or via
-`fetchRate`-equivalent) and `rateAuto = false`. Replace the `transferRateMode = TransferRateMode.Default(rate)` assignment accordingly.
+- [ ] **Step 8: Edit-mode load.** Where a saved transaction is loaded in `attach()`: Expense/Income
+set `rate = transaction.rate.value.toString()` and `rateAuto = false`. Transfer set
+`targetAmount = transaction.targetAmount.value.toString()`, derive a `rate` string
+(`targetAmount ÷ amount`, formatted) and `rateAuto = false`. Replace the
+`transferRateMode = TransferRateMode.Default(...)` assignment accordingly.
 
-- [ ] **Step 9: `save()`.** Replace the transfer `computedTargetAmount` `when(mode)` block with the
-maintained value:
+- [ ] **Step 9: `save()`.** Replace the transfer `computedTargetAmount` `when(mode)` block with
+`val computedTargetAmount = Amount(state.targetAmount.toBigDecimalOrNull())`.
 
-```kotlin
-val computedTargetAmount = Amount(state.targetAmount.toBigDecimalOrNull())
-```
-
-- [ ] **Step 10: Delete** `TransferRateMode.kt`. Grep `TransferRateMode` → zero hits in `main`.
-- [ ] **Step 11: Compile** `./gradlew :zero-core:compileDebugKotlin` → expect remaining failures
-only in the VMs/ViewProviders (next tasks). Commit interface + use case together:
-`feat: unify FX rate state in transaction edit use case, drop transfer modes`.
+- [ ] **Step 10: Delete** `TransferRateMode.kt`. `grep -r TransferRateMode src/main` → nothing.
+- [ ] **Step 11: Compile** `:zero-core:compileDebugKotlin` (VMs/VPs still fail). Commit interface +
+use case: `feat: unify FX rate state in transaction edit use case, drop transfer modes`.
 
 ---
 
-### Task 5: Expense/Income VM — ConversionCard state
+### Task 5: Expense/Income VM — rate-field state
 
 **Files:**
 - Modify: `.../common/TransactionEditExpenseIncomeViewModel.kt`
 - Modify: `.../common/DefaultTransactionEditExpenseIncomeViewModel.kt`
 
 - [ ] **Step 1:** Interface — add actions `object FocusRate : Action`, `object ResetRate : Action`.
-Replace the computed `showRate` with constructor fields and add the pre-computed shape:
+Replace the computed `showRate` with constructor fields and the pre-computed shape:
 
 ```kotlin
 data class State(
@@ -331,8 +280,8 @@ data class State(
 
 Import `...edit.TransactionEditFocusTarget`.
 
-- [ ] **Step 2:** Default VM — map both `Expense`/`Income` via a shared helper that resolves
-currency display + `showRate` (trivial lookup, allowed in VM mapping):
+- [ ] **Step 2:** Default VM — map both `Expense`/`Income` via a shared helper that resolves the
+currency display + `showRate` (trivial lookup):
 
 ```kotlin
 val accountCurrency = currencies.firstOrNull { it.id == selectedAccount?.currencyId }
@@ -354,27 +303,31 @@ TransactionEditExpenseIncomeViewModel.State(
 - [ ] **Step 3:** Map new actions: `FocusRate → UseCase.Action.FocusRate`,
 `ResetRate → UseCase.Action.ResetRate`.
 
-- [ ] **Step 4: Compile** `:zero-core:compileDebugKotlin` (transfer VM/VPs may still fail) →
-verify this file's errors are gone. Commit with Task 6/7 or after Task 10.
+- [ ] **Step 4:** Commit with Task 6/7.
 
 ---
 
-### Task 6: `TransactionEditConversionCard` + strings
+### Task 6: `TransactionEditRateField` (shared) + `TransactionEditAmountField` + strings
 
 **Files:**
-- Create: `.../common/TransactionEditConversionCard.kt`
+- Create: `.../common/TransactionEditRateField.kt`
+- Create: `.../common/TransactionEditAmountField.kt`
 - Delete: `.../common/TransactionEditRateTextField.kt`
 - Modify: `zero-core/src/main/res/values/strings.xml`
 
 - [ ] **Step 1: Strings** (under `<!-- Transaction Edit -->`):
 
 ```xml
+<string name="transaction_edit_exchange_rate">Exchange rate</string>
 <string name="transaction_edit_converts_to">Converts to</string>
 <string name="transaction_edit_rate_reset">Reset</string>
+<string name="transfer_edit_from_amount">From amount</string>
+<string name="transfer_edit_to_amount">To amount</string>
 ```
 
-- [ ] **Step 2: Composable** — header + editable rate pill; caret when focused; Reset (manual) /
-Edit (auto) trailing. Full code:
+(`transaction_edit_amount_display_label` = "Amount" already exists for the single-amount caption.)
+
+- [ ] **Step 2: `TransactionEditRateField`** — boxed "Exchange rate" tile, optional converted line:
 
 ```kotlin
 package com.hluhovskyi.zero.transactions.edit.common
@@ -408,23 +361,24 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
-internal fun TransactionEditConversionCard(
+internal fun TransactionEditRateField(
     modifier: Modifier = Modifier,
-    txCurrencySymbol: String,
-    accountCurrencyName: String,
-    accountCurrencySymbol: String,
+    sourceCurrencySymbol: String,
+    targetCurrencySymbol: String,
     rate: String,
     rateAuto: Boolean,
-    convertedAmountText: String,
     focused: Boolean,
-    onFocusRate: () -> Unit,
-    onResetRate: () -> Unit,
+    onFocus: () -> Unit,
+    onReset: () -> Unit,
+    convertedAmountText: String? = null,
+    convertedCurrencyName: String = "",
 ) {
     Column(
         modifier = modifier
-            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(18.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(11.dp),
+            .background(if (focused) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
+            .then(if (focused) Modifier.border(1.5.dp, ZeroTheme.colors.primaryContainer, RoundedCornerShape(16.dp)) else Modifier)
+            .clickable(onClick = onFocus)
+            .padding(horizontal = 16.dp, vertical = 11.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -432,73 +386,105 @@ internal fun TransactionEditConversionCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(R.string.transaction_edit_converts_to).uppercase() + "  " + accountCurrencyName,
+                text = stringResource(R.string.transaction_edit_exchange_rate).uppercase(),
                 fontSize = 10.sp, fontWeight = FontWeight.Bold,
                 color = ZeroTheme.colors.onSurfaceVariant, letterSpacing = 1.2.sp,
             )
-            Text(
-                text = convertedAmountText,
-                fontSize = 19.sp, fontWeight = FontWeight.ExtraBold,
-                color = ZeroTheme.colors.primaryContainer,
-            )
-        }
-        RateEditRow(txCurrencySymbol, accountCurrencySymbol, rate, rateAuto, focused, onFocusRate, onResetRate)
-    }
-}
-
-@Composable
-private fun RateEditRow(
-    txSym: String, acctSym: String, rate: String, rateAuto: Boolean,
-    focused: Boolean, onFocus: () -> Unit, onReset: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (focused) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainer,
-                RoundedCornerShape(12.dp),
-            )
-            .then(if (focused) Modifier.border(1.5.dp, ZeroTheme.colors.primaryContainer, RoundedCornerShape(12.dp)) else Modifier)
-            .clickable(onClick = onFocus)
-            .padding(horizontal = 12.dp, vertical = 9.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("1 $txSym = ", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
-            Text(rate.ifEmpty { "0" }, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer)
-            if (focused) {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 2.dp)
-                        .width(2.dp).height(16.dp)
-                        .background(ZeroTheme.colors.primaryContainer),
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("1$sourceCurrencySymbol = ", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
+                Text(rate.ifEmpty { "0" }, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer)
+                if (focused) {
+                    Box(modifier = Modifier.padding(horizontal = 2.dp).width(2.dp).height(15.dp).background(ZeroTheme.colors.primaryContainer))
+                }
+                Text(" $targetCurrencySymbol", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
+                if (!rateAuto) {
+                    Row(modifier = Modifier.padding(start = 5.dp).clickable(onClick = onReset), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = ZeroTheme.colors.primaryContainer)
+                        Text(stringResource(R.string.transaction_edit_rate_reset), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.primaryContainer, modifier = Modifier.padding(start = 2.dp))
+                    }
+                } else {
+                    Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.padding(start = 4.dp).size(14.dp), tint = if (focused) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outline)
+                }
             }
-            Text(" $acctSym", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
         }
-        if (rateAuto) {
-            Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(15.dp), tint = ZeroTheme.colors.outline)
-        } else {
-            Row(modifier = Modifier.clickable(onClick = onReset), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(15.dp), tint = ZeroTheme.colors.primaryContainer)
+        if (convertedAmountText != null) {
+            Box(modifier = Modifier.fillMaxWidth().padding(top = 9.dp).height(1.dp).background(ZeroTheme.colors.surfaceContainer))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    stringResource(R.string.transaction_edit_rate_reset),
-                    fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                    color = ZeroTheme.colors.primaryContainer, modifier = Modifier.padding(start = 4.dp),
+                    text = stringResource(R.string.transaction_edit_converts_to) + " · " + convertedCurrencyName,
+                    fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant,
                 )
+                Text(convertedAmountText, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer)
             }
         }
     }
 }
 ```
 
-- [ ] **Step 3: Delete** `TransactionEditRateTextField.kt`.
-- [ ] **Step 4: Commit** `feat: add TransactionEditConversionCard, drop rate text field`.
+- [ ] **Step 3: `TransactionEditAmountField`** — boxed caption + currency symbol + right-aligned
+value + focus caret (read-only; the keypad edits via the parent):
+
+```kotlin
+package com.hluhovskyi.zero.transactions.edit.common
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
+
+@Composable
+internal fun TransactionEditAmountField(
+    modifier: Modifier = Modifier,
+    caption: String,
+    currencySymbol: String,
+    value: String,
+    focused: Boolean,
+    onFocus: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .background(if (focused) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(18.dp))
+            .then(if (focused) Modifier.border(1.5.dp, ZeroTheme.colors.primaryContainer, RoundedCornerShape(18.dp)) else Modifier)
+            .clickable(onClick = onFocus)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        Text(caption.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant, letterSpacing = 1.2.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(currencySymbol, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant)
+            Box(modifier = Modifier.weight(1f))
+            Text(value.ifEmpty { "0" }, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer)
+            Box(modifier = Modifier.padding(start = 3.dp).width(2.dp).height(22.dp).background(if (focused) ZeroTheme.colors.primaryContainer else Color.Transparent))
+        }
+    }
+}
+```
+
+- [ ] **Step 4: Delete** `TransactionEditRateTextField.kt`.
+- [ ] **Step 5: Commit** `feat: add shared Exchange-rate + AmountField composables`.
 
 ---
 
-### Task 7: Expense/Income ViewProvider — render ConversionCard
+### Task 7: Expense/Income ViewProvider — render the Exchange-rate tile
 
 **Files:**
 - Modify: `.../common/TransactionEditExpenseIncomeViewProvider.kt`
@@ -508,24 +494,24 @@ block with:
 
 ```kotlin
 AnimatedVisibility(visible = state.showRate) {
-    TransactionEditConversionCard(
+    TransactionEditRateField(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        txCurrencySymbol = state.txCurrencySymbol,
-        accountCurrencyName = state.accountCurrencyName,
-        accountCurrencySymbol = state.accountCurrencySymbol,
+        sourceCurrencySymbol = state.txCurrencySymbol,
+        targetCurrencySymbol = state.accountCurrencySymbol,
         rate = state.rate,
         rateAuto = state.rateAuto,
-        convertedAmountText = state.convertedAmountText,
         focused = state.editTarget == TransactionEditFocusTarget.Rate,
-        onFocusRate = { viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.FocusRate) },
-        onResetRate = { viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ResetRate) },
+        onFocus = { viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.FocusRate) },
+        onReset = { viewModel.perform(TransactionEditExpenseIncomeViewModel.Action.ResetRate) },
+        convertedAmountText = state.convertedAmountText,
+        convertedCurrencyName = state.accountCurrencyName,
     )
 }
 ```
 
 Import `...edit.TransactionEditFocusTarget`.
 
-- [ ] **Step 2: Commit** `feat: render ConversionCard on expense-income screen`.
+- [ ] **Step 2: Commit** `feat: render Exchange-rate tile on expense-income screen`.
 
 ---
 
@@ -535,8 +521,8 @@ Import `...edit.TransactionEditFocusTarget`.
 - Modify: `.../transfer/TransactionEditTransferViewModel.kt`
 - Modify: `.../transfer/DefaultTransactionEditTransferViewModel.kt`
 
-- [ ] **Step 1:** Interface — new Action set and State. Remove `ChangeTransferRate`, `CycleRateMode`,
-`ChangeAmount`, `ChangeTargetAmount` (value edits now come from the parent keypad). Keep account/date:
+- [ ] **Step 1:** Interface — Actions: remove `ChangeTransferRate`, `CycleRateMode`, `ChangeAmount`,
+`ChangeTargetAmount` (value edits come from the parent keypad). Keep account/date, add focus/reset:
 
 ```kotlin
 sealed interface Action {
@@ -567,184 +553,25 @@ data class State(
 )
 ```
 
-Remove `import ...Rate` and `import ...TransferRateMode`; import `...TransactionEditFocusTarget`.
+Remove `import ...Rate` / `...TransferRateMode`; import `...TransactionEditFocusTarget`.
 
-- [ ] **Step 2:** Default VM — map from `State.Transfer`, computing `needsFx`:
+- [ ] **Step 2:** Default VM — map from `State.Transfer`, computing
+`needsFx = selectedAccount != null && selectedTargetAccount != null &&
+selectedAccount.currencyId != selectedTargetAccount.currencyId`; map the new fields through. In
+`perform`: `FocusAmount → FocusAmount`, `FocusReceived → FocusReceived`, `FocusRate → FocusRate`,
+`ResetRate → ResetRate`, account/swap/date as today.
 
-```kotlin
-needsFx = state.selectedAccount != null && state.selectedTargetAccount != null &&
-    state.selectedAccount.currencyId != state.selectedTargetAccount.currencyId,
-```
-
-Map the new fields straight through. In `perform`, map: `FocusAmount → UseCase.Action.FocusAmount`,
-`FocusReceived → FocusReceived`, `FocusRate → FocusRate`, `ResetRate → ResetRate`,
-`SelectAccount`/`SelectTargetAccount`/`SwapAccounts`/`ChangeDate` as today.
-
-- [ ] **Step 3: Compile** — VP still fails (next task).
-- [ ] **Step 4: Commit** with Task 9.
+- [ ] **Step 3:** Commit with Task 9.
 
 ---
 
-### Task 9: Transfer composables + ViewProvider rewrite
+### Task 9: Transfer ViewProvider rewrite
 
 **Files:**
-- Create: `.../common/TransactionEditAmountField.kt`
-- Create: `.../transfer/TransactionEditRateConnector.kt`
 - Modify: `.../transfer/TransactionEditTransferViewProvider.kt`
-- Modify: `zero-core/src/main/res/values/strings.xml`
 
-- [ ] **Step 1: Strings:**
-
-```xml
-<string name="transfer_edit_you_send">You send</string>
-<string name="transfer_edit_you_get">You get</string>
-<string name="transaction_edit_amount_label_caption">Amount</string>
-```
-
-(`transfer_edit_from_label`/`transfer_edit_to_label`/`transfer_edit_swap_description` already exist.)
-
-- [ ] **Step 2: `TransactionEditAmountField`** — boxed caption + currency symbol + right-aligned
-value + focus caret (read-only display; the keypad edits via the parent). Full code:
-
-```kotlin
-package com.hluhovskyi.zero.transactions.edit.common
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.ZeroTheme
-
-@Composable
-internal fun TransactionEditAmountField(
-    modifier: Modifier = Modifier,
-    caption: String,
-    currencySymbol: String,
-    value: String,
-    focused: Boolean,
-    onFocus: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(18.dp))
-            .clickable(onClick = onFocus)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        Text(
-            text = caption.uppercase(),
-            fontSize = 10.sp, fontWeight = FontWeight.Bold,
-            color = ZeroTheme.colors.onSurfaceVariant, letterSpacing = 1.2.sp,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = currencySymbol,
-                fontSize = 19.sp, fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.onSurfaceVariant,
-            )
-            Box(modifier = Modifier.weight(1f))
-            Text(
-                text = value.ifEmpty { "0" },
-                fontSize = 26.sp, fontWeight = FontWeight.ExtraBold,
-                color = ZeroTheme.colors.primaryContainer,
-            )
-            Box(
-                modifier = Modifier
-                    .padding(start = 3.dp)
-                    .width(2.dp).height(22.dp)
-                    .background(if (focused) ZeroTheme.colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent),
-            )
-        }
-    }
-}
-```
-
-- [ ] **Step 3: `TransactionEditRateConnector`** — the pill (`1 {srcSym} = {rate} {dstSym}`) with
-caret + Reset/Edit. Full code:
-
-```kotlin
-package com.hluhovskyi.zero.transactions.edit.transfer
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.ZeroTheme
-
-@Composable
-internal fun TransactionEditRateConnector(
-    modifier: Modifier = Modifier,
-    sourceCurrencySymbol: String,
-    targetCurrencySymbol: String,
-    rate: String,
-    rateAuto: Boolean,
-    focused: Boolean,
-    onFocus: () -> Unit,
-    onReset: () -> Unit,
-) {
-    Row(
-        modifier = modifier
-            .background(
-                if (focused) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainerLow,
-                RoundedCornerShape(999.dp),
-            )
-            .border(
-                1.5.dp,
-                if (focused) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.surfaceContainer,
-                RoundedCornerShape(999.dp),
-            )
-            .clickable(onClick = onFocus)
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("1$sourceCurrencySymbol = ", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
-        Text(rate.ifEmpty { "0" }, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = if (focused) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.onSurface)
-        if (focused) {
-            Box(modifier = Modifier.padding(horizontal = 2.dp).width(2.dp).height(14.dp).background(ZeroTheme.colors.primaryContainer))
-        }
-        Text(" $targetCurrencySymbol", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant)
-        if (!rateAuto) {
-            Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.padding(start = 4.dp).size(14.dp).clickable(onClick = onReset), tint = ZeroTheme.colors.primaryContainer)
-        } else {
-            Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.padding(start = 4.dp).size(13.dp), tint = if (focused) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outline)
-        }
-    }
-}
-```
-
-- [ ] **Step 4: ViewProvider rewrite.** Replace `RateModePill` + `AccountSelectorsWithSwap` body.
-The amount area adapts to `needsFx`; the account row (From | swap | To) is constant. Keep the
-existing `SelectorCard`-based account tiles + circular `SwapButton` but lay them **horizontally**:
+- [ ] **Step 1:** Replace `RateModePill` + `AccountSelectorsWithSwap` body. Amount area adapts to
+`needsFx`; account row (From | swap | To) is constant:
 
 ```kotlin
 Column(
@@ -755,21 +582,21 @@ Column(
         Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             TransactionEditAmountField(
                 modifier = Modifier.weight(1f),
-                caption = stringResource(R.string.transfer_edit_you_send),
+                caption = stringResource(R.string.transfer_edit_from_amount),
                 currencySymbol = state.sourceCurrencySymbol, value = state.amount,
                 focused = state.editTarget == TransactionEditFocusTarget.Amount,
                 onFocus = { viewModel.perform(TransactionEditTransferViewModel.Action.FocusAmount) },
             )
             TransactionEditAmountField(
                 modifier = Modifier.weight(1f),
-                caption = stringResource(R.string.transfer_edit_you_get),
+                caption = stringResource(R.string.transfer_edit_to_amount),
                 currencySymbol = state.targetCurrencySymbol, value = state.targetAmount,
                 focused = state.editTarget == TransactionEditFocusTarget.Received,
                 onFocus = { viewModel.perform(TransactionEditTransferViewModel.Action.FocusReceived) },
             )
         }
-        TransactionEditRateConnector(
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp),
+        TransactionEditRateField(
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
             sourceCurrencySymbol = state.sourceCurrencySymbol,
             targetCurrencySymbol = state.targetCurrencySymbol,
             rate = state.rate, rateAuto = state.rateAuto,
@@ -780,14 +607,14 @@ Column(
     } else {
         TransactionEditAmountField(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            caption = stringResource(R.string.transaction_edit_amount_label_caption),
+            caption = stringResource(R.string.transaction_edit_amount_display_label),
             currencySymbol = state.sourceCurrencySymbol, value = state.amount,
             focused = true,
             onFocus = { viewModel.perform(TransactionEditTransferViewModel.Action.FocusAmount) },
         )
     }
 
-    AccountSelectorsWithSwap( /* existing composable; lay out horizontally — see Step 5 */
+    AccountSelectorsWithSwap(
         modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 16.dp),
         state = state,
         onSourceSelected = { viewModel.perform(TransactionEditTransferViewModel.Action.SelectAccount(it)) },
@@ -806,16 +633,18 @@ Column(
 }
 ```
 
-Delete `RateModePill` and its helpers (`formatDefaultPillText`, `computeTargetFromRate`,
-`amountFormat`). Remove now-unused imports (`Rate`, `TransferRateMode`, `BasicTextField`,
+- [ ] **Step 2:** Rework `AccountSelectorsWithSwap` to a horizontal `Row`: From `SelectorCard`
+(weight 1f) | a narrow vertical swap bar | To `SelectorCard` (weight 1f). The swap bar matches the
+design `SwapButton`: ~36.dp wide, full height, `RoundedCornerShape(14.dp)`, `surfaceContainerLow`
+background, centered swap icon (`Icons.Filled.SwapVert` or the existing icon). Keep the existing
+`SelectorCard` dropdown wiring.
+
+- [ ] **Step 3:** Delete `RateModePill`, `formatDefaultPillText`, `computeTargetFromRate`,
+`amountFormat`, and now-unused imports (`Rate`, `TransferRateMode`, `BasicTextField`,
 `KeyboardOptions`, etc.).
 
-- [ ] **Step 5:** Adapt `AccountSelectorsWithSwap` to a horizontal `Row` (From `SelectorCard`
-weight 1f, `SwapButton` from the design — a 38.dp circle with the swap icon, no overlap, To
-`SelectorCard` weight 1f). Keep the existing `SelectorCard` usage and dropdown wiring.
-
-- [ ] **Step 6: Compile** `:zero-core:compileDebugKotlin` → PASS (with Task 8). Commit:
-`feat: live-linked You-send/You-get transfer FX layout`.
+- [ ] **Step 4: Compile** `:zero-core:compileDebugKotlin` (with Task 8) → PASS. Commit:
+`feat: live-linked From/To transfer FX layout with shared rate field`.
 
 ---
 
@@ -826,54 +655,19 @@ weight 1f, `SwapButton` from the design — a 38.dp circle with the swap icon, n
 - Modify: `.../DefaultTransactionEditViewModel.kt`
 - Modify: `.../TransactionEditViewProvider.kt`
 
-- [ ] **Step 1:** Interface — add to `State`: `rate: String = ""`, `targetAmount: String = ""`,
-`editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount`. Add actions
-`data class ChangeRate(val rate: String) : Action`,
-`data class ChangeTargetAmount(val amount: String) : Action`, `object FocusAmount : Action`.
-Import the enum.
+- [ ] **Step 1:** Interface — `State` adds `rate: String = ""`, `targetAmount: String = ""`,
+`editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount`. Actions add
+`data class ChangeRate(val rate: String)`, `data class ChangeTargetAmount(val amount: String)`,
+`object FocusAmount`. Import the enum.
 
-- [ ] **Step 2:** Default VM — map per-branch:
+- [ ] **Step 2:** Default VM — map `rate`/`editTarget` from Expense/Income/Transfer; `targetAmount`
+from Transfer (else `""`). `perform`: `ChangeRate → ChangeRate`,
+`ChangeTargetAmount → ChangeTargetAmount`, `FocusAmount → FocusAmount`.
 
-```kotlin
-rate = when (state) {
-    is TransactionEditUseCase.State.Expense -> state.rate
-    is TransactionEditUseCase.State.Income -> state.rate
-    is TransactionEditUseCase.State.Transfer -> state.rate
-},
-targetAmount = when (state) {
-    is TransactionEditUseCase.State.Transfer -> state.targetAmount
-    else -> ""
-},
-editTarget = when (state) {
-    is TransactionEditUseCase.State.Expense -> state.editTarget
-    is TransactionEditUseCase.State.Income -> state.editTarget
-    is TransactionEditUseCase.State.Transfer -> state.editTarget
-},
-```
-
-`perform`: `ChangeRate → UseCase.Action.ChangeRate`,
-`ChangeTargetAmount → UseCase.Action.ChangeTargetAmount`, `FocusAmount → UseCase.Action.FocusAmount`.
-
-- [ ] **Step 3:** ViewProvider — hide the hero `AmountDisplay` for transfer, and add `FocusAmount`
-to its tap:
-
-```kotlin
-if (state.selectedTransactionType != TransactionEditType.TRANSFER) {
-    AmountDisplay(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 16.dp, bottom = 8.dp),
-        label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-        amount = state.amount,
-        currencySymbol = state.currencySymbol,
-        onClick = {
-            keypadVisible = true
-            viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
-        },
-        onCurrencyClick = if (state.canPickCurrency) {
-            { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
-        } else null,
-    )
-}
-```
+- [ ] **Step 3:** ViewProvider — wrap the pinned `AmountDisplay` in
+`if (state.selectedTransactionType != TransactionEditType.TRANSFER) { … }`, and add
+`viewModel.perform(TransactionEditViewModel.Action.FocusAmount)` to its `onClick` (alongside
+`keypadVisible = true`).
 
 - [ ] **Step 4:** Keypad — route by `editTarget`:
 
@@ -900,8 +694,8 @@ AnimatedVisibility(visible = keypadVisible) {
 }
 ```
 
-For transfer the keypad must stay visible (no hero amount to tap) — initialise `keypadVisible` so
-it is `true` whenever the type is transfer, e.g. `LaunchedEffect(state.selectedTransactionType) { if (state.selectedTransactionType == TransactionEditType.TRANSFER) keypadVisible = true }`.
+Keep the keypad visible on transfer (no hero to tap):
+`LaunchedEffect(state.selectedTransactionType) { if (state.selectedTransactionType == TransactionEditType.TRANSFER) keypadVisible = true }`.
 Import `...edit.TransactionEditFocusTarget`.
 
 - [ ] **Step 5: Compile** `:zero-core:compileDebugKotlin` → PASS.
@@ -911,35 +705,38 @@ Import `...edit.TransactionEditFocusTarget`.
 
 ### Task 11: Full verification
 
-- [ ] **Step 1:** `./gradlew :zero-ui:testDebugUnitTest :zero-core:testDebugUnitTest lintDebug 2>&1 | tail -25` → all PASS. Fix any `ViewProviderDerivation` lint hits by moving the logic into the VM/use-case mapping.
+- [ ] **Step 1:** `./gradlew :zero-ui:testDebugUnitTest :zero-core:testDebugUnitTest lintDebug 2>&1 | tail -25` → all PASS. Fix any `ViewProviderDerivation` lint hits by moving logic into VM/use-case mapping.
 - [ ] **Step 2:** Acquire emulator (`./scripts/emulator/acquire`), build+install, and via
 `android-ui-inspector`:
-  - **Expense**, currency ≠ account currency → ConversionCard shows auto rate + live "Converts to";
-    tap rate pill → keypad edits rate (caret, 6 dp), "Converts to" updates; **Reset** appears after a
-    manual edit and restores auto; tap amount → keypad edits amount (2 dp). Same-currency hides card.
-  - **Transfer**, differing-currency accounts → "You send"/"You get" + rate connector; edit send →
-    get updates; edit get → send back-computes; edit rate → get updates and Reset appears; swap keeps
-    it consistent; same-currency accounts show a single Amount field.
-- [ ] **Step 3:** Final commit for any inspector-driven polish: `fix: FX layout polish`.
+  - **Expense**, currency ≠ account → Exchange-rate tile (rate row + "Converts to · …" line);
+    tap rate → keypad edits rate (caret, 6 dp, converted updates); Reset appears after manual edit
+    and restores auto; tap amount → keypad edits amount (2 dp). Same-currency hides the tile.
+  - **Transfer**, differing-currency accounts → From amount / To amount + Exchange-rate tile; edit
+    From → To updates; edit To → From back-computes; edit rate → To updates and Reset appears; swap
+    stays consistent; same-currency accounts show a single Amount field.
+- [ ] **Step 3:** Final polish commit if needed: `fix: FX layout polish`.
 
 ---
 
 ## Self-review notes
 
 - **Spec coverage:** keypad maxDecimals (T1); focus enum incl. Received (T2); unified use-case rate
-  state + auto-derive collector + live-linking + save + mode removal (T3–4); expense/income VM (T5);
-  ConversionCard + strings (T6); expense/income VP (T7); transfer VM (T8); transfer composables + VP
-  rewrite (T9); parent VM/VP keypad routing + hidden hero amount on transfer (T10); tests + UI (T11).
+  state + collector + live-linking + save + mode removal (T3–4); expense/income VM (T5); shared
+  `TransactionEditRateField` + `TransactionEditAmountField` + strings (T6); expense/income VP (T7);
+  transfer VM (T8); transfer VP rewrite (T9); parent VM/VP keypad routing + hidden hero amount on
+  transfer (T10); tests + UI (T11).
+- **One shared rate composable:** `TransactionEditRateField` serves both modes — converted line only
+  when `convertedAmountText != null` (expense/income). No separate ConversionCard/RateConnector.
 - **Naming consistency:** `editTarget`, `rateAuto`, `rate`, `targetAmount`, `convertedAmountText`,
   `TransactionEditFocusTarget.{Amount,Rate,Received}`, actions `FocusAmount/FocusRate/FocusReceived/
   ResetRate/ChangeRate/ChangeTargetAmount` used identically across use case, both child VMs, parent
   VM, and views.
 - **Removals:** `TransferRateMode.kt`, `CycleTransferRateMode`, `ChangeTransferRate`,
-  `cycleTransferRateMode()`, `RateModePill`, `fetchRate`/`fetchRateIfTransfer` (collector replaces).
-  After T4/T9, `grep -r TransferRateMode src/main` returns nothing.
+  `cycleTransferRateMode()`, `RateModePill`, `fetchRate`/`fetchRateIfTransfer`,
+  `TransactionEditRateTextField`. After T4/T9, `grep -r TransferRateMode src/main` is empty.
 - **Derivation placement:** `convertedAmountText` formatted in the use case; `needsFx`/`showRate`
-  and currency lookups are trivial joins in the VM mapping; ViewProviders only read — satisfies
-  `ViewProviderDerivation`.
-- **Open checks for executor:** confirm `ZeroTheme.colors.surfaceContainerLow/surfaceContainer/
-  surface/outline` token names; confirm `AmountFormatter` reaches `DefaultTransactionEditUseCase`;
-  confirm edit-mode load derives a transfer `rate` string from the saved source/target amounts.
+  and currency lookups are trivial joins in the VM mapping; ViewProviders only read.
+- **Out of scope (not rate UX):** expense/income hero amount stays (not re-boxed); category picker
+  unchanged; transfer keeps `SelectorCard` dropdowns (no bottom-sheet account picker).
+- **Open checks for executor:** confirm `ZeroTheme.colors` token names; confirm `AmountFormatter`
+  reaches `DefaultTransactionEditUseCase`; confirm edit-mode load derives a transfer rate string.

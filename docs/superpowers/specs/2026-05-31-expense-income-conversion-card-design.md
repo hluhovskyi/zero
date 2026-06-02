@@ -1,107 +1,115 @@
-# Transaction-edit currency-exchange UX — ConversionCard + live-linked transfer
+# Transaction-edit currency-exchange UX — unified Exchange-rate field
 
 ## Goal
 
 Rework the foreign-exchange UX on the transaction edit screen to match the Claude Design
-`ui_kits/zero/index.html` (`AddTransactionSheet`):
+`ui_kits/zero/index.html` (`AddTransactionSheet`). The design consolidates the rate UX into a
+single shared boxed component — `RateFieldRow` (label **"Exchange rate"**) — used by both modes:
 
-- **Expense / Income** — replace the plain `OutlinedTextField` rate field with the design's
-  **ConversionCard** (simple mode): a live "converts to" preview plus an inline-keypad-editable
-  rate pill with an auto-derived default and a reset affordance.
-- **Transfer** — replace the current three-mode rate pill (`Default` / `CustomRate` /
-  `CustomAmount` cycling) with the design's **live-linked fields**: side-by-side
-  **"You send" / "You get"** amount fields and a **rate connector** pill between them; editing any
-  one of {send, rate, receive} keeps the other two consistent. Auto rate by default with reset.
+- **Expense / Income** — replace the plain `OutlinedTextField` rate field with the
+  Exchange-rate tile: a tappable rate row (`1 {srcSym} = {rate} {dstSym}`, auto default + Reset),
+  plus a second line below a divider showing the converted total
+  (`Converts to · {account currency} ≈ {sym}{amount}`).
+- **Transfer** — replace the current 3-mode rate pill (`Default` / `CustomRate` / `CustomAmount`
+  cycling) with side-by-side **"From amount" / "To amount"** fields and the same Exchange-rate tile
+  (without the converted line) below them; editing any one of {from, rate, to} keeps the other two
+  consistent. Auto rate by default with reset.
 
-Both modes are driven by the existing inline `AmountKeypad`, which edits whichever field is
-focused.
+Both modes are driven by the existing inline `AmountKeypad`, which edits whichever field is focused
+(`Amount` / `Rate` / `Received`).
 
-The design also defines a `transfer` variant of `ConversionCard`, but `AddTransactionSheet`
-renders `TransferBlock` (the dual-field layout) — the `ConversionCard` transfer branch is dead
-code. We implement `TransferBlock`.
+The design file still defines older `ConversionCard` / transfer-variant branches, but
+`AddTransactionSheet` renders `AmountField` + `RateFieldRow` + `TransferBlock` — those are the live
+components; the rest is dead code.
 
-## Out of scope
+## Out of scope (not the rate UX)
 
 - Re-boxing the expense/income hero amount into the design's `AmountField` chip — the existing
-  pinned `AmountDisplay` stays for expense/income. (The transfer amount *does* move into the block,
-  because transfer has two amounts.)
-- Currency picker behaviour, category row, notes — unchanged.
-- Saved-transaction persistence format — unchanged.
+  pinned `AmountDisplay` stays for expense/income. (Transfer *does* get the boxed From/To amount
+  fields, because transfer has two amounts and no pinned hero.)
+- The design's new category picker (`CategoryFieldRow` + quick chips) — unchanged.
+- The design's bottom-sheet account picker — transfer keeps the existing `SelectorCard` dropdown
+  on the From/To tiles.
+- Currency picker behaviour, notes, saved-transaction persistence format — unchanged.
 
 ## Shared model
 
-- **`TransactionEditFocusTarget`** — new enum `{ Amount, Rate, Received }`. Identifies which field
-  the inline keypad drives. Expense/income use `Amount`/`Rate`; transfer uses all three; `Received`
-  is transfer-only.
-- The rate is a `String` plus a `rateAuto: Boolean`, on the shared `TransactionEditUseCase` (single
+- **`TransactionEditFocusTarget`** — new enum `{ Amount, Rate, Received }`: which field the inline
+  keypad drives. Expense/income use `Amount`/`Rate`; transfer uses all three.
+- The rate is a `String` + `rateAuto: Boolean` on the shared `TransactionEditUseCase` (single
   source of truth for parent + child VMs). Auto-derived from the active currency pair via
-  `CurrencyConvertUseCase.getRate` by a single reactive collector in `attach()`:
+  `CurrencyConvertUseCase.getRate` by one reactive collector in `attach()`:
   - expense/income pair = (`selectedCurrency.id`, `selectedAccount.currencyId`)
   - transfer pair = (`selectedAccount.currencyId`, `selectedTargetAccount.currencyId`)
 
   When `rateAuto` and the pair differs, it sets the formatted rate (and, for transfer, recomputes
   the received amount).
-- **Actions** (shared): `ChangeAmount`, `ChangeRate` (sets `rateAuto = false`), `ResetRate`
-  (re-derive + `rateAuto = true`), `FocusAmount`, `FocusRate`. Transfer adds `FocusReceived` and
-  reuses `ChangeTargetAmount` as the "received" edit. Account/currency selection and swap set
-  `rateAuto = true` and `editTarget = Amount`; the reactive collector recomputes.
+- **Actions** (shared): `ChangeAmount`, `ChangeRate` (sets `rateAuto = false`), `ChangeTargetAmount`
+  (transfer "received" edit), `ResetRate` (re-derive + `rateAuto = true`), `FocusAmount`,
+  `FocusRate`, `FocusReceived`. Account/currency selection and swap set `rateAuto = true` and
+  `editTarget = Amount`; the collector recomputes.
 - **Live-linking (transfer only), 2-dp rounding:**
   - `ChangeAmount(v)` → `received = v × rate`
   - `ChangeRate(v)` → `received = amount × v`, `rateAuto = false`
   - `ChangeTargetAmount(v)` → `amount = v ÷ rate` (when `rate > 0`)
-  - `ResetRate` → `rate = derived`, `received = amount × rate`
+  - `ResetRate` → re-derive rate, `received = amount × rate`
 
-## Expense/Income — ConversionCard (simple mode)
+## Shared composable — `TransactionEditRateField`
 
-Same as the prior spec revision. Shown when `selectedCurrency.id != selectedAccount.currencyId`:
+One boxed tile (replaces the prior separate ConversionCard / RateConnector). Token usage models the
+existing transfer `RateModePill`.
 
-- **Header:** `CONVERTS TO {account currency name}` + `≈ {acctSymbol}{converted}` where
-  `converted = amount × rate`, formatted by `AmountFormatter` in the UseCase (so VM/ViewProvider do
-  no derivation, per zero-core `ViewProviderDerivation`).
-- **Editable rate pill:** `1 {txSymbol} = {rate} {acctSymbol}`, focus border + caret when
-  `editTarget == Rate`. Trailing **Reset** (refresh) once manual, else a subtle **Edit** (pencil)
-  hint.
+- Container: `surfaceLow` rounded box; `surface` fill + `1.5dp primaryContainer` border when focused.
+- Top row: `EXCHANGE RATE` label (left) and the rate group (right):
+  `1{srcSym} = {rate} {dstSym}` with a caret when focused, then **Reset** (refresh) once manual or a
+  subtle **pencil** when auto.
+- Optional second line (expense/income only), above a `surfaceContainer` divider:
+  `Converts to · {accountCurrencyName}` (left) + `≈ {dstSym}{convertedAmount}` (right).
+- Tapping the tile emits `FocusRate`; tapping Reset emits `ResetRate`.
 
-Composable `TransactionEditConversionCard` replaces `TransactionEditRateTextField` (deleted).
+The converted string is formatted in the use case (`AmountFormatter`) so the VM/ViewProvider do no
+derivation (zero-core `ViewProviderDerivation`).
 
-## Transfer — TransferBlock (live-linked)
+## Expense/Income
+
+Shown when `selectedCurrency.id != selectedAccount.currencyId`: render `TransactionEditRateField`
+with the converted line. Deletes `TransactionEditRateTextField`. Hero amount unchanged.
+
+## Transfer
 
 Replaces `RateModePill` + `AccountSelectorsWithSwap`. `TransferRateMode` and its actions
-(`CycleTransferRateMode`, `ChangeTransferRate`) and file are removed; the use case now keeps
-`amount`, `targetAmount`, `rate`, `rateAuto`, `editTarget` on `State.Transfer`.
+(`CycleTransferRateMode`, `ChangeTransferRate`) and file are removed; `State.Transfer` now keeps
+`amount`, `targetAmount`, `rate`, `rateAuto`, `editTarget`.
 
-- **Currencies differ:** Row of two `TransactionEditAmountField`s — **You send** (source symbol,
-  `amount`) and **You get** (target symbol, `targetAmount`) — each tappable to focus; a
-  `TransactionEditRateConnector` pill below (`1 {srcSym} = {rate} {dstSym}`, focus border + caret
-  when `editTarget == Rate`, Reset/Edit trailing).
+- **Currencies differ:** Row of two `TransactionEditAmountField`s — **From amount** (source symbol,
+  `amount`) and **To amount** (target symbol, `targetAmount`) — each tappable to focus; the
+  `TransactionEditRateField` (no converted line) below.
 - **Currencies match:** a single **Amount** `TransactionEditAmountField`.
-- **Account row (constant):** `From` tile + swap button + `To` tile (reuse `SelectorCard` styled as
-  the From/To tiles with a centered swap, as today; lay them out horizontally per the design).
+- **Account row (constant):** `From` tile + a narrow vertical swap bar + `To` tile (reuse
+  `SelectorCard`, laid out horizontally).
 - Date picker below.
 
-New composables: `TransactionEditAmountField` (in `common`, boxed caption + currency symbol +
-right-aligned value + focus caret) and `TransactionEditRateConnector` (transfer package). Model
-token usage after the existing `RateModePill` / `AmountDisplay`.
+New composables: `TransactionEditAmountField` (boxed caption + currency symbol + right-aligned value
++ focus caret) and `TransactionEditRateField` (shared, in `common`).
 
 ## Parent screen wiring
 
 `TransactionEditViewProvider`:
-- Hide the pinned `AmountDisplay` when `selectedTransactionType == TRANSFER` (the block owns the
-  transfer amounts).
-- Route the inline keypad by `editTarget`: value/onChange switch between `amount`/`ChangeAmount`,
-  `rate`/`ChangeRate` (6 decimals), and `targetAmount`/`ChangeTargetAmount`.
-- Tapping the expense/income hero amount sends `FocusAmount`.
+- Hide the pinned `AmountDisplay` when `selectedTransactionType == TRANSFER`.
+- Route the inline keypad by `editTarget`: `amount`/`ChangeAmount`, `rate`/`ChangeRate` (6 decimals),
+  `targetAmount`/`ChangeTargetAmount`. Keep the keypad visible on transfer (no hero to tap).
+- Tapping the expense/income hero amount emits `FocusAmount`.
 
-`TransactionEditViewModel.State` gains `rate`, `targetAmount`, `editTarget` (Transfer maps real
-values; expense/income maps `rate`/`editTarget`, `targetAmount = ""`). New parent actions
+`TransactionEditViewModel.State` gains `rate`, `targetAmount`, `editTarget`. New parent actions
 `ChangeRate`, `ChangeTargetAmount`, `FocusAmount`.
 
 ## Testing
 
 - `AmountKeypadTest`: 6-decimal cap accepts a 6th decimal, rejects a 7th; 2-dp default unchanged.
 - `android-ui-inspector`:
-  - Expense with differing currencies → ConversionCard renders, keypad edits the rate (pill caret +
-    live "Converts to"), Reset restores the auto rate, tapping amount returns focus to amount.
-  - Transfer with differing-currency accounts → You send / You get + rate connector; editing send
-    updates get, editing get back-computes send, editing rate updates get and shows Reset; same-
-    currency accounts show a single Amount field.
+  - Expense, currencies differ → Exchange-rate tile renders (rate row + Converts-to line); keypad
+    edits the rate (caret, 6 dp, converted updates), Reset restores auto, tapping amount returns
+    focus to amount. Same-currency hides the tile.
+  - Transfer, differing-currency accounts → From amount / To amount + Exchange-rate tile; editing
+    From updates To, editing To back-computes From, editing rate updates To and shows Reset; swap
+    stays consistent; same-currency accounts show a single Amount field.
