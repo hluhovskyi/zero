@@ -105,6 +105,7 @@ private fun TransactionEditTransferView(
                 currencySymbol = state.sourceCurrencySymbol,
                 value = state.amount,
                 focused = true,
+                hero = true,
                 onFocus = { viewModel.perform(TransactionEditTransferViewModel.Action.FocusAmount) },
             )
         }
