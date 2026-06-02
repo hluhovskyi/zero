@@ -49,7 +49,7 @@ import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAmountField
+import com.hluhovskyi.zero.ui.AmountField
 import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
@@ -199,7 +199,7 @@ private fun TransactionEditView(
         // ── Pinned: amount (tap to focus → keypad shows). Hidden on transfer, which renders its
         // own From/To amount fields in the scrolling form. ──
         if (state.selectedTransactionType != TransactionEditType.TRANSFER) {
-            TransactionEditAmountField(
+            AmountField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)

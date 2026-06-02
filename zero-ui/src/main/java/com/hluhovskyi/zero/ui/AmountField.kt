@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.edit.common
+package com.hluhovskyi.zero.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,13 +26,14 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
- * Boxed amount tile. [hero] = big figure, no border (caret only). Split (default) = medium figure,
- * focus background + border. Read-only display — the inline keypad supplies edits via the parent.
- * When [onCurrencyClick] is set the currency renders as a tappable chip (expense/income), otherwise
- * a static symbol (transfer).
+ * Boxed amount tile driven by an external keypad (read-only display). [hero] = big figure, no
+ * border (caret only); split (default) = medium figure, focus background + border. When
+ * [onCurrencyClick] is set the currency renders as a tappable chip, otherwise a static symbol.
+ *
+ * Companion to [AmountKeypad]/[AmountDisplay]: the keypad supplies edits, this shows the value.
  */
 @Composable
-internal fun TransactionEditAmountField(
+fun AmountField(
     modifier: Modifier = Modifier,
     caption: String,
     currencySymbol: String,

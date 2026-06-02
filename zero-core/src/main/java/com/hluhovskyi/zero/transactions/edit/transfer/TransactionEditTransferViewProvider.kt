@@ -28,8 +28,8 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransactionEditFocusTarget
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditAmountField
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateField
+import com.hluhovskyi.zero.ui.AmountField
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
@@ -67,7 +67,7 @@ private fun TransactionEditTransferView(
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                TransactionEditAmountField(
+                AmountField(
                     modifier = Modifier.weight(1f),
                     caption = stringResource(R.string.transfer_edit_from_amount),
                     currencySymbol = state.sourceCurrencySymbol,
@@ -75,7 +75,7 @@ private fun TransactionEditTransferView(
                     focused = state.editTarget == TransactionEditFocusTarget.Amount,
                     onFocus = { viewModel.perform(TransactionEditTransferViewModel.Action.FocusAmount) },
                 )
-                TransactionEditAmountField(
+                AmountField(
                     modifier = Modifier.weight(1f),
                     caption = stringResource(R.string.transfer_edit_to_amount),
                     currencySymbol = state.targetCurrencySymbol,
@@ -97,7 +97,7 @@ private fun TransactionEditTransferView(
                 onReset = { viewModel.perform(TransactionEditTransferViewModel.Action.ResetRate) },
             )
         } else {
-            TransactionEditAmountField(
+            AmountField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
