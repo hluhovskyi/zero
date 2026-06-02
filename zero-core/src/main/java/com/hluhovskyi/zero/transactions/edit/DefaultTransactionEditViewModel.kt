@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 internal class DefaultTransactionEditViewModel(
     private val useCase: TransactionEditUseCase,
@@ -192,7 +191,8 @@ internal class DefaultTransactionEditViewModel(
             is TransactionEditUseCase.State.Expense -> currenciesDiffer(selectedCurrency, selectedAccount)
             is TransactionEditUseCase.State.Income -> currenciesDiffer(selectedCurrency, selectedAccount)
             is TransactionEditUseCase.State.Transfer ->
-                selectedAccount != null && selectedTargetAccount != null &&
+                selectedAccount != null &&
+                    selectedTargetAccount != null &&
                     selectedAccount.currencyId != selectedTargetAccount.currencyId
         }
 

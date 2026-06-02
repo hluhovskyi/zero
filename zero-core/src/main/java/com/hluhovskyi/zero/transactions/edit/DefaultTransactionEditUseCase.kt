@@ -533,12 +533,11 @@ internal class DefaultTransactionEditUseCase(
 
     private data class RateKey(val pair: Pair<Id.Known?, Id.Known?>, val auto: Boolean)
 
-    private fun CompositeState.currencyPair(): Pair<Id.Known?, Id.Known?> =
-        if (transactionType == TransactionEditType.TRANSFER) {
-            selectedAccount?.currencyId to selectedTargetAccount?.currencyId
-        } else {
-            selectedCurrency?.id to selectedAccount?.currencyId
-        }
+    private fun CompositeState.currencyPair(): Pair<Id.Known?, Id.Known?> = if (transactionType == TransactionEditType.TRANSFER) {
+        selectedAccount?.currencyId to selectedTargetAccount?.currencyId
+    } else {
+        selectedCurrency?.id to selectedAccount?.currencyId
+    }
 
     private fun selectAccount(action: TransactionEditUseCase.Action.SelectAccount) {
         mutableState.update { state ->
@@ -670,17 +669,15 @@ internal class DefaultTransactionEditUseCase(
         val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
     ) {
         /** Symbol of [account]'s currency, or "" if unresolved. */
-        fun currencySymbolOf(account: TransactionEditAccount?): String =
-            account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
+        fun currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
 
         /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
-        fun receivedFor(from: String, rate: String): String =
-            if (transactionType == TransactionEditType.TRANSFER) {
-                (from.toBigDecimalOrZero() * rate.toBigDecimalOrZero())
-                    .setScale(MONEY_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-            } else {
-                targetAmount
-            }
+        fun receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) {
+            (from.toBigDecimalOrZero() * rate.toBigDecimalOrZero())
+                .setScale(MONEY_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        } else {
+            targetAmount
+        }
     }
 
     private companion object {
