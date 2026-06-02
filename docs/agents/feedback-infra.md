@@ -34,6 +34,8 @@ Deployed from `functions/feedback/`. See `functions/feedback/README.md` for depl
 
 The function decodes the `X-Integrity-Token` via Google's Play Integrity API, validates the three verdicts (`PLAY_RECOGNIZED`, `MEETS_DEVICE_INTEGRITY`, expected package name), then files the GitHub issue server-side using a PAT it owns. The PAT never reaches the AAB.
 
+**Must stay `--allow-unauthenticated`** (`allUsers` → `roles/run.invoker`). The app authenticates with the in-code Play Integrity token, not a Google IAM bearer token. Lock it to IAM and Cloud Run returns a platform **403** (`Empty Authorization header value`) before `index.js` runs — every report fails and the integrity logs stay empty, so it mimics a verdict rejection but isn't one. Play Integrity is the gate; IAM invocation auth must stay open.
+
 **Label naming is server-side.** The request body is `{title, body, type, debug}`. The function builds `labels = ["feedback", TYPE_TO_LABEL[type], ...maybeDebug]` and rejects unknown `type` with 400. To rename a GitHub label (or split one type into multiple labels), change `TYPE_TO_LABEL` in `index.js` and redeploy — no app release needed. The labels named in `TYPE_TO_LABEL` must exist on the issue tracker (`bug`, `idea`, `other`); unknown labels make Octokit's `issues.create` fail and the function returns 502.
 
 ## Debug builds (Play Integrity test devices)

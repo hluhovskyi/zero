@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Pre-push hook installed in agent worktrees. Rejects pushes to master or main.
+# Reads ref updates from stdin in pre-push format:
+#   <local-ref> <local-sha> <remote-ref> <remote-sha>
+set -euo pipefail
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    refs/heads/master|refs/heads/main)
+      echo "agent pre-push: refusing push to $remote_ref" >&2
+      echo "agent sessions must push only feature branches" >&2
+      exit 1
+      ;;
+  esac
+done

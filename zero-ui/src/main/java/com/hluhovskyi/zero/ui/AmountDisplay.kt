@@ -12,11 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -145,11 +144,11 @@ private fun EditableAmount(
         textStyle = TextStyle(
             fontSize = 56.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colors.primary,
+            color = ZeroTheme.colors.primary,
             textAlign = TextAlign.Right,
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        cursorBrush = SolidColor(MaterialTheme.colors.primary),
+        cursorBrush = SolidColor(ZeroTheme.colors.primary),
         singleLine = true,
         decorationBox = { innerTextField ->
             if (textFieldValue.text.isEmpty()) {
@@ -157,7 +156,7 @@ private fun EditableAmount(
                     text = stringResource(R.string.amount_display_placeholder),
                     fontSize = 56.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                    color = ZeroTheme.colors.primary.copy(alpha = 0.3f),
                     textAlign = TextAlign.Right,
                     modifier = Modifier.fillMaxWidth(),
                 )
