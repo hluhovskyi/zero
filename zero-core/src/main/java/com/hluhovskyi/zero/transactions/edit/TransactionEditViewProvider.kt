@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,17 +38,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.common.AttachWithView
-import com.hluhovskyi.zero.common.AttachableViewComponent
-import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.ui.AmountDisplay
+import com.hluhovskyi.zero.transactions.edit.common.ExpenseIncomeForm
+import com.hluhovskyi.zero.transactions.edit.transfer.TransferForm
+import com.hluhovskyi.zero.ui.AmountField
 import com.hluhovskyi.zero.ui.AmountKeypad
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.SegmentedToggle
@@ -56,27 +58,20 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class TransactionEditViewProvider(
     private val viewModel: TransactionEditViewModel,
-    private val expenseIncomeComponent: Buildable<out AttachableViewComponent>,
-    private val transferComponent: Buildable<out AttachableViewComponent>,
+    private val imageLoader: ImageLoader,
     private val isNewTransaction: Boolean,
 ) : ViewProvider {
 
     @Composable
     override fun View() {
-        TransactionEditView(
-            viewModel = viewModel,
-            expenseIncomeComponent = expenseIncomeComponent,
-            transferComponent = transferComponent,
-            isNewTransaction = isNewTransaction,
-        )
+        TransactionEditView(viewModel, imageLoader, isNewTransaction)
     }
 }
 
 @Composable
 private fun TransactionEditView(
     viewModel: TransactionEditViewModel,
-    expenseIncomeComponent: Buildable<out AttachableViewComponent>,
-    transferComponent: Buildable<out AttachableViewComponent>,
+    imageLoader: ImageLoader,
     isNewTransaction: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditViewModel.State())
@@ -85,16 +80,19 @@ private fun TransactionEditView(
     val labelIncome = stringResource(R.string.transaction_type_income)
     val labelTransfer = stringResource(R.string.transaction_type_transfer)
 
-    // Keypad opens on tapping the amount; auto-opens for a brand-new transaction.
+    val isTransfer = state.selectedTransactionType == TransactionEditType.TRANSFER
+
+    // Keypad opens on tapping the amount; auto-opens for a new transaction and stays open on
+    // transfer (which has no pinned hero amount to tap).
     var keypadVisible by rememberSaveable { mutableStateOf(isNewTransaction) }
     BackHandler(enabled = keypadVisible) { keypadVisible = false }
+    LaunchedEffect(isTransfer) { if (isTransfer) keypadVisible = true }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ZeroTheme.colors.surface),
     ) {
-        // ── Pinned: header ──
         val title = when (state.headerMode) {
             is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
             is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
@@ -106,70 +104,12 @@ private fun TransactionEditView(
             subtitle = subtitle,
             onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
             trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
-                {
-                    Box {
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = stringResource(R.string.transaction_edit_more_options_description),
-                                tint = ZeroTheme.colors.primaryContainer,
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.ContentCopy,
-                                            contentDescription = null,
-                                            tint = ZeroTheme.colors.onSurface,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.transaction_duplicate),
-                                            color = ZeroTheme.colors.onSurface,
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    viewModel.perform(TransactionEditViewModel.Action.Duplicate)
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Delete,
-                                            contentDescription = null,
-                                            tint = ZeroTheme.colors.error,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.transaction_edit_delete),
-                                            color = ZeroTheme.colors.error,
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    viewModel.perform(TransactionEditViewModel.Action.Delete)
-                                },
-                            )
-                        }
-                    }
-                }
+                { EditMenu(menuExpanded, { menuExpanded = it }, viewModel) }
             } else {
                 null
             },
         )
 
-        // ── Pinned: type toggle ──
         SegmentedToggle(
             modifier = Modifier
                 .fillMaxWidth()
@@ -177,9 +117,7 @@ private fun TransactionEditView(
                 .padding(top = 24.dp),
             items = state.transactionTypes,
             selectedItem = state.selectedTransactionType,
-            onItemSelected = { type ->
-                viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(type))
-            },
+            onItemSelected = { viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(it)) },
             labelMapping = { type ->
                 when (type) {
                     TransactionEditType.EXPENSE -> labelExpense
@@ -189,24 +127,31 @@ private fun TransactionEditView(
             },
         )
 
-        // ── Pinned: amount (tap to focus → keypad shows) ──
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(top = 16.dp, bottom = 8.dp),
-            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-            amount = state.amount,
-            currencySymbol = state.currencySymbol,
-            onClick = { keypadVisible = true },
-            onCurrencyClick = if (state.canPickCurrency) {
-                { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
-            } else {
-                null
-            },
-        )
+        // Pinned hero amount — hidden on transfer (its From/To amounts live in the form).
+        if (!isTransfer) {
+            AmountField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 16.dp, bottom = 8.dp)
+                    .testTag("TransactionEdit.amountField"),
+                caption = stringResource(R.string.transaction_edit_amount_display_label),
+                currencySymbol = state.currencySymbol,
+                value = state.amount,
+                focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
+                hero = true,
+                onFocus = {
+                    keypadVisible = true
+                    viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
+                },
+                onCurrencyClick = if (state.canPickCurrency) {
+                    { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+                } else {
+                    null
+                },
+            )
+        }
 
-        // ── Scrolling: type-specific form + notes ──
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -214,57 +159,21 @@ private fun TransactionEditView(
             contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
         ) {
             item {
-                when (state.selectedTransactionType) {
-                    TransactionEditType.EXPENSE,
-                    TransactionEditType.INCOME,
-                    -> expenseIncomeComponent.AttachWithView()
-                    TransactionEditType.TRANSFER -> transferComponent.AttachWithView()
+                // Its own distinct flow so the form recomposes only on form changes, not on every
+                // header/amount/keypad emission.
+                val form by viewModel.form.collectAsState(
+                    initial = TransactionEditViewModel.Form.ExpenseIncome(),
+                )
+                when (val current = form) {
+                    is TransactionEditViewModel.Form.ExpenseIncome ->
+                        ExpenseIncomeForm(current, imageLoader, viewModel::perform)
+                    is TransactionEditViewModel.Form.Transfer ->
+                        TransferForm(current, viewModel::perform)
                 }
             }
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 16.dp)
-                        .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.transaction_notes_label).uppercase(),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZeroTheme.colors.onSurfaceVariant,
-                        letterSpacing = 1.5.sp,
-                    )
-                    BasicTextField(
-                        value = state.notes,
-                        onValueChange = { notes ->
-                            viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(notes))
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        textStyle = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ZeroTheme.colors.onSurface,
-                        ),
-                        decorationBox = { innerTextField ->
-                            if (state.notes.isEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.transaction_notes_hint),
-                                    fontSize = 15.sp,
-                                    color = ZeroTheme.colors.onSurfaceVariant,
-                                )
-                            }
-                            innerTextField()
-                        },
-                    )
-                }
-            }
+            item { NotesField(state.notes, viewModel) }
         }
 
-        // ── Pinned: FAB on top of keypad ──
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -280,16 +189,127 @@ private fun TransactionEditView(
                 text = stringResource(R.string.transaction_edit_save),
             )
             AnimatedVisibility(visible = keypadVisible) {
+                val target = state.keypadTarget
                 AmountKeypad(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(ZeroTheme.colors.surfaceContainerLow)
                         .padding(horizontal = 8.dp, vertical = 8.dp),
-                    value = state.amount,
-                    onChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it)) },
+                    value = when (target) {
+                        TransactionEditFocusTarget.Rate -> state.rate
+                        TransactionEditFocusTarget.Received -> state.targetAmount
+                        TransactionEditFocusTarget.Amount -> state.amount
+                    },
+                    onChange = {
+                        when (target) {
+                            TransactionEditFocusTarget.Rate ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
+                            TransactionEditFocusTarget.Received ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
+                            TransactionEditFocusTarget.Amount ->
+                                viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
+                        }
+                    },
+                    maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
                     keyHeight = 58.dp,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun EditMenu(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    viewModel: TransactionEditViewModel,
+) {
+    Box {
+        IconButton(onClick = { onExpandedChange(true) }) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.transaction_edit_more_options_description),
+                tint = ZeroTheme.colors.primaryContainer,
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentCopy,
+                            contentDescription = null,
+                            tint = ZeroTheme.colors.onSurface,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.transaction_duplicate), color = ZeroTheme.colors.onSurface)
+                    }
+                },
+                onClick = {
+                    onExpandedChange(false)
+                    viewModel.perform(TransactionEditViewModel.Action.Duplicate)
+                },
+            )
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            tint = ZeroTheme.colors.error,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.transaction_edit_delete), color = ZeroTheme.colors.error)
+                    }
+                },
+                onClick = {
+                    onExpandedChange(false)
+                    viewModel.perform(TransactionEditViewModel.Action.Delete)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotesField(notes: String, viewModel: TransactionEditViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 16.dp)
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.transaction_notes_label).uppercase(),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = ZeroTheme.colors.onSurfaceVariant,
+            letterSpacing = 1.5.sp,
+        )
+        BasicTextField(
+            value = notes,
+            onValueChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = TextStyle(
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ZeroTheme.colors.onSurface,
+            ),
+            decorationBox = { innerTextField ->
+                if (notes.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.transaction_notes_hint),
+                        fontSize = 15.sp,
+                        color = ZeroTheme.colors.onSurfaceVariant,
+                    )
+                }
+                innerTextField()
+            },
+        )
     }
 }
