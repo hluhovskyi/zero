@@ -34,12 +34,16 @@ fi
 set +e
 (
   cd "$WORKTREE"
+  # NOTE: --disallowedTools is variadic and will swallow positional args that follow it.
+  # Use `--` to terminate the variadic list before the prompt, otherwise the prompt is
+  # parsed as another tool pattern and claude exits with "no prompt provided".
   claude -p \
     --no-session-persistence \
     --permission-mode acceptEdits \
     --max-budget-usd 8 \
     --output-format json \
-    --disallowedTools "Bash(git push --force*) Bash(git push --force-with-lease*) Bash(gh pr merge*) Bash(gh repo delete*) Bash(gh repo edit*) Bash(gh release delete*) Bash(rm -rf /*) Bash(rm -rf ~*)" \
+    --disallowedTools "Bash(git push --force*)" "Bash(git push --force-with-lease*)" "Bash(gh pr merge*)" "Bash(gh repo delete*)" "Bash(gh repo edit*)" "Bash(gh release delete*)" "Bash(rm -rf /*)" "Bash(rm -rf ~*)" \
+    -- \
     "/agent-do --issue $N"
 ) >"$RESULT_JSON" 2>"$LOG_FILE"
 EXIT=$?
