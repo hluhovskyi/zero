@@ -28,4 +28,12 @@ interface DatabaseTestBridge {
      * batch-select removal e2e test.
      */
     suspend fun seedExpenses()
+
+    /**
+     * Seeds two accounts in different currencies — "Wallet" (USD) and "Revolut" (EUR) — plus a
+     * bootstrap expense so the app lands on Transactions, not Welcome. Used by the FX e2e tests to
+     * reach the foreign-currency conversion UI (expense currency ≠ account, and cross-currency
+     * transfer) without hand-driving account creation.
+     */
+    suspend fun seedFxAccounts()
 }

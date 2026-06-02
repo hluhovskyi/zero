@@ -28,6 +28,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - `ui/tap-label.sh <label> [--screenshot] [--verify <landmark>]` — tap a node by exact text/content-desc.
 - `ui/verify-screen.sh <landmark>` — re-dump and check a landmark is visible. Exit 0 if found.
 - `ui/open-screen.sh <name>` — pre-baked tap chains to common screens.
+- `ui/screenshot.sh [out-path] [--relaunch <pkg/activity>]` — one call: optionally force-stop + relaunch, wait for the app window, then capture + pull a PNG (default `/tmp/screen.png`). Use instead of inline wait-loops.
 
 ## install-app.sh — APK install (replaces `installDebug`)
 
@@ -57,3 +58,5 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - **Don't use `./gradlew installDebug`.** Use `./scripts/install-app.sh` instead. The hook will deny `installDebug`.
 - **Fail loud.** Scripts that swallow stderr/exit codes turn into silent no-ops; surface the actual adb / curl / gradle error.
 - **One responsibility per script.** If you reach for `&&`/`;` to chain unrelated work, write a second script instead.
+- **Capture screenshots and waits via `ui/screenshot.sh`, never inline `until …; do sleep; done` loops.** A wait-loop's leading token is `until`, so it bypasses the `ui/*` allow-list and prompts on every call — and foreground `sleep` is blocked anyway. The script waits internally in one allow-listed call.
+- **Allowlist project scripts in global `~/.claude/settings.json`, not the worktree's `.claude/settings.json`.** In a worktree session the worktree copy isn't honored mid-session; a global edit takes effect immediately and spans every worktree, so entries can't go stale per-checkout.

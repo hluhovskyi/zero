@@ -10,6 +10,7 @@ import kotlinx.datetime.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DefaultFeedbackViewModelTest {
@@ -111,7 +112,7 @@ class DefaultFeedbackViewModelTest {
     }
 
     @Test
-    fun `Success invokes handler and clears submitting`() = runTest {
+    fun `Success shows confirmation, clears submitting, and does not invoke handler`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
         val handler = RecordingSubmittedHandler()
@@ -122,10 +123,26 @@ class DefaultFeedbackViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, service.callCount)
-        assertEquals(1, handler.callCount)
+        assertEquals(0, handler.callCount)
         val state = viewModel.state.first()
         assertFalse(state.isSubmitting)
+        assertTrue(state.submitted)
         assertNull(state.errorMessage)
+    }
+
+    @Test
+    fun `Done after successful submit invokes submitted handler`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val handler = RecordingSubmittedHandler()
+        val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
+
+        viewModel.perform(FeedbackViewModel.Action.UpdateDescription("description"))
+        viewModel.perform(FeedbackViewModel.Action.Submit)
+        advanceUntilIdle()
+        viewModel.perform(FeedbackViewModel.Action.Done)
+
+        assertEquals(1, handler.callCount)
     }
 
     @Test

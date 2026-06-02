@@ -8,6 +8,7 @@ interface FeedbackViewModel : AttachableActionStateModel<FeedbackViewModel.Actio
         data class UpdateDescription(val text: String) : Action
         data class SelectType(val type: FeedbackType) : Action
         object Submit : Action
+        object Done : Action
         object Close : Action
     }
 
@@ -15,6 +16,7 @@ interface FeedbackViewModel : AttachableActionStateModel<FeedbackViewModel.Actio
         val description: String = "",
         val type: FeedbackType = FeedbackType.Bug,
         val isSubmitting: Boolean = false,
+        val submitted: Boolean = false,
         val deviceInfoPreview: String = "",
         val errorMessage: String? = null,
     )
