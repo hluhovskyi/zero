@@ -8,15 +8,18 @@ import kotlinx.coroutines.flow.firstOrNull
 /** Resolves a saved transaction into the initial edit state (for edit and duplicate flows). */
 internal interface TransactionEditLoader {
 
+    /** Loads the saved transaction [id], or null (and reports) if it can't be resolved. */
+    suspend fun fetch(id: Id.Known): TransactionRepository.Transaction?
+
     /**
-     * Loads the transaction [id] and seeds it onto [state] (whose reference data is already loaded).
-     * Returns the seeded state, or null if the transaction can't be resolved.
+     * Seeds [transaction] onto [state] (whose reference data is already loaded). Pure, so the caller
+     * can apply it inside an atomic `MutableStateFlow.update {}`.
      */
-    suspend fun load(
-        id: Id.Known,
-        isDuplicate: Boolean,
+    fun seed(
         state: TransactionEditState,
-    ): TransactionEditState?
+        transaction: TransactionRepository.Transaction,
+        isDuplicate: Boolean,
+    ): TransactionEditState
 }
 
 internal class DefaultTransactionEditLoader(
@@ -24,31 +27,23 @@ internal class DefaultTransactionEditLoader(
     private val incorrectStateDetector: IncorrectStateDetector,
 ) : TransactionEditLoader {
 
-    override suspend fun load(
-        id: Id.Known,
-        isDuplicate: Boolean,
-        state: TransactionEditState,
-    ): TransactionEditState? {
+    override suspend fun fetch(id: Id.Known): TransactionRepository.Transaction? {
         val transaction = transactionRepository
             .query(TransactionRepository.Criteria.ById(id))
             .firstOrNull()
-
-        var seeded: TransactionEditState? = null
-        incorrectStateDetector.asyncRequireNonNull(
-            value = transaction,
-            message = "Transaction is not resolved with id=$id",
-        ) { resolved ->
-            seeded = state.seededFrom(resolved, isDuplicate)
+        if (transaction == null) {
+            incorrectStateDetector.assert("Transaction is not resolved with id=$id")
         }
-        return seeded
+        return transaction
     }
 
-    private fun TransactionEditState.seededFrom(
+    override fun seed(
+        state: TransactionEditState,
         transaction: TransactionRepository.Transaction,
         isDuplicate: Boolean,
     ): TransactionEditState {
-        val account = accounts.firstOrNull { it.id == transaction.accountId }
-        val currency = currencies.firstOrNull { it.id == transaction.currencyId }
+        val account = state.accounts.firstOrNull { it.id == transaction.accountId }
+        val currency = state.currencies.firstOrNull { it.id == transaction.currencyId }
         val snapshot = if (isDuplicate) {
             TransactionEditUseCase.SourceSnapshot(
                 amount = transaction.amount.value.toString(),
@@ -58,10 +53,10 @@ internal class DefaultTransactionEditLoader(
         } else {
             null
         }
-        val base = copy(
+        val base = state.copy(
             amount = transaction.amount.value.toString(),
-            selectedAccount = account ?: selectedAccount,
-            selectedCurrency = currency ?: selectedCurrency,
+            selectedAccount = account ?: state.selectedAccount,
+            selectedCurrency = currency ?: state.selectedCurrency,
             localDateTime = transaction.dateTime,
             notes = transaction.notes.orEmpty(),
             rateAuto = false,
@@ -79,7 +74,7 @@ internal class DefaultTransactionEditLoader(
                 val toAmount = transaction.targetAmount.value.toString()
                 base.copy(
                     transactionType = TransactionEditType.TRANSFER,
-                    selectedTargetAccount = accounts.firstOrNull { it.id == transaction.targetAccount },
+                    selectedTargetAccount = state.accounts.firstOrNull { it.id == transaction.targetAccount },
                     targetAmount = toAmount,
                     rate = rateFromAmounts(base.amount, toAmount) ?: "1",
                 )

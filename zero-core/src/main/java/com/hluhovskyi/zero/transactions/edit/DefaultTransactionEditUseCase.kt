@@ -252,8 +252,8 @@ internal class DefaultTransactionEditUseCase(
             if (loadFromId != null) {
                 launch {
                     awaitReferenceData()
-                    loader.load(loadFromId, duplicateFromTransactionId is Id.Known, mutableState.value)
-                        ?.let { mutableState.value = it }
+                    val transaction = loader.fetch(loadFromId) ?: return@launch
+                    mutableState.update { loader.seed(it, transaction, duplicateFromTransactionId is Id.Known) }
                 }
             }
 
