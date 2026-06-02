@@ -50,7 +50,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - `fetch-design.sh` — fetches Claude Design HTML for the `fetch-design` skill.
 - `guard-branch-switch.sh` — PreToolUse hook that blocks branch switches on master.
 - `guard-adb.sh` — PreToolUse hook that blocks bare `adb` / `installDebug`.
-- `guard-wait-loops.sh` — PreToolUse hook that blocks inline `until`/`while` + `sleep` poll-loops.
+- `guard-wait-loops.sh` — **experimental** PreToolUse hook that blocks inline `until`/`while` + `sleep` poll-loops. Blunt keyword match; its deny message asks the agent to report misfires so it can be dropped if it proves more annoying than useful.
 - `lib/emulator.py` — shared helpers for the Python orchestrator scripts (lock, adb-devices, worktree scan).
 
 ## Rules
