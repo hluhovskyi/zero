@@ -54,26 +54,33 @@ State machine (from spec):
 
 ```
 .claude/plugins/zero-project/skills/
-├── agent-pr-watch -> ../../../../skills/agent-pr-watch     (NEW symlink)
-├── agent-pr-fix   -> ../../../../skills/agent-pr-fix       (NEW symlink)
+├── agent-pr-watch   -> ../../../../skills/agent-pr-watch     (NEW symlink)
+├── agent-pr-fix     -> ../../../../skills/agent-pr-fix       (NEW symlink)
+├── agent-pr-verify  -> ../../../../skills/agent-pr-verify    (NEW symlink)
 skills/
-├── agent-do/SKILL.md                                       (MODIFIED — verify step + spotless)
-├── agent-pr-watch/SKILL.md                                 (NEW)
-└── agent-pr-fix/SKILL.md                                   (NEW)
+├── agent-do/SKILL.md                                         (MODIFIED — spotless + inspector verify step)
+├── agent-pr-watch/SKILL.md                                   (NEW)
+├── agent-pr-fix/SKILL.md                                     (NEW)
+└── agent-pr-verify/SKILL.md                                  (NEW — uses /android-ui-inspector)
 scripts/agent/
-├── watch-prs.sh                                            (NEW)
-├── spawn-fix-session.sh                                    (NEW)
-├── verify-pr.sh                                            (NEW — shared by watcher and executor)
-├── setup-labels.sh                                         (MODIFIED — add 2 labels)
-├── SMOKE-TEST.md                                           (MODIFIED — 7 new tests)
+├── watch-prs.sh                                              (NEW)
+├── spawn-fix-session.sh                                      (NEW)
+├── spawn-verify-session.sh                                   (NEW)
+├── setup-labels.sh                                           (MODIFIED — add 2 labels)
+├── SMOKE-TEST.md                                             (MODIFIED — 7 new tests)
 └── tests/
-    ├── test-pr-classify.sh                                 (NEW)
+    ├── test-pr-classify.sh                                   (NEW)
     └── fixtures/
-        ├── pr-behind.json                                  (NEW)
-        ├── pr-ci-failing.json                              (NEW)
-        ├── pr-verified-approved.json                       (NEW)
-        └── pr-verified-no-approval.json                    (NEW)
+        ├── pr-behind.json                                    (NEW)
+        ├── pr-ci-failing.json                                (NEW)
+        ├── pr-verified-approved.json                         (NEW)
+        └── pr-verified-no-approval.json                      (NEW)
 ```
+
+Note: `verify-pr.sh` from the earlier draft is dropped — verification is a
+model-driven sub-session because `/android-ui-inspector` requires reasoning.
+What stays as pure bash: emulator acquire/release, APK install, screencap pull,
+PR comment + label apply.
 
 ## Task list
 
@@ -103,20 +110,35 @@ Each fixture is a saved `gh pr view --json ...` output for one of the states. Te
 
 Run: `bash scripts/agent/tests/test-pr-classify.sh` — all green.
 
-### Task 3 — Shared verify-pr.sh script
+### Task 3 — Verify-session skill + spawn wrapper
 
-**Create:** `scripts/agent/verify-pr.sh`
+**Create:** `skills/agent-pr-verify/SKILL.md`
 
-Usage: `verify-pr.sh <pr-number> <worktree-path>`
+Spawned by watcher (and used inline by executor's step 4.5). Invoked as
+`/agent-pr-verify --issue <N> --pr <PR>`. Steps the model performs:
 
-Steps:
-1. Acquire emulator via `./scripts/emulator/acquire`. If fails, exit non-zero with code 75 ("temp unavailable").
-2. Build + install debug APK from the worktree.
-3. Launch app via `./scripts/ui/adb` shell start.
-4. Take a screenshot via `./scripts/ui/adb shell screencap -p /sdcard/agent-verify-$N.png` then `adb pull`.
-5. Return the screenshot path on stdout.
+1. Acquire emulator via `./scripts/emulator/acquire` (exit 75 on busy).
+2. Build + install debug APK from the current worktree.
+3. Launch the app.
+4. Invoke `/android-ui-inspector` to navigate to the screen the issue describes.
+   Use bounds-based taps; do not guess coordinates from screenshots.
+5. Reproduce the scenario the issue mentions (e.g., open category detail after
+   adding a transaction; trigger transfer dialog; etc.).
+6. Take a screenshot via `./scripts/ui/adb shell screencap -p /sdcard/...`
+   then `adb pull`.
+7. Emit a one-paragraph verdict to stdout including the screenshot path and the
+   resource IDs / class names from the inspector dump that prove the fix.
+8. Exit 0 if the bug is gone, exit 2 if it's still present, exit 75 if emulator
+   unavailable. Any other non-zero is treated as a real failure.
 
-This script does NOT post comments or apply labels — that's the caller's job. Keeps it reusable.
+**Create:** `scripts/agent/spawn-verify-session.sh`
+
+Same shape as `spawn-fix-session.sh` (see Task 5): reuses the existing
+`.claude/worktrees/issue-<N>` worktree, applies sandbox flags, captures stdout
+to `.agent-state/verify-<PR>.verdict`. Returns the exit code unchanged so the
+watcher can distinguish exit-75 (retry) from exit-2 (counts against the cap).
+
+Add symlink: `.claude/plugins/zero-project/skills/agent-pr-verify → ../../../../skills/agent-pr-verify`.
 
 ### Task 4 — Watcher script with state machine
 
@@ -130,7 +152,7 @@ Main loop logic:
 4. Dispatch:
    - `behind` → fetch + merge + push
    - `ci-failing` → call `spawn-fix-session.sh <N>`; if returns failure-counter ≥ 3 → apply `agent-blocked` label, comment with stderr tail
-   - `needs-verify` → check if doc-only (skip), otherwise call `verify-pr.sh`, on success apply `agent-verified` label + post screenshot comment
+   - `needs-verify` → check if doc-only (skip), otherwise call `spawn-verify-session.sh`. On exit 0: apply `agent-verified` label + post screenshot/verdict comment. On exit 2: do NOT label, log as a failed verify (counts against 3-attempt cap). On exit 75: exit tick silently, retry next time.
    - `verified-no-approval` → exit silently (nothing to do)
    - `ready-to-merge` → `gh pr ready <N>`; `gh pr merge <N> --squash --auto`; cleanup worktree + branch
 5. Report one line per tick to stdout.
@@ -176,18 +198,21 @@ Mirror of `agent-poll`: thin wrapper that runs `bash scripts/agent/watch-prs.sh`
 
 Add symlink: `.claude/plugins/zero-project/skills/agent-pr-watch → ../../../../skills/agent-pr-watch`.
 
-### Task 8 — Update `/agent-do` with spotless + verify
+### Task 8 — Update `/agent-do` with spotless + inline verify
 
 **Edit:** `skills/agent-do/SKILL.md`
 
 In Step 4:
 - Add `./gradlew spotlessApply` before any commit.
-- After tests pass, before commit, add a Step 4.5 that calls the same `verify-pr.sh` logic (factor out: the executor calls `verify-pr.sh` with its own worktree path).
-- Embed the screenshot path in the PR body draft (Step 5).
 
-Update the verification clause: "If verification fails, exit non-zero. The watcher will mark `agent-blocked`."
+Insert Step 4.5:
+- Invoke `/android-ui-inspector` directly within the same session (no sub-spawn — the executor already has full context).
+- Same 8-step procedure as the verify-session: acquire emulator, install, launch, navigate via inspector bounds, reproduce scenario, screenshot, produce verdict, decide.
+- Embed the screenshot path + verdict in the PR body draft (Step 5).
+- On exit 2 (bug still present) → do NOT open the PR. Exit non-zero so the watcher labels the issue `agent-blocked`.
+- On exit 75 → retry once after 30s; if still busy, exit 75, watcher's next tick handles it.
 
-Skip verification on doc-only PRs (same heuristic as the watcher).
+Skip Step 4.5 on doc-only PRs (every file matches `*.md` under `docs/` or root).
 
 ### Task 9 — Smoke tests + documentation
 

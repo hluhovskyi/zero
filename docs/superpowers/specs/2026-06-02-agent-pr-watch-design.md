@@ -57,13 +57,25 @@ Insert a new step between **Step 4 (Execute)** and **Step 5 (Push and open PR)**
 
 1. Acquire the emulator: `./scripts/emulator/acquire` (flock-safe per PR #223).
 2. Install the debug APK built in step 4.
-3. Launch the app and navigate to the screen the issue describes.
-4. Take a screenshot via `./scripts/ui/adb` wrapper.
-5. **Reason about the screenshot.** Compare what's on screen against what the issue
-   body asked for. If the issue says "dark mode renders icon poorly," look at the
-   icon in dark mode. If the issue says "amount keypad overlaps system keyboard,"
-   trigger that scenario.
-6. Embed the screenshot path and a 1-2 sentence verdict in the PR body.
+3. Launch the app.
+4. Invoke the `/android-ui-inspector` skill to navigate to the screen the issue
+   describes. The inspector is mandatory here, not optional: it dumps the real
+   view hierarchy with bounds, so navigation is driven by actual coordinates of
+   labeled elements instead of guessed taps. This is what makes verification
+   reproducible — a screenshot alone can be misread by the model, but bounded
+   element assertions cannot.
+5. Take a screenshot via the `./scripts/ui/adb` wrapper.
+6. **Reason about the screenshot + the inspector dump.** Compare what's on screen
+   against what the issue body asked for:
+   - "Dark mode renders icon poorly" → switch to dark mode via system settings,
+     re-dump, inspect contrast of the named view bounds.
+   - "Amount keypad overlaps system keyboard" → trigger the scenario, dump the
+     hierarchy, assert the two views don't overlap by bounds.
+   - "Category detail not updating after adding a transaction" → reproduce the
+     flow, dump after each step, assert the relevant text node updates.
+7. Embed the screenshot path and a 1-2 sentence verdict in the PR body. If the
+   verdict references specific elements, include their resource IDs / class
+   names from the inspector dump so a reviewer can re-check.
 
 If verification fails (the bug is still present, or the change broke an unrelated
 flow visible on the same screen), do NOT open a PR. Exit cleanly so the watcher
@@ -72,8 +84,9 @@ labels the issue `agent-blocked`.
 If the issue is a doc-only change (every file in the diff matches `*.md` under
 `docs/` or top-level READMEs), skip verification.
 
-This step uses Bash, not a `claude -p` sub-spawn — the executor session has all
-the context it needs (the issue body, the code it just wrote).
+This step uses Bash + the inspector skill in the same session — not a
+`claude -p` sub-spawn — because the executor session already has the issue body
+and the code it just wrote.
 
 ### Also add to Step 4 — `./gradlew spotlessApply` before any commit.
 
@@ -103,7 +116,7 @@ For each candidate PR, classify and act:
 |-----------|--------|-----------------------------|
 | `BEHIND` master | `git fetch && git merge origin/master`, push | CI re-runs; re-evaluate |
 | CI failing | spawn `claude -p /agent-pr-fix <N>` with stderr tail in the prompt | one fix commit, push |
-| CI green + no `agent-verified` label | acquire emulator, run verification (same shape as executor's step 4.5), apply `agent-verified` label, comment with screenshot | re-evaluate |
+| CI green + no `agent-verified` label | acquire emulator, run verification (same shape as executor's step 4.5 — `/android-ui-inspector` + screenshot + bounded-element verdict), apply `agent-verified` label, comment with screenshot + verdict | re-evaluate |
 | CI green + `agent-verified` + approval signal | `gh pr ready` → `gh pr merge --squash --auto` → cleanup | merged |
 | 3+ consecutive fix attempts failed | `agent-blocked` label + comment, stop | manual review |
 
@@ -133,6 +146,27 @@ Heuristics like "does this touch UI code?" are too easy to fool. Default to
 verify; cost of a wasted emulator run is much smaller than cost of merging a
 broken build.
 
+### Verify session (`/agent-pr-verify <N>`)
+
+Spawned as a `claude -p` process when the watcher needs to re-verify a PR. The
+verify step uses `/android-ui-inspector` for bounded-element assertions, which
+requires model reasoning — pure bash can't drive it. Prompt includes:
+
+- The issue body (treated as untrusted data, same framing as `/agent-do`)
+- The PR diff (so it knows what changed)
+- The standing system prompt: "Acquire emulator, install + launch the debug APK,
+  invoke `/android-ui-inspector` to navigate to the relevant screen, take a
+  screenshot, produce a one-paragraph verdict citing inspector bounds, exit."
+
+Sandbox flags identical to `/agent-do`. Output (verdict + screenshot path) is
+captured by the watcher, which then applies the `agent-verified` label and posts
+the screenshot as a PR comment.
+
+If `claude -p` exits non-zero or the verdict says the bug is still present →
+watcher does NOT apply `agent-verified`. Counts against the 3-attempt cap if
+the failure is "bug still present" (the executor produced a non-fix);
+*not* against the cap if the failure is "emulator unavailable" (exit 75).
+
 ### Fix session (`/agent-pr-fix <N>`)
 
 Spawned as a separate `claude -p` process when CI is failing. Prompt includes:
@@ -154,7 +188,7 @@ attempt. Three in a row → `agent-blocked`.
 | Watcher merges a PR you didn't approve | Hard gate on approval signal (label or review) inside `watch-prs.sh`; no `gh pr merge` without it |
 | Watcher's fix session ships malicious code via prompt injection in CI logs | CI logs are framed as untrusted data in the prompt; sandbox flags identical to executor; pre-push hook blocks master |
 | Concurrent verify steps thrash the emulator | `./scripts/emulator/acquire` is flock-safe; if acquire fails, exit tick, retry next time |
-| Verify gives false positive | Watcher's verify is a second pass after executor's verify; both are stricter than "no crash" — must compare against issue body and produce a verdict |
+| Verify gives false positive | Watcher's verify is a second pass after executor's verify; both use `/android-ui-inspector` for bounded-element assertions (not just "screenshot looks ok"); must compare against issue body and produce a verdict |
 | Babysitter loops forever on flaky CI | 3-attempt cap → `agent-blocked` |
 
 ## Out of scope
