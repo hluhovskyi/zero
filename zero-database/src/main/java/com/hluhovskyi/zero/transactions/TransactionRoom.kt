@@ -202,7 +202,10 @@ internal interface TransactionRoom {
         LEFT JOIN CategoryEntity c ON t.categoryId = c.id AND c.userId = t.userId
         WHERE t.userId = :userId
           AND t.deletedAt IS NULL
-          AND (a.name LIKE :query ESCAPE '\' OR c.name LIKE :query ESCAPE '\')
+          AND (a.name LIKE :query ESCAPE '\'
+               OR c.name LIKE :query ESCAPE '\'
+               OR printf('%.2f', t.amount_value) LIKE :query ESCAPE '\'
+               OR printf('%.2f', t.target_amount_value) LIKE :query ESCAPE '\')
         ORDER BY datetime(t.enteredDateTime) DESC
     """,
     )
