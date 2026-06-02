@@ -83,6 +83,7 @@ internal class DefaultTransactionEditUseCase(
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                     sourceSnapshot = state.sourceSnapshot,
+                    isModified = state.isModified,
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -97,6 +98,7 @@ internal class DefaultTransactionEditUseCase(
                     notes = state.notes,
                     date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                     sourceSnapshot = state.sourceSnapshot,
+                    isModified = state.isModified,
                 )
 
                 TransactionEditType.TRANSFER -> {
@@ -119,6 +121,7 @@ internal class DefaultTransactionEditUseCase(
                         notes = state.notes,
                         date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                         sourceSnapshot = state.sourceSnapshot,
+                        isModified = state.isModified,
                     )
                 }
             }
@@ -126,6 +129,9 @@ internal class DefaultTransactionEditUseCase(
 
     override fun perform(action: TransactionEditUseCase.Action) {
         logger.d("perform=$action")
+        if (action.isUserEdit()) {
+            mutableState.update { state -> state.copy(isModified = true) }
+        }
         when (action) {
             is TransactionEditUseCase.Action.ChangeAmount -> {
                 mutableState.update { state ->
@@ -485,7 +491,11 @@ internal class DefaultTransactionEditUseCase(
                     .collectLatest { picked ->
                         mutableState.update { state ->
                             val category = state.allCategories.firstOrNull { it.id == picked.categoryId }
-                            if (category != null) state.copy(selectedCategory = category) else state
+                            if (category != null) {
+                                state.copy(selectedCategory = category, isModified = true)
+                            } else {
+                                state
+                            }
                         }
                     }
             }
@@ -509,6 +519,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencies = currencies,
                                 manuallyChangedCurrency = true,
                                 selectedCurrency = pickedCurrency,
+                                isModified = true,
                             )
                         }
                     }
@@ -709,6 +720,33 @@ internal class DefaultTransactionEditUseCase(
         .stripTrailingZeros()
         .toPlainString()
 
+    /** Actions that change the form contents, as opposed to navigation/lifecycle actions. */
+    private fun TransactionEditUseCase.Action.isUserEdit(): Boolean = when (this) {
+        is TransactionEditUseCase.Action.SwitchTransaction,
+        is TransactionEditUseCase.Action.SelectAccount,
+        is TransactionEditUseCase.Action.SelectTargetAccount,
+        is TransactionEditUseCase.Action.SelectCurrency,
+        is TransactionEditUseCase.Action.SelectCategory,
+        is TransactionEditUseCase.Action.ChangeAmount,
+        is TransactionEditUseCase.Action.ChangeRate,
+        is TransactionEditUseCase.Action.ChangeDate,
+        is TransactionEditUseCase.Action.ChangeTargetAmount,
+        is TransactionEditUseCase.Action.ChangeTransferRate,
+        is TransactionEditUseCase.Action.CycleTransferRateMode,
+        is TransactionEditUseCase.Action.SwapAccounts,
+        is TransactionEditUseCase.Action.ChangeNotes,
+        -> true
+
+        is TransactionEditUseCase.Action.EditCategories,
+        is TransactionEditUseCase.Action.ShowAllCategories,
+        is TransactionEditUseCase.Action.ShowAllCurrencies,
+        is TransactionEditUseCase.Action.Save,
+        is TransactionEditUseCase.Action.Discard,
+        is TransactionEditUseCase.Action.Delete,
+        is TransactionEditUseCase.Action.Duplicate,
+        -> false
+    }
+
     private data class CompositeState(
         val transactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val accounts: List<TransactionEditAccount> = emptyList(),
@@ -727,5 +765,6 @@ internal class DefaultTransactionEditUseCase(
         val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val notes: String = "",
         val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
+        val isModified: Boolean = false,
     )
 }

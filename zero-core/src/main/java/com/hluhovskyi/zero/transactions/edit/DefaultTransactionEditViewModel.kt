@@ -55,6 +55,9 @@ internal class DefaultTransactionEditViewModel(
                     is TransactionEditUseCase.State.Transfer -> state.sourceCurrencySymbol
                 },
                 canPickCurrency = state !is TransactionEditUseCase.State.Transfer,
+                // Duplicating is a save-a-copy flow, so keep its button available immediately;
+                // for new/edit, only reveal the button once the user actually changes something.
+                isSaveVisible = state.isModified || isDuplicateMode,
             )
         }
 

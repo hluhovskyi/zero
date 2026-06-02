@@ -27,6 +27,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         val amount: String = "",
         val currencySymbol: String = "",
         val canPickCurrency: Boolean = false,
+        val isSaveVisible: Boolean = false,
     )
 
     sealed interface HeaderMode {
