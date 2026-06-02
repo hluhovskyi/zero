@@ -24,9 +24,6 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         object Delete : Action
         object Duplicate : Action
         data class ChangeTargetAmount(val amount: String) : Action
-        object FocusAmount : Action
-        object FocusRate : Action
-        object FocusReceived : Action
         object ResetRate : Action
         object SwapAccounts : Action
         object ShowAllCategories : Action
@@ -38,57 +35,57 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
 
         val amount: String
         val rate: String
-        val editTarget: TransactionEditFocusTarget
+        val rateAuto: Boolean
+        val notes: String
+        val accounts: List<TransactionEditAccount>
+        val selectedAccount: TransactionEditAccount?
+        val currencies: List<TransactionEditCurrency>
         val date: LocalDateTime
         val sourceSnapshot: SourceSnapshot?
 
         data class Expense(
-            val accounts: List<TransactionEditAccount> = emptyList(),
-            val selectedAccount: TransactionEditAccount? = null,
+            override val accounts: List<TransactionEditAccount> = emptyList(),
+            override val selectedAccount: TransactionEditAccount? = null,
             val categories: List<TransactionEditCategory> = emptyList(),
             val selectedCategory: TransactionEditCategory? = null,
-            val currencies: List<TransactionEditCurrency> = emptyList(),
+            override val currencies: List<TransactionEditCurrency> = emptyList(),
             val selectedCurrency: TransactionEditCurrency? = null,
             override val amount: String = "",
             override val rate: String = "",
-            val rateAuto: Boolean = true,
-            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
-            val convertedAmountText: String = "",
-            val notes: String = "",
+            override val rateAuto: Boolean = true,
+            override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
         ) : State
 
         data class Income(
-            val accounts: List<TransactionEditAccount> = emptyList(),
-            val selectedAccount: TransactionEditAccount? = null,
+            override val accounts: List<TransactionEditAccount> = emptyList(),
+            override val selectedAccount: TransactionEditAccount? = null,
             val categories: List<TransactionEditCategory> = emptyList(),
             val selectedCategory: TransactionEditCategory? = null,
-            val currencies: List<TransactionEditCurrency> = emptyList(),
+            override val currencies: List<TransactionEditCurrency> = emptyList(),
             val selectedCurrency: TransactionEditCurrency? = null,
             override val amount: String = "",
             override val rate: String = "",
-            val rateAuto: Boolean = true,
-            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
-            val convertedAmountText: String = "",
-            val notes: String = "",
+            override val rateAuto: Boolean = true,
+            override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
         ) : State
 
         data class Transfer(
-            val accounts: List<TransactionEditAccount> = emptyList(),
-            val selectedAccount: TransactionEditAccount? = null,
+            override val accounts: List<TransactionEditAccount> = emptyList(),
+            override val selectedAccount: TransactionEditAccount? = null,
             val targetAccounts: List<TransactionEditAccount> = emptyList(),
             val selectedTargetAccount: TransactionEditAccount? = null,
             override val amount: String = "",
             val targetAmount: String = "",
             override val rate: String = "",
-            val rateAuto: Boolean = true,
-            override val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
+            override val rateAuto: Boolean = true,
+            override val currencies: List<TransactionEditCurrency> = emptyList(),
             val sourceCurrencySymbol: String = "",
             val targetCurrencySymbol: String = "",
-            val notes: String = "",
+            override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
         ) : State

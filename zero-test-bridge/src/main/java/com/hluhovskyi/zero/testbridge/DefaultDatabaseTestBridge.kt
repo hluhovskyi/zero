@@ -59,82 +59,15 @@ internal class DefaultDatabaseTestBridge(
 
     override suspend fun seedDefaultSetup() {
         currentUserRepository.query().first()
-
-        val iconId = IconRepository.unknownCategoryIconId()
-        val colorId = Id.Known("blue")
-        val currencyId = Id.Known("USD")
-        val accountId = Id.Known("test-account")
-        val categoryId = Id.Known("test-category")
-        val epoch = LocalDateTime(2020, 1, 1, 0, 0)
-
-        accountRepository.insert(
-            AccountRepository.AccountInsert(
-                id = accountId,
-                name = "Wallet",
-                currencyId = currencyId,
-                iconId = iconId,
-                colorId = colorId,
-                initialBalance = Amount(BigDecimal.ZERO),
-                category = AccountCategory.CASH,
-            ),
-        )
-
-        categoryRepository.insert(
-            CategoryRepository.CategoryInsert(
-                id = categoryId,
-                parentCategoryId = Id.Unknown,
-                name = "Food",
-                iconId = iconId,
-                colorId = colorId,
-                type = CategoryType.EXPENSE,
-            ),
-        )
-
-        transactionRepository.insert(
-            TransactionRepository.Transaction.Expense(
-                id = Id.Known("bootstrap"),
-                amount = Amount(BigDecimal.ONE),
-                accountId = accountId,
-                currencyId = currencyId,
-                dateTime = epoch,
-                updatedDateTime = epoch,
-                categoryId = categoryId,
-                rate = Rate.Same,
-            ),
-        )
+        insertWalletAccount()
+        insertFoodCategory()
+        insertBootstrapExpense()
     }
 
     override suspend fun seedExpenses() {
         currentUserRepository.query().first()
-
-        val iconId = IconRepository.unknownCategoryIconId()
-        val colorId = Id.Known("blue")
-        val currencyId = Id.Known("USD")
-        val accountId = Id.Known("test-account")
-        val categoryId = Id.Known("test-category")
-
-        accountRepository.insert(
-            AccountRepository.AccountInsert(
-                id = accountId,
-                name = "Wallet",
-                currencyId = currencyId,
-                iconId = iconId,
-                colorId = colorId,
-                initialBalance = Amount(BigDecimal.ZERO),
-                category = AccountCategory.CASH,
-            ),
-        )
-
-        categoryRepository.insert(
-            CategoryRepository.CategoryInsert(
-                id = categoryId,
-                parentCategoryId = Id.Unknown,
-                name = "Food",
-                iconId = iconId,
-                colorId = colorId,
-                type = CategoryType.EXPENSE,
-            ),
-        )
+        insertWalletAccount()
+        insertFoodCategory()
 
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val noonToday = LocalDateTime(today.year, today.month, today.dayOfMonth, 12, 0)
@@ -143,11 +76,11 @@ internal class DefaultDatabaseTestBridge(
                 TransactionRepository.Transaction.Expense(
                     id = Id.Known(id),
                     amount = Amount(BigDecimal(amount)),
-                    accountId = accountId,
-                    currencyId = currencyId,
+                    accountId = Id.Known("test-account"),
+                    currencyId = Id.Known("USD"),
                     dateTime = noonToday,
                     updatedDateTime = noonToday,
-                    categoryId = categoryId,
+                    categoryId = Id.Known("test-category"),
                     rate = Rate.Same,
                 ),
             )
@@ -156,62 +89,10 @@ internal class DefaultDatabaseTestBridge(
 
     override suspend fun seedFxAccounts() {
         currentUserRepository.query().first()
-
-        val iconId = IconRepository.unknownCategoryIconId()
-        val colorId = Id.Known("blue")
-        val usd = Id.Known("USD")
-        val eur = Id.Known("EUR")
-        val walletId = Id.Known("test-account")
-        val revolutId = Id.Known("test-account-eur")
-        val categoryId = Id.Known("test-category")
-        val epoch = LocalDateTime(2020, 1, 1, 0, 0)
-
-        accountRepository.insert(
-            AccountRepository.AccountInsert(
-                id = walletId,
-                name = "Wallet",
-                currencyId = usd,
-                iconId = iconId,
-                colorId = colorId,
-                initialBalance = Amount(BigDecimal.ZERO),
-                category = AccountCategory.CASH,
-            ),
-        )
-        accountRepository.insert(
-            AccountRepository.AccountInsert(
-                id = revolutId,
-                name = "Revolut",
-                currencyId = eur,
-                iconId = iconId,
-                colorId = colorId,
-                initialBalance = Amount(BigDecimal.ZERO),
-                category = AccountCategory.CASH,
-            ),
-        )
-
-        categoryRepository.insert(
-            CategoryRepository.CategoryInsert(
-                id = categoryId,
-                parentCategoryId = Id.Unknown,
-                name = "Food",
-                iconId = iconId,
-                colorId = colorId,
-                type = CategoryType.EXPENSE,
-            ),
-        )
-
-        transactionRepository.insert(
-            TransactionRepository.Transaction.Expense(
-                id = Id.Known("bootstrap"),
-                amount = Amount(BigDecimal.ONE),
-                accountId = walletId,
-                currencyId = usd,
-                dateTime = epoch,
-                updatedDateTime = epoch,
-                categoryId = categoryId,
-                rate = Rate.Same,
-            ),
-        )
+        insertWalletAccount()
+        insertWalletAccount(id = Id.Known("test-account-eur"), name = "Revolut", currencyId = Id.Known("EUR"))
+        insertFoodCategory()
+        insertBootstrapExpense()
     }
 
     override suspend fun seedBudgetOverScenario() {
@@ -272,6 +153,58 @@ internal class DefaultDatabaseTestBridge(
                 dateTime = noonToday,
                 updatedDateTime = noonToday,
                 categoryId = target.id,
+                rate = Rate.Same,
+            ),
+        )
+    }
+
+    private suspend fun insertWalletAccount(
+        id: Id.Known = Id.Known("test-account"),
+        name: String = "Wallet",
+        currencyId: Id.Known = Id.Known("USD"),
+    ) {
+        accountRepository.insert(
+            AccountRepository.AccountInsert(
+                id = id,
+                name = name,
+                currencyId = currencyId,
+                iconId = IconRepository.unknownCategoryIconId(),
+                colorId = Id.Known("blue"),
+                initialBalance = Amount(BigDecimal.ZERO),
+                category = AccountCategory.CASH,
+            ),
+        )
+    }
+
+    private suspend fun insertFoodCategory(id: Id.Known = Id.Known("test-category")) {
+        categoryRepository.insert(
+            CategoryRepository.CategoryInsert(
+                id = id,
+                parentCategoryId = Id.Unknown,
+                name = "Food",
+                iconId = IconRepository.unknownCategoryIconId(),
+                colorId = Id.Known("blue"),
+                type = CategoryType.EXPENSE,
+            ),
+        )
+    }
+
+    /** A tiny, dateless expense so a freshly-seeded DB lands on Transactions, not Welcome. */
+    private suspend fun insertBootstrapExpense(
+        accountId: Id.Known = Id.Known("test-account"),
+        currencyId: Id.Known = Id.Known("USD"),
+        categoryId: Id.Known = Id.Known("test-category"),
+    ) {
+        val epoch = LocalDateTime(2020, 1, 1, 0, 0)
+        transactionRepository.insert(
+            TransactionRepository.Transaction.Expense(
+                id = Id.Known("bootstrap"),
+                amount = Amount(BigDecimal.ONE),
+                accountId = accountId,
+                currencyId = currencyId,
+                dateTime = epoch,
+                updatedDateTime = epoch,
+                categoryId = categoryId,
                 rate = Rate.Same,
             ),
         )
