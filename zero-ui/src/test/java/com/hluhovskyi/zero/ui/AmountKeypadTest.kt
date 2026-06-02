@@ -29,4 +29,14 @@ class AmountKeypadTest {
     fun `digit is rejected when two decimal places already present`() {
         assertEquals("12.50", handleAmountKeypadKey("12.50", "3"))
     }
+
+    @Test
+    fun `digit accepted up to sixth decimal place`() {
+        assertEquals("1.23456", handleAmountKeypadKey("1.2345", "6", maxDecimals = 6))
+    }
+
+    @Test
+    fun `digit rejected past sixth decimal place`() {
+        assertEquals("1.234567", handleAmountKeypadKey("1.234567", "8", maxDecimals = 6))
+    }
 }
