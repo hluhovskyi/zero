@@ -10,10 +10,12 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
+import com.hluhovskyi.zero.budget.over.BudgetOverComponent
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryRepository
@@ -82,6 +84,7 @@ abstract class ActivityComponent :
     AccountDetailComponent.Dependencies,
     BudgetComponent.Dependencies,
     BudgetEditComponent.Dependencies,
+    BudgetOverComponent.Dependencies,
     CategoryComponent.Dependencies,
     CategoryDetailComponent.Dependencies,
     CategoryPickerComponent.Dependencies,
@@ -133,6 +136,7 @@ abstract class ActivityComponent :
 
         val importComponentBuilder: ImportComponent.Builder
         val settingsComponentBuilder: SettingsComponent.Builder
+        val backupDetailComponentBuilder: BackupDetailComponent.Builder
         val presetsComponent: PresetsComponent
 
         val feedbackService: FeedbackService
@@ -196,6 +200,11 @@ abstract class ActivityComponent :
         fun budgetEditComponentBuilder(
             component: ActivityComponent,
         ): BudgetEditComponent.Builder = BudgetEditComponent.builder(component)
+
+        @Provides
+        fun budgetOverComponentBuilder(
+            component: ActivityComponent,
+        ): BudgetOverComponent.Builder = BudgetOverComponent.builder(component)
 
         @Provides
         fun categoryPickerComponentBuilder(

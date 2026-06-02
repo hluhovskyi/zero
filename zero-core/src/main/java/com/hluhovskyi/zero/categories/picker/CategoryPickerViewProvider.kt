@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,7 +29,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val GRID_COLUMNS = 4
 
@@ -111,7 +111,7 @@ private fun CategoryPickerGridItem(
             text = category.name,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

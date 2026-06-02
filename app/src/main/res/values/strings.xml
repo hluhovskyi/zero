@@ -4,6 +4,19 @@
     <!-- Screens -->
     <string name="categories_edit">Edit categories</string>
 
+    <!-- Bottom navigation labels -->
+    <string name="bottom_bar_home">Home</string>
+    <string name="bottom_bar_accounts">Accounts</string>
+    <string name="bottom_bar_budget">Budget</string>
+    <string name="bottom_bar_categories">Categories</string>
+    <string name="bottom_bar_settings">Settings</string>
+    <string name="bottom_bar_home_icon_description">Home icon</string>
+    <string name="bottom_bar_accounts_icon_description">Accounts icon</string>
+    <string name="bottom_bar_budget_icon_description">Budget icon</string>
+    <string name="bottom_bar_categories_icon_description">Category icon</string>
+    <string name="bottom_bar_settings_icon_description">Settings icon</string>
+    <string name="bottom_bar_over_budget_description">Over budget</string>
+
     <!-- Biometric prompt (app-module only — system BiometricPrompt is shown from MainActivity) -->
     <string name="biometric_prompt_title_unlock">Unlock Zero</string>
     <string name="biometric_prompt_title_enable">Enable biometric lock</string>
@@ -11,5 +24,16 @@
     <string name="biometric_prompt_subtitle">Use biometrics or device credential</string>
 
     <!-- Feedback -->
-    <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+    <string name="feedback_error_not_configured">Feedback isn\'t available in this build.</string>
+    <string name="feedback_error_unverified">Couldn\'t verify this install. Make sure you installed from Google Play, then try again.</string>
+    <string name="feedback_error_server">Server couldn\'t accept the report (error %1$d). Try again later.</string>
+    <string name="feedback_error_network">No connection. Check your network and try again.</string>
+
+    <!-- Backup failure notification -->
+    <string name="backup_notification_channel">Backup status</string>
+    <string name="backup_notification_title">Zero couldn\'t back up your data</string>
+    <string name="backup_notification_body_auth">Sign in to Google Drive again to keep backing up.</string>
+    <string name="backup_notification_body_network">Check your connection and try again.</string>
+    <string name="backup_notification_body_quota">Your Google Drive is full.</string>
+    <string name="backup_notification_body_generic">Tap to retry.</string>
 </resources>

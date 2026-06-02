@@ -1,20 +1,16 @@
 package com.hluhovskyi.zero
 
-import android.content.Context
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
 import com.hluhovskyi.zero.common.Uri
-import androidx.compose.foundation.Image as ComposeImage
 import androidx.compose.ui.graphics.Color as ComposeColor
 
 internal class CoilImageLoader(
-    private val context: Context,
-    private val imageLoader: coil.ImageLoader,
+    private val imageLoader: coil3.ImageLoader,
 ) : ImageLoader {
 
     @Composable
@@ -32,15 +28,10 @@ internal class CoilImageLoader(
 
         when (uri) {
             is Uri.NonEmpty -> {
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(uri.value)
-                        .build(),
-                    imageLoader = imageLoader,
-                )
-                ComposeImage(
-                    painter = painter,
+                AsyncImage(
+                    model = uri.value,
                     contentDescription = contentDescription,
+                    imageLoader = imageLoader,
                     modifier = modifier,
                     contentScale = contentScale,
                     colorFilter = tint

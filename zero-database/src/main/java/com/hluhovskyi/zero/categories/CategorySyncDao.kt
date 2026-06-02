@@ -16,6 +16,9 @@ internal interface CategorySyncDao {
     @Query("SELECT * FROM CategoryEntity WHERE userId = :userId AND updatedDateTime > :since")
     suspend fun selectSince(userId: Id.Known, since: LocalDateTime): List<CategoryEntity>
 
+    @Query("SELECT MAX(updatedDateTime) FROM CategoryEntity WHERE userId = :userId")
+    suspend fun selectLastModifiedAt(userId: Id.Known): LocalDateTime?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun syncUpsert(entities: List<CategoryEntity>)
 }

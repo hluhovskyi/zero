@@ -4,8 +4,11 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
+import kotlinx.coroutines.flow.StateFlow
 
 interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action, AccountViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         data class Select(val accountId: Id.Known) : Action
@@ -22,5 +25,15 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
         val activeAccounts: List<Account> = emptyList(),
         val archivedAccounts: List<Account> = emptyList(),
         val hasAddedAccount: Boolean = true,
-    )
+    ) {
+        /**
+         * Active accounts grouped by [AccountCategory] and ordered by the category's declared
+         * order — fed straight into the LazyColumn so the view does no grouping or sorting.
+         */
+        val activeAccountsByCategory: List<Pair<AccountCategory, List<Account>>> = activeAccounts
+            .groupBy { it.category }
+            .entries
+            .sortedBy { it.key.ordinal }
+            .map { it.key to it.value }
+    }
 }

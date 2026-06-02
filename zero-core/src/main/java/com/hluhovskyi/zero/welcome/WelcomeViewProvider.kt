@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,14 +38,7 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.OnAddTransactionHandler
 import com.hluhovskyi.zero.ui.ZeroFab
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.PrimaryContainerLight
-import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SecondaryContainer
-import com.hluhovskyi.zero.ui.theme.SelectedPill
-import com.hluhovskyi.zero.ui.theme.Surface
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class WelcomeViewProvider(
     private val viewModel: WelcomeViewModel,
@@ -64,7 +57,7 @@ internal class WelcomeViewProvider(
                     style = TextStyle(
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Primary,
+                        color = ZeroTheme.colors.primary,
                     ),
                 )
                 Column(
@@ -81,7 +74,7 @@ internal class WelcomeViewProvider(
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Primary,
+                            color = ZeroTheme.colors.primary,
                             letterSpacing = (-0.48).sp,
                             lineHeight = 28.8.sp,
                         ),
@@ -93,7 +86,7 @@ internal class WelcomeViewProvider(
                         text = stringResource(R.string.welcome_subtitle),
                         style = TextStyle(
                             fontSize = 15.sp,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                             lineHeight = 23.sp,
                         ),
                         textAlign = TextAlign.Center,
@@ -111,7 +104,7 @@ internal class WelcomeViewProvider(
                         Icon(
                             imageVector = Icons.Filled.FileDownload,
                             contentDescription = null,
-                            tint = PrimaryContainer,
+                            tint = ZeroTheme.colors.primaryContainer,
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(Modifier.width(6.dp))
@@ -120,7 +113,7 @@ internal class WelcomeViewProvider(
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PrimaryContainer,
+                                color = ZeroTheme.colors.primaryContainer,
                             ),
                         )
                     }
@@ -150,7 +143,7 @@ private fun WelcomeIllustration() {
                 .rotate(-6f)
                 .size(width = 152.dp, height = 96.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(SelectedPill),
+                .background(ZeroTheme.colors.selectedPill),
         )
         // Mid card
         Box(
@@ -159,11 +152,11 @@ private fun WelcomeIllustration() {
                 .rotate(-2f)
                 .size(width = 152.dp, height = 96.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(PrimaryContainerLight),
+                .background(ZeroTheme.colors.primaryContainerLight),
         ) {
-            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = Primary.copy(alpha = 0.10f))
-            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 60.dp, color = Primary.copy(alpha = 0.08f))
-            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 40.dp, color = Primary.copy(alpha = 0.08f))
+            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = ZeroTheme.colors.primary.copy(alpha = 0.10f))
+            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 60.dp, color = ZeroTheme.colors.primary.copy(alpha = 0.08f))
+            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 40.dp, color = ZeroTheme.colors.primary.copy(alpha = 0.08f))
         }
         // Front card
         Box(
@@ -171,11 +164,11 @@ private fun WelcomeIllustration() {
                 .padding(start = 24.dp, top = 8.dp)
                 .size(width = 152.dp, height = 96.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(PrimaryContainer),
+                .background(ZeroTheme.colors.primaryContainer),
         ) {
-            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = Color.White.copy(alpha = 0.20f))
-            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 80.dp, color = Color.White.copy(alpha = 0.15f))
-            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 48.dp, color = Color.White.copy(alpha = 0.15f))
+            CardLine(offsetY = 14.dp, offsetX = 16.dp, width = 120.dp, color = ZeroTheme.colors.welcomeCardLine.copy(alpha = 0.20f))
+            CardLine(offsetY = 30.dp, offsetX = 16.dp, width = 80.dp, color = ZeroTheme.colors.welcomeCardLine.copy(alpha = 0.15f))
+            CardLine(offsetY = 48.dp, offsetX = 16.dp, width = 48.dp, color = ZeroTheme.colors.welcomeCardLine.copy(alpha = 0.15f))
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -184,7 +177,7 @@ private fun WelcomeIllustration() {
                 style = TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = ZeroTheme.colors.welcomeCardLine.copy(alpha = 0.9f),
                     letterSpacing = (-0.36).sp,
                 ),
             )
@@ -196,16 +189,16 @@ private fun WelcomeIllustration() {
                 .padding(end = 10.dp, bottom = 12.dp)
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(Surface)
+                .background(ZeroTheme.colors.surface)
                 .padding(3.dp)
                 .clip(CircleShape)
-                .background(SecondaryContainer),
+                .background(ZeroTheme.colors.secondaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = null,
-                tint = Secondary,
+                tint = ZeroTheme.colors.secondary,
                 modifier = Modifier.size(18.dp),
             )
         }

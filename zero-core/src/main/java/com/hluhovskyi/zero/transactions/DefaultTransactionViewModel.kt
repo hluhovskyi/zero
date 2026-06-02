@@ -6,10 +6,11 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.colors.schemeForOrGrey
 import com.hluhovskyi.zero.common.Amount
-import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
@@ -22,13 +23,12 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -40,7 +40,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import java.io.Closeable
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -58,11 +57,12 @@ internal class DefaultTransactionViewModel(
     private val transactionFilterApplicator: TransactionFilterApplicator,
     private val clock: Clock,
     private val zoneProvider: ZoneProvider,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
-) : TransactionViewModel {
+    private val dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    TransactionViewModel {
 
     private val mutableState = MutableStateFlow(TransactionViewModel.State())
-    override val state: Flow<TransactionViewModel.State> = mutableState
+    override val state: StateFlow<TransactionViewModel.State> = mutableState
 
     private val loadMoreTrigger = MutableSharedFlow<Unit>(
         extraBufferCapacity = 1,
@@ -77,7 +77,7 @@ internal class DefaultTransactionViewModel(
 
             is TransactionViewModel.Action.LoadMore -> {
                 if (mutableState.value.searchQuery.isBlank()) {
-                    coroutineScope.launch {
+                    scope.launch(dispatchers.io()) {
                         loadMoreTrigger.emit(Unit)
                     }
                 }
@@ -87,14 +87,34 @@ internal class DefaultTransactionViewModel(
                 mutableState.update { it.copy(searchQuery = action.query) }
             }
 
-            is TransactionViewModel.Action.DeleteTransaction -> {
-                coroutineScope.launch {
-                    transactionRepository.delete(action.id)
+            is TransactionViewModel.Action.ToggleSelection -> {
+                mutableState.update { state ->
+                    val updated = if (action.id in state.selectedIds) {
+                        state.selectedIds - action.id
+                    } else {
+                        state.selectedIds + action.id
+                    }
+                    state.copy(selectedIds = updated)
                 }
             }
 
-            is TransactionViewModel.Action.DuplicateTransaction -> {
-                onDuplicateTransactionHandler.onDuplicate(action.id)
+            is TransactionViewModel.Action.ExitSelection -> {
+                mutableState.update { it.copy(selectedIds = emptySet()) }
+            }
+
+            is TransactionViewModel.Action.DeleteSelected -> {
+                val ids = mutableState.value.selectedIds
+                scope.launch(dispatchers.io()) {
+                    ids.forEach { transactionRepository.delete(it) }
+                }
+                mutableState.update { it.copy(selectedIds = emptySet()) }
+            }
+
+            is TransactionViewModel.Action.DuplicateSelected -> {
+                mutableState.value.selectedIds.singleOrNull()?.let { id ->
+                    onDuplicateTransactionHandler.onDuplicate(id)
+                }
+                mutableState.update { it.copy(selectedIds = emptySet()) }
             }
 
             is TransactionViewModel.Action.Filter.Open -> {
@@ -131,8 +151,8 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
+    override fun attachOnMain() {
+        scope.launch(dispatchers.io()) {
             launch {
                 transactionFilterUseCase.state.collect { useCaseState ->
                     if (useCaseState is TransactionFilterUseCase.State.Applied) {

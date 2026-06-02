@@ -37,6 +37,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 
 - `run-android-tests.sh [gradle args…]` — reads `.emulator-serial`, exports `ANDROID_SERIAL`, then runs `./gradlew :app:connectedDebugAndroidTest "$@"`. Use this instead of `ANDROID_SERIAL=… ./gradlew connectedDebugAndroidTest …` — the env-var prefix bypasses the permission allow-list and prompts on every call. Example:
   `./scripts/run-android-tests.sh -Pandroid.testInstrumentationRunnerArguments.class=com.hluhovskyi.zero.ZeroE2eTest`
+  Always emits `STATUS: PASS` or `STATUS: FAIL (exit N)` as the final line — in stress loops `grep STATUS:` instead of trusting `$?` through a pipe (pipelines surface tail's exit, not the script's).
 
 ## github/ — PR helpers
 

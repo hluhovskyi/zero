@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.activity.screens
 import android.content.Context
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
@@ -24,10 +25,13 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
 import com.hluhovskyi.zero.budget.edit.OnBudgetSavedHandler
+import com.hluhovskyi.zero.budget.over.BudgetOverComponent
+import com.hluhovskyi.zero.budget.over.BudgetOverViewModel
 import com.hluhovskyi.zero.categories.CategoryComponent
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.categories.detail.CategoryDetailComponent
@@ -39,6 +43,8 @@ import com.hluhovskyi.zero.colors.ColorPickerComponent
 import com.hluhovskyi.zero.common.AttachWithView
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
@@ -87,6 +93,22 @@ private annotation class MainActivityScreenScope
 @Retention(AnnotationRetention.RUNTIME)
 private annotation class ForMainActivity
 
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class ForHomeTab
+
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class ForBudgetTab
+
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class ForAccountTab
+
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+private annotation class ForCategoryTab
+
 private const val TAG = "MainActivityScreenComponent"
 
 /**
@@ -104,7 +126,25 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
     protected abstract val feedbackComponent: FeedbackComponent
 
-    override fun attach(): Closeable = feedbackComponent.attach()
+    @get:ForHomeTab
+    protected abstract val homeTab: AttachableViewComponent
+
+    @get:ForBudgetTab
+    protected abstract val budgetTab: AttachableViewComponent
+
+    @get:ForAccountTab
+    protected abstract val accountTab: AttachableViewComponent
+
+    @get:ForCategoryTab
+    protected abstract val categoryTab: AttachableViewComponent
+
+    override fun attach(): Closeable = Closeables.merge(
+        feedbackComponent.attach(),
+        homeTab.attach(),
+        budgetTab.attach(),
+        accountTab.attach(),
+        categoryTab.attach(),
+    )
 
     interface Dependencies {
         val idGenerator: IdGenerator
@@ -135,6 +175,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
 
         val budgetComponentBuilder: BudgetComponent.Builder
         val budgetEditComponentBuilder: BudgetEditComponent.Builder
+        val budgetOverComponentBuilder: BudgetOverComponent.Builder
 
         val currencyPickerComponentBuilder: CurrencyPickerComponent.Builder
         val iconPickerComponentBuilder: IconPickerComponent.Builder
@@ -142,6 +183,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val colorPickerComponentFactory: ColorPickerComponent.Factory
 
         val settingsComponentBuilder: SettingsComponent.Builder
+        val backupDetailComponentBuilder: BackupDetailComponent.Builder
         val importComponentBuilder: ImportComponent.Builder
 
         val biometricLockUseCase: BiometricLockUseCase
@@ -254,9 +296,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             startDestination = Destinations.Home,
             navigationEntries = navigationEntries,
             bottomBar = {
-                bottomBarComponent.navigator(navigator)
-                    .logging(logger)
-                    .AttachWithView()
+                // Rebuilt per navigator + non-retaining so it can't hold a stale NavController across rotation (ZERO-2).
+                val bottomBar = remember(navigator) {
+                    bottomBarComponent.navigator(navigator)
+                        .logging(logger)
+                        .build()
+                }
+                bottomBar.AttachWithView()
             },
             bottomSheetNavigator = bottomSheetNavigator,
             modalBottomSheetState = modalBottomSheetState,
@@ -287,40 +333,47 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         fun transactionFilterUseCase(navigator: Navigator): TransactionFilterUseCase = DefaultTransactionFilterUseCase(navigator = navigator)
 
         @Provides
-        @IntoSet
         @MainActivityScreenScope
-        fun homeNavigationEntry(
+        @ForHomeTab
+        fun homeTabComponent(
             homeComponentBuilder: HomeComponent.Builder,
             welcomeComponentBuilder: WelcomeComponent.Builder,
             @ForMainActivity transactionComponentBuilder: TransactionComponent.Builder,
             transactionFilterUseCase: TransactionFilterUseCase,
-            navigatorScope: NavigatorScope,
+            navigator: Navigator,
             logger: Logger,
+        ): AttachableViewComponent = homeComponentBuilder
+            .welcomeComponentBuilder(
+                welcomeComponentBuilder
+                    .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                    .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) },
+            )
+            .transactionComponentBuilder(
+                transactionComponentBuilder
+                    .onTransactionSelectHandler { transactionId ->
+                        navigator.navigateTo(
+                            Destinations.Transaction.Item.Edit,
+                            Destinations.Transaction.Item.TransactionId.withValue(transactionId),
+                        )
+                    }
+                    .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
+                    .transactionFilterUseCase(transactionFilterUseCase)
+                    .displayConfig(DisplayConfig(showFab = true)),
+            )
+            .logging(logger)
+            .build()
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun homeNavigationEntry(
+            @ForHomeTab component: AttachableViewComponent,
+            navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.composable(
             destination = Destinations.Home,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
-            TransactionScreen(
-                component = homeComponentBuilder
-                    .welcomeComponentBuilder(
-                        welcomeComponentBuilder
-                            .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
-                            .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) },
-                    )
-                    .transactionComponentBuilder(
-                        transactionComponentBuilder
-                            .onTransactionSelectHandler { transactionId ->
-                                navigator.navigateTo(
-                                    Destinations.Transaction.Item.Edit,
-                                    Destinations.Transaction.Item.TransactionId.withValue(transactionId),
-                                )
-                            }
-                            .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
-                            .transactionFilterUseCase(transactionFilterUseCase)
-                            .displayConfig(DisplayConfig(showFab = true)),
-                    )
-                    .logging(logger),
-            )
+            component.AttachWithView()
         }
 
         @Provides
@@ -419,29 +472,36 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
+        @MainActivityScreenScope
+        @ForCategoryTab
+        fun categoryTabComponent(
+            componentBuilder: CategoryComponent.Builder,
+            navigator: Navigator,
+            logger: Logger,
+        ): AttachableViewComponent = componentBuilder
+            .onCategorySelectedHandler { categoryId ->
+                navigator.navigateTo(
+                    Destinations.Category.Item.Detail,
+                    Destinations.Category.Item.CategoryId.withValue(categoryId),
+                )
+            }
+            .onAddCategoryHandler { type ->
+                navigator.navigateTo(
+                    Destinations.Category.Edit,
+                    Destinations.Category.Edit.InitialType.withValue(type.name),
+                )
+            }
+            .logging(logger)
+            .build()
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun categoryNavigationEntry(
-            componentBuilder: CategoryComponent.Builder,
+            @ForCategoryTab component: AttachableViewComponent,
             navigatorScope: NavigatorScope,
-            logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Category.All) {
-            CategoriesScreen(
-                component = componentBuilder
-                    .onCategorySelectedHandler { categoryId ->
-                        navigator.navigateTo(
-                            Destinations.Category.Item.Detail,
-                            Destinations.Category.Item.CategoryId.withValue(categoryId),
-                        )
-                    }
-                    .onAddCategoryHandler { type ->
-                        navigator.navigateTo(
-                            Destinations.Category.Edit,
-                            Destinations.Category.Edit.InitialType.withValue(type.name),
-                        )
-                    }
-                    .logging(logger),
-            )
+            component.AttachWithView()
         }
 
         @Provides
@@ -520,28 +580,44 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
+        @MainActivityScreenScope
+        @ForBudgetTab
+        fun budgetTabComponent(
+            componentBuilder: BudgetComponent.Builder,
+            navigator: Navigator,
+            logger: Logger,
+        ): AttachableViewComponent = componentBuilder
+            .onCategoryTappedHandler { categoryId, start, end ->
+                navigator.navigateTo(
+                    Destinations.Budget.Edit,
+                    Destinations.Budget.Edit.CategoryId.withValue(categoryId),
+                    Destinations.Budget.Edit.PeriodStart.withValue(start.toString()),
+                    Destinations.Budget.Edit.PeriodEnd.withValue(end.toString()),
+                )
+            }
+            .onOverActionTappedHandler { categoryId, start, end, mode ->
+                navigator.navigateTo(
+                    Destinations.Budget.Over,
+                    Destinations.Budget.Over.CategoryId.withValue(categoryId),
+                    Destinations.Budget.Over.PeriodStart.withValue(start.toString()),
+                    Destinations.Budget.Over.PeriodEnd.withValue(end.toString()),
+                    Destinations.Budget.Over.InitialMode.withValue(mode?.name.orEmpty()),
+                )
+            }
+            .logging(logger)
+            .build()
+
+        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun budgetNavigationEntry(
-            componentBuilder: BudgetComponent.Builder,
+            @ForBudgetTab component: AttachableViewComponent,
             navigatorScope: NavigatorScope,
-            logger: Logger,
         ): NavigatorEntry = navigatorScope.composable(
             destination = Destinations.Budget.All,
             displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
-            AccountsScreen(
-                component = componentBuilder
-                    .onCategoryTappedHandler { categoryId, start, end ->
-                        navigator.navigateTo(
-                            Destinations.Budget.Edit,
-                            Destinations.Budget.Edit.CategoryId.withValue(categoryId),
-                            Destinations.Budget.Edit.PeriodStart.withValue(start.toString()),
-                            Destinations.Budget.Edit.PeriodEnd.withValue(end.toString()),
-                        )
-                    }
-                    .logging(logger),
-            )
+            component.AttachWithView()
         }
 
         @Provides
@@ -553,7 +629,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(
             destination = Destinations.Budget.Edit,
-            displayOption = NavigatorEntry.DisplayOption.PartiallyVisible.BottomSheet,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
         ) {
             componentBuilder
                 .categoryId(arguments.getValue(Destinations.Budget.Edit.CategoryId))
@@ -571,28 +647,63 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
-        fun accountNavigationEntry(
-            componentBuilder: AccountComponent.Builder,
+        fun budgetOverNavigationEntry(
+            componentBuilder: BudgetOverComponent.Builder,
             navigatorScope: NavigatorScope,
             logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Budget.Over,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
+            componentBuilder
+                .categoryId(arguments.getValue(Destinations.Budget.Over.CategoryId))
+                .period(
+                    DateRange(
+                        start = LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodStart)),
+                        end = LocalDate.parse(arguments.getValue(Destinations.Budget.Over.PeriodEnd)),
+                    ),
+                )
+                .initialMode(
+                    arguments.getValue(Destinations.Budget.Over.InitialMode)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { BudgetOverViewModel.Mode.valueOf(it) },
+                )
+                .onBackHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @MainActivityScreenScope
+        @ForAccountTab
+        fun accountTabComponent(
+            componentBuilder: AccountComponent.Builder,
+            navigator: Navigator,
+            logger: Logger,
+        ): AttachableViewComponent = componentBuilder
+            .onAddAccountHandler { navigator.navigateTo(Destinations.Account.Edit) }
+            .onAccountSelectedHandler { accountId ->
+                navigator.navigateTo(
+                    Destinations.Account.Item.Detail,
+                    Destinations.Account.Item.AccountId.withValue(accountId),
+                )
+            }
+            .onEditAccountHandler { accountId ->
+                navigator.navigateTo(
+                    Destinations.Account.Item.Edit,
+                    Destinations.Account.Item.AccountId.withValue(accountId),
+                )
+            }
+            .logging(logger)
+            .build()
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun accountNavigationEntry(
+            @ForAccountTab component: AttachableViewComponent,
+            navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Account.All) {
-            AccountsScreen(
-                component = componentBuilder
-                    .onAddAccountHandler { navigator.navigateTo(Destinations.Account.Edit) }
-                    .onAccountSelectedHandler { accountId ->
-                        navigator.navigateTo(
-                            Destinations.Account.Item.Detail,
-                            Destinations.Account.Item.AccountId.withValue(accountId),
-                        )
-                    }
-                    .onEditAccountHandler { accountId ->
-                        navigator.navigateTo(
-                            Destinations.Account.Item.Edit,
-                            Destinations.Account.Item.AccountId.withValue(accountId),
-                        )
-                    }
-                    .logging(logger),
-            )
+            component.AttachWithView()
         }
 
         @Provides
@@ -836,9 +947,27 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Settings) {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                .onBackupSelectedHandler { navigator.navigateTo(Destinations.Backup) }
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .biometricLockUseCase(biometricLockUseCase)
                 .biometricAuthenticator(biometricAuthenticator)
+                .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun backupNavigationEntry(
+            componentBuilder: BackupDetailComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Backup,
+            deepLinks = listOf("zero://backup"),
+        ) {
+            componentBuilder
+                .onBackHandler { navigator.back() }
+                .onRestoreSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .logging(logger)
         }
 

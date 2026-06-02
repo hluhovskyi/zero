@@ -10,11 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,8 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
@@ -44,7 +42,7 @@ fun DatePickerCard(
 
     Column(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .clickable {
                 DatePickerDialog(
                     context,
@@ -62,7 +60,7 @@ fun DatePickerCard(
             text = label.uppercase(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 1.sp,
         )
         Row(
@@ -77,7 +75,7 @@ fun DatePickerCard(
                 text = formattedDate,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.primary,
+                color = ZeroTheme.colors.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -85,7 +83,7 @@ fun DatePickerCard(
                 imageVector = Icons.Filled.ArrowDropDown,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }

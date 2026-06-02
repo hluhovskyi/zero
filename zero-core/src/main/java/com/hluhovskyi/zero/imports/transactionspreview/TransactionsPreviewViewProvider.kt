@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,8 +34,7 @@ import com.hluhovskyi.zero.transaction.TransactionView
 import com.hluhovskyi.zero.ui.ImportStepHeader
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Secondary
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val TRANSFER_COLOR_SCHEME = UiColorScheme.default()
 
@@ -74,7 +73,7 @@ private fun TransactionsPreviewView(
                     text = stringResource(R.string.import_transactions_preview_info, state.totalCount),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 0.08.sp,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp, start = 4.dp),
                 )
@@ -85,7 +84,7 @@ private fun TransactionsPreviewView(
                         text = group.dateLabel.uppercase(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 0.08.sp,
                         modifier = Modifier.padding(start = 4.dp, bottom = 6.dp, top = 4.dp),
                     )
@@ -101,7 +100,7 @@ private fun TransactionsPreviewView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Secondary)
+                    .background(ZeroTheme.colors.secondary)
                     .clickable { viewModel.perform(TransactionsPreviewViewModel.Action.Confirm) }
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
@@ -110,7 +109,7 @@ private fun TransactionsPreviewView(
                     text = stringResource(R.string.import_transactions_preview_import, state.totalCount),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = ZeroTheme.colors.onSecondary,
                 )
             }
         }
@@ -126,7 +125,7 @@ private fun TransactionCard(
         .fillMaxWidth()
         .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 12.dp)
         .clip(RoundedCornerShape(12.dp))
-        .background(Color(0xFFFFFFFF))
+        .background(ZeroTheme.colors.surfaceContainerLowest)
     val contentModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -138,11 +137,20 @@ private fun TransactionCard(
         val isIncome = transaction.type == TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME
         val isTransfer = transaction.type == TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER
 
+        val fallbackLabel = when (transaction.type) {
+            TransactionsPreviewViewModel.DisplayTransaction.Type.EXPENSE ->
+                stringResource(R.string.transaction_type_expense)
+            TransactionsPreviewViewModel.DisplayTransaction.Type.INCOME ->
+                stringResource(R.string.transaction_type_income)
+            TransactionsPreviewViewModel.DisplayTransaction.Type.TRANSFER ->
+                stringResource(R.string.transaction_type_transfer)
+        }
+
         TransactionView(
             modifier = contentModifier,
-            primaryText = transaction.primaryText,
+            primaryText = transaction.primaryText ?: fallbackLabel,
             primaryAmount = transaction.amount,
-            amountColor = if (isIncome) Secondary else Color(0xFF1B1B1F),
+            amountColor = if (isIncome) ZeroTheme.colors.transactionIncome else ZeroTheme.colors.onSurface,
             secondaryText = transaction.accountName,
             iconColorScheme = if (isTransfer) TRANSFER_COLOR_SCHEME else colorScheme,
             mainIcon = when {

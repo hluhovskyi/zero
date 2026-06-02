@@ -15,19 +15,17 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -45,11 +43,7 @@ import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.SwipeableSegmentedTabs
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private val CATEGORY_TABS = listOf(CategoryType.EXPENSE, CategoryType.INCOME)
 
@@ -78,7 +72,7 @@ private fun CategoryView(
     amountFormatter: AmountFormatter,
     onAddCategory: OnAddCategoryHandler,
 ) {
-    val state by viewModel.state.collectAsState(initial = CategoryViewModel.State())
+    val state by viewModel.state.collectAsState()
     val expenseLabel = stringResource(R.string.transaction_type_expense)
     val incomeLabel = stringResource(R.string.transaction_type_income)
 
@@ -90,7 +84,7 @@ private fun CategoryView(
                 style = TextStyle(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Primary,
+                    color = ZeroTheme.colors.primary,
                 ),
             )
 
@@ -106,7 +100,8 @@ private fun CategoryView(
                     .padding(bottom = 6.dp),
             ) { tab ->
                 CategoryPage(
-                    categories = state.categoriesByType[tab].orEmpty(),
+                    active = state.activeCategoriesByType[tab].orEmpty(),
+                    inactive = state.inactiveCategoriesByType[tab].orEmpty(),
                     grandTotal = state.grandTotalByType[tab] ?: Amount.zero(),
                     currencySymbol = state.currencySymbol,
                     amountFormatter = amountFormatter,
@@ -131,19 +126,14 @@ private fun CategoryView(
 
 @Composable
 private fun CategoryPage(
-    categories: List<CategoryViewModel.CategoryItem>,
+    active: List<CategoryViewModel.CategoryItem>,
+    inactive: List<CategoryViewModel.CategoryItem>,
     grandTotal: Amount,
     currencySymbol: String,
     amountFormatter: AmountFormatter,
     imageLoader: ImageLoader,
     onCategoryClick: (CategoryViewModel.CategoryItem) -> Unit,
 ) {
-    val active = remember(categories) {
-        categories.filter { it.spending is CategoryViewModel.Spending.Active }
-    }
-    val inactive = remember(categories) {
-        categories.filter { it.spending is CategoryViewModel.Spending.None }
-    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 96.dp),
@@ -181,7 +171,7 @@ private fun CategoryPage(
                     style = TextStyle(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Outline,
+                        color = ZeroTheme.colors.outline,
                         letterSpacing = 0.7.sp,
                     ),
                 )
@@ -209,7 +199,8 @@ private fun ActiveCategoryCard(
 ) {
     val colorScheme = category.colorScheme.toUi()
     val categoryBg = colorScheme.background
-    val tintedBg = lerp(Color.White, categoryBg, 0.45f)
+    val rowBg = ZeroTheme.colors.surfaceContainerLowest
+    val tintedBg = lerp(rowBg, categoryBg, 0.45f)
 
     Box(
         modifier = Modifier
@@ -217,7 +208,7 @@ private fun ActiveCategoryCard(
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
             .drawBehind {
-                drawRect(Color.White)
+                drawRect(rowBg)
                 if (maxFraction > 0f) {
                     drawRect(tintedBg, size = Size(size.width * maxFraction, size.height))
                 }
@@ -246,7 +237,7 @@ private fun ActiveCategoryCard(
                         style = TextStyle(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = OnSurface,
+                            color = ZeroTheme.colors.onSurface,
                         ),
                     )
                     Text(
@@ -254,7 +245,7 @@ private fun ActiveCategoryCard(
                         style = TextStyle(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Primary,
+                            color = ZeroTheme.colors.primary,
                             letterSpacing = (-0.1).sp,
                         ),
                     )
@@ -266,14 +257,14 @@ private fun ActiveCategoryCard(
                     Text(
                         text = pluralStringResource(R.plurals.category_transaction_count, spending.transactionCount, spending.transactionCount),
                         modifier = Modifier.weight(1f),
-                        style = TextStyle(fontSize = 12.sp, color = OnSurfaceVariant),
+                        style = TextStyle(fontSize = 12.sp, color = ZeroTheme.colors.onSurfaceVariant),
                     )
                     Text(
                         text = stringResource(R.string.category_percent_of_total, percentOfTotal),
                         style = TextStyle(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                         ),
                     )
                 }
@@ -285,7 +276,7 @@ private fun ActiveCategoryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp)
-                .background(SurfaceContainer)
+                .background(ZeroTheme.colors.surfaceContainer)
                 .align(Alignment.BottomStart),
         ) {
             Box(
@@ -308,7 +299,7 @@ private fun InactiveCategoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLowest, shape = RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -331,7 +322,7 @@ private fun InactiveCategoryCard(
             style = TextStyle(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
         )
         Text(
@@ -339,7 +330,7 @@ private fun InactiveCategoryCard(
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = Outline,
+                color = ZeroTheme.colors.outline,
             ),
         )
     }

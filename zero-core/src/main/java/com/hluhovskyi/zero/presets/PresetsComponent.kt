@@ -27,6 +27,8 @@ abstract class PresetsComponent {
 
     abstract val attachable: Attachable
 
+    abstract val presetsUseCase: PresetsUseCase
+
     interface Dependencies {
         val categoryRepository: CategoryRepository
         val accountRepository: AccountRepository

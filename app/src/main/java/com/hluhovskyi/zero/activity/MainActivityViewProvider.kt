@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Surface
 import androidx.compose.material.navigation.BottomSheetNavigator
@@ -33,24 +32,29 @@ internal class MainActivityViewProvider(
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding(),
-                color = MaterialTheme.colors.background,
+                color = ZeroTheme.colors.surface,
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // TODO: issue #213 — sheets should open at content height, not full-screen
                     val sheetState = rememberModalBottomSheetState(
                         initialValue = ModalBottomSheetValue.Hidden,
-                        skipHalfExpanded = true,
+                        skipHalfExpanded = false,
                     )
                     val bottomSheetNavigator = remember(sheetState) {
                         BottomSheetNavigator(sheetState)
                     }
                     val navController = rememberNavController(bottomSheetNavigator)
 
-                    screenComponent
-                        .navHostController(navController)
-                        .bottomSheetNavigator(bottomSheetNavigator)
-                        .modalBottomSheetState(sheetState)
-                        .AttachWithView()
+                    // Build per composition, not via the retaining AttachWithView overload:
+                    // retaining this component (which holds the Activity-scoped NavController)
+                    // across a config change crashes NavHost.setGraph on recreation (ZERO-2).
+                    val screen = remember(navController, bottomSheetNavigator, sheetState) {
+                        screenComponent
+                            .navHostController(navController)
+                            .bottomSheetNavigator(bottomSheetNavigator)
+                            .modalBottomSheetState(sheetState)
+                            .build()
+                    }
+                    screen.AttachWithView()
 
                     biometricLockGateComponent.AttachWithView()
                 }

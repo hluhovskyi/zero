@@ -17,10 +17,12 @@ internal abstract class BaseViewModel(
     protected val scope: CoroutineScope
         get() = closeableCoroutineScope
 
-    override fun attach(): Closeable {
+    private val refCounted = RefCountedAttachable {
         attachOnMain()
-        return closeableCoroutineScope
+        closeableCoroutineScope
     }
+
+    override fun attach(): Closeable = refCounted.attach()
 
     protected open fun attachOnMain() {
     }

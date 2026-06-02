@@ -1,11 +1,12 @@
 package com.hluhovskyi.zero.budget
 
+import com.hluhovskyi.zero.budget.over.BudgetOverViewModel
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -15,12 +16,13 @@ import kotlinx.datetime.Month
 internal class DefaultBudgetViewModel(
     private val budgetUseCase: BudgetUseCase,
     @Suppress("unused") private val onCategoryTappedHandler: OnCategoryTappedHandler,
+    private val onOverActionTappedHandler: OnOverActionTappedHandler,
     dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     BudgetViewModel {
 
     private val mutableState = MutableStateFlow(BudgetViewModel.State())
-    override val state: Flow<BudgetViewModel.State> = mutableState
+    override val state: StateFlow<BudgetViewModel.State> = mutableState
 
     private val monthOffset = MutableStateFlow(0)
 
@@ -57,6 +59,28 @@ internal class DefaultBudgetViewModel(
                     )
                 }
             }
+            BudgetViewModel.Action.TapRemove -> {
+                mutableState.update { state ->
+                    val editingId = state.editingCategoryId
+                    val row = editingId?.let { id -> state.budgeted.firstOrNull { it.categoryId == id } }
+                    // Layer the confirmation over the numpad without tearing it down, so cancelling
+                    // (or pressing back) returns to the edit sheet the user came from. Only a set
+                    // budget can be removed; for an unset row there's nothing to remove.
+                    if (row?.budgetId != null) state.copy(removeConfirm = editingId) else state
+                }
+            }
+            BudgetViewModel.Action.ConfirmRemove -> confirmRemove()
+            BudgetViewModel.Action.CancelRemove -> {
+                mutableState.update { it.copy(removeConfirm = null) }
+            }
+            is BudgetViewModel.Action.TapReallocate -> dispatchOverAction(
+                action.categoryId,
+                BudgetOverViewModel.Mode.REALLOCATE,
+            )
+            is BudgetViewModel.Action.TapIncrease -> dispatchOverAction(
+                action.categoryId,
+                BudgetOverViewModel.Mode.INCREASE,
+            )
             is BudgetViewModel.Action.ChangeEditAmount -> {
                 mutableState.update { it.copy(editingAmountText = action.text) }
             }
@@ -139,6 +163,33 @@ internal class DefaultBudgetViewModel(
         budgetUseCase.replaceFromPrevious(monthOffset.value, BudgetType.EXPENSE)
     }
 
+    private fun confirmRemove() {
+        val categoryId = mutableState.value.removeConfirm ?: return
+        // Removal closes both the confirmation and the edit sheet behind it — the row is about
+        // to drop to the unset section, so there's nothing left to edit.
+        mutableState.update {
+            it.copy(
+                removeConfirm = null,
+                editingCategoryId = null,
+                editingAmountText = "0",
+                skippedInSession = emptySet(),
+            )
+        }
+        scope.launch {
+            budgetUseCase.remove(monthOffset.value, BudgetType.EXPENSE, categoryId)
+        }
+    }
+
+    private fun dispatchOverAction(
+        categoryId: Id.Known,
+        mode: BudgetOverViewModel.Mode,
+    ) {
+        val snapshot = mutableState.value
+        val start = snapshot.currentPeriodStart ?: return
+        val end = snapshot.currentPeriodEnd ?: return
+        onOverActionTappedHandler.onTap(categoryId, start, end, mode)
+    }
+
     override fun attachOnMain() {
         scope.launch {
             budgetUseCase.observe(monthOffset, BudgetType.EXPENSE).collectLatest { state ->
@@ -146,14 +197,71 @@ internal class DefaultBudgetViewModel(
                     it.copy(
                         displayedPeriodLabel = label(state.currentPeriod.start),
                         previousPeriodLabel = label(state.previousPeriod.start),
+                        currentPeriodStart = state.currentPeriod.start,
+                        currentPeriodEnd = state.currentPeriod.end,
                         budgeted = state.current,
                         previousPeriodBudgets = state.previous,
+                        items = state.current.toItems(previousPeriod = state.previous),
+                        summary = state.summary,
+                        hasAnyBudget = state.hasAnyBudget,
                         isLoading = false,
                     )
                 }
             }
         }
     }
+
+    private fun List<BudgetQueryUseCase.Budgeted>.toItems(
+        previousPeriod: List<BudgetQueryUseCase.Budgeted>,
+    ): List<BudgetViewModel.Item> {
+        val previousById = previousPeriod
+            .filter { it.budgetId != null }
+            .associate { it.categoryId to it.budgeted }
+        return map { row ->
+            if (row.budgetId != null) {
+                row.toSetItem()
+            } else {
+                row.toUnsetItem(previousAmount = previousById[row.categoryId])
+            }
+        }
+    }
+
+    private fun BudgetQueryUseCase.Budgeted.toSetItem(): BudgetViewModel.Item.Set {
+        val rawProgress = if (budgeted > Amount.zero()) {
+            (spent.value.toDouble() / budgeted.value.toDouble()).toFloat()
+        } else {
+            0f
+        }
+        val isOver = spent > budgeted
+        val status = when {
+            isOver -> BudgetViewModel.Item.Status.Over
+            rawProgress > 0.85f -> BudgetViewModel.Item.Status.AlmostThere
+            rawProgress > 0.65f -> BudgetViewModel.Item.Status.Watch
+            else -> BudgetViewModel.Item.Status.Healthy
+        }
+        val remaining = if (isOver) spent - budgeted else budgeted - spent
+        return BudgetViewModel.Item.Set(
+            categoryId = categoryId,
+            name = categoryName,
+            icon = icon,
+            colorScheme = colorScheme,
+            spent = spent,
+            budgeted = budgeted,
+            remaining = remaining,
+            progress = rawProgress.coerceIn(0f, 1f),
+            status = status,
+        )
+    }
+
+    private fun BudgetQueryUseCase.Budgeted.toUnsetItem(
+        previousAmount: Amount?,
+    ): BudgetViewModel.Item.Unset = BudgetViewModel.Item.Unset(
+        categoryId = categoryId,
+        name = categoryName,
+        icon = icon,
+        colorScheme = colorScheme,
+        previousAmount = previousAmount,
+    )
 
     private fun label(date: LocalDate): String = "${monthName(date.month)} ${date.year}"
 

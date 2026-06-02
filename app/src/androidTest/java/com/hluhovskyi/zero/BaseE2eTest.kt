@@ -1,7 +1,8 @@
 package com.hluhovskyi.zero
 
 import android.app.Application
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.hluhovskyi.zero.activity.MainActivity
 import com.hluhovskyi.zero.robots.BudgetRobot
@@ -9,6 +10,7 @@ import com.hluhovskyi.zero.robots.TransactionsRobot
 import com.hluhovskyi.zero.testbridge.HasTestBridgeContainer
 import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Rule
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -24,6 +26,12 @@ abstract class BaseE2eTest {
         app.testBridgeContainer
     }
 
+    // Launched lazily inside onTransactions/onBudget so the test body can seed the DB BEFORE
+    // the app subscribes. Otherwise HomeViewModel observes an empty DB on attach, paints the
+    // Welcome screen, and the test races a re-emission to flip back to Transactions — which
+    // loses under host load and the transaction list's selectAfter race never resolves.
+    private var scenario: ActivityScenario<MainActivity>? = null
+
     @get:Rule(order = 0)
     val clearDataRule: TestRule = object : TestRule {
         override fun apply(base: Statement, description: Description): Statement = object : Statement() {
@@ -35,11 +43,33 @@ abstract class BaseE2eTest {
     }
 
     @get:Rule(order = 1)
-    val composeRule = createAndroidComposeRule<MainActivity>()
+    val composeRule = createEmptyComposeRule()
+
+    @After
+    fun closeScenario() {
+        scenario?.close()
+        scenario = null
+    }
 
     protected fun seedDefaultSetup() = runBlocking { container.database.seedDefaultSetup() }
 
-    protected fun onTransactions() = TransactionsRobot(composeRule)
+    protected fun seedBudgetOverScenario() = runBlocking { container.database.seedBudgetOverScenario() }
 
-    protected fun onBudget() = BudgetRobot(composeRule).open()
+    protected fun seedExpenses() = runBlocking { container.database.seedExpenses() }
+
+    protected fun onTransactions(): TransactionsRobot {
+        launchApp()
+        return TransactionsRobot(composeRule)
+    }
+
+    protected fun onBudget(): BudgetRobot {
+        launchApp()
+        return BudgetRobot(composeRule).open()
+    }
+
+    private fun launchApp() {
+        if (scenario == null) {
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+        }
+    }
 }

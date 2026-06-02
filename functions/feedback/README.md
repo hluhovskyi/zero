@@ -12,11 +12,14 @@ Phase 1 of `docs/superpowers/specs/2026-05-12-feedback-infra-design.md` (issue #
 {
     "title": "string (required)",
     "body":  "string (required)",
-    "labels": ["string", ...]
+    "type":  "bug | idea | other (required)",
+    "debug": "boolean (optional, default false)"
 }
 ```
 
 Headers: `X-Integrity-Token: <token from StandardIntegrityManager.request>`.
+
+GitHub labels are computed server-side from `type` (the client never names a label): every issue gets `feedback`, plus the mapped type label (`bug`/`idea`/`other`), plus `debug` when `debug=true`. Unknown types are rejected with 400.
 
 Responses:
 - `201 { "issueUrl": "https://github.com/..." }` — issue created.
@@ -39,7 +42,18 @@ Responses:
 
 The function's runtime service account needs **`roles/playintegrity.tokenDecoder`** on the GCP project that hosts the Integrity API.
 
-## Deploy (placeholders only — never paste real values into commits)
+**The function must allow unauthenticated invocation** (`allUsers` → `roles/run.invoker`). The Zero app is a public client: it authenticates with the Play Integrity `X-Integrity-Token` checked *inside* `index.js`, not with a Google IAM bearer token. Deploying `--no-allow-unauthenticated` makes Cloud Run reject every app request with a platform-level **403** before the code runs (`Empty Authorization header value` in the logs) — i.e. feedback silently fails for everyone. Play Integrity is the abuse gate, not IAM. If invocation auth ever gets dropped, restore it with:
+
+```bash
+gcloud run services add-iam-policy-binding feedback \
+    --region=<your-region> --member=allUsers --role=roles/run.invoker
+```
+
+## Deploy
+
+**Code-only change** (the common case — you edited `index.js`): run `./deploy.sh`. It redeploys the current source and preserves all existing config (env vars, secret, service account), so no real values are needed.
+
+**First-time deploy or config change** (placeholders only — never paste real values into commits): use the full command, which sets every flag explicitly.
 
 ```bash
 gcloud functions deploy feedback \
@@ -49,7 +63,7 @@ gcloud functions deploy feedback \
     --source=. \
     --entry-point=feedback \
     --trigger-http \
-    --no-allow-unauthenticated \
+    --allow-unauthenticated \
     --service-account=<sa-email> \
     --set-env-vars=PACKAGE_NAME=<package>,REPO_OWNER=<owner>,REPO_NAME=<repo>,GCP_PROJECT_NUMBER=<number> \
     --set-secrets=GITHUB_TOKEN=<secret-name>:latest
@@ -63,7 +77,7 @@ A real `X-Integrity-Token` only comes from a Play-Integrity-registered Android d
 curl -X POST <function-url> \
     -H "Content-Type: application/json" \
     -H "X-Integrity-Token: <token>" \
-    -d '{"title":"smoke test","body":"sent via curl","labels":["debug"]}'
+    -d '{"title":"smoke test","body":"sent via curl","type":"bug","debug":true}'
 ```
 
 Remove the temporary token logging before merging anything.

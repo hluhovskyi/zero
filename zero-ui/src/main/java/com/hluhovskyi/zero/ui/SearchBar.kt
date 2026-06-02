@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,9 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun SearchBar(
@@ -39,11 +37,11 @@ fun SearchBar(
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         textStyle = TextStyle(
             fontSize = 15.sp,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
         ),
         singleLine = true,
         decorationBox = { innerTextField ->
@@ -54,7 +52,7 @@ fun SearchBar(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = OnSurfaceVariant,
+                    tint = ZeroTheme.colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
                 Box(modifier = Modifier.weight(1f)) {
@@ -62,7 +60,7 @@ fun SearchBar(
                         Text(
                             text = placeholder,
                             fontSize = 15.sp,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                         )
                     }
                     innerTextField()
@@ -75,7 +73,7 @@ fun SearchBar(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.action_clear_description),
-                            tint = OnSurfaceVariant,
+                            tint = ZeroTheme.colors.onSurfaceVariant,
                         )
                     }
                 }

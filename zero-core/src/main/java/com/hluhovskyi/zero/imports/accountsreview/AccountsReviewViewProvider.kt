@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,14 +37,7 @@ import com.hluhovskyi.zero.imports.ImportAccount
 import com.hluhovskyi.zero.imports.ImportStrategyChip
 import com.hluhovskyi.zero.imports.ResolveStrategy
 import com.hluhovskyi.zero.ui.ImportStepHeader
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
-
-private val ExistsBadgeBackground = Color(0xFFE8EEFF)
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class AccountsReviewViewProvider(
     private val viewModel: AccountsReviewViewModel,
@@ -61,7 +53,6 @@ internal class AccountsReviewViewProvider(
 @Composable
 private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: ImageLoader) {
     val state by viewModel.state.collectAsState(initial = AccountsReviewViewModel.State())
-    val totalTransactions = state.accounts.sumOf { it.transactionCount }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ImportStepHeader(
@@ -75,10 +66,10 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
         ) {
             item {
                 Text(
-                    text = stringResource(R.string.import_accounts_review_info, state.accounts.size, totalTransactions),
+                    text = stringResource(R.string.import_accounts_review_info, state.accounts.size, state.totalTransactions),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 0.08.sp,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp, start = 4.dp),
                 )
@@ -100,7 +91,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(PrimaryContainer)
+                    .background(ZeroTheme.colors.primaryContainer)
                     .clickable { viewModel.perform(AccountsReviewViewModel.Action.Next) }
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
@@ -109,7 +100,7 @@ private fun AccountsReviewView(viewModel: AccountsReviewViewModel, imageLoader: 
                     text = stringResource(R.string.import_accounts_review_continue),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = ZeroTheme.colors.onPrimary,
                 )
             }
         }
@@ -134,7 +125,7 @@ private fun AccountRow(
             .fillMaxWidth()
             .padding(bottom = 4.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceContainerLowest)
+            .background(ZeroTheme.colors.surfaceContainerLowest)
             .alpha(if (isSkipped) 0.4f else 1f)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -143,7 +134,7 @@ private fun AccountRow(
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(SurfaceContainer, shape = RoundedCornerShape(12.dp)),
+                .background(ZeroTheme.colors.surfaceContainer, shape = RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
             val icon = account.icon
@@ -151,13 +142,13 @@ private fun AccountRow(
                 imageLoader.View(
                     image = icon,
                     modifier = Modifier.size(22.dp),
-                    tint = OnSurfaceVariant,
+                    tint = ZeroTheme.colors.onSurfaceVariant,
                 )
             } else {
                 Icon(
                     imageVector = Icons.Filled.AccountBalance,
                     contentDescription = null,
-                    tint = OnSurfaceVariant,
+                    tint = ZeroTheme.colors.onSurfaceVariant,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -171,7 +162,7 @@ private fun AccountRow(
                     text = account.name,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -180,14 +171,14 @@ private fun AccountRow(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(ExistsBadgeBackground)
+                            .background(ZeroTheme.colors.importMergeContainer)
                             .padding(horizontal = 5.dp, vertical = 2.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.import_resolve_exists_badge).uppercase(),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryContainer,
+                            color = ZeroTheme.colors.primaryContainer,
                             letterSpacing = 0.06.sp,
                             maxLines = 1,
                         )
@@ -206,7 +197,7 @@ private fun AccountRow(
                     stringResource(R.string.import_accounts_review_tx_count, displayedCount)
                 },
                 fontSize = 11.sp,
-                color = if (isSkipped) Outline else OnSurfaceVariant,
+                color = if (isSkipped) ZeroTheme.colors.outline else ZeroTheme.colors.onSurfaceVariant,
             )
         }
         ImportStrategyChip(

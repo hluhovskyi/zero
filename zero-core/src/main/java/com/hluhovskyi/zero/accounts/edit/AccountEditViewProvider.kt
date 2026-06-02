@@ -19,11 +19,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,9 +49,7 @@ import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class AccountEditViewProvider(
     private val viewModel: AccountEditViewModel,
@@ -185,7 +183,7 @@ private fun FormCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -193,7 +191,7 @@ private fun FormCard(
             text = label.uppercase(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 1.5.sp,
         )
         BasicTextField(
@@ -203,7 +201,7 @@ private fun FormCard(
             textStyle = TextStyle(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
             singleLine = true,
             decorationBox = { innerTextField ->
@@ -211,7 +209,7 @@ private fun FormCard(
                     Text(
                         text = placeholder,
                         fontSize = 15.sp,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
                 innerTextField()

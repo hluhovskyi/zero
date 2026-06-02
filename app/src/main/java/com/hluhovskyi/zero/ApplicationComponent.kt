@@ -1,12 +1,24 @@
 package com.hluhovskyi.zero
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import androidx.work.WorkManager
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.activity.ActivityComponent
+import com.hluhovskyi.zero.activity.CurrentActivityTracker
+import com.hluhovskyi.zero.auth.AuthComponent
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.AttachBackupToNotifications
+import com.hluhovskyi.zero.backup.BackupClient
+import com.hluhovskyi.zero.backup.BackupComponent
+import com.hluhovskyi.zero.backup.BackupDetailComponent
+import com.hluhovskyi.zero.backup.BackupScheduler
+import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.DriveComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
 import com.hluhovskyi.zero.budget.BudgetRepository
@@ -37,34 +49,43 @@ import com.hluhovskyi.zero.common.time.ZoneBasedClock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
+import com.hluhovskyi.zero.currencies.CurrencyComponent
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.CurrencyLoader
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
-import com.hluhovskyi.zero.currencies.JavaCurrencyRepository
-import com.hluhovskyi.zero.currencies.LocaleBasedCurrencyPrimaryUseCase
-import com.hluhovskyi.zero.currencies.PredefinedCurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.PredefinedCurrencyLoader
+import com.hluhovskyi.zero.currencies.ExchangeRateService
 import com.hluhovskyi.zero.export.DefaultExportWriter
 import com.hluhovskyi.zero.export.ExportWriter
 import com.hluhovskyi.zero.feedback.DeviceInfo
 import com.hluhovskyi.zero.feedback.FeedbackService
+import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
 import com.hluhovskyi.zero.imports.SnapshotParser
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
+import com.hluhovskyi.zero.notifications.AndroidNotifier
+import com.hluhovskyi.zero.notifications.Notifier
 import com.hluhovskyi.zero.presets.PresetsComponent
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceResolverComponent
+import com.hluhovskyi.zero.scheduling.WorkManagerScheduler
+import com.hluhovskyi.zero.scheduling.WorkSchedulerComponent
+import com.hluhovskyi.zero.security.AndroidSecureKeyValueStore
+import com.hluhovskyi.zero.security.SecureKeyValueStore
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.sync.SyncComponent
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.sync.SyncSerializer
+import com.hluhovskyi.zero.testbridge.DatabaseTestBridge
+import com.hluhovskyi.zero.testbridge.TestBridgeContainer
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import dagger.Provides
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
@@ -82,6 +103,8 @@ private annotation class ApplicationScope
 )
 abstract class ApplicationComponent :
     ActivityComponent.Dependencies,
+    AuthComponent.Dependencies,
+    BackupDetailComponent.Dependencies,
     CrashComponent.Dependencies,
     DatabaseComponent.Dependencies,
     RemoteComponent.Dependencies,
@@ -93,6 +116,8 @@ abstract class ApplicationComponent :
     abstract val attachable: Attachable
     abstract val logger: Logger
     abstract val databaseComponent: DatabaseComponent
+    abstract val workSchedulerComponent: WorkSchedulerComponent
+    abstract val testBridgeContainer: TestBridgeContainer
     abstract override val feedbackService: FeedbackService
     abstract override val deviceInfo: DeviceInfo
 
@@ -119,6 +144,7 @@ abstract class ApplicationComponent :
             CrashModule::class,
             DatabaseModule::class,
             RemoteModule::class,
+            AuthModule::class,
         ],
     )
     object Module {
@@ -208,62 +234,53 @@ abstract class ApplicationComponent :
         fun androidUriResourceFactory(
             context: Context,
         ): AndroidUriResourceFactory = DefaultAndroidUriResourceFactory(
-            packageName = context.packageName,
+            context = context,
         )
 
         @Provides
         @ApplicationScope
-        internal fun currencyLoader(
+        fun currencyComponent(
             resourceResolver: ResourceResolver,
             androidUriResourceFactory: AndroidUriResourceFactory,
             localeProvider: LocaleProvider,
+            exchangeRateService: ExchangeRateService,
+            configurationRepository: ConfigurationRepository,
+            zonedClock: ZonedClock,
+            incorrectStateDetector: IncorrectStateDetector,
+            databaseComponent: DatabaseComponent,
             logger: Logger,
-        ): CurrencyLoader = PredefinedCurrencyLoader(
-            resourceResolver = resourceResolver,
-            androidUriResourceFactory = androidUriResourceFactory,
-            localeProvider = localeProvider,
-            logger = logger,
+        ): CurrencyComponent = CurrencyComponent.create(
+            dependencies = object : CurrencyComponent.Dependencies {
+                override val resourceResolver = resourceResolver
+                override val localeProvider = localeProvider
+                override val exchangeRateService = exchangeRateService
+                override val configurationRepository = configurationRepository
+                override val zonedClock = zonedClock
+                override val incorrectStateDetector = incorrectStateDetector
+                override val currencyRepositoryTransformer = databaseComponent.currencyRepositoryTransformer
+                override val logger = logger
+            },
+            ratesUri = androidUriResourceFactory.asset("exchange_rates.min.json"),
+            overridesUri = androidUriResourceFactory.asset("exchange_rate_overrides.min.json"),
         )
 
         @Provides
         @ApplicationScope
-        internal fun currencyRepository(
-            localeProvider: LocaleProvider,
-            currencyLoader: CurrencyLoader,
-            databaseComponent: DatabaseComponent,
-        ): CurrencyRepository {
-            val baseRepository = JavaCurrencyRepository(
-                localeProvider = localeProvider,
-                currencyLoader = currencyLoader,
-            )
-            return databaseComponent.transform(baseRepository)
-        }
+        fun currencyRepository(
+            currencyComponent: CurrencyComponent,
+        ): CurrencyRepository = currencyComponent.currencyRepository
 
         @Provides
         @ApplicationScope
         fun currencyPrimaryUseCase(
-            configurationRepository: ConfigurationRepository,
-            currencyRepository: CurrencyRepository,
-            localeProvider: LocaleProvider,
-            logger: Logger,
-        ): CurrencyPrimaryUseCase = LocaleBasedCurrencyPrimaryUseCase(
-            configurationRepository = configurationRepository,
-            currencyRepository = currencyRepository,
-            localeProvider = localeProvider,
-            logger = logger,
-        )
+            currencyComponent: CurrencyComponent,
+        ): CurrencyPrimaryUseCase = currencyComponent.currencyPrimaryUseCase
 
         @Provides
         @ApplicationScope
-        internal fun currencyConvertUseCase(
-            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-            currencyLoader: CurrencyLoader,
-            incorrectStateDetector: IncorrectStateDetector,
-        ): CurrencyConvertUseCase = PredefinedCurrencyConvertUseCase(
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            currencyLoader = currencyLoader,
-            incorrectStateDetector = incorrectStateDetector,
-        )
+        fun currencyConvertUseCase(
+            currencyComponent: CurrencyComponent,
+        ): CurrencyConvertUseCase = currencyComponent.currencyConvertUseCase
 
         @Provides
         @ApplicationScope
@@ -307,6 +324,8 @@ abstract class ApplicationComponent :
                 clock = clock,
                 zoneProvider = zoneProvider,
             ),
+            clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides
@@ -316,6 +335,7 @@ abstract class ApplicationComponent :
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            configurationRepository: ConfigurationRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = CategoryComponent.queryUseCase(
@@ -323,6 +343,7 @@ abstract class ApplicationComponent :
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            configurationRepository = configurationRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -339,6 +360,25 @@ abstract class ApplicationComponent :
             accountRepository = accountRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             configurationRepository = configurationRepository,
+        )
+
+        // E2e test seam — the bridge wraps clearData to also re-seed presets so each test
+        // starts in the fresh-install baseline without depending on activity-attach timing.
+        @Provides
+        @ApplicationScope
+        fun testBridgeContainer(
+            databaseComponent: DatabaseComponent,
+            presetsComponent: PresetsComponent,
+        ): TestBridgeContainer = TestBridgeContainer(
+            database = DatabaseTestBridge(
+                cleanupJob = databaseComponent.cleanupJob,
+                currentUserRepository = databaseComponent.currentUserRepository,
+                accountRepository = databaseComponent.accountRepository,
+                categoryRepository = databaseComponent.categoryRepository,
+                transactionRepository = databaseComponent.transactionRepository,
+                budgetRepository = databaseComponent.budgetRepository,
+                seedPresets = { presetsComponent.presetsUseCase.seed() },
+            ),
         )
 
         @Provides
@@ -369,6 +409,85 @@ abstract class ApplicationComponent :
 
         @Provides
         @ApplicationScope
+        fun currentActivityTracker(application: Application): CurrentActivityTracker = CurrentActivityTracker(application)
+
+        @Provides
+        @ApplicationScope
+        fun currentActivityProvider(
+            tracker: CurrentActivityTracker,
+        ): @JvmSuppressWildcards () -> Activity? = tracker
+
+        @Provides
+        @ApplicationScope
+        fun driveComponent(
+            httpExecutor: HttpExecutor,
+            oauthTokenProvider: OAuthTokenProvider,
+        ): DriveComponent = DriveComponent.factory(
+            object : DriveComponent.Dependencies {
+                override val httpExecutor = httpExecutor
+                override val oauthTokenProvider = oauthTokenProvider
+            },
+        ).create()
+
+        @Provides
+        @ApplicationScope
+        fun backupClient(driveComponent: DriveComponent): BackupClient = driveComponent.backupClient
+
+        @Provides
+        @ApplicationScope
+        fun backupComponent(
+            syncEngine: SyncEngine,
+            backupClient: BackupClient,
+            currentUserRepository: CurrentUserRepository,
+        ): BackupComponent = BackupComponent.factory(
+            object : BackupComponent.Dependencies {
+                override val syncEngine = syncEngine
+                override val backupClient = backupClient
+                override val currentUserRepository = currentUserRepository
+                override val backupCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            },
+        ).create()
+
+        @Provides
+        fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
+
+        @Provides
+        @ApplicationScope
+        fun notifier(context: Context): Notifier = AndroidNotifier(context)
+
+        @Provides
+        @ApplicationScope
+        internal fun workSchedulerComponent(
+            backupUseCase: BackupUseCase,
+            syncEngine: SyncEngine,
+            currentUserRepository: CurrentUserRepository,
+            workManagerScheduler: WorkManagerScheduler,
+        ): WorkSchedulerComponent = WorkSchedulerComponent.builder(
+            object : WorkSchedulerComponent.Dependencies {
+                override val backupUseCase = backupUseCase
+                override val syncEngine = syncEngine
+                override val currentUserRepository = currentUserRepository
+                override val workManagerScheduler = workManagerScheduler
+            },
+        ).build()
+
+        @Provides
+        internal fun backupScheduler(component: WorkSchedulerComponent): BackupScheduler = component.backupScheduler
+
+        @Provides
+        @ApplicationScope
+        fun secureKeyValueStore(context: Context): SecureKeyValueStore = AndroidSecureKeyValueStore(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManager(context: Context): WorkManager = WorkManager.getInstance(context)
+
+        @Provides
+        @ApplicationScope
+        fun workManagerScheduler(workManager: WorkManager): WorkManagerScheduler = WorkManagerScheduler(workManager)
+
+        @Provides
+        @ApplicationScope
         fun exportWriter(context: Context): ExportWriter = DefaultExportWriter(context)
 
         @Provides
@@ -379,6 +498,7 @@ abstract class ApplicationComponent :
             idGenerator: IdGenerator,
             logger: Logger,
             resourceResolver: ResourceResolver,
+            driveComponent: DriveComponent,
         ): ImportComponent.Builder {
             val parsers: List<SnapshotParser> = listOf(
                 ZeroBackupParser(syncEngine = syncEngine),
@@ -388,6 +508,7 @@ abstract class ApplicationComponent :
                     clock = clock,
                     logger = logger,
                 ),
+                driveComponent.driveSnapshotParser,
             )
             return ImportComponent.builder(component)
                 .parsers(parsers)
@@ -397,6 +518,11 @@ abstract class ApplicationComponent :
         fun settingsComponentBuilder(
             component: ApplicationComponent,
         ): SettingsComponent.Builder = SettingsComponent.builder(component)
+
+        @Provides
+        fun backupDetailComponentBuilder(
+            component: ApplicationComponent,
+        ): BackupDetailComponent.Builder = BackupDetailComponent.builder(component)
 
         @Provides
         fun activityComponentBuilder(
@@ -485,6 +611,32 @@ internal object RemoteModule {
     fun feedbackService(
         remoteComponent: RemoteComponent,
     ): FeedbackService = remoteComponent.feedbackService
+
+    @Provides
+    @ApplicationScope
+    fun httpExecutor(
+        remoteComponent: RemoteComponent,
+    ): HttpExecutor = remoteComponent.httpExecutor
+
+    @Provides
+    @ApplicationScope
+    fun exchangeRateService(
+        remoteComponent: RemoteComponent,
+    ): ExchangeRateService = remoteComponent.exchangeRateService
+}
+
+@dagger.Module
+internal object AuthModule {
+
+    @Provides
+    @ApplicationScope
+    fun authComponent(component: ApplicationComponent): AuthComponent = AuthComponent.builder()
+        .dependencies(component)
+        .build()
+
+    @Provides
+    @ApplicationScope
+    fun oauthTokenProvider(authComponent: AuthComponent): OAuthTokenProvider = authComponent.googleOAuthTokenProvider
 }
 
 @dagger.Module
@@ -501,6 +653,14 @@ internal object CrashModule {
     @Provides
     @ApplicationScope
     fun attachable(
+        context: Context,
         crashComponent: CrashComponent,
-    ): Attachable = AttachApplicationComponent(crashComponent)
+        currentActivityTracker: CurrentActivityTracker,
+        backupComponent: BackupComponent,
+        notifier: Notifier,
+    ): Attachable = AttachApplicationComponent(
+        crashComponent = crashComponent,
+        currentActivityTracker = currentActivityTracker,
+        backupNotifications = AttachBackupToNotifications(context, backupComponent, notifier),
+    )
 }

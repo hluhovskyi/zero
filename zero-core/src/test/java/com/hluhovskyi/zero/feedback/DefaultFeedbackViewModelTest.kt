@@ -9,7 +9,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -39,8 +38,11 @@ class DefaultFeedbackViewModelTest {
     private class ScriptedFeedbackService(private val result: FeedbackSubmitResult) : FeedbackService {
         var callCount: Int = 0
             private set
+        var lastReport: FeedbackReport? = null
+            private set
         override suspend fun submit(report: FeedbackReport): FeedbackSubmitResult {
             callCount++
+            lastReport = report
             return result
         }
     }
@@ -53,16 +55,26 @@ class DefaultFeedbackViewModelTest {
         }
     }
 
+    private class RecordingCloseHandler : OnFeedbackCloseHandler {
+        var callCount: Int = 0
+            private set
+        override fun onFeedbackClose() {
+            callCount++
+        }
+    }
+
     private fun newViewModel(
         service: FeedbackService,
-        handler: OnFeedbackSubmittedHandler,
+        submittedHandler: OnFeedbackSubmittedHandler,
         scope: CoroutineScope,
+        closeHandler: OnFeedbackCloseHandler = RecordingCloseHandler(),
     ): DefaultFeedbackViewModel = DefaultFeedbackViewModel(
         feedbackService = service,
         breadcrumbs = emptyBreadcrumbs,
         reportFormatter = formatter,
-        onFeedbackSubmittedHandler = handler,
-        errorMessageProvider = { "error" },
+        onFeedbackSubmittedHandler = submittedHandler,
+        onFeedbackCloseHandler = closeHandler,
+        errorMessages = { reason -> "error:${reason::class.simpleName}" },
         deviceInfo = deviceInfo,
         coroutineScope = scope,
     )
@@ -70,7 +82,7 @@ class DefaultFeedbackViewModelTest {
     @Test
     fun `UpdateDescription updates state and clears prior error`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Network))
         val handler = RecordingSubmittedHandler()
         val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
 
@@ -117,9 +129,9 @@ class DefaultFeedbackViewModelTest {
     }
 
     @Test
-    fun `Failure sets error message preserves description and does not invoke handler`() = runTest {
+    fun `Failure maps reason to message preserves description and does not invoke handler`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Failure(FeedbackSubmitResult.Failure.Reason.Server(503)))
         val handler = RecordingSubmittedHandler()
         val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
 
@@ -132,6 +144,47 @@ class DefaultFeedbackViewModelTest {
         val state = viewModel.state.first()
         assertFalse(state.isSubmitting)
         assertEquals("typed text", state.description)
-        assertNotNull(state.errorMessage)
+        assertEquals("error:Server", state.errorMessage)
+    }
+
+    @Test
+    fun `SelectType updates state type`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val handler = RecordingSubmittedHandler()
+        val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
+
+        viewModel.perform(FeedbackViewModel.Action.SelectType(FeedbackType.Idea))
+
+        val state = viewModel.state.first()
+        assertEquals(FeedbackType.Idea, state.type)
+    }
+
+    @Test
+    fun `submitted report carries selected type`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val handler = RecordingSubmittedHandler()
+        val viewModel = newViewModel(service, handler, CoroutineScope(dispatcher))
+
+        viewModel.perform(FeedbackViewModel.Action.SelectType(FeedbackType.Other))
+        viewModel.perform(FeedbackViewModel.Action.UpdateDescription("hello"))
+        viewModel.perform(FeedbackViewModel.Action.Submit)
+        advanceUntilIdle()
+
+        assertEquals(FeedbackType.Other, service.lastReport?.type)
+    }
+
+    @Test
+    fun `Close invokes close handler`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val service = ScriptedFeedbackService(FeedbackSubmitResult.Success("url"))
+        val submitted = RecordingSubmittedHandler()
+        val close = RecordingCloseHandler()
+        val viewModel = newViewModel(service, submitted, CoroutineScope(dispatcher), closeHandler = close)
+
+        viewModel.perform(FeedbackViewModel.Action.Close)
+
+        assertEquals(1, close.callCount)
     }
 }

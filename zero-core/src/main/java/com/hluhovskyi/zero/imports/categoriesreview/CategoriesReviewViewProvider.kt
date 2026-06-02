@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,16 +38,10 @@ import com.hluhovskyi.zero.imports.ResolveStrategy
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.ImportStepHeader
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val TOTAL_STEPS = 4
 private const val CURRENT_STEP = 1
-
-private val ExistsBadgeBackground = Color(0xFFE8EEFF)
 
 internal class CategoriesReviewViewProvider(
     private val viewModel: CategoriesReviewViewModel,
@@ -82,7 +76,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
                     text = stringResource(R.string.import_categories_review_info, state.categories.size),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 0.08.sp,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp, start = 4.dp),
                 )
@@ -105,7 +99,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(PrimaryContainer)
+                    .background(ZeroTheme.colors.primaryContainer)
                     .clickable { viewModel.perform(CategoriesReviewViewModel.Action.Next) }
                     .padding(16.dp),
                 contentAlignment = Alignment.Center,
@@ -114,7 +108,7 @@ private fun CategoriesReviewView(viewModel: CategoriesReviewViewModel, imageLoad
                     text = stringResource(R.string.import_categories_review_continue),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = ZeroTheme.colors.onPrimary,
                 )
             }
         }
@@ -139,7 +133,7 @@ private fun CategoryRow(
             .fillMaxWidth()
             .padding(bottom = 4.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceContainerLowest)
+            .background(ZeroTheme.colors.surfaceContainerLowest)
             .alpha(if (isSkipped) 0.4f else 1f)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -165,7 +159,7 @@ private fun CategoryRow(
                     text = category.name,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurface,
+                    color = ZeroTheme.colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -174,14 +168,14 @@ private fun CategoryRow(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(ExistsBadgeBackground)
+                            .background(ZeroTheme.colors.importMergeContainer)
                             .padding(horizontal = 5.dp, vertical = 2.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.import_resolve_exists_badge).uppercase(),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryContainer,
+                            color = ZeroTheme.colors.primaryContainer,
                             letterSpacing = 0.06.sp,
                             maxLines = 1,
                         )
@@ -204,7 +198,7 @@ private fun CategoryRow(
                     )
                 },
                 fontSize = 11.sp,
-                color = if (isSkipped) Outline else OnSurfaceVariant,
+                color = if (isSkipped) ZeroTheme.colors.outline else ZeroTheme.colors.onSurfaceVariant,
             )
         }
         ImportStrategyChip(

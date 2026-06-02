@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.activity.screens.bottombar
 
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.Uri
 
 internal interface BottomBarViewModel : AttachableActionStateModel<BottomBarViewModel.Action, BottomBarViewModel.State> {
 
@@ -14,8 +14,16 @@ internal interface BottomBarViewModel : AttachableActionStateModel<BottomBarView
 
     data class Item(
         val id: Id.Known,
-        val name: String,
-        val icon: Image,
+        val iconUri: Uri,
         val selected: Boolean,
+        val hasAlert: Boolean = false,
     )
+
+    companion object {
+        val HomeId = Id.Known("home")
+        val AccountsId = Id.Known("accounts")
+        val BudgetId = Id.Known("budget")
+        val CategoriesId = Id.Known("categories")
+        val SettingsId = Id.Known("settings")
+    }
 }

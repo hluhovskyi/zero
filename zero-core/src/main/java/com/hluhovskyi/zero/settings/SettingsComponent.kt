@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.settings
 
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
@@ -41,12 +43,15 @@ abstract class SettingsComponent : AttachableViewComponent {
         val currentUserRepository: CurrentUserRepository
         val serializer: SyncSerializer
         val exportWriter: ExportWriter
+        val oauthTokenProvider: OAuthTokenProvider
+        val backupUseCase: BackupUseCase
     }
 
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerSettingsComponent.builder()
             .dependencies(dependencies)
             .onImportSelectedHandler(OnImportSelectedHandler.Noop)
+            .onBackupSelectedHandler(OnBackupSelectedHandler.Noop)
             .settingsCurrencyUseCase(SettingsCurrencyUseCase.Noop)
     }
 
@@ -56,6 +61,9 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onImportSelectedHandler(handler: OnImportSelectedHandler): Builder
+
+        @BindsInstance
+        fun onBackupSelectedHandler(handler: OnBackupSelectedHandler): Builder
 
         @BindsInstance
         fun settingsCurrencyUseCase(useCase: SettingsCurrencyUseCase): Builder
@@ -88,18 +96,24 @@ abstract class SettingsComponent : AttachableViewComponent {
         @SettingsScope
         fun viewModel(
             onImportSelected: OnImportSelectedHandler,
+            onBackupSelected: OnBackupSelectedHandler,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
             exportUseCase: ExportUseCase,
             biometricLockUseCase: BiometricLockUseCase,
             biometricAuthenticator: BiometricAuthenticator,
+            oauthTokenProvider: OAuthTokenProvider,
+            backupUseCase: BackupUseCase,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
+            onBackupSelected = onBackupSelected,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,
             exportUseCase = exportUseCase,
             biometricLockUseCase = biometricLockUseCase,
             biometricAuthenticator = biometricAuthenticator,
+            oauthTokenProvider = oauthTokenProvider,
+            backupUseCase = backupUseCase,
         )
 
         @Provides

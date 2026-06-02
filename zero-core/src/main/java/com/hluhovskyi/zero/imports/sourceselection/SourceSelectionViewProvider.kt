@@ -14,13 +14,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,15 +40,7 @@ import com.hluhovskyi.zero.imports.KnownSource
 import com.hluhovskyi.zero.imports.Source
 import com.hluhovskyi.zero.ui.ImportErrorBanner
 import com.hluhovskyi.zero.ui.ModalHeader
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Surface
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class SourceSelectionViewProvider(
     private val viewModel: SourceSelectionViewModel,
@@ -66,7 +59,7 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Surface),
+            .background(ZeroTheme.colors.surface),
     ) {
         ModalHeader(
             title = stringResource(R.string.import_source_selection_title),
@@ -91,7 +84,7 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
                 Text(
                     text = stringResource(R.string.import_source_selection_subtitle),
                     fontSize = 14.sp,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     lineHeight = 20.sp,
                     modifier = Modifier.padding(bottom = 4.dp),
                 )
@@ -99,7 +92,9 @@ private fun SourceSelectionView(viewModel: SourceSelectionViewModel) {
             items(state.sources, key = { it.key }) { source ->
                 SourceCard(
                     source = source,
-                    onClick = { viewModel.perform(SourceSelectionViewModel.Action.SelectSource(source)) },
+                    onClick = { requiresFile ->
+                        viewModel.perform(SourceSelectionViewModel.Action.SelectSource(source, requiresFile))
+                    },
                 )
             }
             item(key = "hint") {
@@ -115,36 +110,50 @@ private data class SourceCardConfig(
     val iconTint: Color,
     val title: String,
     val description: String,
+    /** Whether tapping this source opens the file picker. Fileless sources (Drive) fetch
+     *  remotely, so the selection skips straight to loading. */
+    val requiresFile: Boolean = true,
 )
 
 @Composable
 private fun sourceCardConfig(source: Source): SourceCardConfig? = when (source.key) {
     KnownSource.ZeroBackup.key -> SourceCardConfig(
         icon = Icons.Filled.Backup,
-        iconBg = Color(0xFFE8EEFF),
-        iconTint = PrimaryContainer,
+        iconBg = ZeroTheme.colors.importMergeContainer,
+        iconTint = ZeroTheme.colors.primaryContainer,
         title = stringResource(R.string.import_source_zero_backup_title),
         description = stringResource(R.string.import_source_zero_backup_description),
     )
     KnownSource.ZenMoney.key -> SourceCardConfig(
         icon = Icons.Filled.Description,
-        iconBg = Color(0xFFE8F5E9),
-        iconTint = Color(0xFF1B5E20),
+        iconBg = ZeroTheme.colors.importNewContainer,
+        iconTint = ZeroTheme.colors.importNewContent,
         title = stringResource(R.string.import_source_zenmoney_title),
         description = stringResource(R.string.import_source_zenmoney_description),
+    )
+    // Key mirrors DriveSnapshotParser.KEY in zero-backup, which zero-core cannot depend on.
+    DRIVE_SOURCE_KEY -> SourceCardConfig(
+        icon = Icons.Filled.CloudDownload,
+        iconBg = ZeroTheme.colors.importMergeContainer,
+        iconTint = ZeroTheme.colors.primaryContainer,
+        title = stringResource(R.string.import_source_drive_title),
+        description = stringResource(R.string.import_source_drive_description),
+        requiresFile = false,
     )
     else -> null
 }
 
+private const val DRIVE_SOURCE_KEY = "drive"
+
 @Composable
-private fun SourceCard(source: Source, onClick: () -> Unit) {
+private fun SourceCard(source: Source, onClick: (requiresFile: Boolean) -> Unit) {
     val config = sourceCardConfig(source) ?: return
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceContainerLowest)
-            .clickable(onClick = onClick, onClickLabel = config.title)
+            .background(ZeroTheme.colors.surfaceContainerLowest)
+            .clickable(onClick = { onClick(config.requiresFile) }, onClickLabel = config.title)
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -170,19 +179,19 @@ private fun SourceCard(source: Source, onClick: () -> Unit) {
                 text = config.title,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             )
             Text(
                 text = config.description,
                 fontSize = 13.sp,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 lineHeight = 18.sp,
             )
         }
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = null,
-            tint = OutlineVariant,
+            tint = ZeroTheme.colors.outlineVariant,
             modifier = Modifier.size(20.dp),
         )
     }
@@ -193,7 +202,7 @@ private fun MoreSourcesHint() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -201,20 +210,20 @@ private fun MoreSourcesHint() {
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .background(SurfaceContainer, RoundedCornerShape(8.dp)),
+                .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = null,
-                tint = Outline,
+                tint = ZeroTheme.colors.outline,
                 modifier = Modifier.size(18.dp),
             )
         }
         Text(
             text = stringResource(R.string.import_source_more_coming_soon),
             fontSize = 13.sp,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
         )
     }
 }

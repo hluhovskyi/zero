@@ -1,5 +1,7 @@
 package com.hluhovskyi.zero.settings
 
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
+import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.export.ExportUseCase
@@ -9,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -19,9 +21,12 @@ internal class DefaultSettingsViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val settingsCurrencyUseCase: SettingsCurrencyUseCase,
     private val onImportSelected: OnImportSelectedHandler,
+    private val onBackupSelected: OnBackupSelectedHandler,
     private val exportUseCase: ExportUseCase,
     private val biometricLockUseCase: BiometricLockUseCase,
     private val biometricAuthenticator: BiometricAuthenticator,
+    private val oauthTokenProvider: OAuthTokenProvider,
+    private val backupUseCase: BackupUseCase,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : SettingsViewModel {
 
@@ -32,6 +37,9 @@ internal class DefaultSettingsViewModel(
         when (action) {
             is SettingsViewModel.Action.Import -> coroutineScope.launch(Dispatchers.Main) {
                 onImportSelected.onSelected()
+            }
+            is SettingsViewModel.Action.OpenBackup -> coroutineScope.launch(Dispatchers.Main) {
+                onBackupSelected.onSelected()
             }
             is SettingsViewModel.Action.Export -> coroutineScope.launch {
                 when (val result = exportUseCase.export(action.uri)) {
@@ -88,6 +96,22 @@ internal class DefaultSettingsViewModel(
             launch {
                 biometricLockUseCase.enabled.collect { enabled ->
                     mutableState.update { it.copy(biometricLockEnabled = enabled) }
+                }
+            }
+            launch {
+                combine(
+                    oauthTokenProvider.isSignedIn,
+                    backupUseCase.state,
+                ) { isSignedIn, backup ->
+                    SettingsViewModel.BackupSummary(
+                        isSignedIn = isSignedIn,
+                        phase = backup.phase,
+                        lastSuccessAt = backup.lastSuccessAt,
+                        lastError = backup.lastError,
+                        consecutiveFailures = backup.consecutiveFailures,
+                    )
+                }.collect { summary ->
+                    mutableState.update { it.copy(backup = summary) }
                 }
             }
         }

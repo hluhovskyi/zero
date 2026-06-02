@@ -12,6 +12,12 @@ const auth = new google.auth.GoogleAuth({
 const playintegrity = google.playintegrity({ version: 'v1', auth });
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
+const TYPE_TO_LABEL = {
+    bug: 'bug',
+    idea: 'idea',
+    other: 'other',
+};
+
 export const feedback = async (req, res) => {
     if (req.method !== 'POST') {
         res.status(405).json({ error: 'method not allowed' });
@@ -44,11 +50,19 @@ export const feedback = async (req, res) => {
         return;
     }
 
-    const { title, body, labels = [] } = req.body || {};
+    const { title, body, type, debug = false } = req.body || {};
     if (typeof title !== 'string' || typeof body !== 'string' || !title || !body) {
         res.status(400).json({ error: 'invalid payload' });
         return;
     }
+    const typeLabel = TYPE_TO_LABEL[type];
+    if (!typeLabel) {
+        res.status(400).json({ error: 'invalid type' });
+        return;
+    }
+
+    const labels = ['feedback', typeLabel];
+    if (debug === true) labels.push('debug');
 
     try {
         const issue = await octokit.issues.create({

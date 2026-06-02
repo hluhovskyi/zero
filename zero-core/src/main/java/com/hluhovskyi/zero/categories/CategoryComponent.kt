@@ -6,6 +6,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
@@ -46,6 +47,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         val clock: Clock
         val zoneProvider: ZoneProvider
         val configurationRepository: ConfigurationRepository
+        val dispatchers: DispatcherProvider
     }
 
     companion object {
@@ -55,6 +57,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             iconRepository: IconRepository,
             colorRepository: ColorRepository,
             transactionRepository: TransactionRepository,
+            configurationRepository: ConfigurationRepository,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): CategoriesQueryUseCase = DefaultCategoriesQueryUseCase(
@@ -62,6 +65,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             iconRepository = iconRepository,
             colorRepository = colorRepository,
             transactionRepository = transactionRepository,
+            configurationRepository = configurationRepository,
             clock = clock,
             zoneProvider = zoneProvider,
         )
@@ -121,12 +125,14 @@ abstract class CategoryComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onCategorySelectedHandler: OnCategorySelectedHandler,
             configurationRepository: ConfigurationRepository,
+            dispatchers: DispatcherProvider,
         ): CategoryViewModel = DefaultCategoryViewModel(
             categoriesQueryUseCase = categoriesQueryUseCase,
             categorySpendingUseCase = categorySpendingUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onCategorySelectedHandler = onCategorySelectedHandler,
             configurationRepository = configurationRepository,
+            dispatchers = dispatchers,
         )
 
         @Provides

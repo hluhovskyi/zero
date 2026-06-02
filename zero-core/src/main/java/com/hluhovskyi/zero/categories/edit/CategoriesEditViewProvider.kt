@@ -19,11 +19,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,9 +50,7 @@ import com.hluhovskyi.zero.ui.SegmentedToggle
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class CategoriesEditViewProvider(
     private val viewModel: CategoryEditViewModel,
@@ -191,7 +189,7 @@ private fun NameFormCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow, RoundedCornerShape(14.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -199,7 +197,7 @@ private fun NameFormCard(
             text = stringResource(R.string.category_edit_name_label).uppercase(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 1.2.sp,
         )
         BasicTextField(
@@ -211,7 +209,7 @@ private fun NameFormCard(
             textStyle = TextStyle(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
             singleLine = true,
             decorationBox = { innerTextField ->
@@ -219,7 +217,7 @@ private fun NameFormCard(
                     Text(
                         text = stringResource(R.string.category_edit_name_placeholder),
                         fontSize = 16.sp,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
                 innerTextField()

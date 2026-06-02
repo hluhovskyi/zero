@@ -19,7 +19,7 @@ internal class HomeViewProvider(
 
     @Composable
     override fun View() {
-        val state by viewModel.state.collectAsState(initial = HomeViewModel.State())
+        val state by viewModel.state.collectAsState()
 
         Box(modifier = Modifier.fillMaxSize()) {
             if (state.isNewUser) {

@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,13 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-
-private val MergeBackground = Color(0xFFE8EEFF)
-private val NewBackground = Color(0xFFE8F5E9)
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private data class StrategyVisual(
     val background: Color,
@@ -48,20 +42,20 @@ private data class StrategyVisual(
 @Composable
 private fun visuals(): Map<ResolveStrategy, StrategyVisual> = mapOf(
     ResolveStrategy.Merge to StrategyVisual(
-        background = MergeBackground,
-        foreground = PrimaryContainer,
+        background = ZeroTheme.colors.importMergeContainer,
+        foreground = ZeroTheme.colors.primaryContainer,
         label = stringResource(R.string.import_resolve_strategy_merge),
         description = stringResource(R.string.import_resolve_strategy_merge_desc),
     ),
     ResolveStrategy.New to StrategyVisual(
-        background = NewBackground,
-        foreground = Secondary,
+        background = ZeroTheme.colors.importNewContainer,
+        foreground = ZeroTheme.colors.secondary,
         label = stringResource(R.string.import_resolve_strategy_new),
         description = stringResource(R.string.import_resolve_strategy_new_desc),
     ),
     ResolveStrategy.Skip to StrategyVisual(
-        background = SurfaceContainer,
-        foreground = OnSurfaceVariant,
+        background = ZeroTheme.colors.surfaceContainer,
+        foreground = ZeroTheme.colors.onSurfaceVariant,
         label = stringResource(R.string.import_resolve_strategy_skip),
         description = stringResource(R.string.import_resolve_strategy_skip_desc),
     ),
@@ -141,7 +135,7 @@ fun ImportStrategyChip(
                         Text(
                             text = optionVisual.description,
                             fontSize = 11.sp,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                         )
                     }
                     if (isSelected) {

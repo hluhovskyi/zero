@@ -25,11 +25,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -395,7 +396,24 @@ internal class DefaultTransactionEditUseCase(
             }
 
             launch {
-                categoriesQueryUseCase.queryRanked(emptyFlow())
+                val accountSignals = mutableState
+                    .map { it.selectedAccount?.id }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.AccountChanged(it) }
+
+                val dateSignals = mutableState
+                    .map { it.localDateTime?.date }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.DateChanged(it) }
+
+                val amountSignals = mutableState
+                    .map { it.amount.toBigDecimalOrNull()?.takeIf { value -> value > BigDecimal.ZERO } }
+                    .distinctUntilChanged()
+                    .map { CategoriesQueryUseCase.RankSignal.AmountChanged(it) }
+
+                val signals = merge(accountSignals, dateSignals, amountSignals)
+
+                categoriesQueryUseCase.queryRanked(signals)
                     .map { categories ->
                         categories.map { category ->
                             TransactionEditCategory(
@@ -477,15 +495,21 @@ internal class DefaultTransactionEditUseCase(
                     .filterIsInstance<TransactionEditCurrencyUseCase.State.Picked>()
                     .collectLatest { picked ->
                         mutableState.update { state ->
-                            val currency = state.currencies.firstOrNull { it.id == picked.currency.id }
-                            if (currency != null) {
-                                state.copy(
-                                    manuallyChangedCurrency = true,
-                                    selectedCurrency = currency,
-                                )
+                            val pickedCurrency = TransactionEditCurrency(
+                                id = picked.currency.id,
+                                name = picked.currency.name,
+                                currencySymbol = picked.currency.symbol,
+                            )
+                            val currencies = if (state.currencies.any { it.id == pickedCurrency.id }) {
+                                state.currencies
                             } else {
-                                state
+                                state.currencies + pickedCurrency
                             }
+                            state.copy(
+                                currencies = currencies,
+                                manuallyChangedCurrency = true,
+                                selectedCurrency = pickedCurrency,
+                            )
                         }
                     }
             }

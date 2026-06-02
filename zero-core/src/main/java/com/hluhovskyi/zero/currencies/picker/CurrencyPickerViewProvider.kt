@@ -14,8 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,8 +30,7 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.SearchBar
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val GRID_COLUMNS = 4
 
@@ -83,7 +81,7 @@ private fun CurrencyPickerGridItem(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val primary = MaterialTheme.colors.primary
+    val primary = ZeroTheme.colors.primary
     val shape = RoundedCornerShape(12.dp)
     Column(
         modifier = Modifier.clickable(onClick = onClick),
@@ -101,14 +99,14 @@ private fun CurrencyPickerGridItem(
                         Modifier.padding(4.dp)
                     },
                 )
-                .background(SurfaceContainer, shape),
+                .background(ZeroTheme.colors.surfaceContainer, shape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = currency.symbol,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             )
         }
         Text(
@@ -116,7 +114,7 @@ private fun CurrencyPickerGridItem(
             text = currency.name,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

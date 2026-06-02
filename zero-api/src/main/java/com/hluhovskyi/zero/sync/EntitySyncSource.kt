@@ -9,4 +9,7 @@ interface EntitySyncSource<T : SyncEntity> {
 
     /** Entities with updatedDateTime > [since]. Used for delta sync. */
     suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<T>
+
+    /** Max updatedDateTime across all entities, or null when empty. */
+    suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime?
 }

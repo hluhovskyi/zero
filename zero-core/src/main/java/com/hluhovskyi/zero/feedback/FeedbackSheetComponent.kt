@@ -13,8 +13,9 @@ class FeedbackSheetComponent(
     deviceInfo: DeviceInfo,
     clock: Clock,
     isDebugBuild: Boolean,
-    errorMessageProvider: () -> String,
+    errorMessages: FeedbackErrorMessages,
     onFeedbackSubmittedHandler: OnFeedbackSubmittedHandler,
+    onFeedbackCloseHandler: OnFeedbackCloseHandler,
 ) : AttachableViewComponent {
 
     override val tag: String = TAG
@@ -29,7 +30,8 @@ class FeedbackSheetComponent(
                 clock = clock,
             ),
             onFeedbackSubmittedHandler = onFeedbackSubmittedHandler,
-            errorMessageProvider = errorMessageProvider,
+            onFeedbackCloseHandler = onFeedbackCloseHandler,
+            errorMessages = errorMessages,
             deviceInfo = deviceInfo,
         )
     }

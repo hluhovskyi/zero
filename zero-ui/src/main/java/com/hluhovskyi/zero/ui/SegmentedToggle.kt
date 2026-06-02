@@ -8,9 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,9 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * @param selectedFraction Optional continuous indicator position (0..items.size-1) that overrides
@@ -50,13 +47,13 @@ fun <T> SegmentedToggle(
 
     Layout(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(12.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(12.dp))
             .padding(4.dp),
         content = {
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = SurfaceContainerLowest,
-                elevation = 2.dp,
+                color = ZeroTheme.colors.surfaceContainerLowest,
+                shadowElevation = 2.dp,
                 content = {},
             )
             items.forEach { item ->
@@ -72,9 +69,9 @@ fun <T> SegmentedToggle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isSelected) {
-                            MaterialTheme.colors.primary
+                            ZeroTheme.colors.primary
                         } else {
-                            OnSurfaceVariant
+                            ZeroTheme.colors.onSurfaceVariant
                         },
                         textAlign = TextAlign.Center,
                     )

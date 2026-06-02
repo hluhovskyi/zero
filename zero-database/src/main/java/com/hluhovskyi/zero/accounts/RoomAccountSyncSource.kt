@@ -13,6 +13,8 @@ internal class RoomAccountSyncSource(
 
     override suspend fun exportSince(userId: Id.Known, since: LocalDateTime): List<SyncAccount> = dao().selectSince(userId, since).map { it.toSyncModel() }
 
+    override suspend fun lastModifiedAt(userId: Id.Known): LocalDateTime? = dao().selectLastModifiedAt(userId)
+
     private fun AccountEntity.toSyncModel() = SyncAccount(
         id = id,
         currencyId = currencyId,

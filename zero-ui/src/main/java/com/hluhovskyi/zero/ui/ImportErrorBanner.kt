@@ -10,22 +10,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.ErrorContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun ImportErrorBanner(
@@ -37,7 +35,7 @@ fun ImportErrorBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(ErrorContainer, RoundedCornerShape(12.dp))
+            .background(ZeroTheme.colors.errorContainer, RoundedCornerShape(12.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
@@ -45,13 +43,13 @@ fun ImportErrorBanner(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(Color(0xFFFFEBEE), RoundedCornerShape(10.dp)),
+                .background(ZeroTheme.colors.importErrorContainer, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.Cancel,
                 contentDescription = null,
-                tint = Error,
+                tint = ZeroTheme.colors.error,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -63,12 +61,12 @@ fun ImportErrorBanner(
                 text = stringResource(R.string.import_error_banner_title),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Error,
+                color = ZeroTheme.colors.error,
             )
             Text(
                 text = message,
                 fontSize = 13.sp,
-                color = Color(0xFF93000A),
+                color = ZeroTheme.colors.importErrorContent,
                 lineHeight = 19.sp,
             )
             Row(
@@ -77,7 +75,7 @@ fun ImportErrorBanner(
             ) {
                 Box(
                     modifier = Modifier
-                        .background(Error, RoundedCornerShape(8.dp))
+                        .background(ZeroTheme.colors.error, RoundedCornerShape(8.dp))
                         .clickable(onClick = onRetry)
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
@@ -85,7 +83,7 @@ fun ImportErrorBanner(
                         text = stringResource(R.string.import_error_banner_retry),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = ZeroTheme.colors.onError,
                     )
                 }
                 Box(
@@ -98,7 +96,7 @@ fun ImportErrorBanner(
                         text = stringResource(R.string.import_error_banner_dismiss),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Error,
+                        color = ZeroTheme.colors.error,
                     )
                 }
             }

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * Common icon container with a rounded-square background.
@@ -39,7 +40,7 @@ fun CategoryIconView(
                     Modifier
                         .border(2.dp, primaryColor, shape)
                         .padding(2.dp)
-                        .background(Color.White, shape)
+                        .background(ZeroTheme.colors.surfaceContainerLowest, shape)
                         .padding(2.dp)
                 } else {
                     Modifier.padding(4.dp)
@@ -58,6 +59,11 @@ fun CategoryIconView(
 /**
  * Overload of [CategoryIconView] that uses [UiColorScheme].
  * Provides [iconTint] to the content lambda for convenient icon tinting.
+ *
+ * In dark mode the entity's `primary` and `background` swap roles: the
+ * container fills with the darker brand tone and the icon paints with the
+ * lighter pastel, so the icon container reads as theme-coherent on the dark
+ * surface instead of an out-of-place light pastel chip.
  */
 @Composable
 fun CategoryIconView(
@@ -68,14 +74,23 @@ fun CategoryIconView(
     isSelected: Boolean = false,
     content: @Composable (iconTint: Color) -> Unit,
 ) {
+    val containerColor: Color
+    val iconColor: Color
+    if (ZeroTheme.colors.isLight) {
+        containerColor = colorScheme.background
+        iconColor = colorScheme.primary
+    } else {
+        containerColor = colorScheme.primary
+        iconColor = colorScheme.background
+    }
     CategoryIconView(
-        color = colorScheme.background,
+        color = containerColor,
         modifier = modifier,
         size = size,
         contentPadding = contentPadding,
         isSelected = isSelected,
-        primaryColor = colorScheme.primary,
+        primaryColor = iconColor,
     ) {
-        content(colorScheme.primary)
+        content(iconColor)
     }
 }

@@ -49,15 +49,19 @@ abstract class BudgetComponent : AttachableViewComponent {
             categoriesQueryUseCase: CategoriesQueryUseCase,
             budgetRepository: BudgetRepository,
             categorySpendingUseCase: CategorySpendingUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): BudgetQueryUseCase = DefaultBudgetQueryUseCase(
             categoriesQueryUseCase = categoriesQueryUseCase,
             budgetRepository = budgetRepository,
             categorySpendingUseCase = categorySpendingUseCase,
+            periodResolver = DefaultPeriodResolver(clock = clock, zoneProvider = zoneProvider),
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerBudgetComponent.builder()
             .dependencies(dependencies)
             .onCategoryTappedHandler(OnCategoryTappedHandler.Noop)
+            .onOverActionTappedHandler(OnOverActionTappedHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -67,6 +71,9 @@ abstract class BudgetComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onCategoryTappedHandler(handler: OnCategoryTappedHandler): Builder
+
+        @BindsInstance
+        fun onOverActionTappedHandler(handler: OnOverActionTappedHandler): Builder
     }
 
     @dagger.Module
@@ -96,10 +103,12 @@ abstract class BudgetComponent : AttachableViewComponent {
         internal fun viewModel(
             budgetUseCase: BudgetUseCase,
             onCategoryTappedHandler: OnCategoryTappedHandler,
+            onOverActionTappedHandler: OnOverActionTappedHandler,
             dispatcherProvider: DispatcherProvider,
         ): BudgetViewModel = DefaultBudgetViewModel(
             budgetUseCase = budgetUseCase,
             onCategoryTappedHandler = onCategoryTappedHandler,
+            onOverActionTappedHandler = onOverActionTappedHandler,
             dispatchers = dispatcherProvider,
         )
 

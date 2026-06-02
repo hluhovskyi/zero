@@ -10,13 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun <T> SelectorCard(
@@ -47,7 +45,7 @@ fun <T> SelectorCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+                .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
                 .clickable { if (onClick != null) onClick() else expanded = true }
                 .padding(16.dp),
         ) {
@@ -55,7 +53,7 @@ fun <T> SelectorCard(
                 text = label.uppercase(),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 letterSpacing = 1.sp,
             )
             Row(
@@ -70,7 +68,7 @@ fun <T> SelectorCard(
                     text = value,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colors.primary,
+                    color = ZeroTheme.colors.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -78,7 +76,7 @@ fun <T> SelectorCard(
                     imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = OnSurfaceVariant,
+                    tint = ZeroTheme.colors.onSurfaceVariant,
                 )
             }
         }
@@ -89,13 +87,12 @@ fun <T> SelectorCard(
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
+                    text = { Text(text = nameMapping(item)) },
                     onClick = {
                         onItemSelected(item)
                         expanded = false
                     },
-                ) {
-                    Text(text = nameMapping(item))
-                }
+                )
             }
         }
     }

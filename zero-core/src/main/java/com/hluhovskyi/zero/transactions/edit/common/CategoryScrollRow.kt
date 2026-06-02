@@ -9,11 +9,10 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +28,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.OnSurface
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun CategoryScrollRow(
@@ -69,7 +68,7 @@ private fun ShowAllItem(onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CategoryIconView(
-            color = MaterialTheme.colors.surface,
+            color = ZeroTheme.colors.surface,
             size = 48.dp,
             contentPadding = 12.dp,
         ) {
@@ -77,7 +76,7 @@ private fun ShowAllItem(onClick: () -> Unit) {
                 imageVector = Icons.Filled.Apps,
                 contentDescription = stringResource(R.string.transaction_edit_show_all_categories_description),
                 modifier = Modifier.sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
-                tint = OnSurface,
+                tint = ZeroTheme.colors.onSurface,
             )
         }
         Text(
@@ -85,7 +84,7 @@ private fun ShowAllItem(onClick: () -> Unit) {
             text = stringResource(R.string.transaction_edit_all_categories),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -123,7 +122,7 @@ private fun CategoryItem(
             text = category.name,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (isSelected) MaterialTheme.colors.primary else OnSurface,
+            color = if (isSelected) ZeroTheme.colors.primary else ZeroTheme.colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

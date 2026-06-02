@@ -124,18 +124,78 @@
     <string name="settings_backup_saved">Backup saved</string>
     <string name="settings_export_failed">Export failed: %1$s</string>
 
+    <!-- Backup -->
+    <string name="settings_section_backup">Backup</string>
+    <string name="settings_backup_row_title">Cloud Backup</string>
+    <string name="settings_backup_row_off">Off</string>
+    <string name="settings_backup_row_uploading">Backing up…</string>
+    <string name="settings_backup_row_restoring">Restoring…</string>
+    <string name="settings_backup_row_failed">Backup failed — Tap to retry</string>
+    <string name="settings_backup_row_last_at">Last backed up %1$s</string>
+    <string name="settings_backup_row_on">On</string>
+
+    <string name="backup_screen_title">Backup</string>
+    <string name="backup_back_description">Back</string>
+    <string name="backup_disconnected_title">Back up to the cloud</string>
+    <string name="backup_disconnected_body">Save a copy of your data to your Google Drive. Restore it on any device, anytime.</string>
+    <string name="backup_connect">Connect Google Drive</string>
+    <string name="backup_account_placeholder">Google Drive</string>
+    <string name="backup_now">Back up now</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_disconnect">Disconnect Google Drive</string>
+    <string name="backup_status_up_to_date">Up to date</string>
+    <string name="backup_status_last_at">Last backed up %1$s</string>
+    <string name="backup_status_never">No backups yet</string>
+    <string name="backup_status_uploading_title">Backing up…</string>
+    <string name="backup_status_uploading_body">Uploading your latest data to Google Drive.</string>
+    <string name="backup_status_restoring_title">Restoring…</string>
+    <string name="backup_status_restoring_body">Pulling your data from Google Drive.</string>
+    <string name="backup_status_failed_title">Backup failed</string>
+    <string name="backup_status_failed_retry">Retry</string>
+    <string name="backup_error_network">Couldn\'t reach Google Drive. Check your connection and try again.</string>
+    <string name="backup_error_auth_expired">Sign in to Google Drive again to keep backing up.</string>
+    <string name="backup_error_quota">Your Google Drive is full.</string>
+    <string name="backup_error_parse">We couldn\'t read your last backup.</string>
+    <string name="backup_error_unknown">Something went wrong. %1$s</string>
+    <string name="backup_sign_in_cancelled">Sign-in cancelled.</string>
+    <string name="backup_sign_in_failed">Sign-in failed. Please try again.</string>
+    <string name="backup_mobile_data_title">Back up over mobile data</string>
+    <string name="backup_mobile_data_body">Off by default. Automatic backups run on Wi-Fi only.</string>
+
+    <string name="backup_relative_just_now">just now</string>
+    <plurals name="backup_relative_minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="backup_relative_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="backup_relative_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+
     <!-- Import -->
     <string name="import_back_description">Back</string>
     <string name="import_nothing_to_import_title">Nothing to Import</string>
     <string name="import_up_to_date_message">Your data is already up to date.</string>
     <string name="import_all_synced_message">All categories, accounts, and transactions from this backup are already in the app.</string>
     <string name="import_done">Done</string>
+    <string name="import_restore_success_title">Restore Complete</string>
+    <plurals name="import_restore_success_message">
+        <item quantity="one">Restored %d item</item>
+        <item quantity="other">Restored %d items</item>
+    </plurals>
+    <string name="import_restore_success_content_description">Restore complete</string>
     <string name="import_source_selection_title">Import Data</string>
     <string name="import_source_selection_subtitle">Choose a data source. Zero will preview what will be imported before anything is saved.</string>
     <string name="import_source_zero_backup_title">Zero Backup</string>
     <string name="import_source_zero_backup_description">Restore from a .zero backup file</string>
     <string name="import_source_zenmoney_title">ZenMoney CSV</string>
     <string name="import_source_zenmoney_description">Import transactions from a ZenMoney export</string>
+    <string name="import_source_drive_title">Google Drive</string>
+    <string name="import_source_drive_description">Restore from your Google Drive backup</string>
     <string name="import_source_more_coming_soon">More sources coming soon</string>
     <string name="import_accounts_review_title">Review Accounts</string>
     <string name="import_accounts_review_info">%1$d ACCOUNTS · %2$d TRANSACTIONS</string>
@@ -167,6 +227,12 @@
     <string name="transaction_clear_all">Clear all</string>
     <string name="transaction_remove_filter_description">Remove filter</string>
     <string name="transaction_add">Add transaction</string>
+    <string name="transaction_selection_exit_description">Exit selection</string>
+    <string name="transaction_selection_more_description">More options</string>
+    <plurals name="transaction_selection_count">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
 
     <!-- Transaction Filter Sheet -->
     <string name="filter_title">Filter</string>
@@ -219,10 +285,19 @@
     <string name="transaction_notes_hint">Add a note…</string>
 
     <!-- Feedback -->
-    <string name="feedback_title">Send feedback</string>
-    <string name="feedback_description_hint">Describe what happened…</string>
-    <string name="feedback_submit">Send</string>
+    <string name="feedback_title">Send Feedback</string>
+    <string name="feedback_submit">Send Feedback</string>
     <string name="feedback_error_generic">Couldn\'t send. Try again.</string>
+    <string name="feedback_eyebrow">Found a bug or have an idea? Tell us what happened — we read every report.</string>
+    <string name="feedback_type_bug">Bug</string>
+    <string name="feedback_type_idea">Idea</string>
+    <string name="feedback_type_other">Other</string>
+    <string name="feedback_what_happened">What happened?</string>
+    <string name="feedback_hint_bug">Tap on a transaction to edit it — the amount field is blank instead of the current value…</string>
+    <string name="feedback_hint_idea">It would be great if I could split a transaction across two categories…</string>
+    <string name="feedback_hint_other">Tell us what\'s on your mind…</string>
+    <string name="feedback_close">Close</string>
+    <string name="feedback_char_counter">%1$d/1000</string>
 
     <!-- Home / Welcome -->
     <string name="home_title">Zero</string>
@@ -260,8 +335,54 @@
     <string name="budget_copy_confirm_replace">Replace</string>
     <string name="budget_copy_confirm_cancel">Cancel</string>
 
+    <string name="budget_remove_confirm_title">Remove %1$s?</string>
+    <string name="budget_remove_confirm_subtitle">This removes the budget limit for this month only.</string>
+    <string name="budget_remove_confirm_cancel">Cancel</string>
+    <string name="budget_remove_confirm_remove">Remove</string>
+    <string name="budget_remove_toast">Removed %1$s from budget</string>
+
     <string name="budget_numpad_set">Set %1$s</string>
     <string name="budget_numpad_set_next">Set %1$s — Next →</string>
     <string name="budget_numpad_skip_next">Skip →</string>
     <string name="budget_numpad_close">Close</string>
+
+    <string name="budget_section_categories">Categories</string>
+    <string name="budget_summary_used">Used</string>
+    <string name="budget_summary_spent">Spent</string>
+    <string name="budget_summary_remaining">Remaining</string>
+    <string name="budget_summary_budget">Budget</string>
+    <string name="budget_summary_on_track">On track this month</string>
+    <plurals name="budget_summary_over_budget">
+        <item quantity="one">%1$d category over budget</item>
+        <item quantity="other">%1$d categories over budget</item>
+    </plurals>
+    <string name="budget_card_left">%1$s left</string>
+    <string name="budget_card_over">%1$s over</string>
+    <string name="budget_card_of">of %1$s</string>
+    <string name="budget_card_last">last: %1$s</string>
+    <string name="budget_card_no_limit">no limit</string>
+    <string name="budget_card_reallocate">Reallocate</string>
+    <string name="budget_card_increase">Increase</string>
+    <string name="budget_over_choice_title">%1$s is over budget</string>
+    <string name="budget_over_choice_subtitle">Spent %1$s of %2$s — %3$s over</string>
+    <string name="budget_over_choice_reallocate_title">Reallocate budget</string>
+    <string name="budget_over_choice_reallocate_subtitle">Move money from another category</string>
+    <string name="budget_over_choice_increase_title">Increase budget</string>
+    <string name="budget_over_choice_increase_subtitle">Add more to this category\'s limit</string>
+    <string name="budget_over_reallocate_header">Reallocate From</string>
+    <string name="budget_over_target_needs">%1$s needs</string>
+    <string name="budget_over_target_more">%1$s more</string>
+    <string name="budget_over_section_available">Available to move</string>
+    <string name="budget_over_section_suggestions">Suggestions</string>
+    <string name="budget_over_source_remaining">%1$s remaining</string>
+    <string name="budget_over_source_of">of %1$s</string>
+    <string name="budget_over_source_covers">✓ Covers it</string>
+    <string name="budget_over_source_partial">Partial</string>
+    <string name="budget_over_source_empty">No categories have remaining budget</string>
+    <string name="budget_over_reallocate_cta">Move %1$s from %2$s</string>
+    <string name="budget_over_increase_header">Increase Budget</string>
+    <string name="budget_over_increase_new_label">New Budget</string>
+    <string name="budget_over_increase_cta">Confirm Increase</string>
+    <string name="budget_over_back_cd">Back</string>
+    <string name="budget_over_close_cd">Close</string>
 </resources>

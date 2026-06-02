@@ -6,18 +6,23 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 @Stable
 interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel.Action, TransactionViewModel.State> {
 
+    override val state: StateFlow<State>
+
     sealed interface Action {
         data class SelectTransaction(val item: Item.Transaction) : Action
         data object LoadMore : Action
         data class UpdateSearchQuery(val query: String) : Action
-        data class DeleteTransaction(val id: Id.Known) : Action
-        data class DuplicateTransaction(val id: Id.Known) : Action
+        data class ToggleSelection(val id: Id.Known) : Action
+        data object ExitSelection : Action
+        data object DeleteSelected : Action
+        data object DuplicateSelected : Action
 
         sealed interface Filter : Action {
             data object Open : Filter
@@ -33,7 +38,13 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         val transactions: List<Item> = emptyList(),
         val searchQuery: String = "",
         val activeFilter: TransactionFilter = TransactionFilter(),
-    )
+        val selectedIds: Set<Id.Known> = emptySet(),
+    ) {
+        val inSelectionMode: Boolean = selectedIds.isNotEmpty()
+        val selectionCount: Int = selectedIds.size
+
+        fun isSelected(id: Id.Known): Boolean = id in selectedIds
+    }
 
     @Stable
     sealed interface Item {

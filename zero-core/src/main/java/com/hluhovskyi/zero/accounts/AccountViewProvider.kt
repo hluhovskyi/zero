@@ -22,17 +22,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,16 +63,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLowest
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 internal class AccountViewProvider(
     private val viewModel: AccountViewModel,
@@ -100,13 +91,8 @@ private fun AccountView(
     amountFormatter: AmountFormatter,
     onAddAccount: OnAddAccountHandler,
 ) {
-    val state by viewModel.state.collectAsState(initial = AccountViewModel.State())
-    val grouped = remember(state.activeAccounts) {
-        state.activeAccounts
-            .groupBy { it.category }
-            .entries
-            .sortedBy { it.key.ordinal }
-    }
+    val state by viewModel.state.collectAsState()
+    val grouped = state.activeAccountsByCategory
     val archivedAccounts = state.archivedAccounts
     var expandedItemId: Id.Known? by remember { mutableStateOf(null) }
     var showArchived by remember { mutableStateOf(false) }
@@ -200,7 +186,7 @@ private fun NetWorthHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SurfaceContainerLow)
+            .background(ZeroTheme.colors.surfaceContainerLow)
             .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -210,7 +196,7 @@ private fun NetWorthHeader(
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 letterSpacing = 1.sp,
             ),
         )
@@ -219,7 +205,7 @@ private fun NetWorthHeader(
             style = TextStyle(
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Primary,
+                color = ZeroTheme.colors.primary,
                 letterSpacing = (-0.5).sp,
             ),
         )
@@ -234,7 +220,7 @@ private fun NetWorthHeader(
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     ),
                 )
@@ -243,7 +229,7 @@ private fun NetWorthHeader(
                     style = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Secondary,
+                        color = ZeroTheme.colors.secondary,
                     ),
                 )
             }
@@ -251,7 +237,7 @@ private fun NetWorthHeader(
                 modifier = Modifier
                     .width(1.dp)
                     .height(32.dp)
-                    .background(OutlineVariant)
+                    .background(ZeroTheme.colors.outlineVariant)
                     .align(Alignment.CenterVertically),
             )
             Column(
@@ -263,7 +249,7 @@ private fun NetWorthHeader(
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     ),
                 )
@@ -272,7 +258,7 @@ private fun NetWorthHeader(
                     style = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Error,
+                        color = ZeroTheme.colors.error,
                     ),
                 )
             }
@@ -293,7 +279,7 @@ private fun MyAccountsSectionHeader() {
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = OnSurface,
+                color = ZeroTheme.colors.onSurface,
             ),
         )
     }
@@ -307,7 +293,7 @@ private fun CategoryHeader(category: AccountCategory) {
         style = TextStyle(
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurfaceVariant,
+            color = ZeroTheme.colors.onSurfaceVariant,
             letterSpacing = 0.8.sp,
         ),
     )
@@ -333,7 +319,7 @@ private fun ArchivedFooter(
             .padding(horizontal = 16.dp)
             .padding(top = 20.dp, bottom = 24.dp),
     ) {
-        Divider(color = SurfaceContainer, thickness = 1.dp)
+        HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -346,7 +332,7 @@ private fun ArchivedFooter(
                 imageVector = Icons.Filled.Archive,
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
-                tint = Outline,
+                tint = ZeroTheme.colors.outline,
             )
             Spacer(Modifier.width(6.dp))
             Text(
@@ -358,7 +344,7 @@ private fun ArchivedFooter(
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Outline,
+                    color = ZeroTheme.colors.outline,
                     letterSpacing = 0.4.sp,
                 ),
             )
@@ -369,7 +355,7 @@ private fun ArchivedFooter(
                 modifier = Modifier
                     .size(14.dp)
                     .rotate(chevronRotation),
-                tint = Outline,
+                tint = ZeroTheme.colors.outline,
             )
         }
         AnimatedVisibility(visible = showArchived) {
@@ -382,7 +368,7 @@ private fun ArchivedFooter(
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Outline,
+                        color = ZeroTheme.colors.outline,
                         letterSpacing = 1.2.sp,
                     ),
                     textAlign = TextAlign.Center,
@@ -407,6 +393,7 @@ private fun ArchivedAccountRow(
     amountFormatter: AmountFormatter,
     onClick: () -> Unit,
 ) {
+    val outlineColor = ZeroTheme.colors.outlineVariant
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -414,7 +401,7 @@ private fun ArchivedAccountRow(
             .alpha(0.78f)
             .drawBehind {
                 drawRoundRect(
-                    color = OutlineVariant,
+                    color = outlineColor,
                     cornerRadius = CornerRadius(12.dp.toPx()),
                     style = Stroke(
                         width = 1.dp.toPx(),
@@ -430,13 +417,13 @@ private fun ArchivedAccountRow(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(SurfaceContainer, RoundedCornerShape(10.dp)),
+                .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             imageLoader.View(
                 modifier = Modifier.size(20.dp),
                 image = account.icon,
-                tint = Outline,
+                tint = ZeroTheme.colors.outline,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -445,7 +432,7 @@ private fun ArchivedAccountRow(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -456,7 +443,7 @@ private fun ArchivedAccountRow(
             ) {
                 Box(
                     modifier = Modifier
-                        .background(SurfaceContainer, RoundedCornerShape(4.dp))
+                        .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 1.dp),
                 ) {
                     Text(
@@ -464,7 +451,7 @@ private fun ArchivedAccountRow(
                         style = TextStyle(
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Outline,
+                            color = ZeroTheme.colors.outline,
                             letterSpacing = 1.sp,
                         ),
                     )
@@ -474,7 +461,7 @@ private fun ArchivedAccountRow(
                         text = account.details,
                         style = TextStyle(
                             fontSize = 11.sp,
-                            color = Outline,
+                            color = ZeroTheme.colors.outline,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -490,7 +477,7 @@ private fun ArchivedAccountRow(
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Outline,
+                color = ZeroTheme.colors.outline,
             ),
         )
     }
@@ -515,7 +502,7 @@ private fun AccountRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                .background(SurfaceContainerLowest, shape = RoundedCornerShape(12.dp))
+                .background(ZeroTheme.colors.surfaceContainerLowest, shape = RoundedCornerShape(12.dp))
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -538,7 +525,7 @@ private fun AccountRow(
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurface,
+                        color = ZeroTheme.colors.onSurface,
                     ),
                 )
                 if (account.details != null) {
@@ -546,7 +533,7 @@ private fun AccountRow(
                         text = account.details,
                         style = TextStyle(
                             fontSize = 12.sp,
-                            color = OnSurfaceVariant,
+                            color = ZeroTheme.colors.onSurfaceVariant,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -561,7 +548,7 @@ private fun AccountRow(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (account.balance < 0L) Error else OnSurface,
+                    color = if (account.balance < 0L) ZeroTheme.colors.error else ZeroTheme.colors.onSurface,
                 ),
             )
         }
@@ -569,35 +556,41 @@ private fun AccountRow(
             expanded = menuExpanded,
             onDismissRequest = onMenuDismiss,
         ) {
-            DropdownMenuItem(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.account_detail_edit))
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.account_detail_edit)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = onEditClick,
+            )
             if (account.archivedAt == null) {
-                DropdownMenuItem(onClick = onArchiveClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Archive,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.account_detail_archive))
-                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.account_detail_archive)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Archive,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = onArchiveClick,
+                )
             } else {
-                DropdownMenuItem(onClick = onUnarchiveClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Unarchive,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.account_detail_unarchive))
-                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.account_detail_unarchive)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Unarchive,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = onUnarchiveClick,
+                )
             }
         }
     }

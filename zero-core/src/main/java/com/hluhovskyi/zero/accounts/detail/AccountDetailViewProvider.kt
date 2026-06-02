@@ -11,17 +11,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,13 +48,7 @@ import com.hluhovskyi.zero.ui.CollapsibleHeroLayout
 import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.ZeroFab
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.ErrorContainer
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.Primary
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.Secondary
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -82,7 +76,7 @@ internal class AccountDetailViewProvider(
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
                                     contentDescription = stringResource(R.string.account_detail_more_options_description),
-                                    tint = PrimaryContainer,
+                                    tint = ZeroTheme.colors.primaryContainer,
                                 )
                             }
                             DropdownMenu(
@@ -90,49 +84,49 @@ internal class AccountDetailViewProvider(
                                 onDismissRequest = { menuExpanded = false },
                             ) {
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.account_detail_edit)) },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    },
                                     onClick = {
                                         menuExpanded = false
                                         viewModel.perform(AccountDetailViewModel.Action.Edit)
                                     },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Edit,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.account_detail_edit))
-                                }
+                                )
                                 if (state.isArchived) {
                                     DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.account_detail_unarchive)) },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Filled.Unarchive,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        },
                                         onClick = {
                                             menuExpanded = false
                                             viewModel.perform(AccountDetailViewModel.Action.Unarchive)
                                         },
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Unarchive,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(stringResource(R.string.account_detail_unarchive))
-                                    }
+                                    )
                                 } else {
                                     DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.account_detail_archive)) },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Filled.Archive,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        },
                                         onClick = {
                                             menuExpanded = false
                                             viewModel.perform(AccountDetailViewModel.Action.Archive)
                                         },
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Archive,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(stringResource(R.string.account_detail_archive))
-                                    }
+                                    )
                                 }
                             }
                         },
@@ -162,10 +156,10 @@ private fun HeroCard(
     imageLoader: ImageLoader,
 ) {
     val isNeg = state.isNegativeBalance
-    val heroBackground = if (isNeg) ErrorContainer else SurfaceContainerLow
-    val balanceColor = if (isNeg) Error else Primary
-    val accentColor = if (isNeg) Error else Primary
-    val inValueColor = if (isNeg) Error else Secondary
+    val heroBackground = if (isNeg) ZeroTheme.colors.errorContainer else ZeroTheme.colors.surfaceContainerLow
+    val balanceColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.primary
+    val accentColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.primary
+    val inValueColor = if (isNeg) ZeroTheme.colors.error else ZeroTheme.colors.secondary
 
     Box(
         modifier = Modifier
@@ -227,14 +221,14 @@ private fun HeroCard(
                     label = stringResource(R.string.account_detail_out_this_month).uppercase(),
                     value = "–${amountFormatter.format(state.totalOut, state.currencySymbol)}",
                     labelColor = accentColor.copy(alpha = 0.7f),
-                    valueColor = OnSurface,
+                    valueColor = ZeroTheme.colors.onSurface,
                 )
                 Spacer(Modifier.width(24.dp))
                 DetailStatColumn(
                     label = stringResource(R.string.account_detail_transactions).uppercase(),
                     value = state.transactionCount.toString(),
                     labelColor = accentColor.copy(alpha = 0.7f),
-                    valueColor = OnSurface,
+                    valueColor = ZeroTheme.colors.onSurface,
                 )
             }
         }

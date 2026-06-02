@@ -13,19 +13,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -40,12 +37,9 @@ import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.transactions.edit.TransactionEditAccount
 import com.hluhovskyi.zero.transactions.edit.TransferRateMode
-import com.hluhovskyi.zero.ui.AmountDisplay
 import com.hluhovskyi.zero.ui.DatePickerCard
 import com.hluhovskyi.zero.ui.SelectorCard
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerHigh
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -70,32 +64,17 @@ private fun TransactionEditTransferView(
     shouldFocus: Boolean,
 ) {
     val state by viewModel.state.collectAsState(initial = TransactionEditTransferViewModel.State())
-    val focusRequester = remember { FocusRequester() }
 
     Column(
         modifier = Modifier
             .padding(horizontal = 24.dp)
             .then(if (!shouldFocus) Modifier.focusTarget() else Modifier),
     ) {
-        // Amount display
-        AmountDisplay(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, bottom = 24.dp),
-            label = stringResource(R.string.transaction_edit_amount_display_label).uppercase(),
-            amount = state.amount,
-            currencySymbol = state.sourceCurrencySymbol,
-            focusRequester = focusRequester,
-            onAmountChange = {
-                viewModel.perform(TransactionEditTransferViewModel.Action.ChangeAmount(it))
-            },
-        )
-
         // Rate mode pill
         RateModePill(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(top = 32.dp, bottom = 24.dp),
             state = state,
             onCycleMode = {
                 viewModel.perform(TransactionEditTransferViewModel.Action.CycleRateMode)
@@ -149,7 +128,7 @@ private fun RateModePill(
 ) {
     Column(
         modifier = modifier
-            .background(SurfaceContainerLow, RoundedCornerShape(16.dp))
+            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
             .padding(16.dp),
     ) {
         when (val mode = state.transferRateMode) {
@@ -167,7 +146,7 @@ private fun RateModePill(
                         text = pillText,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             }
@@ -182,14 +161,14 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_rate_label).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
                         text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                         modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
@@ -202,10 +181,10 @@ private fun RateModePill(
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    cursorBrush = SolidColor(ZeroTheme.colors.primary),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         if (mode.rate.isEmpty()) {
@@ -213,7 +192,7 @@ private fun RateModePill(
                                 text = stringResource(R.string.transfer_edit_enter_rate),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = OnSurfaceVariant.copy(alpha = 0.5f),
+                                color = ZeroTheme.colors.onSurfaceVariant.copy(alpha = 0.5f),
                             )
                         }
                         innerTextField()
@@ -226,7 +205,7 @@ private fun RateModePill(
                         modifier = Modifier.padding(top = 4.dp),
                         text = computedTarget,
                         fontSize = 12.sp,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                     )
                 }
             }
@@ -241,14 +220,14 @@ private fun RateModePill(
                         text = stringResource(R.string.transfer_edit_destination_amount).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = OnSurfaceVariant,
+                        color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     )
                     Text(
                         text = stringResource(R.string.transfer_edit_change).uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                         modifier = Modifier.clickable { onCycleMode() },
                     )
                 }
@@ -261,10 +240,10 @@ private fun RateModePill(
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.primary,
+                        color = ZeroTheme.colors.primary,
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    cursorBrush = SolidColor(MaterialTheme.colors.primary),
+                    cursorBrush = SolidColor(ZeroTheme.colors.primary),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         Row(
@@ -275,7 +254,7 @@ private fun RateModePill(
                                     text = state.targetCurrencySymbol,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = OnSurfaceVariant,
+                                    color = ZeroTheme.colors.onSurfaceVariant,
                                     modifier = Modifier.padding(end = 4.dp),
                                 )
                             }
@@ -285,7 +264,7 @@ private fun RateModePill(
                                         text = "0",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = OnSurfaceVariant.copy(alpha = 0.5f),
+                                        color = ZeroTheme.colors.onSurfaceVariant.copy(alpha = 0.5f),
                                     )
                                 }
                                 innerTextField()
@@ -337,7 +316,7 @@ private fun AccountSelectorsWithSwap(
                 .zIndex(1f)
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(SurfaceContainerHigh)
+                .background(ZeroTheme.colors.surfaceContainerHigh)
                 .clickable { onSwap() },
             contentAlignment = Alignment.Center,
         ) {
@@ -345,7 +324,7 @@ private fun AccountSelectorsWithSwap(
                 imageVector = Icons.Filled.SwapVert,
                 contentDescription = stringResource(R.string.transfer_edit_swap_description),
                 modifier = Modifier.size(20.dp),
-                tint = OnSurfaceVariant,
+                tint = ZeroTheme.colors.onSurfaceVariant,
             )
         }
     }

@@ -17,6 +17,15 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 
 **When a UseCase exists, it owns all state — ViewModels are thin projections.** A ViewModel backed by a UseCase should only `filterIsInstance` and `.map` the relevant slice; it must not introduce its own `MutableStateFlow`. State that lives in the ViewModel instead of `UseCase.InternalState` won't survive back-navigation and won't be visible to other steps in the same flow.
 
+## ViewModel UI Shape
+
+Layer split — enforced by `ViewProviderDerivation` lint:
+- **UseCase** — domain truth: sort, aggregation, business thresholds. Emits domain types.
+- **ViewModel** — screen shape: sealed `Item` per visual variant, pre-joined fields, pre-computed semantic enums (e.g. `Status.{Healthy,Watch,AlmostThere,Over}`). No formatters, no Compose `Color`.
+- **View** — `when (item) { is X -> ...; is Y -> ... }`, `AmountFormatter`, `ZeroTheme.colors`, `stringResource`. No `.filter`/`.any`/`.sortedBy`/`sumOf`, no `if (raw.field != null)`.
+
+Reference: `TransactionViewModel.Item`. For derived `State` fields prefer body `val foo = expr` over `get()` — same correctness, cached per instance, re-evaluated by `copy()`.
+
 ## Flow Composition
 
 ViewModels `combine()` multiple repository flows into a single `Flow<State>`. Key extensions:

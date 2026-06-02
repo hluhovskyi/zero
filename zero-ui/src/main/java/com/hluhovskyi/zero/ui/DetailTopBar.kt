@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun DetailTopBar(
@@ -37,7 +37,7 @@ fun DetailTopBar(
             Icon(
                 imageVector = Icons.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.action_back_description),
-                tint = PrimaryContainer,
+                tint = ZeroTheme.colors.primaryContainer,
             )
         }
         Text(
@@ -47,7 +47,7 @@ fun DetailTopBar(
             style = TextStyle(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
             ),
         )
         Box {

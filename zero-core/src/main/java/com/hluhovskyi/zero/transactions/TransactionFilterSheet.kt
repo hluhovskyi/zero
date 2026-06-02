@@ -20,10 +20,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.trace
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
@@ -46,13 +47,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
 import com.hluhovskyi.zero.ui.ModalHeader
 import com.hluhovskyi.zero.ui.common.toUi
-import com.hluhovskyi.zero.ui.theme.Error
-import com.hluhovskyi.zero.ui.theme.OnSurface
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.Outline
-import com.hluhovskyi.zero.ui.theme.OutlineVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
-import com.hluhovskyi.zero.ui.theme.SurfaceContainerLow
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 internal fun TransactionFilterSheet(
@@ -83,7 +78,7 @@ internal fun TransactionFilterSheet(
                             text = stringResource(R.string.filter_reset),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Error,
+                            color = ZeroTheme.colors.error,
                         )
                     }
                 }
@@ -190,7 +185,7 @@ private fun FilterSection(
                 text = label.uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceVariant,
+                color = ZeroTheme.colors.onSurfaceVariant,
                 letterSpacing = 1.sp,
             )
             if (selectedLabel != null) {
@@ -198,7 +193,7 @@ private fun FilterSection(
                     text = selectedLabel,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = PrimaryContainer,
+                    color = ZeroTheme.colors.primaryContainer,
                 )
             }
         }
@@ -252,10 +247,10 @@ private fun PillChip(
     Box(
         modifier = Modifier
             .clip(CircleShape)
-            .background(if (isActive) PrimaryContainer else Color.Transparent)
+            .background(if (isActive) ZeroTheme.colors.primaryContainer else Color.Transparent)
             .border(
                 width = 1.5.dp,
-                color = if (isActive) PrimaryContainer else OutlineVariant,
+                color = if (isActive) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.outlineVariant,
                 shape = CircleShape,
             )
             .clickable(onClick = onClick)
@@ -265,7 +260,7 @@ private fun PillChip(
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (isActive) Color.White else OnSurfaceVariant,
+            color = if (isActive) ZeroTheme.colors.onPrimary else ZeroTheme.colors.onSurfaceVariant,
         )
     }
 }
@@ -287,14 +282,14 @@ private fun AllFilterTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (allOn) PrimaryContainer else SurfaceContainerLow),
+                .background(if (allOn) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.surfaceContainerLow),
             contentAlignment = Alignment.Center,
         ) {
             if (allOn) {
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = ZeroTheme.colors.onPrimary,
                     modifier = Modifier.size(22.dp),
                 )
             } else {
@@ -302,7 +297,7 @@ private fun AllFilterTile(
                     text = count.toString(),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Outline,
+                    color = ZeroTheme.colors.outline,
                 )
             }
         }
@@ -310,7 +305,7 @@ private fun AllFilterTile(
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = if (allOn) PrimaryContainer else OnSurfaceVariant,
+            color = if (allOn) ZeroTheme.colors.primaryContainer else ZeroTheme.colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -366,7 +361,7 @@ private fun AccountItemGrid(
     onToggleAll: () -> Unit,
     onToggle: (Id.Known) -> Unit,
     imageLoader: ImageLoader,
-) {
+) = trace("AccountItemGrid") {
     FilterTileGrid(rowCount = (items.size + 4) / 5) { idx ->
         val item = items.getOrNull(idx)
         Box(
@@ -419,7 +414,7 @@ private fun CategoryTile(
     category: TransactionFilterSheetViewModel.FilterCategoryItem.Category,
     isSelected: Boolean,
     imageLoader: ImageLoader,
-) {
+) = trace("CategoryTile") {
     val colorScheme = category.colorScheme.toUi()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -452,7 +447,7 @@ private fun CategoryTile(
             text = category.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -499,7 +494,7 @@ private fun AccountTile(
             text = account.name,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
+            color = ZeroTheme.colors.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -519,7 +514,7 @@ private fun ApplyButton(
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .padding(bottom = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(PrimaryContainer)
+            .background(ZeroTheme.colors.primaryContainer)
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.Center,
@@ -529,7 +524,7 @@ private fun ApplyButton(
             text = stringResource(R.string.filter_apply),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = ZeroTheme.colors.onPrimary,
         )
         if (activeCount > 0) {
             Spacer(modifier = Modifier.width(8.dp))
@@ -537,14 +532,14 @@ private fun ApplyButton(
                 modifier = Modifier
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.22f)),
+                    .background(ZeroTheme.colors.onPrimary.copy(alpha = 0.22f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = activeCount.toString(),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = ZeroTheme.colors.onPrimary,
                 )
             }
         }

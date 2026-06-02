@@ -16,6 +16,8 @@ internal class DefaultImportViewModel(
             is ImportUseCase.State.AccountsReview -> ImportViewModel.State.AccountsReview
             is ImportUseCase.State.TransactionsPreview -> ImportViewModel.State.TransactionsPreview
             is ImportUseCase.State.UpToDate -> ImportViewModel.State.UpToDate
+            is ImportUseCase.State.RestoreSuccess ->
+                ImportViewModel.State.RestoreSuccess(useCaseState.itemCount)
         }
     }
 

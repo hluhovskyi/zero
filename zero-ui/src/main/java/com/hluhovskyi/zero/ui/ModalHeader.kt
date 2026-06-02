@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
-import com.hluhovskyi.zero.ui.theme.OnSurfaceVariant
-import com.hluhovskyi.zero.ui.theme.PrimaryContainer
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 @Composable
 fun ModalHeader(
@@ -44,7 +43,7 @@ fun ModalHeader(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(R.string.action_close_description),
-                tint = PrimaryContainer,
+                tint = ZeroTheme.colors.primaryContainer,
             )
         }
         Column(
@@ -55,7 +54,7 @@ fun ModalHeader(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryContainer,
+                color = ZeroTheme.colors.primaryContainer,
                 textAlign = TextAlign.Center,
             )
             if (subtitle != null) {
@@ -64,7 +63,7 @@ fun ModalHeader(
                     text = subtitle,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = OnSurfaceVariant,
+                    color = ZeroTheme.colors.onSurfaceVariant,
                     letterSpacing = 0.4.sp,
                     textAlign = TextAlign.Center,
                 )
