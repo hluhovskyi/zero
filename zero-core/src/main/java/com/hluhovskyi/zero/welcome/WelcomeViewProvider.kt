@@ -20,6 +20,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -92,6 +93,33 @@ internal class WelcomeViewProvider(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(28.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(ZeroTheme.colors.primaryContainer)
+                            .clickable {
+                                viewModel.perform(WelcomeViewModel.Action.RestoreSelected)
+                            }
+                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CloudDownload,
+                            contentDescription = null,
+                            tint = ZeroTheme.colors.onPrimary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.welcome_restore_action),
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ZeroTheme.colors.onPrimary,
+                            ),
+                        )
+                    }
+                    Spacer(Modifier.height(14.dp))
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))

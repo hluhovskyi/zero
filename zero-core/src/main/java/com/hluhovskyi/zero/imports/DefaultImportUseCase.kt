@@ -35,6 +35,7 @@ internal class DefaultImportUseCase(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val onImportFinishedHandler: OnImportFinishedHandler,
+    private val initialSourceKey: String? = null,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : ImportUseCase {
 
@@ -58,6 +59,17 @@ internal class DefaultImportUseCase(
         InternalState(screen = ImportUseCase.State.SourceSelection(parsers.map { it.source })),
     )
     override val state: Flow<ImportUseCase.State> = mutableState.map { it.screen }
+
+    init {
+        // When the screen is opened pre-pointed at a source (e.g. the Welcome "Restore from Drive"
+        // CTA), skip the source picker and load it immediately. Pre-selectable sources are fileless
+        // (Drive) — they fetch remotely, so there is no file picker to show.
+        if (initialSourceKey != null) {
+            parsers.firstOrNull { it.source.key == initialSourceKey }?.let { parser ->
+                perform(ImportUseCase.Action.SelectSource(parser.source, requiresFile = false))
+            }
+        }
+    }
 
     override fun perform(action: ImportUseCase.Action) {
         when (action) {

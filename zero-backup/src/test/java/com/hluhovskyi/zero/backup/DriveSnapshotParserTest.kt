@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.backup
 
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.sync.SyncSnapshot
@@ -52,7 +53,25 @@ class DriveSnapshotParserTest {
     }
 
     @Test
-    fun `parse throws when signed out`() = runTest {
+    fun `parse signs in on demand when signed out, then downloads`() = runTest {
+        val client = FakeBackupClient(
+            latestResult = BackupClient.Result.Success(metadata("file-9")),
+            downloadResult = BackupClient.DownloadResult.Success(BackupEnvelope(format = 1, snapshot = snapshot)),
+        )
+        val oauth = FakeOAuthTokenProvider(
+            token = null,
+            signInResult = OAuthTokenProvider.Result.Success(accountLabel = "user@gmail.com"),
+        )
+        val parser = DriveSnapshotParser(client, oauth)
+
+        val result = parser.parse(sentinelUri)
+
+        assertEquals(1, oauth.signInCount)
+        assertEquals(snapshot, result)
+    }
+
+    @Test
+    fun `parse throws when signed out and sign-in is cancelled`() = runTest {
         val parser = DriveSnapshotParser(FakeBackupClient(), FakeOAuthTokenProvider(token = null))
 
         val error = runCatching { parser.parse(sentinelUri) }.exceptionOrNull()
