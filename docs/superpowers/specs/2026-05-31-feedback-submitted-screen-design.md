@@ -41,7 +41,7 @@ Centered column:
 ## Strings (zero-core `strings.xml`)
 
 - `feedback_sent_title` = "Feedback sent"
-- `feedback_sent_body` = "Thanks — we'll review it within a few days. We may follow up by email if we need more detail."
+- `feedback_sent_body` = "Thanks for the report — it helps make Zero better."
 - `feedback_done` = "Done"
 
 ## Testing
