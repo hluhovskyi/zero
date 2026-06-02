@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,11 +22,13 @@ class BaseViewModelRefCountTest {
 
     private inner class Subject : BaseViewModel(dispatchers) {
         var attachOnMainCalls = 0
+        var workRuns = 0
         val liveScope: Boolean
             get() = scope.coroutineContext[Job]!!.isActive
 
         override fun attachOnMain() {
             attachOnMainCalls++
+            scope.launch { workRuns++ }
         }
     }
 
@@ -44,5 +47,20 @@ class BaseViewModelRefCountTest {
 
         b.close()
         assertFalse(subject.liveScope)
+    }
+
+    @Test
+    fun `re-attach after full release restarts work in a live scope`() {
+        val subject = Subject()
+
+        subject.attach().close()
+
+        assertEquals(1, subject.workRuns)
+        assertFalse(subject.liveScope)
+
+        subject.attach()
+
+        assertTrue(subject.liveScope)
+        assertEquals(2, subject.workRuns)
     }
 }
