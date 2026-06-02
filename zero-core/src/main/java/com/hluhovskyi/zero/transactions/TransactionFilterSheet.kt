@@ -553,12 +553,11 @@ private fun ApplyButton(
  * Returns `(container, icon)`.
  */
 @Composable
-private fun filterTileColors(colorScheme: UiColorScheme): Pair<Color, Color> =
-    if (ZeroTheme.colors.isLight) {
-        colorScheme.background to colorScheme.primary
-    } else {
-        colorScheme.primary to colorScheme.background
-    }
+private fun filterTileColors(colorScheme: UiColorScheme): Pair<Color, Color> = if (ZeroTheme.colors.isLight) {
+    colorScheme.background to colorScheme.primary
+} else {
+    colorScheme.primary to colorScheme.background
+}
 
 private fun toggleCategoryId(
     current: Set<Id.Known>?,
