@@ -46,6 +46,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetViewModel
 import com.hluhovskyi.zero.ui.ModalHeader
+import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -415,7 +416,7 @@ private fun CategoryTile(
     isSelected: Boolean,
     imageLoader: ImageLoader,
 ) = trace("CategoryTile") {
-    val colorScheme = category.colorScheme.toUi()
+    val (containerColor, iconColor) = filterTileColors(category.colorScheme.toUi())
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -427,10 +428,10 @@ private fun CategoryTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(colorScheme.background)
+                .background(containerColor)
                 .then(
                     if (isSelected) {
-                        Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
+                        Modifier.border(2.dp, iconColor, RoundedCornerShape(14.dp))
                     } else {
                         Modifier
                     },
@@ -440,7 +441,7 @@ private fun CategoryTile(
             imageLoader.View(
                 image = category.icon,
                 modifier = Modifier.size(24.dp),
-                tint = colorScheme.primary,
+                tint = iconColor,
             )
         }
         Text(
@@ -462,7 +463,7 @@ private fun AccountTile(
     isSelected: Boolean,
     imageLoader: ImageLoader,
 ) {
-    val colorScheme = account.colorScheme.toUi()
+    val (containerColor, iconColor) = filterTileColors(account.colorScheme.toUi())
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -474,10 +475,10 @@ private fun AccountTile(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(colorScheme.background)
+                .background(containerColor)
                 .then(
                     if (isSelected) {
-                        Modifier.border(2.dp, colorScheme.primary, RoundedCornerShape(14.dp))
+                        Modifier.border(2.dp, iconColor, RoundedCornerShape(14.dp))
                     } else {
                         Modifier
                     },
@@ -487,7 +488,7 @@ private fun AccountTile(
             imageLoader.View(
                 image = account.icon,
                 modifier = Modifier.size(24.dp),
-                tint = colorScheme.primary,
+                tint = iconColor,
             )
         }
         Text(
@@ -544,6 +545,18 @@ private fun ApplyButton(
             }
         }
     }
+}
+
+/**
+ * In dark mode the entity's `primary` and `background` swap roles so the tile reads as a
+ * dark brand chip with a light pastel icon, matching `CategoryIconView`.
+ * Returns `(container, icon)`.
+ */
+@Composable
+private fun filterTileColors(colorScheme: UiColorScheme): Pair<Color, Color> = if (ZeroTheme.colors.isLight) {
+    colorScheme.background to colorScheme.primary
+} else {
+    colorScheme.primary to colorScheme.background
 }
 
 private fun toggleCategoryId(
