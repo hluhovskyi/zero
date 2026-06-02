@@ -1,0 +1,4 @@
+[
+  {"event": "labeled", "label": {"name": "agent-approved"}, "actor": {"login": "hluhovskyi"}, "created_at": "2026-05-28T10:00:00Z"},
+  {"event": "commented", "actor": {"login": "hluhovskyi"}, "created_at": "2026-05-28T10:05:00Z"}
+]
