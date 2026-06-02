@@ -22,11 +22,23 @@ The design file still defines older `ConversionCard` / transfer-variant branches
 `AddTransactionSheet` renders `AmountField` + `RateFieldRow` + `TransferBlock` — those are the live
 components; the rest is dead code.
 
+## Amount field (in scope — it changed too)
+
+The amount is now a **boxed hero tile**, not the current plain centered number: a `surfaceLow`
+rounded card with a small uppercase caption, a left currency chip (expense/income) or static symbol
+(transfer), and a big right-aligned figure with a focus caret. This is the design's `AmountField`:
+
+- **hero** (expense/income, transfer single-currency): big figure (≈36sp), `surfaceLow` always, **no
+  border**, currency **chip** (taps to currency picker), caret when focused.
+- **split** (transfer From/To): medium figure (≈26sp), `surfaceLow` → `surface` when focused, **1.5dp
+  primaryContainer border when focused**, static currency symbol, caret when focused.
+
+Implemented as one `TransactionEditAmountField` used by the parent (expense/income hero) and the
+transfer child (split + single). The existing zero-ui `AmountDisplay` is left untouched (still used
+by account edit).
+
 ## Out of scope (not the rate UX)
 
-- Re-boxing the expense/income hero amount into the design's `AmountField` chip — the existing
-  pinned `AmountDisplay` stays for expense/income. (Transfer *does* get the boxed From/To amount
-  fields, because transfer has two amounts and no pinned hero.)
 - The design's new category picker (`CategoryFieldRow` + quick chips) — unchanged.
 - The design's bottom-sheet account picker — transfer keeps the existing `SelectorCard` dropdown
   on the From/To tiles.
@@ -48,11 +60,13 @@ components; the rest is dead code.
   (transfer "received" edit), `ResetRate` (re-derive + `rateAuto = true`), `FocusAmount`,
   `FocusRate`, `FocusReceived`. Account/currency selection and swap set `rateAuto = true` and
   `editTarget = Amount`; the collector recomputes.
-- **Live-linking (transfer only), 2-dp rounding:**
-  - `ChangeAmount(v)` → `received = v × rate`
-  - `ChangeRate(v)` → `received = amount × v`, `rateAuto = false`
-  - `ChangeTargetAmount(v)` → `amount = v ÷ rate` (when `rate > 0`)
-  - `ResetRate` → re-derive rate, `received = amount × rate`
+- **Live-linking (transfer only). The From amount is the anchor** (matches the design comment
+  "editing the received amount re-derives the RATE, not the sent amount"):
+  - `ChangeAmount(from)` → `received = from × rate` (2 dp). From is what the user typed.
+  - `ChangeRate(rate)` → `received = from × rate` (2 dp), `rateAuto = false`.
+  - `ChangeTargetAmount(to)` → re-derive `rate = to ÷ from` (6 dp, when `from > 0`),
+    `rateAuto = false`; **from stays fixed**.
+  - `ResetRate` → re-derive rate from the pair, `received = from × rate` (2 dp), `rateAuto = true`.
 
 ## Shared composable — `TransactionEditRateField`
 
@@ -72,8 +86,11 @@ derivation (zero-core `ViewProviderDerivation`).
 
 ## Expense/Income
 
-Shown when `selectedCurrency.id != selectedAccount.currencyId`: render `TransactionEditRateField`
-with the converted line. Deletes `TransactionEditRateTextField`. Hero amount unchanged.
+The pinned amount becomes the boxed `TransactionEditAmountField` (hero, currency chip → currency
+picker, caret when `editTarget == Amount`). When
+`selectedCurrency.id != selectedAccount.currencyId`, render `TransactionEditRateField` (with the
+converted line) **directly under the amount** — i.e. as the first item in the expense/income child,
+above the category row. Deletes `TransactionEditRateTextField`.
 
 ## Transfer
 
@@ -95,13 +112,16 @@ New composables: `TransactionEditAmountField` (boxed caption + currency symbol +
 ## Parent screen wiring
 
 `TransactionEditViewProvider`:
-- Hide the pinned `AmountDisplay` when `selectedTransactionType == TRANSFER`.
+- For expense/income, render the boxed `TransactionEditAmountField` (hero) in the pinned area
+  (replacing the old `AmountDisplay`), with the currency chip → `PickCurrency`, caret when
+  `editTarget == Amount`, tap → `FocusAmount`. Hide it entirely when
+  `selectedTransactionType == TRANSFER` (the transfer child renders its own boxed amount fields).
 - Route the inline keypad by `editTarget`: `amount`/`ChangeAmount`, `rate`/`ChangeRate` (6 decimals),
   `targetAmount`/`ChangeTargetAmount`. Keep the keypad visible on transfer (no hero to tap).
-- Tapping the expense/income hero amount emits `FocusAmount`.
 
-`TransactionEditViewModel.State` gains `rate`, `targetAmount`, `editTarget`. New parent actions
-`ChangeRate`, `ChangeTargetAmount`, `FocusAmount`.
+`TransactionEditViewModel.State` gains `rate`, `targetAmount`, `editTarget` (plus the existing
+`amount`, `currencySymbol`, `canPickCurrency`). New parent actions `ChangeRate`,
+`ChangeTargetAmount`, `FocusAmount`.
 
 ## Testing
 

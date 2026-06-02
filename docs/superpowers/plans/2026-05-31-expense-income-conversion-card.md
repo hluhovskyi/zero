@@ -135,16 +135,18 @@ val rateAuto: Boolean = true,
 val editTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
 ```
 
-- [ ] **Step 3: Helpers** near `private fun BigDecimal.format()`:
+- [ ] **Step 3: Helpers** near `private fun BigDecimal.format()`. `timesRate` computes the To
+amount (2 dp); `rateFromAmounts` re-derives the rate from From/To (6 dp) — From is the anchor:
 
 ```kotlin
 private fun String.timesRate(rate: String): String =
     (toBigDecimalOrZero() * rate.toBigDecimalOrZero()).format()
 
-private fun String.divByRate(rate: String): String {
-    val r = rate.toBigDecimalOrNull()
-    return if (r == null || r.signum() == 0) this
-    else toBigDecimalOrZero().divide(r, 2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+/** rate = to ÷ from (6 dp). Returns null when `from` is 0/blank so the caller keeps the old rate. */
+private fun rateFromAmounts(from: String, to: String): String? {
+    val f = from.toBigDecimalOrNull() ?: return null
+    if (f.signum() == 0) return null
+    return to.toBigDecimalOrZero().divide(f, 6, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
 }
 ```
 
@@ -183,7 +185,9 @@ is TransactionEditUseCase.Action.ChangeRate -> mutableState.update { s ->
     s.copy(rate = action.rate, rateAuto = false, targetAmount = received)
 }
 is TransactionEditUseCase.Action.ChangeTargetAmount -> mutableState.update { s ->
-    s.copy(targetAmount = action.amount, amount = action.amount.divByRate(s.rate), editTarget = TransactionEditFocusTarget.Received)
+    // From is the anchor: editing the To amount re-derives the rate, leaving `amount` fixed.
+    val newRate = rateFromAmounts(s.amount, action.amount) ?: s.rate
+    s.copy(targetAmount = action.amount, rate = newRate, rateAuto = false, editTarget = TransactionEditFocusTarget.Received)
 }
 is TransactionEditUseCase.Action.FocusAmount -> mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Amount) }
 is TransactionEditUseCase.Action.FocusRate -> mutableState.update { it.copy(editTarget = TransactionEditFocusTarget.Rate) }
@@ -425,8 +429,10 @@ internal fun TransactionEditRateField(
 }
 ```
 
-- [ ] **Step 3: `TransactionEditAmountField`** — boxed caption + currency symbol + right-aligned
-value + focus caret (read-only; the keypad edits via the parent):
+- [ ] **Step 3: `TransactionEditAmountField`** — boxed amount tile with `hero`/split sizes and an
+optional currency chip. Read-only display; the keypad edits via the parent. **Hero** = big figure,
+`surfaceLow` always, no border, caret when focused. **Split** = medium figure, `surface` +
+1.5dp `primaryContainer` border when focused, static symbol, caret when focused:
 
 ```kotlin
 package com.hluhovskyi.zero.transactions.edit.common
@@ -440,8 +446,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -459,21 +470,37 @@ internal fun TransactionEditAmountField(
     value: String,
     focused: Boolean,
     onFocus: () -> Unit,
+    hero: Boolean = false,
+    onCurrencyClick: (() -> Unit)? = null,
 ) {
+    val focusBg = !hero && focused
     Column(
         modifier = modifier
-            .background(if (focused) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(18.dp))
-            .then(if (focused) Modifier.border(1.5.dp, ZeroTheme.colors.primaryContainer, RoundedCornerShape(18.dp)) else Modifier)
+            .background(if (focusBg) ZeroTheme.colors.surface else ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(18.dp))
+            .then(if (focusBg) Modifier.border(1.5.dp, ZeroTheme.colors.primaryContainer, RoundedCornerShape(18.dp)) else Modifier)
             .clickable(onClick = onFocus)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Text(caption.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant, letterSpacing = 1.2.sp)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(currencySymbol, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant)
+            if (onCurrencyClick != null) {
+                Row(
+                    modifier = Modifier
+                        .background(ZeroTheme.colors.surfaceContainer, RoundedCornerShape(10.dp))
+                        .clickable(onClick = onCurrencyClick)
+                        .padding(start = 9.dp, end = 6.dp, top = 5.dp, bottom = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(currencySymbol, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.primaryContainer)
+                    Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(15.dp), tint = ZeroTheme.colors.onSurfaceVariant)
+                }
+            } else {
+                Text(currencySymbol, fontSize = if (hero) 21.sp else 19.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant)
+            }
             Box(modifier = Modifier.weight(1f))
-            Text(value.ifEmpty { "0" }, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer)
-            Box(modifier = Modifier.padding(start = 3.dp).width(2.dp).height(22.dp).background(if (focused) ZeroTheme.colors.primaryContainer else Color.Transparent))
+            Text(value.ifEmpty { "0" }, fontSize = if (hero) 36.sp else 26.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primaryContainer, maxLines = 1)
+            Box(modifier = Modifier.padding(start = 3.dp).width(3.dp).height(if (hero) 29.dp else 22.dp).background(if (focused) ZeroTheme.colors.primaryContainer else Color.Transparent))
         }
     }
 }
@@ -489,13 +516,15 @@ internal fun TransactionEditAmountField(
 **Files:**
 - Modify: `.../common/TransactionEditExpenseIncomeViewProvider.kt`
 
-- [ ] **Step 1:** Replace the `AnimatedVisibility(state.showRate) { TransactionEditRateTextField(...) }`
-block with:
+- [ ] **Step 1:** Delete the old `AnimatedVisibility(state.showRate) { TransactionEditRateTextField(...) }`
+block and instead make the rate tile the **first** child of the column (above `CategoryScrollRow`),
+so it sits directly under the pinned amount per the design (Amount → Exchange rate → Category →
+Date/Account):
 
 ```kotlin
 AnimatedVisibility(visible = state.showRate) {
     TransactionEditRateField(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         sourceCurrencySymbol = state.txCurrencySymbol,
         targetCurrencySymbol = state.accountCurrencySymbol,
         rate = state.rate,
@@ -664,10 +693,34 @@ background, centered swap icon (`Icons.Filled.SwapVert` or the existing icon). K
 from Transfer (else `""`). `perform`: `ChangeRate → ChangeRate`,
 `ChangeTargetAmount → ChangeTargetAmount`, `FocusAmount → FocusAmount`.
 
-- [ ] **Step 3:** ViewProvider — wrap the pinned `AmountDisplay` in
-`if (state.selectedTransactionType != TransactionEditType.TRANSFER) { … }`, and add
-`viewModel.perform(TransactionEditViewModel.Action.FocusAmount)` to its `onClick` (alongside
-`keypadVisible = true`).
+- [ ] **Step 3:** ViewProvider — replace the pinned `AmountDisplay(...)` with the boxed hero
+`TransactionEditAmountField`, shown only for expense/income (transfer renders its own amount fields
+in the child). Drop the `import ...ui.AmountDisplay`; import `...common.TransactionEditAmountField`
+and `...edit.TransactionEditFocusTarget`:
+
+```kotlin
+if (state.selectedTransactionType != TransactionEditType.TRANSFER) {
+    TransactionEditAmountField(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 16.dp, bottom = 8.dp),
+        caption = stringResource(R.string.transaction_edit_amount_display_label),
+        currencySymbol = state.currencySymbol,
+        value = state.amount,
+        focused = state.editTarget == TransactionEditFocusTarget.Amount,
+        hero = true,
+        onFocus = {
+            keypadVisible = true
+            viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
+        },
+        onCurrencyClick = if (state.canPickCurrency) {
+            { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+        } else null,
+    )
+}
+```
+
+(The big-number formatting/grouping that `AmountDisplay` did is now inside
+`TransactionEditAmountField`; if you want thousands grouping on the hero figure, add it to that
+composable's value rendering. The keypad still supplies the raw `state.amount` string.)
 
 - [ ] **Step 4:** Keypad — route by `editTarget`:
 
@@ -711,9 +764,14 @@ Import `...edit.TransactionEditFocusTarget`.
   - **Expense**, currency ≠ account → Exchange-rate tile (rate row + "Converts to · …" line);
     tap rate → keypad edits rate (caret, 6 dp, converted updates); Reset appears after manual edit
     and restores auto; tap amount → keypad edits amount (2 dp). Same-currency hides the tile.
-  - **Transfer**, differing-currency accounts → From amount / To amount + Exchange-rate tile; edit
-    From → To updates; edit To → From back-computes; edit rate → To updates and Reset appears; swap
-    stays consistent; same-currency accounts show a single Amount field.
+  - **Transfer**, differing-currency accounts → From amount / To amount + Exchange-rate tile. The
+    **focused** field shows a primaryContainer border (split) / caret; tapping From, To, or the rate
+    tile moves focus and routes the keypad. Edit From → To recomputes (`from × rate`), From stays;
+    edit To → **rate** recomputes (`to ÷ from`) and Reset appears, From stays; edit rate → To
+    recomputes and Reset appears; Reset restores the auto rate; swap stays consistent; same-currency
+    accounts show a single hero Amount field.
+  - **Focus borders:** confirm every focusable input (hero amount caret, split From/To border+caret,
+    rate tile border) reflects `editTarget`, and only one is active at a time.
 - [ ] **Step 3:** Final polish commit if needed: `fix: FX layout polish`.
 
 ---
@@ -736,7 +794,13 @@ Import `...edit.TransactionEditFocusTarget`.
   `TransactionEditRateTextField`. After T4/T9, `grep -r TransferRateMode src/main` is empty.
 - **Derivation placement:** `convertedAmountText` formatted in the use case; `needsFx`/`showRate`
   and currency lookups are trivial joins in the VM mapping; ViewProviders only read.
-- **Out of scope (not rate UX):** expense/income hero amount stays (not re-boxed); category picker
-  unchanged; transfer keeps `SelectorCard` dropdowns (no bottom-sheet account picker).
+- **Boxed amount:** the expense/income pinned amount and the transfer From/To/single amounts all use
+  `TransactionEditAmountField` (hero = no border + caret; split = focus border + bg + caret). The
+  zero-ui `AmountDisplay` is untouched (account edit still uses it).
+- **Linking anchor:** From is the anchor — editing To re-derives the **rate** (`to ÷ from`, 6 dp),
+  not the From amount; editing From or rate recomputes To (`from × rate`, 2 dp). Reset re-derives
+  rate from the pair.
+- **Out of scope (not rate UX):** category picker unchanged; transfer keeps `SelectorCard`
+  dropdowns (no bottom-sheet account picker).
 - **Open checks for executor:** confirm `ZeroTheme.colors` token names; confirm `AmountFormatter`
   reaches `DefaultTransactionEditUseCase`; confirm edit-mode load derives a transfer rate string.
