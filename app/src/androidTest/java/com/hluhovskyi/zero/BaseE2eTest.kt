@@ -57,6 +57,8 @@ abstract class BaseE2eTest {
 
     protected fun seedExpenses() = runBlocking { container.database.seedExpenses() }
 
+    protected fun seedFxAccounts() = runBlocking { container.database.seedFxAccounts() }
+
     protected fun onTransactions(): TransactionsRobot {
         launchApp()
         return TransactionsRobot(composeRule)
