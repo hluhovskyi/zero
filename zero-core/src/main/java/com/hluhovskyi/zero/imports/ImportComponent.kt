@@ -62,6 +62,7 @@ abstract class ImportComponent :
         fun builder(dependencies: Dependencies): Builder = DaggerImportComponent.builder()
             .dependencies(dependencies)
             .parsers(emptyList())
+            .initialSource(InitialSource(null))
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
 
@@ -73,8 +74,14 @@ abstract class ImportComponent :
         fun parsers(parsers: List<SnapshotParser>): Builder
 
         @BindsInstance
+        fun initialSource(initialSource: InitialSource): Builder
+
+        @BindsInstance
         fun onImportFinishedHandler(handler: OnImportFinishedHandler): Builder
     }
+
+    /** Optional source key to auto-select on open, skipping the picker (e.g. "drive"). */
+    class InitialSource(val key: String?)
 
     @dagger.Module
     object Module {
@@ -91,6 +98,7 @@ abstract class ImportComponent :
             accountRepository: AccountRepository,
             transactionRepository: TransactionRepository,
             onImportFinishedHandler: OnImportFinishedHandler,
+            initialSource: InitialSource,
         ): ImportUseCase = DefaultImportUseCase(
             parsers = parsers,
             syncEngine = syncEngine,
@@ -101,6 +109,7 @@ abstract class ImportComponent :
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
             onImportFinishedHandler = onImportFinishedHandler,
+            initialSourceKey = initialSource.key,
         )
 
         @Provides

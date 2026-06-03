@@ -70,6 +70,7 @@ internal class DefaultTransactionEditUseCase(
     private val mutableState = MutableStateFlow(CompositeState())
     override val state: Flow<TransactionEditUseCase.State> = mutableState
         .map { state ->
+            val date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone())
             when (state.transactionType) {
                 TransactionEditType.EXPENSE -> TransactionEditUseCase.State.Expense(
                     accounts = state.accounts,
@@ -80,9 +81,11 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
+                    rateAuto = state.rateAuto,
                     notes = state.notes,
-                    date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    date = date,
                     sourceSnapshot = state.sourceSnapshot,
+                    isModified = state.isModified,
                 )
 
                 TransactionEditType.INCOME -> TransactionEditUseCase.State.Income(
@@ -94,50 +97,57 @@ internal class DefaultTransactionEditUseCase(
                     selectedCurrency = state.selectedCurrency,
                     amount = state.amount,
                     rate = state.rate,
+                    rateAuto = state.rateAuto,
                     notes = state.notes,
-                    date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
+                    date = date,
                     sourceSnapshot = state.sourceSnapshot,
+                    isModified = state.isModified,
                 )
 
-                TransactionEditType.TRANSFER -> {
-                    val sourceCurrencySymbol = state.selectedAccount?.let { account ->
-                        state.currencies.firstOrNull { it.id == account.currencyId }?.currencySymbol
-                    } ?: ""
-                    val targetCurrencySymbol = state.selectedTargetAccount?.let { account ->
-                        state.currencies.firstOrNull { it.id == account.currencyId }?.currencySymbol
-                    } ?: ""
-                    TransactionEditUseCase.State.Transfer(
-                        accounts = state.accounts,
-                        selectedAccount = state.selectedAccount,
-                        targetAccounts = state.targetAccounts,
-                        selectedTargetAccount = state.selectedTargetAccount,
-                        amount = state.amount,
-                        targetAmount = state.targetAmount,
-                        transferRateMode = state.transferRateMode,
-                        sourceCurrencySymbol = sourceCurrencySymbol,
-                        targetCurrencySymbol = targetCurrencySymbol,
-                        notes = state.notes,
-                        date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
-                        sourceSnapshot = state.sourceSnapshot,
-                    )
-                }
+                TransactionEditType.TRANSFER -> TransactionEditUseCase.State.Transfer(
+                    accounts = state.accounts,
+                    selectedAccount = state.selectedAccount,
+                    targetAccounts = state.targetAccounts,
+                    selectedTargetAccount = state.selectedTargetAccount,
+                    amount = state.amount,
+                    targetAmount = state.targetAmount,
+                    rate = state.rate,
+                    rateAuto = state.rateAuto,
+                    currencies = state.currencies,
+                    sourceCurrencySymbol = state.currencySymbolOf(state.selectedAccount),
+                    targetCurrencySymbol = state.currencySymbolOf(state.selectedTargetAccount),
+                    notes = state.notes,
+                    date = date,
+                    sourceSnapshot = state.sourceSnapshot,
+                    isModified = state.isModified,
+                )
             }
         }
 
     override fun perform(action: TransactionEditUseCase.Action) {
         logger.d("perform=$action")
+        if (action.isUserEdit()) {
+            mutableState.update { state -> state.copy(isModified = true) }
+        }
         when (action) {
             is TransactionEditUseCase.Action.ChangeAmount -> {
                 mutableState.update { state ->
-                    state.copy(amount = action.amount)
+                    state.copy(amount = action.amount, targetAmount = state.receivedFor(action.amount, state.rate))
                 }
             }
 
             is TransactionEditUseCase.Action.ChangeRate -> {
                 mutableState.update { state ->
-                    state.copy(rate = action.rate)
+                    state.copy(
+                        rate = action.rate,
+                        rateAuto = false,
+                        targetAmount = state.receivedFor(state.amount, action.rate),
+                    )
                 }
             }
+
+            is TransactionEditUseCase.Action.ResetRate ->
+                mutableState.update { it.copy(rateAuto = true) }
 
             is TransactionEditUseCase.Action.SelectAccount -> selectAccount(action)
 
@@ -169,20 +179,8 @@ internal class DefaultTransactionEditUseCase(
             }
 
             is TransactionEditUseCase.Action.SelectTargetAccount -> {
-                coroutineScope.launch {
-                    val currentState = mutableState.value
-                    val rate = fetchRateIfTransfer(
-                        state = currentState,
-                        targetAccount = action.account,
-                    )
-
-                    mutableState.update { state ->
-                        state.copy(
-                            selectedTargetAccount = action.account,
-                            transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                                ?: state.transferRateMode,
-                        )
-                    }
+                mutableState.update { state ->
+                    state.copy(selectedTargetAccount = action.account, rateAuto = true)
                 }
             }
 
@@ -233,14 +231,11 @@ internal class DefaultTransactionEditUseCase(
 
             is TransactionEditUseCase.Action.ChangeTargetAmount -> {
                 mutableState.update { state ->
-                    state.copy(targetAmount = action.amount)
-                }
-            }
-
-            is TransactionEditUseCase.Action.ChangeTransferRate -> {
-                mutableState.update { state ->
+                    // From is the anchor: editing the To amount re-derives the rate, leaving `amount` fixed.
                     state.copy(
-                        transferRateMode = TransferRateMode.CustomRate(action.rate),
+                        targetAmount = action.amount,
+                        rate = rateFromAmounts(state.amount, action.amount) ?: state.rate,
+                        rateAuto = false,
                     )
                 }
             }
@@ -252,7 +247,6 @@ internal class DefaultTransactionEditUseCase(
             }
 
             is TransactionEditUseCase.Action.Save -> save()
-            is TransactionEditUseCase.Action.CycleTransferRateMode -> cycleTransferRateMode()
             is TransactionEditUseCase.Action.SwapAccounts -> swapAccounts()
             is TransactionEditUseCase.Action.Duplicate -> {
                 (transactionId as? Id.Known)?.let { id ->
@@ -325,6 +319,7 @@ internal class DefaultTransactionEditUseCase(
                                         selectedCategory = categoryToSelect
                                             ?: state.selectedCategory,
                                         rate = transaction.rate.value.toString(),
+                                        rateAuto = false,
                                     )
                                 }
 
@@ -338,22 +333,21 @@ internal class DefaultTransactionEditUseCase(
                                         selectedCategory = categoryToSelect
                                             ?: state.selectedCategory,
                                         rate = transaction.rate.value.toString(),
+                                        rateAuto = false,
                                     )
                                 }
 
                                 is TransactionRepository.Transaction.Transfer -> {
                                     val targetAccountToSelect =
                                         state.accounts.firstOrNull { it.id == transaction.targetAccount }
-
-                                    val rate = fetchRate(
-                                        sourceAccount = partialState.selectedAccount,
-                                        targetAccount = targetAccountToSelect,
-                                    ) ?: Rate.Same
+                                    val toAmount = transaction.targetAmount.value.toString()
 
                                     partialState.copy(
                                         transactionType = TransactionEditType.TRANSFER,
                                         selectedTargetAccount = targetAccountToSelect,
-                                        transferRateMode = TransferRateMode.Default(rate),
+                                        targetAmount = toAmount,
+                                        rate = rateFromAmounts(partialState.amount, toAmount) ?: "1",
+                                        rateAuto = false,
                                     )
                                 }
                             }
@@ -485,7 +479,11 @@ internal class DefaultTransactionEditUseCase(
                     .collectLatest { picked ->
                         mutableState.update { state ->
                             val category = state.allCategories.firstOrNull { it.id == picked.categoryId }
-                            if (category != null) state.copy(selectedCategory = category) else state
+                            if (category != null) {
+                                state.copy(selectedCategory = category, isModified = true)
+                            } else {
+                                state
+                            }
                         }
                     }
             }
@@ -509,28 +507,52 @@ internal class DefaultTransactionEditUseCase(
                                 currencies = currencies,
                                 manuallyChangedCurrency = true,
                                 selectedCurrency = pickedCurrency,
+                                isModified = true,
                             )
                         }
                     }
             }
+
+            launch { autoDeriveRateOnPairChange() }
         }
     }
 
-    private fun selectAccount(action: TransactionEditUseCase.Action.SelectAccount) {
-        coroutineScope.launch {
-            val currentState = mutableState.value
-            val rate = fetchRateIfTransfer(
-                state = currentState,
-                sourceAccount = action.account,
-            )
-
-            mutableState.update { state ->
-                state.copy(
-                    selectedAccount = action.account,
-                    transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                        ?: state.transferRateMode,
-                )
+    /**
+     * Keeps the exchange rate in sync with the active currency pair while the user hasn't overridden
+     * it — re-deriving whenever the pair changes or the rate returns to auto. Expense/income pair =
+     * (tx currency, account currency); transfer pair = (source-account currency, target-account currency).
+     */
+    private suspend fun autoDeriveRateOnPairChange() {
+        mutableState
+            .map { state -> RateKey(state.currencyPair(), state.rateAuto) }
+            .distinctUntilChanged()
+            .collectLatest { (pair, auto) ->
+                val (sourceCurrencyId, targetCurrencyId) = pair
+                if (!auto || sourceCurrencyId == null || targetCurrencyId == null || sourceCurrencyId == targetCurrencyId) {
+                    return@collectLatest
+                }
+                val derivedRate = currencyConvertUseCase.getRate(sourceCurrencyId, targetCurrencyId).value.toRateString()
+                mutableState.update { state ->
+                    if (!state.rateAuto) {
+                        state
+                    } else {
+                        state.copy(rate = derivedRate, targetAmount = state.receivedFor(state.amount, derivedRate))
+                    }
+                }
             }
+    }
+
+    private data class RateKey(val pair: Pair<Id.Known?, Id.Known?>, val auto: Boolean)
+
+    private fun CompositeState.currencyPair(): Pair<Id.Known?, Id.Known?> = if (transactionType == TransactionEditType.TRANSFER) {
+        selectedAccount?.currencyId to selectedTargetAccount?.currencyId
+    } else {
+        selectedCurrency?.id to selectedAccount?.currencyId
+    }
+
+    private fun selectAccount(action: TransactionEditUseCase.Action.SelectAccount) {
+        mutableState.update { state ->
+            state.copy(selectedAccount = action.account, rateAuto = true)
         }
     }
 
@@ -580,17 +602,7 @@ internal class DefaultTransactionEditUseCase(
                     val targetAccount = state.selectedTargetAccount ?: return@launch
 
                     val sourceAmount = Amount(state.amount.toBigDecimalOrNull())
-                    val computedTargetAmount = when (val mode = state.transferRateMode) {
-                        is TransferRateMode.Default -> sourceAmount.withRate(mode.rate)
-                        is TransferRateMode.CustomRate -> {
-                            val customRate = Rate(mode.rate.toBigDecimalOrNull())
-                            sourceAmount.withRate(customRate)
-                        }
-
-                        is TransferRateMode.CustomAmount -> {
-                            Amount(state.targetAmount.toBigDecimalOrNull())
-                        }
-                    }
+                    val computedTargetAmount = Amount(state.targetAmount.toBigDecimalOrNull())
 
                     TransactionRepository.Transaction.Transfer(
                         id = transactionId,
@@ -613,83 +625,14 @@ internal class DefaultTransactionEditUseCase(
         }
     }
 
-    private fun cycleTransferRateMode() {
-        coroutineScope.launch {
-            val currentState = mutableState.value
-            val rate = if (currentState.transferRateMode is TransferRateMode.CustomAmount) {
-                fetchRate(
-                    sourceAccount = currentState.selectedAccount,
-                    targetAccount = currentState.selectedTargetAccount,
-                )
-            } else {
-                null
-            }
-
-            mutableState.update { state ->
-                var nextTargetAmount = state.targetAmount
-                val nextMode = when (val currentMode = state.transferRateMode) {
-                    is TransferRateMode.Default -> {
-                        val rateString = currentMode.rate.value.format()
-                        TransferRateMode.CustomRate(rateString)
-                    }
-
-                    is TransferRateMode.CustomRate -> {
-                        val sourceAmount = state.amount.toBigDecimalOrZero()
-                        val currentRate = currentMode.rate.toBigDecimalOrZero()
-                        nextTargetAmount = sourceAmount.multiply(currentRate).format()
-
-                        TransferRateMode.CustomAmount(nextTargetAmount)
-                    }
-
-                    is TransferRateMode.CustomAmount -> TransferRateMode.Default(rate ?: Rate.Same)
-                }
-
-                state.copy(
-                    transferRateMode = nextMode,
-                    targetAmount = nextTargetAmount,
-                )
-            }
-        }
-    }
-
     private fun swapAccounts() {
-        coroutineScope.launch {
-            val currentState = mutableState.value
-            val rate = fetchRateIfTransfer(
-                state = currentState,
+        mutableState.update { state ->
+            state.copy(
+                selectedAccount = state.selectedTargetAccount,
+                selectedTargetAccount = state.selectedAccount,
+                rateAuto = true,
             )
-
-            mutableState.update { state ->
-                state.copy(
-                    selectedAccount = state.selectedTargetAccount,
-                    selectedTargetAccount = state.selectedAccount,
-                    transferRateMode = rate?.let { TransferRateMode.Default(it) }
-                        ?: state.transferRateMode,
-                )
-            }
         }
-    }
-
-    private suspend fun fetchRateIfTransfer(
-        state: CompositeState,
-        sourceAccount: TransactionEditAccount? = state.selectedAccount,
-        targetAccount: TransactionEditAccount? = state.selectedTargetAccount,
-    ): Rate? = if (state.transactionType == TransactionEditType.TRANSFER) {
-        fetchRate(sourceAccount, targetAccount)
-    } else {
-        null
-    }
-
-    private suspend fun fetchRate(
-        sourceAccount: TransactionEditAccount?,
-        targetAccount: TransactionEditAccount?,
-    ): Rate? = when {
-        sourceAccount == null || targetAccount == null -> null
-        sourceAccount.currencyId == targetAccount.currencyId -> Rate.Same
-        else -> currencyConvertUseCase.getRate(
-            sourceAccount.currencyId,
-            targetAccount.currencyId,
-        )
     }
 
     private fun resolveCategoryForEdit(
@@ -705,9 +648,43 @@ internal class DefaultTransactionEditUseCase(
         return categoryToSelect to reorderedCategories
     }
 
-    private fun BigDecimal.format() = setScale(2, RoundingMode.HALF_UP)
+    /** The auto-derived rate, money-scaled to a clean string. */
+    private fun BigDecimal.toRateString() = setScale(MONEY_RATE_SCALE, RoundingMode.HALF_UP)
         .stripTrailingZeros()
         .toPlainString()
+
+    /** Actions that change the form contents, as opposed to navigation/lifecycle actions. */
+    private fun TransactionEditUseCase.Action.isUserEdit(): Boolean = when (this) {
+        is TransactionEditUseCase.Action.SwitchTransaction,
+        is TransactionEditUseCase.Action.SelectAccount,
+        is TransactionEditUseCase.Action.SelectTargetAccount,
+        is TransactionEditUseCase.Action.SelectCurrency,
+        is TransactionEditUseCase.Action.SelectCategory,
+        is TransactionEditUseCase.Action.ChangeAmount,
+        is TransactionEditUseCase.Action.ChangeRate,
+        is TransactionEditUseCase.Action.ChangeDate,
+        is TransactionEditUseCase.Action.ChangeTargetAmount,
+        is TransactionEditUseCase.Action.ResetRate,
+        is TransactionEditUseCase.Action.SwapAccounts,
+        is TransactionEditUseCase.Action.ChangeNotes,
+        -> true
+
+        is TransactionEditUseCase.Action.EditCategories,
+        is TransactionEditUseCase.Action.ShowAllCategories,
+        is TransactionEditUseCase.Action.ShowAllCurrencies,
+        is TransactionEditUseCase.Action.Save,
+        is TransactionEditUseCase.Action.Discard,
+        is TransactionEditUseCase.Action.Delete,
+        is TransactionEditUseCase.Action.Duplicate,
+        -> false
+    }
+
+    /** rate = to ÷ from (MONEY_RATE_SCALE). Returns null when `from` is 0/blank so the caller keeps the old rate. */
+    private fun rateFromAmounts(from: String, to: String): String? {
+        val source = from.toBigDecimalOrNull() ?: return null
+        if (source.signum() == 0) return null
+        return to.toBigDecimalOrZero().divide(source, MONEY_RATE_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+    }
 
     private data class CompositeState(
         val transactionType: TransactionEditType = TransactionEditType.EXPENSE,
@@ -723,9 +700,27 @@ internal class DefaultTransactionEditUseCase(
         val manuallyChangedCurrency: Boolean = false,
         val amount: String = "",
         val rate: String = "",
+        val rateAuto: Boolean = true,
         val targetAmount: String = "",
-        val transferRateMode: TransferRateMode = TransferRateMode.Default(Rate.Same),
         val notes: String = "",
         val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
-    )
+        val isModified: Boolean = false,
+    ) {
+        /** Symbol of [account]'s currency, or "" if unresolved. */
+        fun currencySymbolOf(account: TransactionEditAccount?): String = account?.let { currencies.firstOrNull { currency -> currency.id == it.currencyId }?.currencySymbol }.orEmpty()
+
+        /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
+        fun receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) {
+            (from.toBigDecimalOrZero() * rate.toBigDecimalOrZero())
+                .setScale(MONEY_SCALE, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        } else {
+            targetAmount
+        }
+    }
+
+    private companion object {
+        /** Decimal places kept for stored money amounts and the conversion rate. */
+        private const val MONEY_SCALE = 2
+        private const val MONEY_RATE_SCALE = 6
+    }
 }

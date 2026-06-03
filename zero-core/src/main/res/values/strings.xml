@@ -265,6 +265,11 @@
     <string name="transaction_edit_edit_categories_description">Edit categories</string>
     <string name="transaction_edit_currency_label">Currency</string>
     <string name="transaction_edit_rate_label">Rate</string>
+    <string name="transaction_edit_exchange_rate">Exchange rate</string>
+    <string name="transaction_edit_converts_to">Converts to</string>
+    <string name="transaction_edit_rate_reset">Reset</string>
+    <string name="transfer_edit_from_amount">From amount</string>
+    <string name="transfer_edit_to_amount">To amount</string>
     <string name="transaction_edit_show_all_categories_description">Show all categories</string>
     <string name="transaction_edit_all_categories">All</string>
 
@@ -307,6 +312,7 @@
     <string name="welcome_heading">Your finances,\none place.</string>
     <string name="welcome_subtitle">Add your first transaction or bring in data from another app to get started.</string>
     <string name="welcome_import_action">Import from another app</string>
+    <string name="welcome_restore_action">Restore from Google Drive</string>
     <string name="welcome_illustration_amount_placeholder" translatable="false">$0.00</string>
 
     <string name="budget_title">Budget</string>

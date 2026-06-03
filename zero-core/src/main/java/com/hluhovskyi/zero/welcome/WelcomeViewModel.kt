@@ -11,6 +11,7 @@ interface WelcomeViewModel : AttachableActionStateModel<WelcomeViewModel.Action,
 
     sealed interface Action {
         object ImportSelected : Action
+        object RestoreSelected : Action
     }
 
     class State

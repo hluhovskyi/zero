@@ -92,6 +92,9 @@ internal object Destinations {
 
     object Settings : Destination by destinationOf("settings")
     object Backup : Destination by destinationOf("backup")
-    object Import : Destination by destinationOf("import")
+    object Import : Destination by destinationOf("import", InitialSource) {
+        // Optional source key to auto-select on open (e.g. "drive" from the Welcome restore CTA).
+        object InitialSource : Argument<String> by stringOptionalValueOf("initialSource")
+    }
     object Feedback : Destination by destinationOf("feedback")
 }

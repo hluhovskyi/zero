@@ -64,6 +64,46 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
         return this
     }
 
+    fun switchToTransfer(): TransactionEditRobot {
+        composeRule.onNodeWithText("Transfer").performClick()
+        return this
+    }
+
+    fun selectToAccount(name: String): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("TO").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("TO").performClick()
+            onAllNodesWithText(name).onLast().performClick()
+        }
+        return this
+    }
+
+    /** Expense/income: the foreign-currency conversion card is showing. */
+    fun assertConversionVisible(convertsToCurrency: String): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("EXCHANGE RATE").fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText("Converts to · $convertsToCurrency", substring = true)
+                .assertCountEquals(1)
+        }
+        return this
+    }
+
+    /** Transfer: the cross-currency From/To amount fields and rate card are showing. */
+    fun assertTransferConversionVisible(): TransactionEditRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("EXCHANGE RATE").fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText("FROM AMOUNT").assertCountEquals(1)
+            onAllNodesWithText("TO AMOUNT").assertCountEquals(1)
+        }
+        return this
+    }
+
     fun save(): TransactionsRobot {
         composeRule.apply {
             onNodeWithContentDescription("Save Transaction").performClick()

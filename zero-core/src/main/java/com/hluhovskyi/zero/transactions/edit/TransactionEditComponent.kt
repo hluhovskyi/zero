@@ -12,14 +12,11 @@ import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.logging
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.edit.common.TransactionEditExpenseIncomeComponent
-import com.hluhovskyi.zero.transactions.edit.transfer.TransactionEditTransferComponent
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -36,10 +33,7 @@ private const val TAG = "TransactionEditComponent"
     modules = [TransactionEditComponent.Module::class],
     dependencies = [TransactionEditComponent.Dependencies::class],
 )
-abstract class TransactionEditComponent :
-    AttachableViewComponent,
-    TransactionEditExpenseIncomeComponent.Dependencies,
-    TransactionEditTransferComponent.Dependencies {
+abstract class TransactionEditComponent : AttachableViewComponent {
 
     internal abstract val useCase: TransactionEditUseCase
 
@@ -185,33 +179,12 @@ abstract class TransactionEditComponent :
         @TransactionEditScope
         fun viewProvider(
             viewModel: TransactionEditViewModel,
-            expenseIncomeComponentBuilder: TransactionEditExpenseIncomeComponent.Builder,
-            transferComponentBuilder: TransactionEditTransferComponent.Builder,
+            imageLoader: ImageLoader,
             transactionId: Id,
-            logger: Logger,
         ): ViewProvider = TransactionEditViewProvider(
             viewModel = viewModel,
-            expenseIncomeComponent = expenseIncomeComponentBuilder.logging(logger),
-            transferComponent = transferComponentBuilder.logging(logger),
+            imageLoader = imageLoader,
             isNewTransaction = transactionId is Id.Unknown,
         )
-
-        @Provides
-        fun transactionEditExpenseIncomeComponentBuilder(
-            component: TransactionEditComponent,
-            useCase: TransactionEditUseCase,
-            transactionId: Id,
-        ): TransactionEditExpenseIncomeComponent.Builder = TransactionEditExpenseIncomeComponent.builder(component)
-            .transactionEditUseCase(useCase)
-            .isNewTransaction(transactionId is Id.Unknown)
-
-        @Provides
-        fun transactionEditTransferComponentBuilder(
-            component: TransactionEditComponent,
-            useCase: TransactionEditUseCase,
-            transactionId: Id,
-        ): TransactionEditTransferComponent.Builder = TransactionEditTransferComponent.builder(component)
-            .transactionEditUseCase(useCase)
-            .isNewTransaction(transactionId is Id.Unknown)
     }
 }
