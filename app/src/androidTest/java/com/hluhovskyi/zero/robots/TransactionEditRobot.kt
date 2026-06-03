@@ -24,7 +24,17 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
             amount.forEach { ch ->
                 onAllNodesWithText(ch.toString()).filter(hasClickAction()).onLast().performClick()
             }
-            onNodeWithText(category).performClick()
+            // Open the picker via the category field row and pick by name. The quick chips
+            // exclude the already-selected category, so the picker is the deterministic path;
+            // the row also shows the value, so onLast() targets the picker item.
+            onNodeWithText("CATEGORY").performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Search categories…").fetchSemanticsNodes().isNotEmpty()
+            }
+            onAllNodesWithText(category).onLast().performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Search categories…").fetchSemanticsNodes().isEmpty()
+            }
             onNodeWithText("ACCOUNT").performClick()
             onAllNodesWithText(account).onLast().performClick()
         }
