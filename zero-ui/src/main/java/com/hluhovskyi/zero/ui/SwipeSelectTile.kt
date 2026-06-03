@@ -102,20 +102,26 @@ fun SwipeSelectTile(
             state = draggableState,
             orientation = Orientation.Vertical,
             onDragStopped = {
-                when (
+                val outcome =
                     resolveSwipe(offset.value, commitThreshold, tapSlop, canSelectPrevious, canSelectNext)
-                ) {
-                    SwipeOutcome.Next -> {
-                        offset.animateTo(-rowPx, animSpec)
-                        onSelectNext()
-                        offset.snapTo(0f)
+                // Settle on the SAME scope the per-delta snapTo()s use. draggable's onDragStopped
+                // runs on its own internal scope, so a settle animation started there can be
+                // cancelled by the final queued snapTo() landing afterwards — freezing the tile
+                // mid-swipe. Launching here keeps it FIFO-ordered after the drag updates.
+                scope.launch {
+                    when (outcome) {
+                        SwipeOutcome.Next -> {
+                            offset.animateTo(-rowPx, animSpec)
+                            onSelectNext()
+                            offset.snapTo(0f)
+                        }
+                        SwipeOutcome.Previous -> {
+                            offset.animateTo(rowPx, animSpec)
+                            onSelectPrevious()
+                            offset.snapTo(0f)
+                        }
+                        SwipeOutcome.Tap, SwipeOutcome.None -> offset.animateTo(0f, animSpec)
                     }
-                    SwipeOutcome.Previous -> {
-                        offset.animateTo(rowPx, animSpec)
-                        onSelectPrevious()
-                        offset.snapTo(0f)
-                    }
-                    SwipeOutcome.Tap, SwipeOutcome.None -> offset.animateTo(0f, animSpec)
                 }
             },
         )
