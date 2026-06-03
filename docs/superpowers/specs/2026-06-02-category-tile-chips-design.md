@@ -21,16 +21,21 @@ Replace the tile strip with the design's landed pattern:
    category picker** (the `ShowAllCategories` action / bottom sheet).
    - Selected: squircle of the chosen category + its name (primary, bold).
    - Empty: neutral grid-icon placeholder squircle + "Choose category" (variant color).
-2. A **quick-chip row** under the field: the top frequent categories as pill chips
-   (icon + name, **no "All" chip**). Tapping a chip selects that category.
+2. A **quick-chip row** under the field: frequent categories as pill chips (icon + name,
+   **no "All" chip**). Chips are **stateless** — the field row is the single source of
+   truth for what's selected — and **exclude the current category** (they're "switch to
+   one of these others"). Tapping a chip selects it; the previously-selected category
+   rejoins the chips.
 
-   **Implementation note:** the design's "chips vanish until the first pick" empty state
-   assumes no default selection, but the app auto-selects the first ranked category
-   (`TransactionEditMapping`), so `selectedCategory` is never null. The shipped behavior
-   therefore keeps the chips **always visible with a selected-state highlight** (accent
-   border + label on the selected chip) — design approach **A4** (field row + tile
-   drawer with a selected state), the working realization of "tile and chips" given the
-   auto-selection. To open the long tail, tap the field row → picker.
+   **Shortcut lifecycle (the design's "first-time shortcut" intent, adapted to the app's
+   auto-selection):** the app auto-selects the first ranked category
+   (`TransactionEditMapping`), so `selectedCategory` is never null and a literal "until
+   first pick" gate would never show chips. Instead the chips show **only for a new
+   transaction, and only until the user reaches the full picker** — they are hidden in
+   **edit mode** and once a category is **picked from the picker**
+   (`categoryPickedFromPicker`, plumbed draft → state → `Form.showCategoryShortcuts`).
+   To open the long tail (or change after the shortcuts retire), tap the field row →
+   picker.
 
 The category **picker bottom sheet itself is out of scope** — it already exists
 (`CategoryPickerViewProvider`) and is what the row opens. List rows in
