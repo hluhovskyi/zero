@@ -1,0 +1,12 @@
+{
+  "number": 100,
+  "headRefOid": "abc1230000000000000000000000000000000000",
+  "createdAt": "2026-06-02T00:00:00Z",
+  "mergeStateStatus": "CLEAN",
+  "statusCheckRollup": [
+    {"name": "test", "status": "COMPLETED", "conclusion": "SUCCESS"}
+  ],
+  "labels": [],
+  "reviews": [],
+  "files": [{"path": "zero-core/src/main/java/com/hluhovskyi/zero/foo.kt"}]
+}

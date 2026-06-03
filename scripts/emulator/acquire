@@ -69,6 +69,17 @@ def main() -> None:
                         help="Don't spawn a new emulator if all running are claimed")
     args = parser.parse_args()
 
+    # Parallel-workers escape hatch: when ANDROID_SERIAL is set, the caller has
+    # explicitly pinned this session to one emulator. Skip flock + claim
+    # bookkeeping entirely — the user owns the serial, no contention with
+    # sibling worktrees. Exits 0 so callers can treat acquire as a no-op when
+    # the env is set. See: docs/superpowers/specs/2026-06-02-agent-pr-watch-design.md
+    pinned = os.environ.get("ANDROID_SERIAL", "").strip()
+    if pinned:
+        print(f"acquire: using pinned ANDROID_SERIAL={pinned}, skipping flock",
+              file=sys.stderr)
+        return
+
     this = worktree_root()
     with repo_lock():
         result = claim_unused(this)
