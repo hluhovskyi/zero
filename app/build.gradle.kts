@@ -84,6 +84,9 @@ android {
         }
         create("perf") {
             initWith(getByName("release"))
+            // Distinct package so a profileable perf build installs alongside debug/release.
+            applicationIdSuffix = ".perf"
+            versionNameSuffix = "-perf"
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
             isProfileable = true
