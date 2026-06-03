@@ -29,8 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -60,6 +60,9 @@ internal fun resolveSwipe(
 private val RowHeight = 40.dp
 private val SwipeEasing = CubicBezierEasing(0.34f, 0.1f, 0.2f, 1f)
 private const val SwipeDurationMs = 180
+
+/** Opacity drop for a face one full row away from the viewport centre (centre = 1f, neighbour = 0.3f). */
+private const val NeighbourFade = 0.7f
 
 /**
  * Generic vertical swipe-to-select tile. Swipe up → next, swipe down → previous; bounces at the
@@ -171,21 +174,33 @@ fun SwipeSelectTile(
                     .requiredHeight(RowHeight * 3)
                     .offset { IntOffset(0, offset.value.roundToInt()) },
             ) {
-                SwipeFace(alpha = 0.3f) { previous?.invoke() }
-                SwipeFace(alpha = 1f) { current() }
-                SwipeFace(alpha = 0.3f) { next?.invoke() }
+                // Opacity tracks distance from the viewport centre, so a face brightens to full as
+                // it slides in and the committed value is already crisp when it lands — no grey
+                // lingering through the slide. slot ∈ {-1, 0, 1} = previous / current / next.
+                SwipeFace(slot = -1, offsetPx = { offset.value }, rowPx = rowPx) { previous?.invoke() }
+                SwipeFace(slot = 0, offsetPx = { offset.value }, rowPx = rowPx) { current() }
+                SwipeFace(slot = 1, offsetPx = { offset.value }, rowPx = rowPx) { next?.invoke() }
             }
         }
     }
 }
 
 @Composable
-private fun SwipeFace(alpha: Float, content: @Composable () -> Unit) {
+private fun SwipeFace(
+    slot: Int,
+    offsetPx: () -> Float,
+    rowPx: Float,
+    content: @Composable () -> Unit,
+) {
     Box(
         modifier = Modifier
             .height(RowHeight)
             .fillMaxWidth()
-            .alpha(alpha),
+            .graphicsLayer {
+                // Distance of this face's centre from the viewport centre, in rows.
+                val rowsFromCentre = (abs(offsetPx() + slot * rowPx) / rowPx).coerceIn(0f, 1f)
+                alpha = 1f - NeighbourFade * rowsFromCentre
+            },
         contentAlignment = Alignment.CenterStart,
     ) { content() }
 }
