@@ -11,6 +11,7 @@ import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.math.BigDecimal
 
@@ -25,6 +26,33 @@ class TransactionEditMappingTest {
     private val revolut = TransactionEditAccount(Id.Known("acc-eur"), "Revolut", Id.Known("EUR"))
     private val food = TransactionEditCategory(Id.Known("cat"), "Food", ColorScheme.Grey, Image.empty())
     private fun category(id: String) = TransactionEditCategory(Id.Known(id), id, ColorScheme.Grey, Image.empty(), CategoryType.EXPENSE)
+
+    private val accounts = listOf(wallet, revolut)
+    private val currencies = listOf(usd, eur)
+    private val categories = listOf(category("a"), category("b"), category("c"))
+
+    private fun expense(currencyId: Id.Known = eur.id, categoryId: String = "c", rate: Rate = Rate(BigDecimal("0.9"))) = TransactionRepository.Transaction.Expense(
+        id = Id.Known("t"),
+        amount = Amount(BigDecimal("42")),
+        accountId = wallet.id,
+        currencyId = currencyId,
+        dateTime = now,
+        updatedDateTime = now,
+        categoryId = Id.Known(categoryId),
+        rate = rate,
+        notes = "lunch",
+    )
+
+    private fun transfer(amount: String = "100", target: String = "86") = TransactionRepository.Transaction.Transfer(
+        id = Id.Known("t"),
+        amount = Amount(BigDecimal(amount)),
+        accountId = wallet.id,
+        currencyId = usd.id,
+        dateTime = now,
+        updatedDateTime = now,
+        targetAccount = revolut.id,
+        targetAmount = Amount(BigDecimal(target)),
+    )
 
     // ── buildTransaction ───────────────────────────────────────────────────────────────────
 
@@ -109,56 +137,77 @@ class TransactionEditMappingTest {
         assertNull(buildTransaction(state, Id.Known("t"), now))
     }
 
-    // ── seedEditState ──────────────────────────────────────────────────────────────────────
-
-    private val loaded = TransactionEditState(
-        accounts = listOf(wallet, revolut),
-        allCategories = listOf(category("a"), category("b"), category("c")),
-        currencies = listOf(usd, eur),
-    )
+    // ── applyLoaded ────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `edit expense resolves account, currency, category to front, sets rate, clears auto`() {
-        val expense = TransactionRepository.Transaction.Expense(
-            id = Id.Known("t"),
-            amount = Amount(BigDecimal("42")),
-            accountId = wallet.id,
-            currencyId = eur.id,
-            dateTime = now,
-            updatedDateTime = now,
-            categoryId = Id.Known("c"),
-            rate = Rate(BigDecimal("0.9")),
-            notes = "lunch",
-        )
+    fun `applyLoaded folds an expense into the draft by id, fixes rate`() {
+        val draft = applyLoaded(TransactionEditDraft(), expense(), isDuplicate = false)
 
-        val seeded = seedEditState(loaded, expense, isDuplicate = false)
-
-        assertEquals(TransactionEditType.EXPENSE, seeded.transactionType)
-        assertEquals("42", seeded.amount)
-        assertEquals(wallet, seeded.selectedAccount)
-        assertEquals(eur, seeded.selectedCurrency)
-        assertEquals(Id.Known("c"), seeded.selectedCategory?.id)
-        assertEquals(listOf("c", "a", "b"), seeded.allCategories.map { it.id.value })
-        assertEquals("0.9", seeded.rate)
-        assertFalse(seeded.rateAuto)
-        assertEquals("lunch", seeded.notes)
-        assertNull(seeded.sourceSnapshot)
+        assertEquals(TransactionEditType.EXPENSE, draft.transactionType)
+        assertEquals("42", draft.amount)
+        assertEquals(wallet.id, draft.accountId)
+        assertEquals(eur.id, draft.currencyId)
+        assertFalse(draft.manuallyChangedCurrency)
+        assertEquals(Id.Known("c"), draft.categoryId)
+        assertTrue(draft.pinSelectedCategory)
+        assertEquals("0.9", draft.rate)
+        assertFalse(draft.rateAuto)
+        assertEquals("lunch", draft.notes)
+        assertNull(draft.sourceSnapshot)
     }
 
     @Test
-    fun `duplicate captures source snapshot`() {
-        val expense = TransactionRepository.Transaction.Expense(
-            id = Id.Known("t"),
-            amount = Amount(BigDecimal("42")),
-            accountId = wallet.id,
-            currencyId = usd.id,
-            dateTime = now,
-            updatedDateTime = now,
-            categoryId = Id.Known("a"),
-            rate = Rate.Same,
-        )
+    fun `applyLoaded derives the transfer rate from amounts, falls back to 1 at zero source`() {
+        assertEquals("0.86", applyLoaded(TransactionEditDraft(), transfer(), isDuplicate = false).rate)
+        assertEquals("1", applyLoaded(TransactionEditDraft(), transfer(amount = "0", target = "0"), isDuplicate = false).rate)
+    }
 
-        val snapshot = requireNotNull(seedEditState(loaded, expense, isDuplicate = true).sourceSnapshot)
+    // ── resolve ────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `resolve maps a loaded expense draft to selections, pins category to front`() {
+        val draft = applyLoaded(TransactionEditDraft(), expense(), isDuplicate = false)
+
+        val state = resolve(draft, accounts, categories, currencies)
+
+        assertEquals(wallet, state.selectedAccount)
+        assertEquals(eur, state.selectedCurrency)
+        assertEquals(Id.Known("c"), state.selectedCategory?.id)
+        assertEquals(listOf("c", "a", "b"), state.allCategories.map { it.id.value })
+        assertEquals("0.9", state.rate)
+        assertFalse(state.rateAuto)
+        assertNull(state.sourceSnapshot)
+    }
+
+    @Test
+    fun `resolve defaults selection for a fresh draft`() {
+        val state = resolve(TransactionEditDraft(), accounts, categories, currencies)
+
+        assertEquals(wallet, state.selectedAccount)
+        assertEquals(usd, state.selectedCurrency)
+        assertEquals(Id.Known("a"), state.selectedCategory?.id)
+        assertEquals(listOf("a", "b", "c"), state.allCategories.map { it.id.value })
+    }
+
+    @Test
+    fun `resolve survives empty lists, then resolves once they arrive — no gate`() {
+        val draft = applyLoaded(TransactionEditDraft(), expense(), isDuplicate = false)
+
+        val empty = resolve(draft, emptyList(), emptyList(), emptyList())
+        assertNull(empty.selectedAccount)
+        assertNull(empty.selectedCurrency)
+        assertNull(empty.selectedCategory)
+
+        val full = resolve(draft, accounts, categories, currencies)
+        assertEquals(wallet, full.selectedAccount)
+        assertEquals(Id.Known("c"), full.selectedCategory?.id)
+    }
+
+    @Test
+    fun `resolve builds the duplicate snapshot with the source currency symbol`() {
+        val draft = applyLoaded(TransactionEditDraft(), expense(currencyId = usd.id, categoryId = "a", rate = Rate.Same), isDuplicate = true)
+
+        val snapshot = requireNotNull(resolve(draft, accounts, categories, currencies).sourceSnapshot)
 
         assertEquals("42", snapshot.amount)
         assertEquals(now, snapshot.date)
@@ -166,40 +215,25 @@ class TransactionEditMappingTest {
     }
 
     @Test
-    fun `transfer resolves target account and derives rate from amounts`() {
-        val transfer = TransactionRepository.Transaction.Transfer(
-            id = Id.Known("t"),
-            amount = Amount(BigDecimal("100")),
-            accountId = wallet.id,
-            currencyId = usd.id,
-            dateTime = now,
-            updatedDateTime = now,
-            targetAccount = revolut.id,
-            targetAmount = Amount(BigDecimal("86")),
-        )
+    fun `resolve maps a loaded transfer draft to its target account`() {
+        val draft = applyLoaded(TransactionEditDraft(), transfer(), isDuplicate = false)
 
-        val seeded = seedEditState(loaded, transfer, isDuplicate = false)
+        val state = resolve(draft, accounts, categories, currencies)
 
-        assertEquals(TransactionEditType.TRANSFER, seeded.transactionType)
-        assertEquals(revolut, seeded.selectedTargetAccount)
-        assertEquals("86", seeded.targetAmount)
-        assertEquals("0.86", seeded.rate)
-        assertFalse(seeded.rateAuto)
+        assertEquals(TransactionEditType.TRANSFER, state.transactionType)
+        assertEquals(revolut, state.selectedTargetAccount)
+        assertEquals("86", state.targetAmount)
+        assertEquals("0.86", state.rate)
     }
 
     @Test
-    fun `transfer with zero source amount falls back to rate 1`() {
-        val transfer = TransactionRepository.Transaction.Transfer(
-            id = Id.Known("t"),
-            amount = Amount(BigDecimal.ZERO),
-            accountId = wallet.id,
-            currencyId = usd.id,
-            dateTime = now,
-            updatedDateTime = now,
-            targetAccount = revolut.id,
-            targetAmount = Amount(BigDecimal.ZERO),
-        )
+    fun `resolve injects a picked currency that is outside the in-use list`() {
+        val gbp = TransactionEditCurrency(Id.Known("GBP"), "Pound", "£")
+        val draft = TransactionEditDraft(manuallyChangedCurrency = true, currencyId = gbp.id, pickedCurrency = gbp)
 
-        assertEquals("1", seedEditState(loaded, transfer, isDuplicate = false).rate)
+        val state = resolve(draft, accounts, categories, currencies)
+
+        assertEquals(gbp, state.selectedCurrency)
+        assertTrue(state.currencies.contains(gbp))
     }
 }
