@@ -39,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -91,102 +93,118 @@ private fun TransactionEditView(
     BackHandler(enabled = keypadVisible) { keypadVisible = false }
     LaunchedEffect(isTransfer) { if (isTransfer) keypadVisible = true }
 
-    Column(
+    // Height of the floating bottom bar (FAB + keypad), fed back as scroll bottom-padding so the
+    // last list items can be scrolled clear of the overlay.
+    var bottomBarHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(ZeroTheme.colors.surface),
     ) {
-        val title = when (state.headerMode) {
-            is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
-            is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
-            is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
-        }
-        val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
-        ModalHeader(
-            title = title,
-            subtitle = subtitle,
-            onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
-            trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
-                { EditMenu(menuExpanded, { menuExpanded = it }, viewModel) }
-            } else {
-                null
-            },
-        )
-
-        SegmentedToggle(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(top = 24.dp),
-            items = state.transactionTypes,
-            selectedItem = state.selectedTransactionType,
-            onItemSelected = { viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(it)) },
-            labelMapping = { type ->
-                when (type) {
-                    TransactionEditType.EXPENSE -> labelExpense
-                    TransactionEditType.INCOME -> labelIncome
-                    TransactionEditType.TRANSFER -> labelTransfer
-                }
-            },
-        )
-
-        // Pinned hero amount — hidden on transfer (its From/To amounts live in the form).
-        if (!isTransfer) {
-            AmountField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 16.dp, bottom = 8.dp)
-                    .testTag("TransactionEdit.amountField"),
-                caption = stringResource(R.string.transaction_edit_amount_display_label),
-                currencySymbol = state.currencySymbol,
-                value = state.amount,
-                focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
-                hero = true,
-                onFocus = {
-                    focusManager.clearFocus()
-                    keypadVisible = true
-                    viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
-                },
-                onCurrencyClick = if (state.canPickCurrency) {
-                    { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+        Column(modifier = Modifier.fillMaxSize()) {
+            val title = when (state.headerMode) {
+                is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
+                is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
+                is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
+            }
+            val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
+            // Pinned header — everything below it scrolls.
+            ModalHeader(
+                title = title,
+                subtitle = subtitle,
+                onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
+                trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
+                    { EditMenu(menuExpanded, { menuExpanded = it }, viewModel) }
                 } else {
                     null
                 },
             )
-        }
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
-        ) {
-            item {
-                // Its own distinct flow so the form recomposes only on form changes, not on every
-                // header/amount/keypad emission.
-                val form by viewModel.form.collectAsState(
-                    initial = TransactionEditViewModel.Form.ExpenseIncome(),
-                )
-                when (val current = form) {
-                    is TransactionEditViewModel.Form.ExpenseIncome ->
-                        ExpenseIncomeForm(current, imageLoader, viewModel::perform)
-                    is TransactionEditViewModel.Form.Transfer ->
-                        TransferForm(current, viewModel::perform)
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 16.dp + bottomBarHeight),
+            ) {
+                item {
+                    SegmentedToggle(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 24.dp),
+                        items = state.transactionTypes,
+                        selectedItem = state.selectedTransactionType,
+                        onItemSelected = { viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(it)) },
+                        labelMapping = { type ->
+                            when (type) {
+                                TransactionEditType.EXPENSE -> labelExpense
+                                TransactionEditType.INCOME -> labelIncome
+                                TransactionEditType.TRANSFER -> labelTransfer
+                            }
+                        },
+                    )
+                }
+
+                // Hero amount — hidden on transfer (its From/To amounts live in the form).
+                if (!isTransfer) {
+                    item {
+                        AmountField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .padding(top = 16.dp, bottom = 8.dp)
+                                .testTag("TransactionEdit.amountField"),
+                            caption = stringResource(R.string.transaction_edit_amount_display_label),
+                            currencySymbol = state.currencySymbol,
+                            value = state.amount,
+                            focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
+                            hero = true,
+                            onFocus = {
+                                focusManager.clearFocus()
+                                keypadVisible = true
+                                viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
+                            },
+                            onCurrencyClick = if (state.canPickCurrency) {
+                                { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                }
+
+                item {
+                    // Its own distinct flow so the form recomposes only on form changes, not on every
+                    // header/amount/keypad emission.
+                    val form by viewModel.form.collectAsState(
+                        initial = TransactionEditViewModel.Form.ExpenseIncome(),
+                    )
+                    when (val current = form) {
+                        is TransactionEditViewModel.Form.ExpenseIncome ->
+                            ExpenseIncomeForm(current, imageLoader, viewModel::perform)
+                        is TransactionEditViewModel.Form.Transfer ->
+                            TransferForm(current, viewModel::perform)
+                    }
+                }
+                item {
+                    NotesField(
+                        notes = state.notes,
+                        viewModel = viewModel,
+                        onFocus = { keypadVisible = false },
+                    )
                 }
             }
-            item {
-                NotesField(
-                    notes = state.notes,
-                    viewModel = viewModel,
-                    onFocus = { keypadVisible = false },
-                )
-            }
         }
 
+        // Floating bottom bar — overlays the scroll instead of consuming its height. The FAB hovers
+        // above the keypad; both clear the navigation bar.
         Column(
             modifier = Modifier
+                .align(Alignment.BottomEnd)
                 .fillMaxWidth()
+                .onSizeChanged { bottomBarHeight = with(density) { it.height.toDp() } }
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.End,
         ) {
