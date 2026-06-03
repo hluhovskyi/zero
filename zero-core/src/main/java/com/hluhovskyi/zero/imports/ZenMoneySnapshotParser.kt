@@ -32,7 +32,7 @@ class ZenMoneySnapshotParser(
     private val idGenerator: IdGenerator,
     private val clock: Clock,
     logger: Logger,
-) : SnapshotParser {
+) : SnapshotProvider.File {
 
     private val logger = logger.withTag(TAG)
     override val source: Source = KnownSource.ZenMoney

@@ -1,26 +1,24 @@
 package com.hluhovskyi.zero.backup
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
-import com.hluhovskyi.zero.common.Uri
-import com.hluhovskyi.zero.imports.SnapshotParser
+import com.hluhovskyi.zero.imports.SnapshotProvider
 import com.hluhovskyi.zero.imports.Source
 import com.hluhovskyi.zero.sync.SyncSnapshot
 import kotlinx.coroutines.flow.first
 
 /**
- * Exposes the latest Google Drive backup as an import [Source]. The [uri] is ignored — the
- * snapshot is fetched from Drive via [backupClient] rather than read from a local file (the
- * source-selection UI marks Drive as fileless and skips the picker). Format validation lives
- * in the envelope serializer the [backupClient] uses, so [download] already rejects unknown formats.
+ * Exposes the latest Google Drive backup as a remote import [Source]. The snapshot is fetched from
+ * Drive via [backupClient] (no local file). Format validation lives in the envelope serializer the
+ * [backupClient] uses, so [download] already rejects unknown formats.
  */
-class DriveSnapshotParser(
+class DriveSnapshotLoader(
     private val backupClient: BackupClient,
     private val oauthTokenProvider: OAuthTokenProvider,
-) : SnapshotParser {
+) : SnapshotProvider.Remote {
 
     override val source: Source = DriveSource
 
-    override suspend fun parse(uri: Uri.NonEmpty): SyncSnapshot {
+    override suspend fun load(): SyncSnapshot {
         ensureSignedIn()
 
         val metadata = when (val result = backupClient.latest()) {

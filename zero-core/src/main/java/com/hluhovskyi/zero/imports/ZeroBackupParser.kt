@@ -6,7 +6,7 @@ import com.hluhovskyi.zero.sync.SyncSnapshot
 
 class ZeroBackupParser(
     private val syncEngine: SyncEngine,
-) : SnapshotParser {
+) : SnapshotProvider.File {
 
     override val source: Source = KnownSource.ZeroBackup
 

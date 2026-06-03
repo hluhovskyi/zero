@@ -62,7 +62,7 @@ import com.hluhovskyi.zero.http.HttpExecutor
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.icons.PredefinedIconRepository
 import com.hluhovskyi.zero.imports.ImportComponent
-import com.hluhovskyi.zero.imports.SnapshotParser
+import com.hluhovskyi.zero.imports.SnapshotProvider
 import com.hluhovskyi.zero.imports.ZenMoneySnapshotParser
 import com.hluhovskyi.zero.imports.ZeroBackupParser
 import com.hluhovskyi.zero.notifications.AndroidNotifier
@@ -500,7 +500,7 @@ abstract class ApplicationComponent :
             resourceResolver: ResourceResolver,
             driveComponent: DriveComponent,
         ): ImportComponent.Builder {
-            val parsers: List<SnapshotParser> = listOf(
+            val providers: List<SnapshotProvider> = listOf(
                 ZeroBackupParser(syncEngine = syncEngine),
                 ZenMoneySnapshotParser(
                     resourceResolver = resourceResolver,
@@ -508,10 +508,10 @@ abstract class ApplicationComponent :
                     clock = clock,
                     logger = logger,
                 ),
-                driveComponent.driveSnapshotParser,
+                driveComponent.driveSnapshotLoader,
             )
             return ImportComponent.builder(component)
-                .parsers(parsers)
+                .providers(providers)
         }
 
         @Provides

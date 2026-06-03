@@ -6,7 +6,6 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
 import com.hluhovskyi.zero.sync.SyncAccount
@@ -26,7 +25,7 @@ import kotlinx.coroutines.launch
 import java.io.Closeable
 
 internal class DefaultImportUseCase(
-    private val parsers: List<SnapshotParser>,
+    private val providers: List<SnapshotProvider>,
     private val syncEngine: SyncEngine,
     private val currentUserRepository: CurrentUserRepository,
     private val iconRepository: IconRepository,
@@ -56,7 +55,7 @@ internal class DefaultImportUseCase(
     )
 
     private val mutableState = MutableStateFlow(
-        InternalState(screen = ImportUseCase.State.SourceSelection(parsers.map { it.source })),
+        InternalState(screen = ImportUseCase.State.SourceSelection(providers.map { it.source })),
     )
     override val state: Flow<ImportUseCase.State> = mutableState.map { it.screen }
 
@@ -66,106 +65,20 @@ internal class DefaultImportUseCase(
         when (action) {
             is ImportUseCase.Action.SelectSource -> {
                 mutableState.update { current -> current.copy(selectedSource = action.source) }
-                if (action.requiresFile) {
-                    mutableState.update { it.copy(screen = ImportUseCase.State.FilePicker) }
-                } else {
-                    // Fileless sources (e.g. Drive) fetch remotely; the URI is a traceable sentinel
-                    // ignored by the parser. Skip the file picker and load immediately.
-                    perform(ImportUseCase.Action.SelectFile(Uri(FILELESS_SOURCE_URI) as Uri.NonEmpty))
+                when (val provider = providers.firstOrNull { it.source.key == action.source.key }) {
+                    // File sources need the picker; remote sources (Drive) fetch immediately.
+                    is SnapshotProvider.File ->
+                        mutableState.update { it.copy(screen = ImportUseCase.State.FilePicker) }
+                    is SnapshotProvider.Remote ->
+                        coroutineScope.launch { loadAndProcess { provider.load() } }
+                    null -> Unit
                 }
             }
-            is ImportUseCase.Action.SelectFile -> coroutineScope.launch {
-                mutableState.update { it.copy(screen = ImportUseCase.State.Loading) }
-                val source = mutableState.value.selectedSource ?: return@launch
-                val parser = parsers.first { it.source.key == source.key }
-                val userId = currentUserRepository.query().first().id
-                try {
-                    val snapshot = parser.parse(action.uri)
-                    val delta = syncEngine.delta(snapshot, userId)
-
-                    val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
-                    val allIconsById = allIcons.associateBy { it.id }
-
-                    val existingCategories = categoryRepository.query(CategoryRepository.Criteria.All()).first()
-                    val matchedCategoryByImportId = matchExistingByImportId(
-                        syncEntities = delta.categories,
-                        existing = existingCategories,
-                        syncId = { it.id },
-                        syncName = { it.name },
-                        existingId = { it.id },
-                        existingName = { it.name },
-                    )
-
-                    val existingAccounts = accountRepository.query(AccountRepository.Criteria.All()).first()
-                    val matchedAccountByImportId = matchExistingByImportId(
-                        syncEntities = delta.accounts,
-                        existing = existingAccounts,
-                        syncId = { it.id },
-                        syncName = { it.name },
-                        existingId = { it.id },
-                        existingName = { it.name },
-                    )
-
-                    val existingTransactionSignatures = transactionRepository
-                        .query(TransactionRepository.Criteria.All())
-                        .first()
-                        .map { it.toSignature() }
-                        .toSet()
-
-                    val duplicateTxIds = computeDuplicateTxIds(
-                        transactions = delta.transactions,
-                        categoryRemap = matchedCategoryByImportId.mapValues { it.value.id },
-                        accountRemap = matchedAccountByImportId.mapValues { it.value.id },
-                        existingSignatures = existingTransactionSignatures,
-                    )
-                    val categories = buildCategories(
-                        delta = delta,
-                        matchedCategoryByImportId = matchedCategoryByImportId,
-                        duplicateTxIds = duplicateTxIds,
-                        allIconsById = allIconsById,
-                    )
-                    if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
-                        mutableState.update { current ->
-                            current.copy(screen = ImportUseCase.State.UpToDate)
-                        }
-                        return@launch
-                    }
-                    val allNew = matchedCategoryByImportId.isEmpty() &&
-                        matchedAccountByImportId.isEmpty() &&
-                        duplicateTxIds.isEmpty() &&
-                        (delta.categories.isNotEmpty() || delta.accounts.isNotEmpty() || delta.transactions.isNotEmpty())
-                    if (allNew) {
-                        syncEngine.import(delta, userId)
-                        val itemCount = delta.categories.size + delta.accounts.size + delta.transactions.size
-                        mutableState.update { current ->
-                            current.copy(screen = ImportUseCase.State.RestoreSuccess(itemCount))
-                        }
-                        return@launch
-                    }
-                    val defaults = categories.associate { it.id to defaultStrategy(it.existingId) }
-                    mutableState.update { current ->
-                        current.copy(
-                            originalDelta = delta,
-                            storedCategories = categories,
-                            categoryStrategies = defaults,
-                            accountStrategies = emptyMap(),
-                            matchedCategoryByImportId = matchedCategoryByImportId,
-                            matchedAccountByImportId = matchedAccountByImportId,
-                            existingTransactionSignatures = existingTransactionSignatures,
-                            allIconsById = allIconsById,
-                            screen = ImportUseCase.State.CategoriesReview(categories, defaults),
-                        )
-                    }
-                } catch (e: Exception) {
-                    mutableState.update { current ->
-                        InternalState(
-                            selectedSource = current.selectedSource,
-                            screen = ImportUseCase.State.SourceSelection(
-                                sources = parsers.map { it.source },
-                                error = "Couldn't read file. Check the format and try again.",
-                            ),
-                        )
-                    }
+            is ImportUseCase.Action.SelectFile -> {
+                val source = mutableState.value.selectedSource ?: return
+                val provider = providers.firstOrNull { it.source.key == source.key }
+                if (provider is SnapshotProvider.File) {
+                    coroutineScope.launch { loadAndProcess { provider.parse(action.uri) } }
                 }
             }
             is ImportUseCase.Action.SetCategoryStrategy -> mutableState.update { current ->
@@ -244,7 +157,7 @@ internal class DefaultImportUseCase(
                 }
             }
             is ImportUseCase.Action.DismissError -> mutableState.update {
-                InternalState(screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }))
+                InternalState(screen = ImportUseCase.State.SourceSelection(providers.map { it.source }))
             }
             is ImportUseCase.Action.Retry -> mutableState.update { current ->
                 current.copy(screen = ImportUseCase.State.FilePicker)
@@ -258,7 +171,7 @@ internal class DefaultImportUseCase(
                     is ImportUseCase.State.UpToDate,
                     is ImportUseCase.State.RestoreSuccess,
                     -> InternalState(
-                        screen = ImportUseCase.State.SourceSelection(parsers.map { it.source }),
+                        screen = ImportUseCase.State.SourceSelection(providers.map { it.source }),
                     )
                     is ImportUseCase.State.AccountsReview -> {
                         val categories = current.storedCategories ?: return@update current
@@ -283,14 +196,107 @@ internal class DefaultImportUseCase(
         }
     }
 
+    // Shared load → analyse pipeline for both file parses and remote loads. The only difference
+    // between sources is how the snapshot is obtained ([fetch]); everything after is identical.
+    private suspend fun loadAndProcess(fetch: suspend () -> SyncSnapshot) {
+        mutableState.update { it.copy(screen = ImportUseCase.State.Loading) }
+        val userId = currentUserRepository.query().first().id
+        try {
+            processSnapshot(fetch(), userId)
+        } catch (e: Exception) {
+            mutableState.update { current ->
+                InternalState(
+                    selectedSource = current.selectedSource,
+                    screen = ImportUseCase.State.SourceSelection(
+                        sources = providers.map { it.source },
+                        error = "Couldn't read file. Check the format and try again.",
+                    ),
+                )
+            }
+        }
+    }
+
+    private suspend fun processSnapshot(snapshot: SyncSnapshot, userId: Id.Known) {
+        val delta = syncEngine.delta(snapshot, userId)
+
+        val allIcons = iconRepository.query(IconRepository.Criteria.All()).first()
+        val allIconsById = allIcons.associateBy { it.id }
+
+        val existingCategories = categoryRepository.query(CategoryRepository.Criteria.All()).first()
+        val matchedCategoryByImportId = matchExistingByImportId(
+            syncEntities = delta.categories,
+            existing = existingCategories,
+            syncId = { it.id },
+            syncName = { it.name },
+            existingId = { it.id },
+            existingName = { it.name },
+        )
+
+        val existingAccounts = accountRepository.query(AccountRepository.Criteria.All()).first()
+        val matchedAccountByImportId = matchExistingByImportId(
+            syncEntities = delta.accounts,
+            existing = existingAccounts,
+            syncId = { it.id },
+            syncName = { it.name },
+            existingId = { it.id },
+            existingName = { it.name },
+        )
+
+        val existingTransactionSignatures = transactionRepository
+            .query(TransactionRepository.Criteria.All())
+            .first()
+            .map { it.toSignature() }
+            .toSet()
+
+        val duplicateTxIds = computeDuplicateTxIds(
+            transactions = delta.transactions,
+            categoryRemap = matchedCategoryByImportId.mapValues { it.value.id },
+            accountRemap = matchedAccountByImportId.mapValues { it.value.id },
+            existingSignatures = existingTransactionSignatures,
+        )
+        val categories = buildCategories(
+            delta = delta,
+            matchedCategoryByImportId = matchedCategoryByImportId,
+            duplicateTxIds = duplicateTxIds,
+            allIconsById = allIconsById,
+        )
+        if (categories.isEmpty() && delta.accounts.isEmpty() && delta.transactions.isEmpty()) {
+            mutableState.update { current -> current.copy(screen = ImportUseCase.State.UpToDate) }
+            return
+        }
+        val allNew = matchedCategoryByImportId.isEmpty() &&
+            matchedAccountByImportId.isEmpty() &&
+            duplicateTxIds.isEmpty() &&
+            (delta.categories.isNotEmpty() || delta.accounts.isNotEmpty() || delta.transactions.isNotEmpty())
+        if (allNew) {
+            syncEngine.import(delta, userId)
+            val itemCount = delta.categories.size + delta.accounts.size + delta.transactions.size
+            mutableState.update { current -> current.copy(screen = ImportUseCase.State.RestoreSuccess(itemCount)) }
+            return
+        }
+        val defaults = categories.associate { it.id to defaultStrategy(it.existingId) }
+        mutableState.update { current ->
+            current.copy(
+                originalDelta = delta,
+                storedCategories = categories,
+                categoryStrategies = defaults,
+                accountStrategies = emptyMap(),
+                matchedCategoryByImportId = matchedCategoryByImportId,
+                matchedAccountByImportId = matchedAccountByImportId,
+                existingTransactionSignatures = existingTransactionSignatures,
+                allIconsById = allIconsById,
+                screen = ImportUseCase.State.CategoriesReview(categories, defaults),
+            )
+        }
+    }
+
     override fun attach(): Closeable {
         // When the screen is opened pre-pointed at a source (e.g. the Welcome "Restore from Drive"
-        // CTA), skip the source picker and load it immediately. Pre-selectable sources are fileless
-        // (Drive) — they fetch remotely, so there is no file picker to show.
+        // CTA), skip the source picker and load it immediately. The provider type decides the flow.
         if (!initialSourceSelected && initialSourceKey != null) {
             initialSourceSelected = true
-            parsers.firstOrNull { it.source.key == initialSourceKey }?.let { parser ->
-                perform(ImportUseCase.Action.SelectSource(parser.source, requiresFile = false))
+            providers.firstOrNull { it.source.key == initialSourceKey }?.let { provider ->
+                perform(ImportUseCase.Action.SelectSource(provider.source))
             }
         }
         return Closeables.empty()
@@ -520,10 +526,5 @@ internal class DefaultImportUseCase(
         if (existingSignatures.isEmpty()) return delta
         val filtered = delta.transactions.filterNot { it.toSignature() in existingSignatures }
         return delta.copy(transactions = filtered)
-    }
-
-    companion object {
-        /** Sentinel URI handed to fileless parsers (e.g. Drive), which ignore it. */
-        private const val FILELESS_SOURCE_URI = "drive://latest"
     }
 }
