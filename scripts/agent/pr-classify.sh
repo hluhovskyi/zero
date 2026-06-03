@@ -5,37 +5,50 @@
 
 # Usage: pr_has_approval <expected-login> < pr.json
 # JSON must include: labels[*].name, reviews[*].state, reviews[*].author.login,
-#                    reviews[*].commit_id, headRefOid
+#                    reviews[*].commit_id, reviews[*].submitted_at, headRefOid
 # Returns 0 if PR carries the watcher's gate signal:
 #   - `agent-merge` label is present (caller MUST follow up with an actor check
 #     via `gh api`, since label presence alone doesn't bind to who set it), OR
-#   - at least one APPROVED review by <expected-login> WHOSE commit_id equals
-#     the PR's current headRefOid (stale reviews don't gate — protects against
-#     the watcher pushing new commits after approval).
+#   - the LATEST review by <expected-login> (most recent submitted_at) is
+#     APPROVED AND its commit_id equals the PR's current headRefOid.
+#
+# "Latest review wins" is intentional: GitHub keeps every submitted review in
+# the list, so without this an old APPROVED record persists even after the
+# reviewer submits REQUEST_CHANGES or COMMENT to retract. The label path
+# doesn't have this problem — labels are re-read fresh each tick.
 pr_has_approval() {
   local expected="$1"
   local json
   json="$(cat)"
-  local has_label has_approved_at_head
+  local has_label latest_approved_at_head
   has_label="$(jq -r '[.labels[]?.name] | any(. == "agent-merge")' <<<"$json")"
-  has_approved_at_head="$(jq -r --arg me "$expected" '
+  latest_approved_at_head="$(jq -r --arg me "$expected" '
     .headRefOid as $head
-    | [.reviews[]?
-        | select(.state == "APPROVED"
-                 and .author.login == $me
-                 and .commit_id == $head)] | length > 0
+    | [.reviews[]? | select(.author.login == $me)]
+    | sort_by(.submitted_at // "")
+    | last
+    | (. != null
+        and .state == "APPROVED"
+        and .commit_id == $head)
   ' <<<"$json")"
-  [[ "$has_label" == "true" || "$has_approved_at_head" == "true" ]]
+  [[ "$has_label" == "true" || "$latest_approved_at_head" == "true" ]]
 }
 
 # Usage: pr_is_doc_only < pr.json
 # JSON must include: files[*].path
-# Returns 0 when every changed file matches *.md AND lives under docs/ or root.
+# Returns 0 when every changed file is genuine prose docs under `docs/`.
+# Explicitly NOT doc-only: root CLAUDE.md / AGENTS.md / README.md and anything
+# under `.claude/` — these affect agent or app runtime behavior even though
+# they happen to be `.md`. The watcher's only carve-out is `docs/**/*.md`.
 pr_is_doc_only() {
   jq -e '
     [.files[]?.path] as $paths
     | ($paths | length) > 0
-    and ($paths | all(. as $p | ($p | endswith(".md")) and (($p | startswith("docs/")) or (($p | contains("/")) | not))))
+    and ($paths | all(. as $p
+        | ($p | endswith(".md"))
+        and ($p | startswith("docs/"))
+        and (($p | startswith(".claude/")) | not)
+      ))
   ' >/dev/null
 }
 

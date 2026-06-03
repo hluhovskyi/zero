@@ -256,26 +256,18 @@ main() {
             | jq -r --argjson cutoff "$(date -v-1d +%s 2>/dev/null || date -d '1 day ago' +%s)" \
                 '.[] | select((.mergedAt | fromdateiso8601) > $cutoff) | .headRefName' 2>/dev/null)
 
-  # Filter to approved PRs only (single-gate). The approval signal is either:
-  #   - `agent-merge` label present (actor verified later via gh api events), OR
-  #   - an APPROVED review by $ME whose commit_id matches the current headRefOid
-  #     (stale reviews don't gate — protects against the watcher pushing new
-  #     commits after approval).
-  local approved_json
-  approved_json="$(echo "$list_json" | jq --arg me "$ME" '[
-    .[]
-    | (
-        ([.labels[]?.name] | any(. == "agent-merge"))
-        or (
-          .headRefOid as $head
-          | [.reviews[]?
-              | select(.state == "APPROVED"
-                       and .author.login == $me
-                       and .commit_id == $head)] | length > 0
-        )
-      ) as $approved
-    | select($approved)
-  ] | sort_by(.createdAt)')"
+  # Filter to approved PRs only (single-gate). Defer to pr_has_approval (sourced
+  # from pr-classify.sh) so the gate logic lives in exactly one place —
+  # otherwise drift between this jq and pr_has_approval is a security regression
+  # waiting to happen (e.g. the "latest review wins" rule needs to be applied
+  # identically here and in the per-PR classifier).
+  local approved_json sorted_json
+  sorted_json="$(echo "$list_json" | jq 'sort_by(.createdAt)')"
+  approved_json="$(echo "$sorted_json" | jq -c '.[]' | while IFS= read -r pr_obj; do
+    if echo "$pr_obj" | pr_has_approval "$ME"; then
+      echo "$pr_obj"
+    fi
+  done | jq -s '.')"
 
   local count
   count="$(echo "$approved_json" | jq 'length')"

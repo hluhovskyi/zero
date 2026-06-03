@@ -119,6 +119,11 @@ There is one human gate, not two:
   an `agent-merge` label applied by `hluhovskyi` **verified via the events API**
   (label *presence* alone is not trust — anyone with label-write could set it).
 
+The review path evaluates the **latest** review per author (ordered by
+`submitted_at`) — so submitting `REQUEST_CHANGES` after an earlier `APPROVED`
+cleanly retracts the green light. Older `APPROVED` records persist in
+GitHub's history but no longer gate the watcher.
+
 The watcher's PR query filters by this signal. A PR without either is invisible
 — no rebase, no CI fix, no verify, nothing. This means:
 
@@ -163,9 +168,15 @@ ephemeral state, not a public signal.
 
 ### Verification policy: verify everything except doc-only
 
-Skip verification only when every file in the PR diff matches `*.md` and is under
-`docs/` or top-level. Anything else — including `.claude/`, `skills/`, `scripts/`
-— gets verified, because they affect runtime behavior of the dev loop or app.
+Skip verification only when every changed file is under `docs/` AND ends in
+`.md` — genuine project prose. Notable explicit non-doc-only paths:
+
+- Root `CLAUDE.md`, `AGENTS.md`, `README.md` (READMEs are prose, but
+  `CLAUDE.md`/`AGENTS.md` are agent operating instructions — gated to be safe).
+- Anything under `.claude/` even if `*.md`.
+- `skills/**/*.md`, `scripts/**`, any `.kt`/`.gradle`/manifest/resource files.
+
+Anything that affects runtime behavior of the app OR the dev loop gets verified.
 
 Heuristics like "does this touch UI code?" are too easy to fool. Default to
 verify; cost of a wasted emulator run is much smaller than cost of merging a

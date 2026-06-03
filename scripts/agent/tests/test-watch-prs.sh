@@ -209,14 +209,28 @@ assert_contains "behind-dirty state" "state: behind-dirty" "$out"
 assert_contains "spawn-rebase called" "spawn-rebase-session.sh 107" "$(cat "$SPAWN_LOG")"
 
 # Reviewer-approved AT HEAD (no label) → also visible
-echo '[{"number":108,"title":"x","headRefName":"issue-108","headRefOid":"sha108","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"sha108"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-review.json"
+echo '[{"number":108,"title":"x","headRefName":"issue-108","headRefOid":"sha108","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"sha108","submitted_at":"2026-06-02T12:00:00Z"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-review.json"
 out="$(run_watcher "$TMP/list-review.json")"
 assert_contains "APPROVED review at HEAD counts as gate" "state: ready-to-merge" "$out"
 
+# Reviewer-approved AT HEAD review needs a submitted_at (latest-wins).
+# Re-write the visible review fixture above to match the new schema.
+
 # Reviewer-approved at STALE sha (after watcher pushed) → invisible
-echo '[{"number":109,"title":"x","headRefName":"issue-109","headRefOid":"newsha","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"oldsha"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-stalereview.json"
+echo '[{"number":109,"title":"x","headRefName":"issue-109","headRefOid":"newsha","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"oldsha","submitted_at":"2026-06-02T10:00:00Z"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-stalereview.json"
 out="$(run_watcher "$TMP/list-stalereview.json")"
 assert_contains "stale APPROVED review is invisible" "no approved PRs" "$out"
+
+# APPROVED followed by REQUEST_CHANGES → latest-wins → invisible
+echo '[{"number":120,"title":"x","headRefName":"issue-120","headRefOid":"sha120","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"sha120","submitted_at":"2026-06-02T10:00:00Z"},{"state":"REQUEST_CHANGES","author":{"login":"hluhovskyi"},"commit_id":"sha120","submitted_at":"2026-06-02T11:00:00Z"}],"files":[{"path":"a.kt"}]}]' >"$TMP/list-withdrawn.json"
+out="$(run_watcher "$TMP/list-withdrawn.json")"
+assert_contains "withdrawn approval is invisible" "no approved PRs" "$out"
+
+# Root CLAUDE.md change → approved + green CI but NOT doc-only → needs-verify, not ready-to-merge
+echo '[{"number":121,"title":"x","headRefName":"issue-121","headRefOid":"sha121","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[{"name":"agent-merge"}],"reviews":[],"files":[{"path":"CLAUDE.md"}]}]' >"$TMP/list-claudemd.json"
+: >"$SPAWN_LOG"
+out="$(run_watcher "$TMP/list-claudemd.json")"
+assert_contains "CLAUDE.md change is NOT doc-only → needs-verify" "state: needs-verify" "$out"
 
 # agent-merge label applied by stranger → events API returns stranger; watcher skips
 echo '[{"number":110,"title":"x","headRefName":"issue-110","headRefOid":"sha110","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[{"name":"agent-merge"}],"reviews":[],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-stranger.json"

@@ -39,14 +39,16 @@ assert_rc() {
 }
 
 echo "=== pr_has_approval ==="
-pr_has_approval hluhovskyi <"$FIXTURES/pr-no-approval.json"  ; assert_rc "no-approval rejected" 1 $?
-pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-clean.json" ; assert_rc "agent-merge label accepted" 0 $?
-pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-dirty.json" ; assert_rc "APPROVED review at HEAD accepted" 0 $?
-pr_has_approval hluhovskyi <"$FIXTURES/pr-stale-review.json" ; assert_rc "APPROVED review at stale SHA rejected" 1 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-no-approval.json"        ; assert_rc "no-approval rejected" 1 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-clean.json"       ; assert_rc "agent-merge label accepted" 0 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-dirty.json"       ; assert_rc "APPROVED review at HEAD accepted" 0 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-stale-review.json"       ; assert_rc "APPROVED review at stale SHA rejected" 1 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-withdrawn-approval.json" ; assert_rc "REQUEST_CHANGES after APPROVED retracts gate" 1 $?
 
 echo "=== pr_is_doc_only ==="
 pr_is_doc_only <"$FIXTURES/pr-no-approval.json"     ; assert_rc "code-only rejected" 1 $?
-pr_is_doc_only <"$FIXTURES/pr-ready-to-merge.json"  ; assert_rc "doc-only accepted" 0 $?
+pr_is_doc_only <"$FIXTURES/pr-ready-to-merge.json"  ; assert_rc "docs/*.md accepted" 0 $?
+pr_is_doc_only <"$FIXTURES/pr-root-claudemd.json"   ; assert_rc "root CLAUDE.md is NOT doc-only" 1 $?
 
 echo "=== pr_is_stale ==="
 pr_is_stale 2 <"$FIXTURES/pr-stale.json"          ; assert_rc "old dirty branch is stale" 0 $?
