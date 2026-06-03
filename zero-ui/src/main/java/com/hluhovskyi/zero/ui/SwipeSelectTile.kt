@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,14 +31,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 internal enum class SwipeOutcome { Previous, Next, Tap, None }
 
@@ -143,15 +147,23 @@ fun SwipeSelectTile(
             )
         }
 
+        Spacer(modifier = Modifier.height(4.dp))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(RowHeight)
-                .padding(top = 4.dp)
                 .clipToBounds(),
+            contentAlignment = Alignment.Center,
         ) {
+            // A 3-row column (previous / current / next). Center alignment parks the middle
+            // (current) face in the viewport at rest; the layout offset (not a draw shift) keeps
+            // the current face in bounds so it renders and stays in the accessibility tree. Drag
+            // moves it ±1 row to reveal a neighbour before the commit animation lands.
             Column(
-                modifier = Modifier.graphicsLayer { translationY = -rowPx + offset.value },
+                modifier = Modifier
+                    .requiredHeight(RowHeight * 3)
+                    .offset { IntOffset(0, offset.value.roundToInt()) },
             ) {
                 SwipeFace(alpha = 0.3f) { previous?.invoke() }
                 SwipeFace(alpha = 1f) { current() }
