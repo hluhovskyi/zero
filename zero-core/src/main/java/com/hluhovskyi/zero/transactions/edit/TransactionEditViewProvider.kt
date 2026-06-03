@@ -39,8 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -93,40 +91,41 @@ private fun TransactionEditView(
     BackHandler(enabled = keypadVisible) { keypadVisible = false }
     LaunchedEffect(isTransfer) { if (isTransfer) keypadVisible = true }
 
-    // Height of the floating bottom bar (FAB + keypad), fed back as scroll bottom-padding so the
-    // last list items can be scrolled clear of the overlay.
-    var bottomBarHeight by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ZeroTheme.colors.surface),
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            val title = when (state.headerMode) {
-                is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
-                is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
-                is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
-            }
-            val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
-            // Pinned header — everything below it scrolls.
-            ModalHeader(
-                title = title,
-                subtitle = subtitle,
-                onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
-                trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
-                    { EditMenu(menuExpanded, { menuExpanded = it }, viewModel) }
-                } else {
-                    null
-                },
-            )
+        val title = when (state.headerMode) {
+            is TransactionEditViewModel.HeaderMode.New -> stringResource(R.string.transaction_new_title)
+            is TransactionEditViewModel.HeaderMode.Edit -> stringResource(R.string.transaction_edit_title)
+            is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
+        }
+        val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
+        // Pinned header — everything below it scrolls.
+        ModalHeader(
+            title = title,
+            subtitle = subtitle,
+            onClose = { viewModel.perform(TransactionEditViewModel.Action.Discard) },
+            trailingContent = if (state.headerMode is TransactionEditViewModel.HeaderMode.Edit) {
+                { EditMenu(menuExpanded, { menuExpanded = it }, viewModel) }
+            } else {
+                null
+            },
+        )
 
+        // Scrollable body; the save FAB floats over its bottom-end. The FAB is anchored to the
+        // content area (not size-measured), so it sits just above the keypad with no size feedback
+        // and no per-frame recomposition.
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
             LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 16.dp + bottomBarHeight),
+                modifier = Modifier.fillMaxSize(),
+                // Constant clearance so the last item can scroll above the floating FAB.
+                contentPadding = PaddingValues(bottom = if (state.isSaveVisible) 84.dp else 16.dp),
             ) {
                 item {
                     SegmentedToggle(
@@ -196,55 +195,61 @@ private fun TransactionEditView(
                     )
                 }
             }
+
+            SaveFab(
+                visible = state.isSaveVisible,
+                // Clear the nav bar only when the keypad below isn't already doing so.
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .then(if (keypadVisible) Modifier else Modifier.navigationBarsPadding()),
+                onSave = { viewModel.perform(TransactionEditViewModel.Action.Save) },
+            )
         }
 
-        // Floating bottom bar — overlays the scroll instead of consuming its height. The FAB hovers
-        // above the keypad; both clear the navigation bar.
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .fillMaxWidth()
-                .onSizeChanged { bottomBarHeight = with(density) { it.height.toDp() } }
-                .navigationBarsPadding(),
-            horizontalAlignment = Alignment.End,
-        ) {
-            AnimatedVisibility(visible = state.isSaveVisible) {
-                ZeroFab(
-                    modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
-                    onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-                    icon = Icons.Filled.Check,
-                    contentDescription = stringResource(R.string.transaction_edit_save),
-                    expanded = true,
-                    text = stringResource(R.string.transaction_edit_save),
-                )
-            }
-            AnimatedVisibility(visible = keypadVisible) {
-                val target = state.keypadTarget
-                AmountKeypad(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ZeroTheme.colors.surfaceContainerLow)
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    value = when (target) {
-                        TransactionEditFocusTarget.Rate -> state.rate
-                        TransactionEditFocusTarget.Received -> state.targetAmount
-                        TransactionEditFocusTarget.Amount -> state.amount
-                    },
-                    onChange = {
-                        when (target) {
-                            TransactionEditFocusTarget.Rate ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
-                            TransactionEditFocusTarget.Received ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
-                            TransactionEditFocusTarget.Amount ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
-                        }
-                    },
-                    maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
-                    keyHeight = 58.dp,
-                )
-            }
+        // Keypad pinned below the body — a keyboard, not the FAB; it pushes the body up when shown.
+        AnimatedVisibility(visible = keypadVisible) {
+            val target = state.keypadTarget
+            AmountKeypad(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .background(ZeroTheme.colors.surfaceContainerLow)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                value = when (target) {
+                    TransactionEditFocusTarget.Rate -> state.rate
+                    TransactionEditFocusTarget.Received -> state.targetAmount
+                    TransactionEditFocusTarget.Amount -> state.amount
+                },
+                onChange = {
+                    when (target) {
+                        TransactionEditFocusTarget.Rate ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
+                        TransactionEditFocusTarget.Received ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
+                        TransactionEditFocusTarget.Amount ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
+                    }
+                },
+                maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
+                keyHeight = 58.dp,
+            )
         }
+    }
+}
+
+// Standalone so AnimatedVisibility resolves to the plain overload (not ColumnScope's) when the
+// caller is a Box.
+@Composable
+private fun SaveFab(visible: Boolean, modifier: Modifier, onSave: () -> Unit) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ZeroFab(
+            modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
+            onClick = onSave,
+            icon = Icons.Filled.Check,
+            contentDescription = stringResource(R.string.transaction_edit_save),
+            expanded = true,
+            text = stringResource(R.string.transaction_edit_save),
+        )
     }
 }
 
