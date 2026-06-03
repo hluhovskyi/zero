@@ -17,6 +17,14 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 
 **When a UseCase exists, it owns all state — ViewModels are thin projections.** A ViewModel backed by a UseCase should only `filterIsInstance` and `.map` the relevant slice; it must not introduce its own `MutableStateFlow`. State that lives in the ViewModel instead of `UseCase.InternalState` won't survive back-navigation and won't be visible to other steps in the same flow.
 
+**Derive the store; don't let multiple writers scribble on it.** A UseCase whose internal `MutableStateFlow` is written by several `attach()` collectors *and* `perform()` is a latent race: a reference-list re-emission overwrites the user's selection, and load races the reference data (which tempts a `filter { … }.take(1)` load gate that hangs forever when a list is legitimately empty). Derive it instead, the same way ViewModels `combine()` repository flows:
+- Hold user + loaded **intent** in one draft (ids + scalars), written *only* by `perform()`, the loader, and pickers.
+- Keep each reference list (accounts, categories, …) as its own flow.
+- Produce the read model with a single `combine(draft, refs…) → pure resolve()` — one writer, selections resolved `id → object` against whatever lists exist *now* (empty lists yield null selections, not a block, so no load gate is needed).
+- **Fold a loaded row into the draft by id, not by resolving it against the lists at load time** — resolving-at-load is exactly what races the collectors; let `resolve()` map id→object as each list arrives.
+
+Reference impl: `DefaultTransactionEditUseCase` (`TransactionEditDraft` → `resolve()` → `TransactionEditState`).
+
 ## ViewModel UI Shape
 
 Layer split — enforced by `ViewProviderDerivation` lint:
