@@ -21,11 +21,16 @@ Replace the tile strip with the design's landed pattern:
    category picker** (the `ShowAllCategories` action / bottom sheet).
    - Selected: squircle of the chosen category + its name (primary, bold).
    - Empty: neutral grid-icon placeholder squircle + "Choose category" (variant color).
-2. A **one-time quick-chip row** under the field: the top frequent categories as pill
-   chips (icon + name on a `surfaceContainerLow` pill, no selected state, **no "All"
-   chip**). Tapping a chip selects that category. The chip row is shown **only while no
-   category is selected** and vanishes after the first pick (via chip or picker),
-   leaving a clean boxed field. To change later, tap the row → picker.
+2. A **quick-chip row** under the field: the top frequent categories as pill chips
+   (icon + name, **no "All" chip**). Tapping a chip selects that category.
+
+   **Implementation note:** the design's "chips vanish until the first pick" empty state
+   assumes no default selection, but the app auto-selects the first ranked category
+   (`TransactionEditMapping`), so `selectedCategory` is never null. The shipped behavior
+   therefore keeps the chips **always visible with a selected-state highlight** (accent
+   border + label on the selected chip) — design approach **A4** (field row + tile
+   drawer with a selected state), the working realization of "tile and chips" given the
+   auto-selection. To open the long tail, tap the field row → picker.
 
 The category **picker bottom sheet itself is out of scope** — it already exists
 (`CategoryPickerViewProvider`) and is what the row opens. List rows in
