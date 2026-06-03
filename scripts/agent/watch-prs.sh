@@ -15,7 +15,6 @@ source "$SCRIPT_DIR/pr-classify.sh"
 ME="${AGENT_WATCH_USER:-hluhovskyi}"
 REPO="${AGENT_WATCH_REPO:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
 MAX_ATTEMPTS="${AGENT_WATCH_MAX_ATTEMPTS:-3}"
-MAX_ACQUIRE_MISSES="${AGENT_WATCH_MAX_ACQUIRE_MISSES:-10}"
 
 # Pre-flight: ensure the worktree for a PR exists; recreate if needed.
 ensure_worktree() {
@@ -79,32 +78,6 @@ block_pr() {
   echo "  → agent-blocked: $reason"
 }
 
-# Same shape for agent-stale.
-stale_pr() {
-  local pr="$1"
-  gh pr edit "$pr" -R "$REPO" --add-label agent-stale >/dev/null 2>&1 || true
-  gh pr comment "$pr" -R "$REPO" --body "agent-pr-watch: this branch is too old to safely rebase against current master. Please close the PR and re-spawn from the issue." >/dev/null 2>&1 || true
-  echo "  → agent-stale"
-}
-
-# Track acquire-misses so we only spam one comment per PR.
-record_acquire_miss() {
-  local pr="$1"
-  local file="$STATE_DIR/pr-$pr.acquire-misses"
-  local n=0
-  [[ -f "$file" ]] && n="$(cat "$file")"
-  n=$((n + 1))
-  echo "$n" >"$file"
-  if [[ "$n" -eq "$MAX_ACQUIRE_MISSES" ]]; then
-    gh pr comment "$pr" -R "$REPO" --body "agent-pr-watch: waiting for emulator slot (have missed acquire $MAX_ACQUIRE_MISSES times). Will keep trying silently." >/dev/null 2>&1 || true
-  fi
-}
-
-# Reset acquire-miss counter when work proceeds.
-reset_acquire_miss() {
-  rm -f "$STATE_DIR/pr-$1.acquire-misses"
-}
-
 # Cleanup hygiene: nuke `.gradle-home` before `worktree remove` to dodge
 # "Directory not empty" failures.
 cleanup_pr_worktree() {
@@ -116,6 +89,17 @@ cleanup_pr_worktree() {
   git -C "$REPO_ROOT" branch -D "$pr_branch" 2>/dev/null || true
 }
 
+# Count an attempt and block the PR if we hit the cap.
+record_failure_and_maybe_block() {
+  local pr="$1" reason="$2"
+  record_attempt "$pr" failure
+  local fails; fails="$(recent_failures "$pr")"
+  if [[ "$fails" -ge "$MAX_ATTEMPTS" ]]; then
+    block_pr "$pr" "$reason failed $fails times in a row"
+  fi
+  echo "$fails"
+}
+
 # Dispatch on classified state. Returns the human-readable outcome on stdout.
 dispatch_pr() {
   local pr="$1" pr_branch="$2" state="$3" worktree="$4" pr_json_file="$5"
@@ -123,27 +107,20 @@ dispatch_pr() {
   case "$state" in
     behind-clean)
       ( cd "$worktree" && git fetch origin master --quiet && git merge origin/master --no-edit --quiet && git push --quiet ) \
-        && { reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"; echo "rebased (clean)"; return 0; } \
+        && { record_attempt "$pr" success; revoke_label_after_push "$pr"; echo "rebased (clean)"; return 0; } \
         || { record_attempt "$pr" failure; echo "rebase-clean failed"; return 1; }
       ;;
 
     behind-dirty)
       # Pre-stage the conflicted merge so the rebase session has something to fix.
       ( cd "$worktree" && git fetch origin master --quiet && git merge origin/master --no-edit ) >/dev/null 2>&1
-      "$SCRIPT_DIR/spawn-rebase-session.sh" "$pr" "$worktree" >/dev/null 2>&1
+      "$SCRIPT_DIR/spawn-pr-session.sh" repair-rebase "$pr" "$worktree" >/dev/null 2>&1
       local rc=$?
       if [[ "$rc" -eq 0 ]]; then
-        reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"
+        record_attempt "$pr" success; revoke_label_after_push "$pr"
         echo "rebased (LLM)"; return 0
-      elif [[ "$rc" -eq 2 ]]; then
-        stale_pr "$pr"
-        echo "stale (rebase too structural)"; return 1
       else
-        record_attempt "$pr" failure
-        local fails; fails="$(recent_failures "$pr")"
-        if [[ "$fails" -ge "$MAX_ATTEMPTS" ]]; then
-          block_pr "$pr" "rebase-session failed $fails times in a row"
-        fi
+        local fails; fails="$(record_failure_and_maybe_block "$pr" "rebase-session")"
         echo "rebase-session failed (rc=$rc, fails=$fails)"; return 1
       fi
       ;;
@@ -162,31 +139,25 @@ dispatch_pr() {
         echo "(no run id available)" >"$ci_log"
       fi
 
-      "$SCRIPT_DIR/spawn-fix-session.sh" "$pr" "$worktree" "$ci_log" >/dev/null 2>&1
+      "$SCRIPT_DIR/spawn-pr-session.sh" repair-fix "$pr" "$worktree" "$ci_log" >/dev/null 2>&1
       local rc=$?
       if [[ "$rc" -eq 0 ]]; then
-        reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"
+        record_attempt "$pr" success; revoke_label_after_push "$pr"
         echo "ci-fixed"; return 0
       else
-        record_attempt "$pr" failure
-        local fails; fails="$(recent_failures "$pr")"
-        if [[ "$fails" -ge "$MAX_ATTEMPTS" ]]; then
-          block_pr "$pr" "fix-session failed $fails times in a row"
-        fi
+        local fails; fails="$(record_failure_and_maybe_block "$pr" "fix-session")"
         echo "ci-fix failed (rc=$rc, fails=$fails)"; return 1
       fi
       ;;
 
     needs-verify)
-      "$SCRIPT_DIR/spawn-verify-session.sh" "$pr" "$worktree" >/dev/null 2>&1
+      "$SCRIPT_DIR/spawn-pr-session.sh" verify "$pr" "$worktree" >/dev/null 2>&1
       local rc=$?
       case "$rc" in
         0)
-          reset_acquire_miss "$pr"
           local head_sha; head_sha="$(jq -r '.headRefOid' "$pr_json_file")"
           printf '%s %s\n' "$head_sha" "$(date +%s)" >"$STATE_DIR/pr-$pr.verified"
-          # Post the verdict + screenshot as a PR comment.
-          local verdict="$STATE_DIR/verify-$pr.verdict"
+          local verdict="$STATE_DIR/verify-$pr.out"
           if [[ -s "$verdict" ]]; then
             gh pr comment "$pr" -R "$REPO" --body-file "$verdict" >/dev/null 2>&1 || true
           fi
@@ -194,15 +165,10 @@ dispatch_pr() {
           echo "verified"; return 0
           ;;
         75)
-          record_acquire_miss "$pr"
           echo "emu-busy (retry next tick)"; return 0
           ;;
         2)
-          record_attempt "$pr" failure
-          local fails; fails="$(recent_failures "$pr")"
-          if [[ "$fails" -ge "$MAX_ATTEMPTS" ]]; then
-            block_pr "$pr" "verify said bug still present $fails times in a row"
-          fi
+          local fails; fails="$(record_failure_and_maybe_block "$pr" "verify (bug still present)")"
           echo "verify failed: bug still present (fails=$fails)"; return 1
           ;;
         *)
@@ -219,11 +185,6 @@ dispatch_pr() {
       # The next tick will see the PR as MERGED and call cleanup_pr_worktree() from the listing filter.
       echo "ready+auto-merge enabled"
       return 0
-      ;;
-
-    stale)
-      stale_pr "$pr"
-      return 1
       ;;
 
     unknown)
@@ -249,7 +210,7 @@ main() {
     --json number,title,headRefName,headRefOid,createdAt,mergeStateStatus,statusCheckRollup,labels,reviews,files \
     --limit 50)"
 
-  # Cleanup pass: any merged PRs we left worktrees for. (Worktree path lives in `headRefName`.)
+  # Cleanup pass: any merged PRs we left worktrees for.
   while IFS= read -r merged_branch; do
     [[ -n "$merged_branch" ]] && cleanup_pr_worktree "$merged_branch"
   done < <(gh pr list -R "$REPO" --state merged --search "head:issue- author:@me" --json headRefName,mergedAt --limit 20 \
@@ -257,10 +218,7 @@ main() {
                 '.[] | select((.mergedAt | fromdateiso8601) > $cutoff) | .headRefName' 2>/dev/null)
 
   # Filter to approved PRs only (single-gate). Defer to pr_has_approval (sourced
-  # from pr-classify.sh) so the gate logic lives in exactly one place —
-  # otherwise drift between this jq and pr_has_approval is a security regression
-  # waiting to happen (e.g. the "latest review wins" rule needs to be applied
-  # identically here and in the per-PR classifier).
+  # from pr-classify.sh) so the gate logic lives in exactly one place.
   local approved_json sorted_json
   sorted_json="$(echo "$list_json" | jq 'sort_by(.createdAt)')"
   approved_json="$(echo "$sorted_json" | jq -c '.[]' | while IFS= read -r pr_obj; do
@@ -284,9 +242,9 @@ main() {
   pr_branch="$(jq -r '.headRefName' "$pr_json_file")"
   echo "considering PR #$pr ($pr_branch)"
 
-  # Defense-in-depth on the label path: an APPROVED review's author is part of
-  # the JSON, but a label's setter is not. Verify the actor via the events API
-  # before treating an agent-merge label as a gate signal.
+  # Defense-in-depth on the label path: a label's setter is not in the PR JSON.
+  # Verify the actor via the events API before treating an agent-merge label as
+  # a gate signal.
   local has_label has_review_at_head
   has_label="$(jq -r '[.labels[]?.name] | any(. == "agent-merge")' "$pr_json_file")"
   has_review_at_head="$(jq -r --arg me "$ME" '

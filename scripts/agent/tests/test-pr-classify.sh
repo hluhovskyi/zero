@@ -50,11 +50,6 @@ pr_is_doc_only <"$FIXTURES/pr-no-approval.json"     ; assert_rc "code-only rejec
 pr_is_doc_only <"$FIXTURES/pr-ready-to-merge.json"  ; assert_rc "docs/*.md accepted" 0 $?
 pr_is_doc_only <"$FIXTURES/pr-root-claudemd.json"   ; assert_rc "root CLAUDE.md is NOT doc-only" 1 $?
 
-echo "=== pr_is_stale ==="
-pr_is_stale 2 <"$FIXTURES/pr-stale.json"          ; assert_rc "old dirty branch is stale" 0 $?
-pr_is_stale 2 <"$FIXTURES/pr-behind-dirty.json"   ; assert_rc "fresh dirty branch not stale" 1 $?
-pr_is_stale 2 <"$FIXTURES/pr-needs-verify.json"   ; assert_rc "clean branch not stale" 1 $?
-
 echo "=== pr_was_verified_at_head ==="
 pr_was_verified_at_head "$TMP_STATE" <"$FIXTURES/pr-needs-verify.json"; assert_rc "no state file → not verified" 1 $?
 echo "needverify0000000000000000000000000000000 0" >"$TMP_STATE/pr-104.verified"
@@ -67,8 +62,6 @@ state="$(classify_pr_state "$TMP_STATE" <"$FIXTURES/pr-behind-clean.json")"
 assert "behind-clean" "behind-clean" "$state"
 state="$(classify_pr_state "$TMP_STATE" <"$FIXTURES/pr-behind-dirty.json")"
 assert "behind-dirty" "behind-dirty" "$state"
-state="$(classify_pr_state "$TMP_STATE" <"$FIXTURES/pr-stale.json")"
-assert "stale > behind-dirty" "stale" "$state"
 state="$(classify_pr_state "$TMP_STATE" <"$FIXTURES/pr-ci-failing.json")"
 assert "ci-failing" "ci-failing" "$state"
 state="$(classify_pr_state "$TMP_STATE" <"$FIXTURES/pr-ready-to-merge.json")"

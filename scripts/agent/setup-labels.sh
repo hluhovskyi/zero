@@ -9,8 +9,7 @@ gh label create agent-completed   --color cccccc --description "Agent opened a d
 gh label create agent-blocked     --color d93f0b --description "Agent run failed in a recoverable way"      --force
 gh label create agent-error       --color b60205 --description "Agent run crashed unexpectedly"             --force
 
-# PR-watcher gate + escape valve
+# PR-watcher gate
 gh label create agent-merge       --color 1d76db --description "Approved for watcher to ship (rebase/verify/merge)" --force
-gh label create agent-stale       --color fef2c0 --description "Branch too old to safely auto-rebase — re-spawn from the issue" --force
 
-echo "all 7 agent-* labels created/updated"
+echo "all 6 agent-* labels created/updated"

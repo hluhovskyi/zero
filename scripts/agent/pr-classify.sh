@@ -71,33 +71,18 @@ pr_was_verified_at_head() {
   [[ "$recorded" == "$head_sha" ]]
 }
 
-# Usage: pr_is_stale <max-age-days> < pr.json
-# JSON must include: createdAt (ISO 8601), mergeStateStatus
-# Returns 0 when the branch is older than <max-age-days> AND DIRTY.
-pr_is_stale() {
-  local max_days="${1:-2}"
-  jq -e --argjson maxDays "$max_days" '
-    (.createdAt | fromdateiso8601) as $ts
-    | (now - $ts) as $age_sec
-    | .mergeStateStatus == "DIRTY"
-      and $age_sec > ($maxDays * 86400)
-  ' >/dev/null
-}
-
 # Usage: classify_pr_state <state-dir> < pr.json
 # Assumes the caller has already filtered by pr_has_approval. Returns one of:
-#   behind-clean | behind-dirty | ci-failing | needs-verify | ready-to-merge | stale | unknown
-# State precedence (first match wins): stale > behind-dirty > behind-clean > ci-failing > needs-verify > ready-to-merge > unknown.
+#   behind-clean | behind-dirty | ci-failing | needs-verify | ready-to-merge | unknown
+# State precedence (first match wins): behind-dirty > behind-clean > ci-failing > needs-verify > ready-to-merge > unknown.
+# Note: "branch too old" is handled by the rebase session itself (exit 2 →
+# watcher marks agent-blocked); we don't gate on age up-front.
 classify_pr_state() {
   local state_dir="$1"
   local json
   json="$(cat)"
 
   if jq -e '.mergeStateStatus == "DIRTY"' <<<"$json" >/dev/null; then
-    if pr_is_stale 2 <<<"$json"; then
-      echo "stale"
-      return 0
-    fi
     echo "behind-dirty"
     return 0
   fi

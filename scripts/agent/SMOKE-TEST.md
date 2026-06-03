@@ -5,7 +5,7 @@ Run before relying on the system for real work. Maps 1:1 to the spec's acceptanc
 ## Prerequisites
 
 - `gh auth status` shows you authenticated as `hluhovskyi`
-- Labels created: `bash scripts/agent/setup-labels.sh` (creates 7 labels: agent-approved, -in-progress, -completed, -blocked, -error, -merge, -stale)
+- Labels created: `bash scripts/agent/setup-labels.sh` (creates 6 labels: agent-approved, -in-progress, -completed, -blocked, -error, -merge)
 - Unit tests all pass:
   ```bash
   bash scripts/agent/tests/test-pre-push-guard.sh
@@ -122,18 +122,18 @@ already produced a draft PR on a branch like `issue-<N>`.
 2. Run 3 watcher ticks back-to-back.
 3. Expect: after the 3rd failure, `agent-blocked` label is applied + comment posted; further ticks stop touching the PR.
 
-## Test 15: Stale escape valve
+## Test 15: Structural conflict → agent-blocked
 
-1. Take an approved draft PR with a `createdAt` older than 2 days AND a structural conflict (master refactored the PR's target).
-2. Run a watcher tick.
-3. Expect: `agent-stale` label applied + comment "re-spawn from issue"; no rebase attempted.
+1. Take an approved draft PR with a conflict the rebase session can't resolve
+   (e.g. its target code was deleted by master).
+2. Run watcher ticks until rebase has failed 3 times in a row (or once with exit 2).
+3. Expect: `agent-blocked` label applied + comment with the failure reason; no further rebase attempts.
 
 ## Test 16: Emulator-busy doesn't count against the cap
 
 1. With a verify session in progress on emulator-A, run the watcher from another worktree without `ANDROID_SERIAL`.
-2. Expect: spawn-verify returns 75 → tick reports `emu-busy`. `.agent-state/pr-<PR>.acquire-misses` increments.
-3. After 10 such ticks, expect ONE comment "waiting for emulator slot"; no further comments on subsequent ticks.
-4. The 3-attempt failure cap does NOT trigger.
+2. Expect: spawn returns 75 → tick reports `emu-busy (retry next tick)`.
+3. The 3-attempt failure cap does NOT trigger; subsequent ticks just retry silently.
 
 ## Test 17: Parallel workers via ANDROID_SERIAL
 

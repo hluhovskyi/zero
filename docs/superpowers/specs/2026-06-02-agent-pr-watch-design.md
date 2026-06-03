@@ -149,7 +149,11 @@ For each approved candidate PR, classify and act:
 | CI green + diff is not doc-only + verify needed | spawn `claude -p /agent-pr-verify <N>` — inspector + screenshot + bounded-element verdict, post screenshot/verdict as PR comment | proceed to merge |
 | CI green + (verified OR doc-only) | `gh pr ready` → `gh pr merge --squash --auto` → cleanup | merged |
 | Stale (age > 2d AND structural conflict) | `agent-stale` label, comment "branch too old to safely rebase — re-spawn from issue", stop | manual |
-| 3+ consecutive fix or rebase attempts failed | `agent-blocked` label, comment, stop | manual |
+| 3+ consecutive fix/rebase/verify attempts failed | `agent-blocked` label, comment, stop | manual |
+
+`agent-stale` (a separate age-based escape valve) was removed — the rebase
+sub-session itself returns exit 2 when a conflict is structurally
+unresolvable, which already lands in `agent-blocked`. One label is enough.
 
 After any watcher-driven push (`behind-clean` rebase, `behind-dirty` rebase
 success, `ci-failing` fix success) the watcher automatically removes the
@@ -221,9 +225,9 @@ When `./scripts/emulator/acquire` fails because all slots are full, the watcher
 sessions and may be in active use. The script's stop-and-ask message is
 correct; the watcher follows it.
 
-If the watcher gets stuck waiting > N ticks (e.g. 10) for an emulator, post a
-PR comment "agent-pr-watch: waiting for emulator slot" once, then keep
-exiting tick silently — no escalation beyond the one comment, no auto-kill.
+Retries are silent — no comment threshold, no escalation. The user can see
+the watcher is idle from its own output if they care; cluttering the PR with
+"waiting for emulator" comments helps nobody.
 
 ### Verify session (`/agent-pr-verify <N>`)
 
@@ -281,9 +285,8 @@ attempt. Three in a row → `agent-blocked`.
 ## Labels (additions)
 
 - `agent-merge` — applied by *you* as an alternative to a GitHub `APPROVED` review. The watcher's gate signal.
-- `agent-stale` — applied by `/agent-pr-watch` when a branch is too old to safely rebase (age > 2 days AND structural conflict). Tells you to close + re-spawn from the issue.
 
-Existing labels (`agent-approved`, `agent-in-progress`, `agent-completed`, `agent-blocked`, `agent-error`) keep their current meanings. The `agent-verified` label from the earlier draft is dropped — verification is internal pipeline state, not a public label.
+Existing labels (`agent-approved`, `agent-in-progress`, `agent-completed`, `agent-blocked`, `agent-error`) keep their current meanings. Two earlier draft labels were dropped: `agent-verified` (verification is internal pipeline state, not a public signal) and `agent-stale` (its function collapsed into `agent-blocked`).
 
 ## Acceptance tests
 
