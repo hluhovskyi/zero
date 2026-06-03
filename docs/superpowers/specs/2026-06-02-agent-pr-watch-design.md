@@ -113,8 +113,11 @@ already has an approval signal**, dispatch one action, exit. Strictly serial
 
 There is one human gate, not two:
 
-- **Approval signal** = a `state: APPROVED` review on the PR by `hluhovskyi`, OR
-  an `agent-merge` label applied by `hluhovskyi`.
+- **Approval signal** = a `state: APPROVED` review on the PR by `hluhovskyi`
+  **whose `commit_id` equals the current `headRefOid`** (stale reviews don't
+  gate — protects against the watcher pushing new commits after approval), OR
+  an `agent-merge` label applied by `hluhovskyi` **verified via the events API**
+  (label *presence* alone is not trust — anyone with label-write could set it).
 
 The watcher's PR query filters by this signal. A PR without either is invisible
 — no rebase, no CI fix, no verify, nothing. This means:
@@ -142,6 +145,13 @@ For each approved candidate PR, classify and act:
 | CI green + (verified OR doc-only) | `gh pr ready` → `gh pr merge --squash --auto` → cleanup | merged |
 | Stale (age > 2d AND structural conflict) | `agent-stale` label, comment "branch too old to safely rebase — re-spawn from issue", stop | manual |
 | 3+ consecutive fix or rebase attempts failed | `agent-blocked` label, comment, stop | manual |
+
+After any watcher-driven push (`behind-clean` rebase, `behind-dirty` rebase
+success, `ci-failing` fix success) the watcher automatically removes the
+`agent-merge` label and posts a comment asking the human to re-approve at the
+new HEAD. The `commit_id`-bound review check covers the review path the same
+way. Together these prevent an approval-then-rebase exploit where the watcher
+would otherwise merge code the human never saw.
 
 ### Verify is an internal checkpoint, not a public state
 

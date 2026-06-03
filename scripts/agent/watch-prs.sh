@@ -30,6 +30,27 @@ ensure_worktree() {
   echo "$worktree"
 }
 
+# Verify that the LAST event setting the agent-merge label was the expected
+# user. Mirrors `last_labeler_is_me` in poll-helpers.sh. Returns 0 if so.
+# Empty events / network failure → return 1 (fail-closed; never trust a label
+# we can't verify).
+verify_agent_merge_actor() {
+  local pr="$1" expected="$2"
+  local actor
+  actor="$(gh api "repos/$REPO/issues/$pr/events" --paginate 2>/dev/null \
+    | jq -r '[.[] | select(.event == "labeled" and .label.name == "agent-merge")] | last | .actor.login // empty' 2>/dev/null)"
+  [[ -n "$actor" && "$actor" == "$expected" ]]
+}
+
+# Strip the agent-merge label after the watcher pushes new commits. Forces the
+# human to re-apply approval after seeing the new HEAD. (Defense paired with
+# the SHA-bound review check in pr_has_approval.)
+revoke_label_after_push() {
+  local pr="$1"
+  gh pr edit "$pr" -R "$REPO" --remove-label agent-merge >/dev/null 2>&1 || true
+  gh pr comment "$pr" -R "$REPO" --body "agent-pr-watch: pushed new commits — \`agent-merge\` label cleared. Re-apply (or re-review) once you've seen the new HEAD." >/dev/null 2>&1 || true
+}
+
 # Append "<epoch> <outcome>" to .agent-state/pr-<N>.attempts.
 record_attempt() {
   local pr="$1" outcome="$2"
@@ -102,7 +123,7 @@ dispatch_pr() {
   case "$state" in
     behind-clean)
       ( cd "$worktree" && git fetch origin master --quiet && git merge origin/master --no-edit --quiet && git push --quiet ) \
-        && { reset_acquire_miss "$pr"; record_attempt "$pr" success; echo "rebased (clean)"; return 0; } \
+        && { reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"; echo "rebased (clean)"; return 0; } \
         || { record_attempt "$pr" failure; echo "rebase-clean failed"; return 1; }
       ;;
 
@@ -112,7 +133,7 @@ dispatch_pr() {
       "$SCRIPT_DIR/spawn-rebase-session.sh" "$pr" "$worktree" >/dev/null 2>&1
       local rc=$?
       if [[ "$rc" -eq 0 ]]; then
-        reset_acquire_miss "$pr"; record_attempt "$pr" success
+        reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"
         echo "rebased (LLM)"; return 0
       elif [[ "$rc" -eq 2 ]]; then
         stale_pr "$pr"
@@ -144,7 +165,7 @@ dispatch_pr() {
       "$SCRIPT_DIR/spawn-fix-session.sh" "$pr" "$worktree" "$ci_log" >/dev/null 2>&1
       local rc=$?
       if [[ "$rc" -eq 0 ]]; then
-        reset_acquire_miss "$pr"; record_attempt "$pr" success
+        reset_acquire_miss "$pr"; record_attempt "$pr" success; revoke_label_after_push "$pr"
         echo "ci-fixed"; return 0
       else
         record_attempt "$pr" failure
@@ -235,13 +256,23 @@ main() {
             | jq -r --argjson cutoff "$(date -v-1d +%s 2>/dev/null || date -d '1 day ago' +%s)" \
                 '.[] | select((.mergedAt | fromdateiso8601) > $cutoff) | .headRefName' 2>/dev/null)
 
-  # Filter to approved PRs only (single-gate).
+  # Filter to approved PRs only (single-gate). The approval signal is either:
+  #   - `agent-merge` label present (actor verified later via gh api events), OR
+  #   - an APPROVED review by $ME whose commit_id matches the current headRefOid
+  #     (stale reviews don't gate — protects against the watcher pushing new
+  #     commits after approval).
   local approved_json
   approved_json="$(echo "$list_json" | jq --arg me "$ME" '[
-    .[] | . as $pr
+    .[]
     | (
         ([.labels[]?.name] | any(. == "agent-merge"))
-        or ([.reviews[]? | select(.state == "APPROVED" and .author.login == $me)] | length > 0)
+        or (
+          .headRefOid as $head
+          | [.reviews[]?
+              | select(.state == "APPROVED"
+                       and .author.login == $me
+                       and .commit_id == $head)] | length > 0
+        )
       ) as $approved
     | select($approved)
   ] | sort_by(.createdAt)')"
@@ -260,6 +291,24 @@ main() {
   pr="$(jq -r '.number' "$pr_json_file")"
   pr_branch="$(jq -r '.headRefName' "$pr_json_file")"
   echo "considering PR #$pr ($pr_branch)"
+
+  # Defense-in-depth on the label path: an APPROVED review's author is part of
+  # the JSON, but a label's setter is not. Verify the actor via the events API
+  # before treating an agent-merge label as a gate signal.
+  local has_label has_review_at_head
+  has_label="$(jq -r '[.labels[]?.name] | any(. == "agent-merge")' "$pr_json_file")"
+  has_review_at_head="$(jq -r --arg me "$ME" '
+    .headRefOid as $head
+    | [.reviews[]? | select(.state == "APPROVED" and .author.login == $me and .commit_id == $head)] | length > 0
+  ' "$pr_json_file")"
+  if [[ "$has_label" == "true" && "$has_review_at_head" != "true" ]]; then
+    if ! verify_agent_merge_actor "$pr" "$ME"; then
+      echo "  agent-merge was not applied by $ME — removing label and skipping"
+      gh pr edit "$pr" -R "$REPO" --remove-label agent-merge >/dev/null 2>&1 || true
+      gh pr comment "$pr" -R "$REPO" --body "agent-pr-watch: \`agent-merge\` was not applied by \`$ME\`. Label removed; PR will not be processed." >/dev/null 2>&1 || true
+      return 0
+    fi
+  fi
 
   local worktree
   worktree="$(ensure_worktree "$pr_branch")"

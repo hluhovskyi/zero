@@ -4,19 +4,28 @@
 # state names. They do NOT call gh / git / network — keep them testable.
 
 # Usage: pr_has_approval <expected-login> < pr.json
-# JSON must include: labels[*].name, reviews[*].state, reviews[*].author.login
+# JSON must include: labels[*].name, reviews[*].state, reviews[*].author.login,
+#                    reviews[*].commit_id, headRefOid
 # Returns 0 if PR carries the watcher's gate signal:
-#   - `agent-merge` label is present, OR
-#   - at least one APPROVED review by <expected-login>
+#   - `agent-merge` label is present (caller MUST follow up with an actor check
+#     via `gh api`, since label presence alone doesn't bind to who set it), OR
+#   - at least one APPROVED review by <expected-login> WHOSE commit_id equals
+#     the PR's current headRefOid (stale reviews don't gate — protects against
+#     the watcher pushing new commits after approval).
 pr_has_approval() {
   local expected="$1"
   local json
   json="$(cat)"
-  local has_label has_approved
+  local has_label has_approved_at_head
   has_label="$(jq -r '[.labels[]?.name] | any(. == "agent-merge")' <<<"$json")"
-  has_approved="$(jq -r --arg me "$expected" \
-    '[.reviews[]? | select(.state == "APPROVED" and .author.login == $me)] | length > 0' <<<"$json")"
-  [[ "$has_label" == "true" || "$has_approved" == "true" ]]
+  has_approved_at_head="$(jq -r --arg me "$expected" '
+    .headRefOid as $head
+    | [.reviews[]?
+        | select(.state == "APPROVED"
+                 and .author.login == $me
+                 and .commit_id == $head)] | length > 0
+  ' <<<"$json")"
+  [[ "$has_label" == "true" || "$has_approved_at_head" == "true" ]]
 }
 
 # Usage: pr_is_doc_only < pr.json

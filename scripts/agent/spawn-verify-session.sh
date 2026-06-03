@@ -41,6 +41,8 @@ CLAUDE_BIN="${CLAUDE_BIN:-claude}"
       "Bash(gh pr merge*)" \
       "Bash(gh pr edit*)" \
       "Bash(gh pr close*)" \
+      "Bash(gh pr review*)" \
+      "Bash(gh api*)" \
       "Bash(gh issue edit*)" \
       "Bash(rm -rf /*)" \
       "Bash(rm -rf ~*)" \

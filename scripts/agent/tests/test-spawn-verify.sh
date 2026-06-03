@@ -95,6 +95,15 @@ else
   FAIL=$((FAIL + 1)); echo "  ✗ -- separator missing (variadic flag would eat prompt)"
 fi
 
+# Confirm the critical denies are all present.
+for guard in "git push" "git commit" "gh pr ready" "gh pr merge" "gh pr review" "gh api"; do
+  if grep -q "Bash($guard" "$ARGV_LOG"; then
+    PASS=$((PASS + 1)); echo "  ✓ $guard blocked"
+  else
+    FAIL=$((FAIL + 1)); echo "  ✗ $guard NOT blocked"
+  fi
+done
+
 echo "=== verdict/log files written ==="
 
 VERDICT="$REPO_ROOT/.agent-state/verify-123.verdict"

@@ -7,6 +7,6 @@
     {"name": "test", "status": "COMPLETED", "conclusion": "SUCCESS"}
   ],
   "labels": [],
-  "reviews": [{"state": "APPROVED", "author": {"login": "hluhovskyi"}}],
+  "reviews": [{"state": "APPROVED", "author": {"login": "hluhovskyi"}, "commit_id": "dirty000000000000000000000000000000000000"}],
   "files": [{"path": "zero-core/src/main/java/com/hluhovskyi/zero/foo.kt"}]
 }

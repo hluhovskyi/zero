@@ -42,7 +42,7 @@ set +e
     --permission-mode acceptEdits \
     --max-budget-usd 8 \
     --output-format json \
-    --disallowedTools "Bash(git push --force*)" "Bash(git push --force-with-lease*)" "Bash(gh pr merge*)" "Bash(gh repo delete*)" "Bash(gh repo edit*)" "Bash(gh release delete*)" "Bash(rm -rf /*)" "Bash(rm -rf ~*)" \
+    --disallowedTools "Bash(git push --force*)" "Bash(git push --force-with-lease*)" "Bash(gh pr merge*)" "Bash(gh pr ready*)" "Bash(gh pr review*)" "Bash(gh api*)" "Bash(gh repo delete*)" "Bash(gh repo edit*)" "Bash(gh release delete*)" "Bash(rm -rf /*)" "Bash(rm -rf ~*)" \
     -- \
     "/agent-do --issue $N"
 ) >"$RESULT_JSON" 2>"$LOG_FILE"

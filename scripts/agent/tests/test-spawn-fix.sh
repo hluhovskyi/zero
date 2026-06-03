@@ -82,8 +82,8 @@ if grep -qE -- "--disallowedTools.*-- /agent-pr-fix" "$ARGV_LOG"; then
 else
   FAIL=$((FAIL + 1)); echo "  ✗ -- separator missing"
 fi
-# Confirm gh pr merge / ready / edit are explicitly blocked.
-for guard in "gh pr ready" "gh pr merge" "gh pr edit" "gh pr close"; do
+# Confirm gh pr merge / ready / edit / review / api are explicitly blocked.
+for guard in "gh pr ready" "gh pr merge" "gh pr edit" "gh pr close" "gh pr review" "gh api"; do
   if grep -q "Bash($guard" "$ARGV_LOG"; then
     PASS=$((PASS + 1)); echo "  ✓ $guard blocked"
   else

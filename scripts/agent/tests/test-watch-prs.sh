@@ -29,13 +29,20 @@ export GH_LOG="$TMP/gh.log"
 export SPAWN_LOG="$TMP/spawn.log"
 export GIT_LOG="$TMP/git.log"
 
+# Default events fixture: agent-merge labeled by hluhovskyi. Most tests can use
+# this; override per-test to exercise the stranger-rejected path.
+DEFAULT_EVENTS="$TMP/events-default-me.json"
+echo '[{"event":"labeled","label":{"name":"agent-merge"},"actor":{"login":"hluhovskyi"}}]' >"$DEFAULT_EVENTS"
+export GH_EVENTS_FIXTURE="$DEFAULT_EVENTS"
+
 # `gh` mock: dispatches based on argv. Reads fixture JSON via env var GH_LIST_FIXTURE.
+# For `gh api repos/.../issues/<N>/events` the mock returns the contents of
+# $GH_EVENTS_FIXTURE if set, so we can test the agent-merge actor check.
 cat >"$MOCK_BIN/gh" <<'GH'
 #!/usr/bin/env bash
 echo "$@" >>"$GH_LOG"
 case "$1 $2" in
   "pr list")
-    # Differentiate: --state open vs --state merged
     if [[ "$*" == *"--state merged"* ]]; then
       echo "[]"
     else
@@ -44,6 +51,14 @@ case "$1 $2" in
     ;;
   "repo view")
     echo "hluhovskyi/zero"
+    ;;
+  "api "*)
+    # `gh api repos/.../issues/<N>/events` → return events fixture if any
+    if [[ "$*" == *"/events"* ]]; then
+      cat "${GH_EVENTS_FIXTURE:-/dev/null}"
+    else
+      echo "[]"
+    fi
     ;;
   "pr ready"|"pr edit"|"pr comment"|"pr merge"|"issue edit"|"issue comment")
     exit 0
@@ -58,7 +73,9 @@ case "$1 $2" in
 esac
 GH
 
-# `git` mock: passes through everything but `worktree`, which we no-op.
+# `git` mock: passes-through real git for read commands, but no-ops anything
+# that touches remotes or the network (fetch/merge/push) so the watcher's
+# inline rebase path doesn't fail on the fake worktree.
 cat >"$MOCK_BIN/git" <<'GIT'
 #!/usr/bin/env bash
 echo "$@" >>"$GIT_LOG"
@@ -68,11 +85,15 @@ case "$1" in
       add|remove|prune) exit 0 ;;
     esac
     ;;
-  branch)
+  branch|fetch|push)
+    exit 0
+    ;;
+  merge)
+    # No-op merge so behind-clean tests can succeed deterministically.
     exit 0
     ;;
 esac
-# fall through to real git for things like rev-parse if we ever need them
+# fall through to real git for rev-parse / status / etc.
 /usr/bin/env -i HOME="$HOME" PATH=/usr/bin:/bin /usr/bin/git "$@" 2>/dev/null || true
 GIT
 
@@ -123,6 +144,7 @@ run_watcher() {
   local fixture="$1"
   PATH="$MOCK_BIN:$PATH" \
     GH_LIST_FIXTURE="$fixture" \
+    GH_EVENTS_FIXTURE="${GH_EVENTS_FIXTURE:-}" \
     AGENT_WATCH_USER="hluhovskyi" \
     AGENT_WATCH_REPO="hluhovskyi/zero" \
     bash "$FAKE_REPO/scripts/agent/watch-prs.sh" 2>&1
@@ -186,10 +208,51 @@ out="$(run_watcher "$TMP/list-behinddirty.json")"
 assert_contains "behind-dirty state" "state: behind-dirty" "$out"
 assert_contains "spawn-rebase called" "spawn-rebase-session.sh 107" "$(cat "$SPAWN_LOG")"
 
-# Reviewer-approved (no label) → also visible
-echo '[{"number":108,"title":"x","headRefName":"issue-108","headRefOid":"sha","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"}}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-review.json"
+# Reviewer-approved AT HEAD (no label) → also visible
+echo '[{"number":108,"title":"x","headRefName":"issue-108","headRefOid":"sha108","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"sha108"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-review.json"
 out="$(run_watcher "$TMP/list-review.json")"
-assert_contains "APPROVED review counts as gate" "state: ready-to-merge" "$out"
+assert_contains "APPROVED review at HEAD counts as gate" "state: ready-to-merge" "$out"
+
+# Reviewer-approved at STALE sha (after watcher pushed) → invisible
+echo '[{"number":109,"title":"x","headRefName":"issue-109","headRefOid":"newsha","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[],"reviews":[{"state":"APPROVED","author":{"login":"hluhovskyi"},"commit_id":"oldsha"}],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-stalereview.json"
+out="$(run_watcher "$TMP/list-stalereview.json")"
+assert_contains "stale APPROVED review is invisible" "no approved PRs" "$out"
+
+# agent-merge label applied by stranger → events API returns stranger; watcher skips
+echo '[{"number":110,"title":"x","headRefName":"issue-110","headRefOid":"sha110","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[{"name":"agent-merge"}],"reviews":[],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-stranger.json"
+echo '[{"event":"labeled","label":{"name":"agent-merge"},"actor":{"login":"someone-else"}}]' >"$TMP/events-stranger.json"
+export GH_EVENTS_FIXTURE="$TMP/events-stranger.json"
+out="$(run_watcher "$TMP/list-stranger.json")"
+unset GH_EVENTS_FIXTURE
+assert_contains "stranger-applied label rejected" "was not applied by hluhovskyi" "$out"
+
+# agent-merge label applied by hluhovskyi → events API returns me; watcher proceeds
+echo '[{"event":"labeled","label":{"name":"agent-merge"},"actor":{"login":"hluhovskyi"}}]' >"$TMP/events-me.json"
+echo '[{"number":111,"title":"x","headRefName":"issue-111","headRefOid":"sha111","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"CLEAN","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[{"name":"agent-merge"}],"reviews":[],"files":[{"path":"docs/x.md"}]}]' >"$TMP/list-me-applied.json"
+export GH_EVENTS_FIXTURE="$TMP/events-me.json"
+: >"$GH_LOG"
+out="$(run_watcher "$TMP/list-me-applied.json")"
+unset GH_EVENTS_FIXTURE
+assert_contains "me-applied label accepted → ready-to-merge" "state: ready-to-merge" "$out"
+
+# Successful behind-clean rebase → revoke_label_after_push fires (gh pr edit --remove-label agent-merge).
+# behind-clean uses inline cd+git so we need a real-ish worktree dir.
+echo '[{"event":"labeled","label":{"name":"agent-merge"},"actor":{"login":"hluhovskyi"}}]' >"$TMP/events-me.json"
+echo '[{"number":112,"title":"x","headRefName":"issue-112","headRefOid":"sha112","createdAt":"2026-06-02T12:00:00Z","mergeStateStatus":"BEHIND","statusCheckRollup":[{"status":"COMPLETED","conclusion":"SUCCESS"}],"labels":[{"name":"agent-merge"}],"reviews":[],"files":[{"path":"a.kt"}]}]' >"$TMP/list-behind-revoke.json"
+WORKTREE_112="$FAKE_REPO/.claude/worktrees/issue-112"
+git init -q "$WORKTREE_112"
+export GH_EVENTS_FIXTURE="$TMP/events-me.json"
+: >"$GH_LOG"
+out="$(run_watcher "$TMP/list-behind-revoke.json")"
+unset GH_EVENTS_FIXTURE
+# behind-clean attempts inline git fetch+merge+push; the git mock no-ops, so it claims rebased.
+# Either way the watcher should have ATTEMPTED to remove the label.
+if grep -q "pr edit 112 .*--remove-label agent-merge" "$GH_LOG"; then
+  PASS=$((PASS + 1)); echo "  ✓ label revoked after successful watcher push"
+else
+  FAIL=$((FAIL + 1)); echo "  ✗ label NOT revoked after push (gh log follows)"
+  cat "$GH_LOG" | sed 's/^/    /'
+fi
 
 echo
 echo "=== summary: $PASS passed, $FAIL failed ==="

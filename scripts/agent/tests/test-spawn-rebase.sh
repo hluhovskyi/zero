@@ -73,12 +73,14 @@ if grep -qE -- "--disallowedTools.*-- /agent-pr-rebase" "$ARGV_LOG"; then
 else
   FAIL=$((FAIL + 1)); echo "  ✗ -- separator missing"
 fi
-# `git push --force*` MUST be blocked.
-if grep -q "Bash(git push --force" "$ARGV_LOG"; then
-  PASS=$((PASS + 1)); echo "  ✓ force-push blocked"
-else
-  FAIL=$((FAIL + 1)); echo "  ✗ force-push NOT blocked"
-fi
+# Confirm the critical denies are all present.
+for guard in "git push --force" "gh pr ready" "gh pr merge" "gh pr review" "gh api"; do
+  if grep -q "Bash($guard" "$ARGV_LOG"; then
+    PASS=$((PASS + 1)); echo "  ✓ $guard blocked"
+  else
+    FAIL=$((FAIL + 1)); echo "  ✗ $guard NOT blocked"
+  fi
+done
 
 echo "=== input validation ==="
 bash "$SCRIPT" 2>/dev/null

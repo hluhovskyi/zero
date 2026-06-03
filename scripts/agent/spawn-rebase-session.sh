@@ -45,6 +45,8 @@ START_SHA="$(git -C "$WORKTREE" rev-parse HEAD 2>/dev/null || echo "")"
       "Bash(gh pr merge*)" \
       "Bash(gh pr edit*)" \
       "Bash(gh pr close*)" \
+      "Bash(gh pr review*)" \
+      "Bash(gh api*)" \
       "Bash(gh repo delete*)" \
       "Bash(gh repo edit*)" \
       "Bash(rm -rf /*)" \

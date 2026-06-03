@@ -41,7 +41,8 @@ assert_rc() {
 echo "=== pr_has_approval ==="
 pr_has_approval hluhovskyi <"$FIXTURES/pr-no-approval.json"  ; assert_rc "no-approval rejected" 1 $?
 pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-clean.json" ; assert_rc "agent-merge label accepted" 0 $?
-pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-dirty.json" ; assert_rc "APPROVED review accepted" 0 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-behind-dirty.json" ; assert_rc "APPROVED review at HEAD accepted" 0 $?
+pr_has_approval hluhovskyi <"$FIXTURES/pr-stale-review.json" ; assert_rc "APPROVED review at stale SHA rejected" 1 $?
 
 echo "=== pr_is_doc_only ==="
 pr_is_doc_only <"$FIXTURES/pr-no-approval.json"     ; assert_rc "code-only rejected" 1 $?
