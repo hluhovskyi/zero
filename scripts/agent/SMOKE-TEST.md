@@ -11,9 +11,7 @@ Run before relying on the system for real work. Maps 1:1 to the spec's acceptanc
   bash scripts/agent/tests/test-pre-push-guard.sh
   bash scripts/agent/tests/test-poll-helpers.sh
   bash scripts/agent/tests/test-pr-classify.sh
-  bash scripts/agent/tests/test-spawn-fix.sh
-  bash scripts/agent/tests/test-spawn-rebase.sh
-  bash scripts/agent/tests/test-spawn-verify.sh
+  bash scripts/agent/tests/test-spawn-wrappers.sh   # universal + per-wrapper
   bash scripts/agent/tests/test-watch-prs.sh
   ```
 
