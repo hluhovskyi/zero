@@ -38,6 +38,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -81,6 +83,7 @@ private fun TransactionEditView(
     val labelTransfer = stringResource(R.string.transaction_type_transfer)
 
     val isTransfer = state.selectedTransactionType == TransactionEditType.TRANSFER
+    val focusManager = LocalFocusManager.current
 
     // Keypad opens on tapping the amount; auto-opens for a new transaction and stays open on
     // transfer (which has no pinned hero amount to tap).
@@ -141,6 +144,7 @@ private fun TransactionEditView(
                 focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
                 hero = true,
                 onFocus = {
+                    focusManager.clearFocus()
                     keypadVisible = true
                     viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
                 },
@@ -171,7 +175,13 @@ private fun TransactionEditView(
                         TransferForm(current, viewModel::perform)
                 }
             }
-            item { NotesField(state.notes, viewModel) }
+            item {
+                NotesField(
+                    notes = state.notes,
+                    viewModel = viewModel,
+                    onFocus = { keypadVisible = false },
+                )
+            }
         }
 
         Column(
@@ -274,7 +284,11 @@ private fun EditMenu(
 }
 
 @Composable
-private fun NotesField(notes: String, viewModel: TransactionEditViewModel) {
+private fun NotesField(
+    notes: String,
+    viewModel: TransactionEditViewModel,
+    onFocus: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -294,7 +308,9 @@ private fun NotesField(notes: String, viewModel: TransactionEditViewModel) {
         BasicTextField(
             value = notes,
             onValueChange = { viewModel.perform(TransactionEditViewModel.Action.ChangeNotes(it)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { if (it.isFocused) onFocus() },
             textStyle = TextStyle(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
