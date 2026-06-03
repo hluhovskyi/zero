@@ -43,7 +43,7 @@ internal fun ExpenseIncomeForm(
             )
         }
 
-        CategoryScrollRow(
+        CategoryField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp, bottom = 32.dp),
@@ -51,7 +51,7 @@ internal fun ExpenseIncomeForm(
             categories = form.categories,
             selectedCategory = form.selectedCategory,
             onCategorySelected = { perform(TransactionEditViewModel.Action.SelectCategory(it)) },
-            onShowAll = { perform(TransactionEditViewModel.Action.ShowAllCategories) },
+            onOpenPicker = { perform(TransactionEditViewModel.Action.ShowAllCategories) },
         )
 
         Row(
