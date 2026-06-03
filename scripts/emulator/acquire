@@ -14,11 +14,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Hard cap on simultaneously-running emulators. macOS HVF starves existing
-# VMs when another boots — three concurrent Pixel-class AVDs on a 16 GB
-# machine push the system into swap and the older emulators become
-# unresponsive. Override at the shell with ZERO_MAX_EMULATORS=<N>.
-MAX_CONCURRENT = int(os.environ.get("ZERO_MAX_EMULATORS", "2"))
+# Cap on simultaneously-running emulators. The real limit on this hardware is
+# macOS HVF / vCPU scheduling, NOT RAM: at ~9 concurrent the hypervisor thrashes
+# and emulators go unresponsive while system memory is still ~40% free (each
+# instance only resident ~1.1-1.7 GB despite a 2 GB hw.ramSize, since guest RAM
+# is lazy). Instances default to headless + a single vCPU (scripts/emulator/start)
+# to cut the contention; ~5 is the comfortable ceiling on a 10-core machine.
+# Override at the shell with ZERO_MAX_EMULATORS=<N>.
+MAX_CONCURRENT = int(os.environ.get("ZERO_MAX_EMULATORS", "5"))
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent))
