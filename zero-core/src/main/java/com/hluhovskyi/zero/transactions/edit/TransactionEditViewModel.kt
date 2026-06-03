@@ -49,6 +49,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
         val targetAmount: String = "",
         val currencySymbol: String = "",
         val canPickCurrency: Boolean = false,
+        val isSaveVisible: Boolean = false,
         val keypadTarget: TransactionEditFocusTarget = TransactionEditFocusTarget.Amount,
     )
 
