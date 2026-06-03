@@ -24,7 +24,10 @@ class TransactionEditRobot(private val composeRule: ComposeTestRule) {
             amount.forEach { ch ->
                 onAllNodesWithText(ch.toString()).filter(hasClickAction()).onLast().performClick()
             }
-            onNodeWithText(category).performClick()
+            // Category shows as a quick chip (frequent categories rank into the top-6)
+            // and also as the field-row value; onLast() targets the chip, whose tap
+            // selects the category (the row's tap would open the picker instead).
+            onAllNodesWithText(category).onLast().performClick()
             onNodeWithText("ACCOUNT").performClick()
             onAllNodesWithText(account).onLast().performClick()
         }

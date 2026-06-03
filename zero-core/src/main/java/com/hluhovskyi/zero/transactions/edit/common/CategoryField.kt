@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,11 +36,13 @@ import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 private const val QUICK_CHIP_COUNT = 6
+private val ChipShape = RoundedCornerShape(percent = 50)
 
 /**
  * Category selector for the transaction edit screen: a boxed field row (matches
- * Date/Account; always opens the picker) plus a one-time quick-chip shortcut row that
- * shows only while nothing is picked and vanishes after the first selection.
+ * Date/Account; shows the current category and opens the full picker) over a row of
+ * frequent-category quick chips for fast switching. The selected chip is highlighted;
+ * tapping a chip selects that category.
  */
 @Composable
 internal fun CategoryField(
@@ -57,14 +59,13 @@ internal fun CategoryField(
             selectedCategory = selectedCategory,
             onClick = onOpenPicker,
         )
-        AnimatedVisibility(visible = selectedCategory == null) {
-            QuickChipsRow(
-                modifier = Modifier.padding(top = 10.dp),
-                imageLoader = imageLoader,
-                categories = categories.take(QUICK_CHIP_COUNT),
-                onCategorySelected = onCategorySelected,
-            )
-        }
+        QuickChipsRow(
+            modifier = Modifier.padding(top = 10.dp),
+            imageLoader = imageLoader,
+            categories = categories.take(QUICK_CHIP_COUNT),
+            selectedCategory = selectedCategory,
+            onCategorySelected = onCategorySelected,
+        )
     }
 }
 
@@ -146,6 +147,7 @@ private fun QuickChipsRow(
     modifier: Modifier = Modifier,
     imageLoader: ImageLoader,
     categories: List<TransactionEditCategory>,
+    selectedCategory: TransactionEditCategory?,
     onCategorySelected: (TransactionEditCategory) -> Unit,
 ) {
     LazyRow(
@@ -156,6 +158,7 @@ private fun QuickChipsRow(
             QuickChip(
                 imageLoader = imageLoader,
                 category = category,
+                selected = category.id == selectedCategory?.id,
                 onClick = { onCategorySelected(category) },
             )
         }
@@ -166,15 +169,24 @@ private fun QuickChipsRow(
 private fun QuickChip(
     imageLoader: ImageLoader,
     category: TransactionEditCategory,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
     val scheme = category.colorScheme.toUi()
-    // Mirror CategoryIconView's tint logic so a bare icon reads as theme-coherent.
-    val iconTint = if (ZeroTheme.colors.isLight) scheme.primary else scheme.background
+    // Mirror CategoryIconView's tint logic so the icon reads as theme-coherent, and
+    // reuse the same accent for the selected chip's border + label.
+    val accent = if (ZeroTheme.colors.isLight) scheme.primary else scheme.background
+    val background = if (selected) {
+        ZeroTheme.colors.surfaceContainerLowest
+    } else {
+        ZeroTheme.colors.surfaceContainerLow
+    }
+    val labelColor = if (selected) accent else ZeroTheme.colors.onSurface
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(percent = 50))
-            .background(ZeroTheme.colors.surfaceContainerLow)
+            .clip(ChipShape)
+            .background(background)
+            .then(if (selected) Modifier.border(1.5.dp, accent, ChipShape) else Modifier)
             .clickable(onClick = onClick)
             .padding(start = 12.dp, end = 16.dp, top = 9.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -183,13 +195,13 @@ private fun QuickChip(
         imageLoader.View(
             modifier = Modifier.sizeIn(maxHeight = 19.dp, maxWidth = 19.dp),
             image = category.icon,
-            tint = iconTint,
+            tint = accent,
         )
         Text(
             text = category.name,
             fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ZeroTheme.colors.onSurface,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+            color = labelColor,
             maxLines = 1,
         )
     }
