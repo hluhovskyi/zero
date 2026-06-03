@@ -43,6 +43,9 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         val date: LocalDateTime
         val sourceSnapshot: SourceSnapshot?
 
+        /** True once the user has performed at least one editing action on the form. */
+        val isModified: Boolean
+
         data class Expense(
             override val accounts: List<TransactionEditAccount> = emptyList(),
             override val selectedAccount: TransactionEditAccount? = null,
@@ -56,6 +59,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
+            override val isModified: Boolean = false,
         ) : State
 
         data class Income(
@@ -71,6 +75,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
+            override val isModified: Boolean = false,
         ) : State
 
         data class Transfer(
@@ -88,6 +93,7 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
             override val notes: String = "",
             override val date: LocalDateTime,
             override val sourceSnapshot: SourceSnapshot? = null,
+            override val isModified: Boolean = false,
         ) : State
     }
 

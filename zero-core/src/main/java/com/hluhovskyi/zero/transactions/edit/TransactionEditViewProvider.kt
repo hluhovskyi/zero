@@ -190,14 +190,16 @@ private fun TransactionEditView(
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.End,
         ) {
-            ZeroFab(
-                modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
-                onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-                icon = Icons.Filled.Check,
-                contentDescription = stringResource(R.string.transaction_edit_save),
-                expanded = true,
-                text = stringResource(R.string.transaction_edit_save),
-            )
+            AnimatedVisibility(visible = state.isSaveVisible) {
+                ZeroFab(
+                    modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
+                    onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
+                    icon = Icons.Filled.Check,
+                    contentDescription = stringResource(R.string.transaction_edit_save),
+                    expanded = true,
+                    text = stringResource(R.string.transaction_edit_save),
+                )
+            }
             AnimatedVisibility(visible = keypadVisible) {
                 val target = state.keypadTarget
                 AmountKeypad(
