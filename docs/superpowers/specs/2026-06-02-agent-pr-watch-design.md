@@ -102,39 +102,54 @@ Mirror of `/agent-poll`. Lightweight wrapper; real logic lives in
 ### Loop shape
 
 ```
-/loop 10m /agent-pr-watch
+/loop 3m /agent-pr-watch
 ```
 
-Each tick: pick the oldest open draft PR on `head:issue-*` authored by you,
-dispatch one of the five states below, exit. Strictly serial (one PR per tick).
+Each tick: pick the oldest open draft PR on `head:issue-*` authored by you **that
+already has an approval signal**, dispatch one action, exit. Strictly serial
+(one PR per tick). The watcher is invisible to unapproved PRs.
 
-### State machine
+### Single gate — watcher does not act on unapproved PRs
 
-For each candidate PR, classify and act:
+There is one human gate, not two:
 
-| Condition | Action | Next-tick label expectation |
-|-----------|--------|-----------------------------|
-| `BEHIND` master | `git fetch && git merge origin/master`, push | CI re-runs; re-evaluate |
-| CI failing | spawn `claude -p /agent-pr-fix <N>` with stderr tail in the prompt | one fix commit, push |
-| CI green + no `agent-verified` label | acquire emulator, run verification (same shape as executor's step 4.5 — `/android-ui-inspector` + screenshot + bounded-element verdict), apply `agent-verified` label, comment with screenshot + verdict | re-evaluate |
-| CI green + `agent-verified` + approval signal | `gh pr ready` → `gh pr merge --squash --auto` → cleanup | merged |
-| 3+ consecutive fix attempts failed | `agent-blocked` label + comment, stop | manual review |
+- **Approval signal** = a `state: APPROVED` review on the PR by `hluhovskyi`, OR
+  an `agent-merge` label applied by `hluhovskyi`.
 
-### Idempotency: `agent-verified` label
+The watcher's PR query filters by this signal. A PR without either is invisible
+— no rebase, no CI fix, no verify, nothing. This means:
 
-After successful verification, apply `agent-verified`. On future ticks, check the
-label timestamp vs the PR's latest commit timestamp. If commit is newer →
-re-verify. Otherwise → skip verification, move to next state. This keeps
-re-verification cheap on a stable PR and forced on every new commit.
+- You review draft PRs at your own pace.
+- When you decide a PR is the right fix, you signal approval (review OR label).
+- *Only then* does the watcher pick the PR up and drive it through the pipeline.
+- Cost of being thorough is paid only on PRs you've already greenlit. No churn
+  on PRs you'd close.
 
-### Approval signal
+The two states you see in the PR list are:
+- "draft, awaiting your call" (watcher invisible)
+- "merged" (watcher done)
 
-Two equivalent gate-2 signals:
+### State machine (post-approval)
 
-- A `state: APPROVED` review on the PR by `hluhovskyi`
-- An `agent-merge` label applied by `hluhovskyi`
+For each approved candidate PR, classify and act:
 
-Either is sufficient. Both stay your decision — the watcher never applies either.
+| Condition | Action | Next-tick expectation |
+|-----------|--------|----------------------|
+| `BEHIND` clean | `git fetch && git merge origin/master && git push` (inline bash) | CI re-runs |
+| `BEHIND` dirty (conflicts) | spawn `claude -p /agent-pr-rebase <N>` — LLM resolves conflicts, compile-checks, pushes | CI re-runs |
+| CI failing | spawn `claude -p /agent-pr-fix <N>` with failing-job log in the prompt | one fix commit, push, CI re-runs |
+| CI green + diff is not doc-only + verify needed | spawn `claude -p /agent-pr-verify <N>` — inspector + screenshot + bounded-element verdict, post screenshot/verdict as PR comment | proceed to merge |
+| CI green + (verified OR doc-only) | `gh pr ready` → `gh pr merge --squash --auto` → cleanup | merged |
+| Stale (age > 2d AND structural conflict) | `agent-stale` label, comment "branch too old to safely rebase — re-spawn from issue", stop | manual |
+| 3+ consecutive fix or rebase attempts failed | `agent-blocked` label, comment, stop | manual |
+
+### Verify is an internal checkpoint, not a public state
+
+Verification happens inside the post-approval pipeline; the result is gating data
+for the merge, not a "ready for review" signal. The watcher tracks "verified at
+HEAD X" in `.agent-state/pr-<N>.verified` (commit SHA + timestamp). If HEAD moves
+past that SHA, re-verify. No `agent-verified` label is needed — the file is
+ephemeral state, not a public signal.
 
 ### Verification policy: verify everything except doc-only
 
@@ -169,12 +184,25 @@ ANDROID_SERIAL=emulator-5556 /loop 10m /agent-pr-watch
 `ANDROID_SERIAL` to `adb`, so only `./scripts/emulator/acquire` needs a small
 "if `ANDROID_SERIAL` is set, no-op and exit 0" branch.
 
-The spawned sub-sessions (`/agent-do`, `/agent-pr-fix`, `/agent-pr-verify`)
-inherit the parent's environment, so the serial propagates automatically.
+The spawned sub-sessions (`/agent-do`, `/agent-pr-fix`, `/agent-pr-rebase`,
+`/agent-pr-verify`) inherit the parent's environment, so the serial propagates
+automatically.
 
 Note: this doesn't multi-thread within a single watcher tick — each watcher
 is still strictly serial (one issue/PR per tick). Parallelism comes from
 running multiple watchers, each pinned to its own emulator.
+
+### Emulator contention is not a kill license
+
+When `./scripts/emulator/acquire` fails because all slots are full, the watcher
+**exits the tick silently** and retries next time. It NEVER calls
+`release --kill` on a sibling worktree's emulator — those belong to other
+sessions and may be in active use. The script's stop-and-ask message is
+correct; the watcher follows it.
+
+If the watcher gets stuck waiting > N ticks (e.g. 10) for an emulator, post a
+PR comment "agent-pr-watch: waiting for emulator slot" once, then keep
+exiting tick silently — no escalation beyond the one comment, no auto-kill.
 
 ### Verify session (`/agent-pr-verify <N>`)
 
@@ -231,10 +259,10 @@ attempt. Three in a row → `agent-blocked`.
 
 ## Labels (additions)
 
-- `agent-verified` — applied by `/agent-pr-watch` after a successful emulator verification on the current PR HEAD
-- `agent-merge` — applied by *you* as an alternative to a GitHub `APPROVED` review
+- `agent-merge` — applied by *you* as an alternative to a GitHub `APPROVED` review. The watcher's gate signal.
+- `agent-stale` — applied by `/agent-pr-watch` when a branch is too old to safely rebase (age > 2 days AND structural conflict). Tells you to close + re-spawn from the issue.
 
-Existing labels (`agent-approved`, `agent-in-progress`, `agent-completed`, `agent-blocked`, `agent-error`) keep their current meanings.
+Existing labels (`agent-approved`, `agent-in-progress`, `agent-completed`, `agent-blocked`, `agent-error`) keep their current meanings. The `agent-verified` label from the earlier draft is dropped — verification is internal pipeline state, not a public label.
 
 ## Acceptance tests
 

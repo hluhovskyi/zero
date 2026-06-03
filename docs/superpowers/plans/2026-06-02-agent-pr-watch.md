@@ -61,20 +61,24 @@ skills/
 ├── agent-do/SKILL.md                                         (MODIFIED — spotless + inspector verify step)
 ├── agent-pr-watch/SKILL.md                                   (NEW)
 ├── agent-pr-fix/SKILL.md                                     (NEW)
+├── agent-pr-rebase/SKILL.md                                  (NEW — LLM conflict resolver)
 └── agent-pr-verify/SKILL.md                                  (NEW — uses /android-ui-inspector)
 scripts/agent/
 ├── watch-prs.sh                                              (NEW)
 ├── spawn-fix-session.sh                                      (NEW)
+├── spawn-rebase-session.sh                                   (NEW)
 ├── spawn-verify-session.sh                                   (NEW)
-├── setup-labels.sh                                           (MODIFIED — add 2 labels)
-├── SMOKE-TEST.md                                             (MODIFIED — 7 new tests)
+├── setup-labels.sh                                           (MODIFIED — add 2 labels: agent-merge, agent-stale)
+├── SMOKE-TEST.md                                             (MODIFIED — new tests)
 └── tests/
     ├── test-pr-classify.sh                                   (NEW)
     └── fixtures/
-        ├── pr-behind.json                                    (NEW)
+        ├── pr-no-approval.json                               (NEW — watcher must ignore)
+        ├── pr-behind-clean.json                              (NEW)
+        ├── pr-behind-dirty.json                              (NEW)
         ├── pr-ci-failing.json                                (NEW)
-        ├── pr-verified-approved.json                         (NEW)
-        └── pr-verified-no-approval.json                      (NEW)
+        ├── pr-needs-verify.json                              (NEW)
+        └── pr-ready-to-merge.json                            (NEW)
 ```
 
 Note: `verify-pr.sh` from the earlier draft is dropped — verification is a
@@ -90,7 +94,10 @@ Each task ends with a green `bash scripts/agent/tests/*.sh` run or, for non-test
 
 **Edit:** `scripts/agent/setup-labels.sh`
 
-Add `agent-verified` (green) and `agent-merge` (blue) to the array. Run the script against the live repo (idempotent, `--force` flag).
+Add `agent-merge` (blue) and `agent-stale` (yellow) to the array. Run the script against the live repo (idempotent, `--force` flag).
+
+`agent-merge` is the gate-2 signal you apply when you've reviewed and want the watcher to ship the PR.
+`agent-stale` is applied *by* the watcher when a branch can't safely be rebased (age > 2 days AND structural conflict).
 
 Verify with `gh label list | grep agent-`.
 
@@ -100,13 +107,15 @@ Verify with `gh label list | grep agent-`.
 
 Pure functions that take a single JSON blob (output of `gh pr view --json ...`) and return a state name:
 
-- `classify_pr_state` → returns one of: `behind`, `ci-failing`, `needs-verify`, `verified-no-approval`, `ready-to-merge`, `blocked-or-unknown`
-- `pr_has_approval` → checks for `agent-merge` label OR any review with state `APPROVED` by `hluhovskyi`
-- `pr_has_verified_label_on_current_head` → label exists AND its applied-at timestamp ≥ PR's last commit timestamp
+- `pr_has_approval` → returns 0 if the PR has `agent-merge` label OR any review with state `APPROVED` by `hluhovskyi`. **The watcher's first filter.** Anything without approval is invisible.
+- `classify_pr_state` (only called on approved PRs) → returns one of: `behind-clean`, `behind-dirty`, `ci-failing`, `needs-verify`, `ready-to-merge`, `stale`, `unknown`.
+- `pr_was_verified_at_head` → check `.agent-state/pr-<N>.verified` file for the current HEAD SHA. If file exists and SHA matches → verified, skip. Otherwise → needs-verify.
+- `pr_is_stale` → branch age > 2 days AND mergeStateStatus is DIRTY.
+- `pr_is_doc_only` → every changed file matches `*.md` under `docs/` or root README.
 
-**Create:** `scripts/agent/tests/test-pr-classify.sh` + fixture JSONs.
+**Create:** `scripts/agent/tests/test-pr-classify.sh` + fixture JSONs (one per state listed above).
 
-Each fixture is a saved `gh pr view --json ...` output for one of the states. Test asserts the classifier returns the right state name.
+Each fixture is a saved `gh pr view --json ...` output. Test asserts the classifier returns the right state name. Critical test: unapproved PR → `pr_has_approval` returns non-zero, the watcher must not classify further.
 
 Run: `bash scripts/agent/tests/test-pr-classify.sh` — all green.
 
@@ -147,17 +156,23 @@ Add symlink: `.claude/plugins/zero-project/skills/agent-pr-verify → ../../../.
 Main loop logic:
 
 1. List candidate PRs: `gh pr list --state open --draft --search "head:issue- author:@me" --json number,title,baseRefName,headRefName,mergeStateStatus,statusCheckRollup,labels,reviews,commits`
-2. Pick the oldest (sort by createdAt ascending).
-3. Source `pr-classify.sh`, call `classify_pr_state`.
-4. Dispatch:
-   - `behind` → fetch + merge + push
-   - `ci-failing` → call `spawn-fix-session.sh <N>`; if returns failure-counter ≥ 3 → apply `agent-blocked` label, comment with stderr tail
-   - `needs-verify` → check if doc-only (skip), otherwise call `spawn-verify-session.sh`. On exit 0: apply `agent-verified` label + post screenshot/verdict comment. On exit 2: do NOT label, log as a failed verify (counts against 3-attempt cap). On exit 75: exit tick silently, retry next time.
-   - `verified-no-approval` → exit silently (nothing to do)
-   - `ready-to-merge` → `gh pr ready <N>`; `gh pr merge <N> --squash --auto`; cleanup worktree + branch
-5. Report one line per tick to stdout.
+2. **Filter by approval signal** — call `pr_has_approval` on each. Discard the rest. The watcher is invisible to unapproved PRs.
+3. Pick the oldest *approved* PR (sort by createdAt ascending).
+4. Source `pr-classify.sh`, call `classify_pr_state`.
+5. Dispatch:
+   - `behind-clean` → `git fetch && git merge origin/master && git push` inline
+   - `behind-dirty` → call `spawn-rebase-session.sh <N>`; if returns failure-counter ≥ 3 → `agent-blocked`
+   - `ci-failing` → call `spawn-fix-session.sh <N>`; if returns failure-counter ≥ 3 → `agent-blocked`
+   - `needs-verify` → if doc-only, skip and treat as verified; otherwise call `spawn-verify-session.sh`. On exit 0: write `.agent-state/pr-<N>.verified` with current HEAD SHA + timestamp, post screenshot/verdict comment. On exit 2: counts vs cap. On exit 75: exit tick silently.
+   - `ready-to-merge` → `gh pr ready <N>` → `gh pr merge <N> --squash --auto` → cleanup worktree + local branch (after merge confirmed)
+   - `stale` → `agent-stale` label + comment "branch too old to safely rebase — re-spawn from issue" + stop
+6. Report one line per tick to stdout.
 
-Failure-counter persistence: append to `.agent-state/pr-<N>.attempts` (one line per attempt with epoch timestamp + outcome).
+Failure-counter persistence: append to `.agent-state/pr-<N>.attempts` (one line per attempt with epoch timestamp + outcome). Reset on successful state transition.
+
+**Emulator contention:** when `./scripts/emulator/acquire` fails, exit tick silently. Track in `.agent-state/pr-<N>.acquire-misses`. After 10 misses, post one PR comment "waiting for emulator slot" and stop incrementing. Never call `release --kill` on sibling worktrees.
+
+**Cleanup hygiene:** before `git worktree remove`, run `rm -rf <worktree>/.gradle-home` to dodge "Directory not empty" failures from in-flight gradle caches.
 
 ### Task 5 — Fix-session spawn wrapper
 
@@ -189,6 +204,23 @@ Makes ONE commit with the fix. Does NOT mark ready. Does NOT merge. Does NOT mod
 If the fix is non-obvious (e.g. test failure that needs design discussion), exits non-zero — watcher will mark `agent-blocked`.
 
 Add symlink: `.claude/plugins/zero-project/skills/agent-pr-fix → ../../../../skills/agent-pr-fix`.
+
+### Task 6b — `/agent-pr-rebase` skill + spawn wrapper
+
+**Create:** `skills/agent-pr-rebase/SKILL.md`
+
+Spawned by watcher when `git merge origin/master` produces conflicts. The model:
+1. Reads the PR diff + the conflicted file list.
+2. Resolves conflicts by understanding *intent*: which side is the master refactor, which side is the PR's fix. Port the fix to master's new shape, not vice versa.
+3. Runs `./gradlew compileDebugKotlin` (or the closest minimum subset). **Must compile** before pushing.
+4. Runs `./gradlew spotlessApply` so the rebase commit doesn't fail spotless on CI.
+5. Commits the merge resolution with a clear message ("Merge master into <branch> — port <PR title> to <refactor name>").
+6. Pushes.
+7. Exits 0 on success, exits 2 if the conflicts are too structural to resolve safely (e.g. the fix's target code was deleted in master).
+
+Sandbox: same flags as `/agent-pr-fix`. The session reuses the existing worktree at `.claude/worktrees/issue-<N>` so the merge state is already there.
+
+**Create:** `scripts/agent/spawn-rebase-session.sh` — same shape as `spawn-fix-session.sh`. Symlink in plugin dir.
 
 ### Task 7 — `/agent-pr-watch` watcher skill
 
