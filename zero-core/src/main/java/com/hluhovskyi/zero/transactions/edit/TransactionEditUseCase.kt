@@ -44,8 +44,8 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         val selectedTargetAccount: TransactionEditAccount? = null,
         val categories: List<TransactionEditCategory> = emptyList(),
         val selectedCategory: TransactionEditCategory? = null,
-        /** True once the category was chosen from the full picker (retires the quick chips). */
-        val categoryPickedFromPicker: Boolean = false,
+        /** True once the user explicitly chose a category (chip or picker), retiring the quick chips. */
+        val categoryChosenByUser: Boolean = false,
         val currencies: List<TransactionEditCurrency> = emptyList(),
         val selectedCurrency: TransactionEditCurrency? = null,
         val amount: String = "",

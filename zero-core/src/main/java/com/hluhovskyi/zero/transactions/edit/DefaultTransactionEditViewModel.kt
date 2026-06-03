@@ -125,8 +125,8 @@ internal class DefaultTransactionEditViewModel(
             categories = state.categories,
             selectedCategory = state.selectedCategory,
             // Quick chips are a first-time shortcut: only for a new transaction, and only until the
-            // user reaches for the full picker.
-            showCategoryShortcuts = !isEditMode && !state.categoryPickedFromPicker,
+            // user makes an explicit category choice (chip or picker).
+            showCategoryShortcuts = !isEditMode && !state.categoryChosenByUser,
             convertedAmountText = converted,
             targetCurrencyName = accountCurrency?.name.orEmpty(),
         )

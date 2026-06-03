@@ -88,7 +88,7 @@ internal class DefaultTransactionEditUseCase(
                 selectedTargetAccount = state.selectedTargetAccount,
                 categories = categoryType?.let { type -> state.allCategories.filter { it.type == type } }.orEmpty(),
                 selectedCategory = state.selectedCategory?.takeIf { it.type == categoryType },
-                categoryPickedFromPicker = state.categoryPickedFromPicker,
+                categoryChosenByUser = state.categoryChosenByUser,
                 currencies = state.currencies,
                 selectedCurrency = state.selectedCurrency,
                 amount = state.amount,
@@ -153,7 +153,7 @@ internal class DefaultTransactionEditUseCase(
                 mutableDraft.update { it.copy(transactionType = action.type) }
 
             is TransactionEditUseCase.Action.SelectCategory ->
-                mutableDraft.update { it.copy(categoryId = action.category.id, pinSelectedCategory = false) }
+                mutableDraft.update { it.copy(categoryId = action.category.id, pinSelectedCategory = false, categoryChosenByUser = true) }
 
             is TransactionEditUseCase.Action.SelectCurrency ->
                 mutableDraft.update { it.copy(manuallyChangedCurrency = true, currencyId = action.currency.id) }
@@ -231,7 +231,7 @@ internal class DefaultTransactionEditUseCase(
                 transactionEditCategoryUseCase.state
                     .filterIsInstance<TransactionEditCategoryUseCase.State.Picked>()
                     .collect { picked ->
-                        mutableDraft.update { it.copy(categoryId = picked.categoryId, pinSelectedCategory = false, categoryPickedFromPicker = true, isModified = true) }
+                        mutableDraft.update { it.copy(categoryId = picked.categoryId, pinSelectedCategory = false, categoryChosenByUser = true, isModified = true) }
                     }
             }
 

@@ -68,7 +68,7 @@ internal fun resolve(
         selectedTargetAccount = selectedTargetAccount,
         allCategories = orderedCategories,
         selectedCategory = selectedCategory,
-        categoryPickedFromPicker = draft.categoryPickedFromPicker,
+        categoryChosenByUser = draft.categoryChosenByUser,
         currencies = allCurrencies,
         selectedCurrency = selectedCurrency,
         localDateTime = draft.localDateTime,
