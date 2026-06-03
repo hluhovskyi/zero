@@ -21,7 +21,7 @@ class DriveSnapshotParser(
     override val source: Source = DriveSource
 
     override suspend fun parse(uri: Uri.NonEmpty): SyncSnapshot {
-        check(oauthTokenProvider.isSignedIn.first()) { "Not signed in to Google Drive" }
+        ensureSignedIn()
 
         val metadata = when (val result = backupClient.latest()) {
             is BackupClient.Result.Success -> result.metadata
@@ -33,6 +33,18 @@ class DriveSnapshotParser(
             is BackupClient.DownloadResult.Success -> result.envelope.snapshot
             is BackupClient.DownloadResult.Failure -> error(result.error.toMessage())
             BackupClient.DownloadResult.NotFound -> error("No backup found in your Google Drive")
+        }
+    }
+
+    // Ensures a Drive session before fetching. Unlike a one-time-connected source, callers such as
+    // the first-launch Welcome restore reach here without having signed in, so trigger the
+    // interactive sign-in on demand rather than failing.
+    private suspend fun ensureSignedIn() {
+        if (oauthTokenProvider.isSignedIn.first()) return
+        when (val result = oauthTokenProvider.signIn()) {
+            is OAuthTokenProvider.Result.Success -> Unit
+            is OAuthTokenProvider.Result.Failure -> error(result.error.toMessage())
+            OAuthTokenProvider.Result.Cancelled -> error("Google Drive sign-in was cancelled")
         }
     }
 
