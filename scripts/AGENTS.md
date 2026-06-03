@@ -50,6 +50,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - `fetch-design.sh` — fetches Claude Design HTML for the `fetch-design` skill.
 - `guard-branch-switch.sh` — PreToolUse hook that blocks branch switches on master.
 - `guard-adb.sh` — PreToolUse hook that blocks bare `adb` / `installDebug`.
+- `guard-wait-loops.sh` — **experimental** PreToolUse hook that blocks inline `until`/`while` + `sleep` poll-loops. Blunt keyword match; its deny message asks the agent to report misfires so it can be dropped if it proves more annoying than useful.
 - `lib/emulator.py` — shared helpers for the Python orchestrator scripts (lock, adb-devices, worktree scan).
 
 ## Rules
@@ -58,5 +59,4 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - **Don't use `./gradlew installDebug`.** Use `./scripts/install-app.sh` instead. The hook will deny `installDebug`.
 - **Fail loud.** Scripts that swallow stderr/exit codes turn into silent no-ops; surface the actual adb / curl / gradle error.
 - **One responsibility per script.** If you reach for `&&`/`;` to chain unrelated work, write a second script instead.
-- **Capture screenshots and waits via `ui/screenshot.sh`, never inline `until …; do sleep; done` loops.** A wait-loop's leading token is `until`, so it bypasses the `ui/*` allow-list and prompts on every call — and foreground `sleep` is blocked anyway. The script waits internally in one allow-listed call.
-- **Allowlist project scripts in global `~/.claude/settings.json`, not the worktree's `.claude/settings.json`.** In a worktree session the worktree copy isn't honored mid-session; a global edit takes effect immediately and spans every worktree, so entries can't go stale per-checkout.
+- **Don't poll with inline `until`/`while` + `sleep` loops.** Await background-task completion notifications, use `ui/screenshot.sh`, or write a single-call script under `scripts/` (then allowlist it). The hook will deny them.

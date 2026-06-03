@@ -60,6 +60,13 @@ internal fun BottomBarView(
             val overBudgetDescription = stringResource(R.string.bottom_bar_over_budget_description)
             state.items.forEach { item ->
                 NavigationBarItem(
+                    // M3 NavigationBarItem clears the icon slot's semantics (alwaysShowLabel), which
+                    // drops the over-budget dot's description from the merged tree — set it on the item.
+                    modifier = if (item.hasAlert) {
+                        Modifier.semantics { contentDescription = overBudgetDescription }
+                    } else {
+                        Modifier
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = ZeroTheme.colors.primary,
                         unselectedIconColor = ZeroTheme.colors.outline,
@@ -97,8 +104,7 @@ internal fun BottomBarView(
                                             .size(13.dp)
                                             .background(ZeroTheme.colors.surfaceContainerLowest, CircleShape)
                                             .padding(2.dp)
-                                            .background(ZeroTheme.colors.error, CircleShape)
-                                            .semantics { contentDescription = overBudgetDescription },
+                                            .background(ZeroTheme.colors.error, CircleShape),
                                     )
                                 }
                             }
