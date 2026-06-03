@@ -13,9 +13,9 @@ Result: a session in worktree A cannot accidentally talk to or install onto work
 
 ## emulator/ — Capacity management
 
-- `emulator/acquire [--no-auto-start]` — claim an unclaimed running emulator. If all are claimed and `--no-auto-start` is not set, spawn a new one via `emulator/start`. Writes `.emulator-serial`. Run this **explicitly** when entering UI verification, not at session start. Refuses to spawn beyond `ZERO_MAX_EMULATORS` (default 2) — macOS HVF starves existing emulators when too many run concurrently.
+- `emulator/acquire [--no-auto-start]` — claim an unclaimed running emulator. If all are claimed and `--no-auto-start` is not set, spawn a new one via `emulator/start`. Writes `.emulator-serial`. Run this **explicitly** when entering UI verification, not at session start. Refuses to spawn beyond `ZERO_MAX_EMULATORS` (default 5) — the limit is macOS HVF / vCPU scheduling, not RAM: past ~5 concurrent the hypervisor thrashes while memory stays ~40% free.
 - `emulator/release [--kill]` — delete `.emulator-serial`. With `--kill`, also send `adb emu kill` to terminate the emulator process.
-- `emulator/start [<avd>]` — boot an unrun AVD on a free port with `-read-only` so a 2nd instance of the same AVD is possible. Prints the serial. Holds the repo lock from port selection through boot so concurrent sessions can't race.
+- `emulator/start [<avd>]` — boot an unrun AVD on a free port with `-read-only` so a 2nd instance of the same AVD is possible. Prints the serial. Holds the repo lock from port selection through boot so concurrent sessions can't race. Instances are **lean by default** — headless, swiftshader GPU, no audio, single vCPU (`ZERO_EMULATOR_CORES` overrides, default 1) — so several run in parallel; screencap/uiautomator still work since they read the guest framebuffer/hierarchy, not a window. Set `ZERO_EMULATOR_FULL=1` for a windowed, host-GPU, all-cores instance when you need to watch it or want max single-instance speed.
 
 All three coordinate via a shared `flock` on `/tmp/zero-emulator-claim.<repo-hash>.lock`.
 
