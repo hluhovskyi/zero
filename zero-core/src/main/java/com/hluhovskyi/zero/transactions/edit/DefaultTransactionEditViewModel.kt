@@ -31,6 +31,9 @@ internal class DefaultTransactionEditViewModel(
                 targetAmount = state.targetAmount,
                 currencySymbol = state.sourceCurrencySymbol(),
                 canPickCurrency = state.transactionType != TransactionEditType.TRANSFER,
+                // Duplicating is a save-a-copy flow, so keep its button available immediately;
+                // for new/edit, only reveal the button once the user actually changes something.
+                isSaveVisible = state.isModified || isDuplicateMode,
                 keypadTarget = if (state.hasFx()) focus else TransactionEditFocusTarget.Amount,
             )
         }.distinctUntilChanged()

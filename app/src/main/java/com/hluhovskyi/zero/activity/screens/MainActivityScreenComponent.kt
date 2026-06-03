@@ -26,6 +26,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
+import com.hluhovskyi.zero.backup.DriveSnapshotParser
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
@@ -346,6 +347,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             .welcomeComponentBuilder(
                 welcomeComponentBuilder
                     .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                    .onRestoreSelectedHandler {
+                        navigator.navigateTo(
+                            Destinations.Import,
+                            Destinations.Import.InitialSource.withValue(DriveSnapshotParser.KEY),
+                        )
+                    }
                     .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) },
             )
             .transactionComponentBuilder(
@@ -980,6 +987,11 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): NavigatorEntry = navigatorScope.buildable(Destinations.Import) {
             componentBuilder
+                .initialSource(
+                    ImportComponent.InitialSource(
+                        arguments.getValue(Destinations.Import.InitialSource).ifEmpty { null },
+                    ),
+                )
                 .onImportFinishedHandler { navigator.back() }
                 .logging(logger)
         }

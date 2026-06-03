@@ -25,6 +25,7 @@ internal data class TransactionEditDraft(
     val notes: String = "",
     val localDateTime: LocalDateTime? = null,
     val sourceSnapshot: SnapshotIntent? = null,
+    val isModified: Boolean = false,
 ) {
     /** Duplicate-header source, carried by id so [resolve] can resolve its currency symbol. */
     data class SnapshotIntent(

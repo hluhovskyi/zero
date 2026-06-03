@@ -77,6 +77,7 @@ internal fun resolve(
         targetAmount = draft.targetAmount,
         notes = draft.notes,
         sourceSnapshot = snapshot,
+        isModified = draft.isModified,
     )
 }
 

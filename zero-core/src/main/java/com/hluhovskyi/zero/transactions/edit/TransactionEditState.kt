@@ -23,4 +23,5 @@ internal data class TransactionEditState(
     val targetAmount: String = "",
     val notes: String = "",
     val sourceSnapshot: TransactionEditUseCase.SourceSnapshot? = null,
+    val isModified: Boolean = false,
 )

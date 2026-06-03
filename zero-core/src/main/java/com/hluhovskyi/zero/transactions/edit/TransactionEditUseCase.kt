@@ -53,6 +53,8 @@ interface TransactionEditUseCase : AttachableActionStateModel<TransactionEditUse
         val notes: String = "",
         val date: LocalDateTime,
         val sourceSnapshot: SourceSnapshot? = null,
+        /** True once the user has performed at least one editing action on the form. */
+        val isModified: Boolean = false,
     )
 
     /**

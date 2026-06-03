@@ -97,12 +97,16 @@ internal class DefaultTransactionEditUseCase(
                 notes = state.notes,
                 date = state.localDateTime ?: clock.localDateTime(zoneProvider.timeZone()),
                 sourceSnapshot = state.sourceSnapshot,
+                isModified = state.isModified,
             )
         }
         .distinctUntilChanged()
 
     override fun perform(action: TransactionEditUseCase.Action) {
         logger.d("perform=$action")
+        if (action.isUserEdit()) {
+            mutableDraft.update { it.copy(isModified = true) }
+        }
         when (action) {
             is TransactionEditUseCase.Action.ChangeAmount -> mutableDraft.update { draft ->
                 draft.copy(amount = action.amount, targetAmount = draft.receivedFor(action.amount, draft.rate))
@@ -226,7 +230,7 @@ internal class DefaultTransactionEditUseCase(
                 transactionEditCategoryUseCase.state
                     .filterIsInstance<TransactionEditCategoryUseCase.State.Picked>()
                     .collect { picked ->
-                        mutableDraft.update { it.copy(categoryId = picked.categoryId, pinSelectedCategory = false) }
+                        mutableDraft.update { it.copy(categoryId = picked.categoryId, pinSelectedCategory = false, isModified = true) }
                     }
             }
 
@@ -244,6 +248,7 @@ internal class DefaultTransactionEditUseCase(
                                 currencyId = currency.id,
                                 manuallyChangedCurrency = true,
                                 pickedCurrency = currency,
+                                isModified = true,
                             )
                         }
                     }
@@ -352,4 +357,30 @@ internal class DefaultTransactionEditUseCase(
 
     /** The destination amount for a transfer (`from × rate`, money-scaled); unchanged otherwise. */
     private fun TransactionEditDraft.receivedFor(from: String, rate: String): String = if (transactionType == TransactionEditType.TRANSFER) receivedAmount(from, rate) else targetAmount
+
+    /** Actions that change the form contents, as opposed to navigation / lifecycle actions. */
+    private fun TransactionEditUseCase.Action.isUserEdit(): Boolean = when (this) {
+        is TransactionEditUseCase.Action.SwitchTransaction,
+        is TransactionEditUseCase.Action.SelectAccount,
+        is TransactionEditUseCase.Action.SelectTargetAccount,
+        is TransactionEditUseCase.Action.SelectCurrency,
+        is TransactionEditUseCase.Action.SelectCategory,
+        is TransactionEditUseCase.Action.ChangeAmount,
+        is TransactionEditUseCase.Action.ChangeRate,
+        is TransactionEditUseCase.Action.ChangeDate,
+        is TransactionEditUseCase.Action.ChangeTargetAmount,
+        is TransactionEditUseCase.Action.ResetRate,
+        is TransactionEditUseCase.Action.SwapAccounts,
+        is TransactionEditUseCase.Action.ChangeNotes,
+        -> true
+
+        is TransactionEditUseCase.Action.EditCategories,
+        is TransactionEditUseCase.Action.ShowAllCategories,
+        is TransactionEditUseCase.Action.ShowAllCurrencies,
+        is TransactionEditUseCase.Action.Save,
+        is TransactionEditUseCase.Action.Discard,
+        is TransactionEditUseCase.Action.Delete,
+        is TransactionEditUseCase.Action.Duplicate,
+        -> false
+    }
 }
