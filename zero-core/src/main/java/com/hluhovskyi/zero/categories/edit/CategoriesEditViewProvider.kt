@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -154,10 +155,22 @@ private fun CategoryIconTile(
     icon: com.hluhovskyi.zero.common.Image,
     onClick: () -> Unit,
 ) {
+    // In dark mode the entity's primary and background swap roles, matching
+    // CategoryIconView so the tile reads as theme-coherent on the dark surface
+    // instead of an out-of-place light pastel chip.
+    val containerColor: Color
+    val iconColor: Color
+    if (ZeroTheme.colors.isLight) {
+        containerColor = colorScheme.background
+        iconColor = colorScheme.primary
+    } else {
+        containerColor = colorScheme.primary
+        iconColor = colorScheme.background
+    }
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .background(colorScheme.background, RoundedCornerShape(14.dp))
+            .background(containerColor, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick),
     ) {
         imageLoader.View(
@@ -165,7 +178,7 @@ private fun CategoryIconTile(
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(26.dp),
-            tint = colorScheme.primary,
+            tint = iconColor,
         )
         Icon(
             imageVector = Icons.Filled.ArrowDropDown,
@@ -174,7 +187,7 @@ private fun CategoryIconTile(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 6.dp)
                 .size(14.dp),
-            tint = colorScheme.primary,
+            tint = iconColor,
         )
     }
 }
