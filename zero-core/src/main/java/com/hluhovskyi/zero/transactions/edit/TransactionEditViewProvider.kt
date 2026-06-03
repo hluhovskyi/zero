@@ -160,7 +160,7 @@ private fun TransactionEditView(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
         ) {
             item {
                 // Its own distinct flow so the form recomposes only on form changes, not on every

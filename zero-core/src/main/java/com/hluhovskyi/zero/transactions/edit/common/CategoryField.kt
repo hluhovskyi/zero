@@ -1,7 +1,6 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,9 +39,10 @@ private val ChipShape = RoundedCornerShape(percent = 50)
 
 /**
  * Category selector for the transaction edit screen: a boxed field row (matches
- * Date/Account; shows the current category and opens the full picker) over a row of
- * frequent-category quick chips for fast switching. The selected chip is highlighted;
- * tapping a chip selects that category.
+ * Date/Account; shows the current category and opens the full picker) and — only as a
+ * first-time shortcut ([showShortcuts]) — a row of stateless quick chips for frequent
+ * categories *other than* the current one. The row is the single source of truth for
+ * what's selected; the chips are one-tap switches that retire once the picker is used.
  */
 @Composable
 internal fun CategoryField(
@@ -50,22 +50,29 @@ internal fun CategoryField(
     imageLoader: ImageLoader,
     categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
+    showShortcuts: Boolean,
     onCategorySelected: (TransactionEditCategory) -> Unit,
     onOpenPicker: () -> Unit,
 ) {
+    val shortcuts = if (showShortcuts) {
+        categories.filter { it.id != selectedCategory?.id }.take(QUICK_CHIP_COUNT)
+    } else {
+        emptyList()
+    }
     Column(modifier = modifier) {
         CategoryRow(
             imageLoader = imageLoader,
             selectedCategory = selectedCategory,
             onClick = onOpenPicker,
         )
-        QuickChipsRow(
-            modifier = Modifier.padding(top = 10.dp),
-            imageLoader = imageLoader,
-            categories = categories.take(QUICK_CHIP_COUNT),
-            selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected,
-        )
+        if (shortcuts.isNotEmpty()) {
+            QuickChipsRow(
+                modifier = Modifier.padding(top = 10.dp),
+                imageLoader = imageLoader,
+                categories = shortcuts,
+                onCategorySelected = onCategorySelected,
+            )
+        }
     }
 }
 
@@ -147,7 +154,6 @@ private fun QuickChipsRow(
     modifier: Modifier = Modifier,
     imageLoader: ImageLoader,
     categories: List<TransactionEditCategory>,
-    selectedCategory: TransactionEditCategory?,
     onCategorySelected: (TransactionEditCategory) -> Unit,
 ) {
     LazyRow(
@@ -158,7 +164,6 @@ private fun QuickChipsRow(
             QuickChip(
                 imageLoader = imageLoader,
                 category = category,
-                selected = category.id == selectedCategory?.id,
                 onClick = { onCategorySelected(category) },
             )
         }
@@ -169,24 +174,15 @@ private fun QuickChipsRow(
 private fun QuickChip(
     imageLoader: ImageLoader,
     category: TransactionEditCategory,
-    selected: Boolean,
     onClick: () -> Unit,
 ) {
     val scheme = category.colorScheme.toUi()
-    // Mirror CategoryIconView's tint logic so the icon reads as theme-coherent, and
-    // reuse the same accent for the selected chip's border + label.
-    val accent = if (ZeroTheme.colors.isLight) scheme.primary else scheme.background
-    val background = if (selected) {
-        ZeroTheme.colors.surfaceContainerLowest
-    } else {
-        ZeroTheme.colors.surfaceContainerLow
-    }
-    val labelColor = if (selected) accent else ZeroTheme.colors.onSurface
+    // Mirror CategoryIconView's tint logic so the icon reads as theme-coherent.
+    val iconTint = if (ZeroTheme.colors.isLight) scheme.primary else scheme.background
     Row(
         modifier = Modifier
             .clip(ChipShape)
-            .background(background)
-            .then(if (selected) Modifier.border(1.5.dp, accent, ChipShape) else Modifier)
+            .background(ZeroTheme.colors.surfaceContainer)
             .clickable(onClick = onClick)
             .padding(start = 12.dp, end = 16.dp, top = 9.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -195,13 +191,13 @@ private fun QuickChip(
         imageLoader.View(
             modifier = Modifier.sizeIn(maxHeight = 19.dp, maxWidth = 19.dp),
             image = category.icon,
-            tint = accent,
+            tint = iconTint,
         )
         Text(
             text = category.name,
             fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
-            color = labelColor,
+            fontWeight = FontWeight.SemiBold,
+            color = ZeroTheme.colors.onSurface,
             maxLines = 1,
         )
     }

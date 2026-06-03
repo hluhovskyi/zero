@@ -15,6 +15,8 @@ internal data class TransactionEditDraft(
     val targetAccountId: Id.Known? = null,
     val categoryId: Id.Known? = null,
     val pinSelectedCategory: Boolean = false,
+    /** True once the category was chosen from the full picker, which retires the quick chips. */
+    val categoryPickedFromPicker: Boolean = false,
     val currencyId: Id.Known? = null,
     val manuallyChangedCurrency: Boolean = false,
     val pickedCurrency: TransactionEditCurrency? = null,

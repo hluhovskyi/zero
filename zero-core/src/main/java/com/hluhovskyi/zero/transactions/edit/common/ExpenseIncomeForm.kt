@@ -46,10 +46,11 @@ internal fun ExpenseIncomeForm(
         CategoryField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 32.dp),
+                .padding(bottom = 16.dp),
             imageLoader = imageLoader,
             categories = form.categories,
             selectedCategory = form.selectedCategory,
+            showShortcuts = form.showCategoryShortcuts,
             onCategorySelected = { perform(TransactionEditViewModel.Action.SelectCategory(it)) },
             onOpenPicker = { perform(TransactionEditViewModel.Action.ShowAllCategories) },
         )
