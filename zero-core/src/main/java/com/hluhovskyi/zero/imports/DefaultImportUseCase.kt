@@ -60,16 +60,7 @@ internal class DefaultImportUseCase(
     )
     override val state: Flow<ImportUseCase.State> = mutableState.map { it.screen }
 
-    init {
-        // When the screen is opened pre-pointed at a source (e.g. the Welcome "Restore from Drive"
-        // CTA), skip the source picker and load it immediately. Pre-selectable sources are fileless
-        // (Drive) — they fetch remotely, so there is no file picker to show.
-        if (initialSourceKey != null) {
-            parsers.firstOrNull { it.source.key == initialSourceKey }?.let { parser ->
-                perform(ImportUseCase.Action.SelectSource(parser.source, requiresFile = false))
-            }
-        }
-    }
+    private var initialSourceSelected = false
 
     override fun perform(action: ImportUseCase.Action) {
         when (action) {
@@ -292,7 +283,18 @@ internal class DefaultImportUseCase(
         }
     }
 
-    override fun attach(): Closeable = Closeables.empty()
+    override fun attach(): Closeable {
+        // When the screen is opened pre-pointed at a source (e.g. the Welcome "Restore from Drive"
+        // CTA), skip the source picker and load it immediately. Pre-selectable sources are fileless
+        // (Drive) — they fetch remotely, so there is no file picker to show.
+        if (!initialSourceSelected && initialSourceKey != null) {
+            initialSourceSelected = true
+            parsers.firstOrNull { it.source.key == initialSourceKey }?.let { parser ->
+                perform(ImportUseCase.Action.SelectSource(parser.source, requiresFile = false))
+            }
+        }
+        return Closeables.empty()
+    }
 
     /** Maps each `SyncCategory` in the delta to an [ImportCategory] for the review UI, pre-resolving
      *  icon/color from the matched local row and counting how many of its transactions would survive dedup. */
