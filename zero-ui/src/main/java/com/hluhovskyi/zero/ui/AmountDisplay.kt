@@ -12,11 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,13 +41,9 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
- * Amount field with a left-pinned currency and a right-aligned value.
- *
- * Two modes:
- *  - tap mode ([onClick] non-null): a read-only label; tapping it asks the caller to open an
- *    in-app keypad. No system IME. The value is driven externally (e.g. the inline keypad).
- *  - editable mode (default): types via the system numeric keyboard, reporting edits through
- *    [onAmountChange]; the caller supplies a [focusRequester].
+ * Amount field with a left-pinned currency and a right-aligned value. Types via the system numeric
+ * keyboard, reporting edits through [onAmountChange]; the caller supplies a [focusRequester]. The
+ * currency renders as a tappable chip when [onCurrencyClick] is set, otherwise a static symbol.
  */
 @Composable
 fun AmountDisplay(
@@ -58,7 +53,6 @@ fun AmountDisplay(
     label: String,
     focusRequester: FocusRequester? = null,
     onAmountChange: (String) -> Unit = {},
-    onClick: (() -> Unit)? = null,
     onCurrencyClick: (() -> Unit)? = null,
 ) {
     Column(
@@ -112,37 +106,13 @@ fun AmountDisplay(
                 }
             }
 
-            if (onClick != null) {
-                ReadOnlyAmount(
-                    amount = amount,
-                    onClick = onClick,
-                )
-            } else {
-                EditableAmount(
-                    amount = amount,
-                    focusRequester = focusRequester,
-                    onAmountChange = onAmountChange,
-                )
-            }
+            EditableAmount(
+                amount = amount,
+                focusRequester = focusRequester,
+                onAmountChange = onAmountChange,
+            )
         }
     }
-}
-
-@Composable
-private fun ReadOnlyAmount(amount: String, onClick: () -> Unit) {
-    val empty = amount.isEmpty() || amount == "0"
-    Text(
-        text = if (empty) stringResource(R.string.amount_display_placeholder) else amount,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 70.dp)
-            .clickable(onClick = onClick)
-            .testTag("TransactionEdit.amountField"),
-        fontSize = 56.sp,
-        fontWeight = FontWeight.ExtraBold,
-        color = if (empty) MaterialTheme.colors.primary.copy(alpha = 0.3f) else MaterialTheme.colors.primary,
-        textAlign = TextAlign.Right,
-    )
 }
 
 @Composable
@@ -174,11 +144,11 @@ private fun EditableAmount(
         textStyle = TextStyle(
             fontSize = 56.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colors.primary,
+            color = ZeroTheme.colors.primary,
             textAlign = TextAlign.Right,
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        cursorBrush = SolidColor(MaterialTheme.colors.primary),
+        cursorBrush = SolidColor(ZeroTheme.colors.primary),
         singleLine = true,
         decorationBox = { innerTextField ->
             if (textFieldValue.text.isEmpty()) {
@@ -186,7 +156,7 @@ private fun EditableAmount(
                     text = stringResource(R.string.amount_display_placeholder),
                     fontSize = 56.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                    color = ZeroTheme.colors.primary.copy(alpha = 0.3f),
                     textAlign = TextAlign.Right,
                     modifier = Modifier.fillMaxWidth(),
                 )

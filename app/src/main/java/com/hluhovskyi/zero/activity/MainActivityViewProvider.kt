@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Surface
 import androidx.compose.material.navigation.BottomSheetNavigator
@@ -33,7 +32,7 @@ internal class MainActivityViewProvider(
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding(),
-                color = MaterialTheme.colors.background,
+                color = ZeroTheme.colors.surface,
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     val sheetState = rememberModalBottomSheetState(

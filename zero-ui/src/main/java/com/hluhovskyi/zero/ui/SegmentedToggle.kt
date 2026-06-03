@@ -8,9 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -54,7 +53,7 @@ fun <T> SegmentedToggle(
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = ZeroTheme.colors.surfaceContainerLowest,
-                elevation = 2.dp,
+                shadowElevation = 2.dp,
                 content = {},
             )
             items.forEach { item ->
@@ -70,7 +69,7 @@ fun <T> SegmentedToggle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isSelected) {
-                            MaterialTheme.colors.primary
+                            ZeroTheme.colors.primary
                         } else {
                             ZeroTheme.colors.onSurfaceVariant
                         },

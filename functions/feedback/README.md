@@ -42,6 +42,13 @@ Responses:
 
 The function's runtime service account needs **`roles/playintegrity.tokenDecoder`** on the GCP project that hosts the Integrity API.
 
+**The function must allow unauthenticated invocation** (`allUsers` → `roles/run.invoker`). The Zero app is a public client: it authenticates with the Play Integrity `X-Integrity-Token` checked *inside* `index.js`, not with a Google IAM bearer token. Deploying `--no-allow-unauthenticated` makes Cloud Run reject every app request with a platform-level **403** before the code runs (`Empty Authorization header value` in the logs) — i.e. feedback silently fails for everyone. Play Integrity is the abuse gate, not IAM. If invocation auth ever gets dropped, restore it with:
+
+```bash
+gcloud run services add-iam-policy-binding feedback \
+    --region=<your-region> --member=allUsers --role=roles/run.invoker
+```
+
 ## Deploy
 
 **Code-only change** (the common case — you edited `index.js`): run `./deploy.sh`. It redeploys the current source and preserves all existing config (env vars, secret, service account), so no real values are needed.
@@ -56,7 +63,7 @@ gcloud functions deploy feedback \
     --source=. \
     --entry-point=feedback \
     --trigger-http \
-    --no-allow-unauthenticated \
+    --allow-unauthenticated \
     --service-account=<sa-email> \
     --set-env-vars=PACKAGE_NAME=<package>,REPO_OWNER=<owner>,REPO_NAME=<repo>,GCP_PROJECT_NUMBER=<number> \
     --set-secrets=GITHUB_TOKEN=<secret-name>:latest

@@ -1,49 +1,17 @@
 package com.hluhovskyi.zero.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
 @Composable
 fun ZeroTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val zeroColors = if (darkTheme) DarkZeroColors else LightZeroColors
-    val materialColors = if (darkTheme) {
-        darkColors(
-            primary = zeroColors.primary,
-            primaryVariant = zeroColors.primaryContainer,
-            secondary = zeroColors.secondary,
-            secondaryVariant = zeroColors.secondaryContainer,
-            background = zeroColors.surface,
-            surface = zeroColors.surface,
-            error = zeroColors.error,
-            onPrimary = zeroColors.onPrimary,
-            onSecondary = zeroColors.onSecondary,
-            onBackground = zeroColors.onSurface,
-            onSurface = zeroColors.onSurface,
-            onError = zeroColors.onError,
-        )
-    } else {
-        lightColors(
-            primary = zeroColors.primaryContainer,
-            primaryVariant = zeroColors.primary,
-            secondary = zeroColors.secondary,
-            secondaryVariant = zeroColors.secondaryContainer,
-            background = zeroColors.surface,
-            surface = zeroColors.surface,
-            error = zeroColors.error,
-            onPrimary = zeroColors.onPrimary,
-            onSecondary = zeroColors.onSecondary,
-            onBackground = zeroColors.onSurface,
-            onSurface = zeroColors.onSurface,
-            onError = zeroColors.onError,
-        )
-    }
-    CompositionLocalProvider(LocalZeroColors provides zeroColors) {
+    val scheme = if (darkTheme) DarkZeroColorScheme else LightZeroColorScheme
+    val extras = if (darkTheme) DarkZeroExtraColors else LightZeroExtraColors
+    CompositionLocalProvider(LocalZeroExtraColors provides extras) {
         MaterialTheme(
-            colors = materialColors,
+            colorScheme = scheme,
             typography = Typography,
             shapes = Shapes,
             content = content,
