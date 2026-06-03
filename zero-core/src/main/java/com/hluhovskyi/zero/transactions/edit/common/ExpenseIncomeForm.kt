@@ -46,7 +46,7 @@ internal fun ExpenseIncomeForm(
         CategoryField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(top = 8.dp, bottom = 16.dp),
             imageLoader = imageLoader,
             categories = form.categories,
             selectedCategory = form.selectedCategory,

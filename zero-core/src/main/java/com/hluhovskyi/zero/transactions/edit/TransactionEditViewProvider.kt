@@ -102,6 +102,7 @@ private fun TransactionEditView(
             is TransactionEditViewModel.HeaderMode.DuplicateFrom -> stringResource(R.string.transaction_duplicate_from_title)
         }
         val subtitle = (state.headerMode as? TransactionEditViewModel.HeaderMode.DuplicateFrom)?.subtitle
+        // Pinned header — everything below it scrolls.
         ModalHeader(
             title = title,
             subtitle = subtitle,
@@ -113,120 +114,142 @@ private fun TransactionEditView(
             },
         )
 
-        SegmentedToggle(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(top = 24.dp),
-            items = state.transactionTypes,
-            selectedItem = state.selectedTransactionType,
-            onItemSelected = { viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(it)) },
-            labelMapping = { type ->
-                when (type) {
-                    TransactionEditType.EXPENSE -> labelExpense
-                    TransactionEditType.INCOME -> labelIncome
-                    TransactionEditType.TRANSFER -> labelTransfer
-                }
-            },
-        )
-
-        // Pinned hero amount — hidden on transfer (its From/To amounts live in the form).
-        if (!isTransfer) {
-            AmountField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 16.dp, bottom = 8.dp)
-                    .testTag("TransactionEdit.amountField"),
-                caption = stringResource(R.string.transaction_edit_amount_display_label),
-                currencySymbol = state.currencySymbol,
-                value = state.amount,
-                focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
-                hero = true,
-                onFocus = {
-                    focusManager.clearFocus()
-                    keypadVisible = true
-                    viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
-                },
-                onCurrencyClick = if (state.canPickCurrency) {
-                    { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
-                } else {
-                    null
-                },
-            )
-        }
-
-        LazyColumn(
+        // Scrollable body; the save FAB floats over its bottom-end. The FAB is anchored to the
+        // content area (not size-measured), so it sits just above the keypad with no size feedback
+        // and no per-frame recomposition.
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
         ) {
-            item {
-                // Its own distinct flow so the form recomposes only on form changes, not on every
-                // header/amount/keypad emission.
-                val form by viewModel.form.collectAsState(
-                    initial = TransactionEditViewModel.Form.ExpenseIncome(),
-                )
-                when (val current = form) {
-                    is TransactionEditViewModel.Form.ExpenseIncome ->
-                        ExpenseIncomeForm(current, imageLoader, viewModel::perform)
-                    is TransactionEditViewModel.Form.Transfer ->
-                        TransferForm(current, viewModel::perform)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                // Constant clearance so the last item can scroll above the floating FAB.
+                contentPadding = PaddingValues(bottom = if (state.isSaveVisible) 84.dp else 16.dp),
+            ) {
+                item {
+                    SegmentedToggle(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 24.dp),
+                        items = state.transactionTypes,
+                        selectedItem = state.selectedTransactionType,
+                        onItemSelected = { viewModel.perform(TransactionEditViewModel.Action.ChangeTransactionType(it)) },
+                        labelMapping = { type ->
+                            when (type) {
+                                TransactionEditType.EXPENSE -> labelExpense
+                                TransactionEditType.INCOME -> labelIncome
+                                TransactionEditType.TRANSFER -> labelTransfer
+                            }
+                        },
+                    )
+                }
+
+                // Hero amount — hidden on transfer (its From/To amounts live in the form).
+                if (!isTransfer) {
+                    item {
+                        AmountField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .padding(top = 16.dp, bottom = 8.dp)
+                                .testTag("TransactionEdit.amountField"),
+                            caption = stringResource(R.string.transaction_edit_amount_display_label),
+                            currencySymbol = state.currencySymbol,
+                            value = state.amount,
+                            focused = state.keypadTarget == TransactionEditFocusTarget.Amount,
+                            hero = true,
+                            onFocus = {
+                                focusManager.clearFocus()
+                                keypadVisible = true
+                                viewModel.perform(TransactionEditViewModel.Action.FocusAmount)
+                            },
+                            onCurrencyClick = if (state.canPickCurrency) {
+                                { viewModel.perform(TransactionEditViewModel.Action.PickCurrency) }
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                }
+
+                item {
+                    // Its own distinct flow so the form recomposes only on form changes, not on every
+                    // header/amount/keypad emission.
+                    val form by viewModel.form.collectAsState(
+                        initial = TransactionEditViewModel.Form.ExpenseIncome(),
+                    )
+                    when (val current = form) {
+                        is TransactionEditViewModel.Form.ExpenseIncome ->
+                            ExpenseIncomeForm(current, imageLoader, viewModel::perform)
+                        is TransactionEditViewModel.Form.Transfer ->
+                            TransferForm(current, viewModel::perform)
+                    }
+                }
+                item {
+                    NotesField(
+                        notes = state.notes,
+                        viewModel = viewModel,
+                        onFocus = { keypadVisible = false },
+                    )
                 }
             }
-            item {
-                NotesField(
-                    notes = state.notes,
-                    viewModel = viewModel,
-                    onFocus = { keypadVisible = false },
-                )
-            }
+
+            SaveFab(
+                visible = state.isSaveVisible,
+                // Clear the nav bar only when the keypad below isn't already doing so.
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .then(if (keypadVisible) Modifier else Modifier.navigationBarsPadding()),
+                onSave = { viewModel.perform(TransactionEditViewModel.Action.Save) },
+            )
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding(),
-            horizontalAlignment = Alignment.End,
-        ) {
-            AnimatedVisibility(visible = state.isSaveVisible) {
-                ZeroFab(
-                    modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
-                    onClick = { viewModel.perform(TransactionEditViewModel.Action.Save) },
-                    icon = Icons.Filled.Check,
-                    contentDescription = stringResource(R.string.transaction_edit_save),
-                    expanded = true,
-                    text = stringResource(R.string.transaction_edit_save),
-                )
-            }
-            AnimatedVisibility(visible = keypadVisible) {
-                val target = state.keypadTarget
-                AmountKeypad(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ZeroTheme.colors.surfaceContainerLow)
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    value = when (target) {
-                        TransactionEditFocusTarget.Rate -> state.rate
-                        TransactionEditFocusTarget.Received -> state.targetAmount
-                        TransactionEditFocusTarget.Amount -> state.amount
-                    },
-                    onChange = {
-                        when (target) {
-                            TransactionEditFocusTarget.Rate ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
-                            TransactionEditFocusTarget.Received ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
-                            TransactionEditFocusTarget.Amount ->
-                                viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
-                        }
-                    },
-                    maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
-                    keyHeight = 58.dp,
-                )
-            }
+        // Keypad pinned below the body — a keyboard, not the FAB; it pushes the body up when shown.
+        AnimatedVisibility(visible = keypadVisible) {
+            val target = state.keypadTarget
+            AmountKeypad(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .background(ZeroTheme.colors.surfaceContainerLow)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                value = when (target) {
+                    TransactionEditFocusTarget.Rate -> state.rate
+                    TransactionEditFocusTarget.Received -> state.targetAmount
+                    TransactionEditFocusTarget.Amount -> state.amount
+                },
+                onChange = {
+                    when (target) {
+                        TransactionEditFocusTarget.Rate ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeRate(it))
+                        TransactionEditFocusTarget.Received ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeTargetAmount(it))
+                        TransactionEditFocusTarget.Amount ->
+                            viewModel.perform(TransactionEditViewModel.Action.ChangeAmount(it))
+                    }
+                },
+                maxDecimals = if (target == TransactionEditFocusTarget.Rate) 6 else 2,
+                keyHeight = 58.dp,
+            )
         }
+    }
+}
+
+// Standalone so AnimatedVisibility resolves to the plain overload (not ColumnScope's) when the
+// caller is a Box.
+@Composable
+private fun SaveFab(visible: Boolean, modifier: Modifier, onSave: () -> Unit) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ZeroFab(
+            modifier = Modifier.padding(end = 16.dp, bottom = 12.dp),
+            onClick = onSave,
+            icon = Icons.Filled.Check,
+            contentDescription = stringResource(R.string.transaction_edit_save),
+            expanded = true,
+            text = stringResource(R.string.transaction_edit_save),
+        )
     }
 }
 
