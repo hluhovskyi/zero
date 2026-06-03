@@ -78,6 +78,17 @@ def spawn_emulator(avd: str, port: int) -> str:
         str(EMULATOR_BIN), "-avd", avd, "-port", str(port),
         "-read-only", "-no-snapshot-load", "-no-boot-anim",
     ]
+    # Lean by default: headless, software (swiftshader) GPU, no audio, a single
+    # vCPU — so several instances fit on a CPU-bound host (macOS HVF starves VMs
+    # long before RAM runs out). screencap/uiautomator read the guest
+    # framebuffer/hierarchy, so UI verification works without a host window.
+    # ZERO_EMULATOR_CORES overrides the vCPU count (default 1). Set
+    # ZERO_EMULATOR_FULL=1 for a windowed, host-GPU, all-cores instance — when
+    # you want to watch it or need max single-instance speed.
+    if not os.environ.get("ZERO_EMULATOR_FULL"):
+        cores = os.environ.get("ZERO_EMULATOR_CORES", "1")
+        cmd += ["-no-window", "-gpu", "swiftshader_indirect", "-no-audio",
+                "-cores", cores]
     print(f"▶ Starting AVD '{avd}' on {serial} (log: {log})", file=sys.stderr)
     with open(log, "wb") as f:
         subprocess.Popen(

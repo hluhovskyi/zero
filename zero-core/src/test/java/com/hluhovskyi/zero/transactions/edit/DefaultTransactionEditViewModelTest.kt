@@ -47,7 +47,7 @@ class DefaultTransactionEditViewModelTest {
     @Test
     fun `save hidden when form is unmodified`() = runTest {
         val vm = createViewModel(
-            state = TransactionEditUseCase.State.Expense(date = date, isModified = false),
+            state = TransactionEditUseCase.State(date = date, isModified = false),
         )
         assertFalse(vm.state.first().isSaveVisible)
     }
@@ -55,7 +55,7 @@ class DefaultTransactionEditViewModelTest {
     @Test
     fun `save shown once the form is modified`() = runTest {
         val vm = createViewModel(
-            state = TransactionEditUseCase.State.Expense(date = date, isModified = true),
+            state = TransactionEditUseCase.State(date = date, isModified = true),
         )
         assertTrue(vm.state.first().isSaveVisible)
     }
@@ -63,7 +63,7 @@ class DefaultTransactionEditViewModelTest {
     @Test
     fun `save shown in duplicate mode even when unmodified`() = runTest {
         val vm = createViewModel(
-            state = TransactionEditUseCase.State.Expense(date = date, isModified = false),
+            state = TransactionEditUseCase.State(date = date, isModified = false),
             isDuplicateMode = true,
         )
         assertTrue(vm.state.first().isSaveVisible)
