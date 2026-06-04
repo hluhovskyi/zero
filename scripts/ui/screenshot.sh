@@ -38,9 +38,11 @@ if [ -n "$RELAUNCH" ]; then
     fi
     sleep 0.5
   done
-  # Small settle for first-frame compose layout.
-  sleep 0.5
 fi
+
+# Wait for the hierarchy to settle so we never capture a mid-transition /
+# mid-animation frame (covers both the --relaunch and the plain post-tap case).
+"$(dirname "$0")/wait-stable.sh" >/dev/null 2>&1 || true
 
 "$ADB" shell screencap -p /sdcard/_screenshot.png >/dev/null 2>&1
 if ! "$ADB" pull /sdcard/_screenshot.png "$OUT" >/dev/null 2>&1; then
