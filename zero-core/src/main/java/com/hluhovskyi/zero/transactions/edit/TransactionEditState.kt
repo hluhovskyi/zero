@@ -14,6 +14,7 @@ internal data class TransactionEditState(
     val selectedTargetAccount: TransactionEditAccount? = null,
     val allCategories: List<TransactionEditCategory> = emptyList(),
     val selectedCategory: TransactionEditCategory? = null,
+    val categoryChosenByUser: Boolean = false,
     val currencies: List<TransactionEditCurrency> = emptyList(),
     val selectedCurrency: TransactionEditCurrency? = null,
     val localDateTime: LocalDateTime? = null,
