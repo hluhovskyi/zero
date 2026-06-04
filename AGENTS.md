@@ -80,6 +80,7 @@ See [Architecture Patterns](docs/agents/architecture.md) for full details with c
 
 - [Architecture Patterns](docs/agents/architecture.md) — Component/ViewModel/UseCase/ViewProvider, attach() lifecycle, Flow composition
 - [Architecture Review](docs/agents/architecture-review.md) — house-pattern conformance + structural smell catalog; rubric for `/pr-architecture-review`
+- [Architecture Review Evidence](docs/agents/architecture-review-evidence.md) — each rule grounded in a real reference + its lint enforcement (what's machine-checked vs. manual)
 - [Concurrency](docs/agents/concurrency.md) — Async-first design, Dispatchers, Flow vs suspend, state management, pagination
 - [Data Layer](docs/agents/data-layer.md) — Repository pattern, Room entities, query/insert conventions
 - [Backup](docs/agents/backup.md) — Android Auto Backup (allowlist rules, what's backed up, how to change it) + Drive backup pointer

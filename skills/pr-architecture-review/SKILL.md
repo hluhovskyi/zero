@@ -13,6 +13,8 @@ A structural pass over a change: does it follow the codebase's architecture, and
 
 The full catalog of house patterns + smell signatures + the reasoning method lives in [`docs/agents/architecture-review.md`](../../docs/agents/architecture-review.md). **Read it first** — this skill is the runner; the doc is the rubric.
 
+Each rule is grounded in a real reference + its enforcement in [`docs/agents/architecture-review-evidence.md`](../../docs/agents/architecture-review-evidence.md). **The key shortcut:** many rules (visibility, derivation, theme, module-encapsulation, handler-shape, scoped-builder, closeable/job handling) are already caught by custom lint detectors — CI fails on them, so re-flagging them here is redundant. Spend the pass on the rows marked **Manual** in the evidence doc: the structural, judgment-call smells no detector can express.
+
 ## Step 1 — Determine the target
 
 - PR number/URL given → use it: `gh pr diff <N> --name-only` for the file set, `gh pr diff <N>` for the patch.

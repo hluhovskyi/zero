@@ -4,6 +4,8 @@ Catalog for an architecture pass over a diff: does it conform to the house patte
 
 Findings are **advisory**, not blocking. Each finding names the symptom, the cause, and the smaller change that removes it — then lets a human decide.
 
+Every rule below is grounded in a real codebase reference + its lint enforcement in [architecture-review-evidence.md](architecture-review-evidence.md). Rules already caught by a lint detector don't need a manual finding — focus on the **Manual** rows there.
+
 ## The method
 
 - **Symptom → missing abstraction.** A good finding collapses several symptoms into one cause: a sentinel arg, a boolean flag, and a duplicated `when` are often three faces of one absent subtype split. Listing symptoms is noise; naming the abstraction is signal.
