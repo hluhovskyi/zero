@@ -41,6 +41,7 @@ import com.hluhovskyi.zero.activity.navigation.BundleArguments
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.rememberPerformanceHolder
 import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -210,11 +211,3 @@ private const val NAV_TRANSITION_MILLIS = 180
 private val BOTTOM_BAR_TAB_ROUTES = setOf("home", "accounts", "categories", "budget", "settings")
 
 private fun isTabSwitch(from: String?, to: String?): Boolean = from in BOTTOM_BAR_TAB_ROUTES && to in BOTTOM_BAR_TAB_ROUTES
-
-@Composable
-private fun rememberPerformanceHolder(): PerformanceMetricsState.Holder {
-    val view = LocalView.current
-    return remember(view) {
-        PerformanceMetricsState.getHolderForHierarchy(view)
-    }
-}

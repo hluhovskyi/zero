@@ -36,6 +36,13 @@ fun <T> SegmentedToggle(
     labelMapping: (T) -> String,
     selectedFraction: Float? = null,
 ) {
+    trackChanges("modifier", modifier)
+    trackChanges("items", items)
+    trackChanges("selectedItem", selectedItem)
+    trackChanges("onItemSelected", onItemSelected)
+    trackChanges("labelMapping", labelMapping)
+    trackChanges("selectedFraction", selectedFraction)
+
     val selectedIndex = items.indexOf(selectedItem).coerceAtLeast(0)
     val animatedFraction by animateFloatAsState(
         targetValue = selectedIndex.toFloat(),

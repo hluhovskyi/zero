@@ -5,7 +5,12 @@ import com.hluhovskyi.zero.categories.CategoryType
 enum class TransactionEditType {
     EXPENSE,
     INCOME,
-    TRANSFER,
+    TRANSFER;
+
+    companion object {
+
+        val List: List<TransactionEditType> = entries.toList()
+    }
 }
 
 /** Category type to rank/filter by; null for transfers, which have no category. */

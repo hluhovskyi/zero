@@ -12,7 +12,12 @@ fun trackChanges(tag: String, any: Any?) {
 
     SideEffect {
         if (previous.value !== any) {
-            Log.d("Recompose", "$tag, ${previous.value} -> $any")
+            if (previous.value == any) {
+                Log.d("Recompose", "$tag, equals, but not the same")
+            } else {
+                Log.d("Recompose", "$tag, ${previous.value} -> $any")
+            }
+
             previous.value = any
         }
     }
