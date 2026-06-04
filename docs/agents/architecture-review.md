@@ -4,7 +4,7 @@ Catalog for an architecture pass over a diff: does it conform to the house patte
 
 Findings are **advisory**, not blocking. Each finding names the symptom, the cause, and the smaller change that removes it — then lets a human decide.
 
-Every rule below is grounded in a real codebase reference + its lint enforcement in [architecture-review-evidence.md](architecture-review-evidence.md). Rules already caught by a lint detector don't need a manual finding — focus on the **Manual** rows there.
+Many house patterns are machine-enforced by custom lint detectors (see [Architecture — Lint Enforcement](architecture.md#lint-enforcement)) — don't re-flag what a detector already catches. This pass earns its keep on the smells lint can't express: the judgment calls in *Smell signatures* below.
 
 ## The method
 
