@@ -34,6 +34,11 @@ git add skills/<name>/SKILL.md
 
 Descriptions are always in context — keep them under 25 words. Name the trigger phrases/contexts only; all implementation detail belongs in the skill body.
 
+## Writing the content
+
+- **A general rubric draws examples from across the codebase, not the one case that prompted it** — a skill written while deep in a specific bug/refactor will anchor every example to it; pull illustrations from other features so the rules read as general.
+- **Fold evidence into an existing doc before adding a new file** — reference `docs/agents/architecture.md`, an `AGENTS.md`, etc.; a new doc needs a reason beyond "I had material for one."
+
 ## Plugin loader trap
 
 The Claude Code plugin loader resolves plugins by looking for a directory at `<marketplace installLocation>/plugins/<plugin-name>/`. The `source` field in `marketplace.json` and `enabledPlugins` in `settings.json` are **necessary but not sufficient** — the directory must physically exist at that path (symlink is fine).
