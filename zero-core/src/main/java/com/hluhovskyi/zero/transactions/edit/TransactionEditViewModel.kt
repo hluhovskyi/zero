@@ -77,6 +77,8 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
             override val date: LocalDateTime? = null,
             val categories: List<TransactionEditCategory> = emptyList(),
             val selectedCategory: TransactionEditCategory? = null,
+            /** Whether the one-time quick-chip shortcuts should show (new transaction, picker unused). */
+            val showCategoryShortcuts: Boolean = false,
             val convertedAmountText: String = "",
             val targetCurrencyName: String = "",
         ) : Form

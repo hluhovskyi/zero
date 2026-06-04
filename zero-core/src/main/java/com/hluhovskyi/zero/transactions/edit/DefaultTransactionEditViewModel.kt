@@ -124,6 +124,9 @@ internal class DefaultTransactionEditViewModel(
             date = state.date,
             categories = state.categories,
             selectedCategory = state.selectedCategory,
+            // Quick chips are a first-time shortcut: only for a new transaction, and only until the
+            // user makes an explicit category choice (chip or picker).
+            showCategoryShortcuts = !isEditMode && !state.categoryChosenByUser,
             convertedAmountText = converted,
             targetCurrencyName = accountCurrency?.name.orEmpty(),
         )
