@@ -438,11 +438,13 @@ abstract class ApplicationComponent :
         fun backupComponent(
             syncEngine: SyncEngine,
             backupClient: BackupClient,
+            oauthTokenProvider: OAuthTokenProvider,
             currentUserRepository: CurrentUserRepository,
         ): BackupComponent = BackupComponent.factory(
             object : BackupComponent.Dependencies {
                 override val syncEngine = syncEngine
                 override val backupClient = backupClient
+                override val oauthTokenProvider = oauthTokenProvider
                 override val currentUserRepository = currentUserRepository
                 override val backupCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             },

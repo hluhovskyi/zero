@@ -27,21 +27,13 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
         val lastSuccessAt: LocalDateTime? = null,
         val lastError: BackupError? = null,
-        val signInFeedback: SignInFeedback? = null,
-        val disconnectFeedback: DisconnectFeedback? = null,
+        val signInFeedback: BackupUseCase.SignInFeedback? = null,
+        val disconnectFeedback: BackupUseCase.DisconnectFeedback? = null,
         val confirmDialog: ConfirmDialog? = null,
         val wifiOnly: Boolean = true,
     )
 
-    sealed interface SignInFeedback {
-        object Cancelled : SignInFeedback
-        data class Failed(val error: BackupError) : SignInFeedback
-    }
-
-    sealed interface DisconnectFeedback {
-        object DeleteFailed : DisconnectFeedback
-    }
-
+    /** Pure-UI state for the disconnect confirm dialog; the connection lifecycle itself lives in [BackupUseCase]. */
     sealed interface ConfirmDialog {
         object Disconnect : ConfirmDialog
     }

@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.backup
 
-import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.OnBackHandler
@@ -33,8 +32,6 @@ abstract class BackupDetailComponent : AttachableViewComponent {
     interface Dependencies {
         val backupUseCase: BackupUseCase
         val backupScheduler: BackupScheduler
-        val backupClient: BackupClient
-        val oauthTokenProvider: OAuthTokenProvider
         val configurationRepository: ConfigurationRepository
         val dispatchers: DispatcherProvider
     }
@@ -65,8 +62,6 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         fun viewModel(
             backupUseCase: BackupUseCase,
             backupScheduler: BackupScheduler,
-            backupClient: BackupClient,
-            oauthTokenProvider: OAuthTokenProvider,
             configurationRepository: ConfigurationRepository,
             onBackHandler: OnBackHandler,
             onRestoreSelectedHandler: OnRestoreSelectedHandler,
@@ -74,8 +69,6 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
             backupScheduler = backupScheduler,
-            backupClient = backupClient,
-            oauthTokenProvider = oauthTokenProvider,
             configurationRepository = configurationRepository,
             onBackHandler = onBackHandler,
             onRestoreSelectedHandler = onRestoreSelectedHandler,
