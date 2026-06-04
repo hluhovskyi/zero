@@ -69,23 +69,14 @@ private val RowHeight = 40.dp
 private val SwipeEasing = CubicBezierEasing(0.34f, 0.1f, 0.2f, 1f)
 private const val SwipeDurationMs = 240
 
-/** Opacity drop for a face one full row away from the viewport centre (centre = 1f, neighbour = 0.3f). */
+/** Opacity drop one row from centre (centre = 1f, neighbour = 0.3f). */
 private const val NeighbourFade = 0.7f
 
 /**
- * Generic vertical swipe-to-select tile. Swipe up → next, swipe down → previous; bounces at the
- * edges. The caller owns the data and supplies the [current] / [previous] / [next] face slots plus
- * the commit callbacks — the rendered content is intentionally out of scope here. The 40dp viewport
- * clips a three-face spinner whose opacity tracks distance from centre, so the arriving value lands
- * crisp. The dropdown arrow is replaced by a [Icons.Filled.SwapVert] affordance in the top-right.
- *
- * On commit the just-selected neighbour is shown in the centre *optimistically* — the tile folds
- * back to the parent's value only once [currentKey] reports the new selection. That fold-back is
- * derived during composition, so it's atomic with the parent's (async) state update and never
- * flashes the previous value mid-swipe. Pass a stable [currentKey] (e.g. the selected id) to enable
- * it; without one the tile still works but can flicker on slow state updates.
- *
- * Reused for the transaction-edit Date, Account and Category tiles.
+ * Vertical swipe-to-select tile (slot core): swipe up → next, down → previous, bounces at the edges.
+ * Caller supplies the [current]/[previous]/[next] faces and commit callbacks. Pass a stable
+ * [currentKey] to enable optimistic commit; without it the tile can flicker on slow state updates.
+ * Use the list-backed overload for bounded selectors.
  */
 @Composable
 fun SwipeSelectTile(
@@ -107,13 +98,11 @@ fun SwipeSelectTile(
     val tapSlop = with(density) { 5.dp.toPx() }
     val animSpec = remember { tween<Float>(SwipeDurationMs, easing = SwipeEasing) }
 
-    // Visual offset of the spinner column, +down / -up. Written synchronously by drag and by the
-    // settle/commit animation, so there's no cross-scope race to freeze the tile mid-swipe.
+    // Spinner offset (+down / -up). Written synchronously, so no cross-scope race can freeze it.
     var offsetPx by remember { mutableFloatStateOf(0f) }
 
-    // Optimistic commit latch: while waiting for the parent to apply a committed selection, render
-    // its neighbour in the centre. `pending` clears the instant currentKey moves off the latched
-    // (pre-commit) key — the same composition that swaps in the parent's new value.
+    // Optimistic-commit latch: show the committed neighbour centre until the parent confirms via
+    // currentKey. The fold-back is derived below, so it's atomic with the async state update.
     var committedKey by remember { mutableStateOf<Any?>(null) }
     var committedDir by remember { mutableIntStateOf(0) }
     val pending = committedKey != null && currentKey == committedKey
@@ -141,8 +130,7 @@ fun SwipeSelectTile(
                     when (outcome) {
                         SwipeOutcome.Next -> {
                             animate(offsetPx, -rowPx, animationSpec = animSpec) { v, _ -> offsetPx = v }
-                            // shift=+1 @ offset 0 renders identically to shift=0 @ offset -rowPx
-                            // (next centred), so this swap is seamless; the parent catches up later.
+                            // shift+1 @ offset 0 == shift 0 @ -rowPx (next centred): a seamless swap.
                             Snapshot.withMutableSnapshot {
                                 committedDir = 1
                                 committedKey = currentKey
@@ -167,7 +155,7 @@ fun SwipeSelectTile(
         )
         .let { if (onClick != null) it.clickable { onClick() } else it }
 
-    // The three rendered slots, shifted by the optimistic latch so the committed value sits centre.
+    // Slots shifted by the latch so the committed value sits centre while the parent catches up.
     val topFace = when (shift) {
         1 -> current
         -1 -> null
@@ -219,8 +207,7 @@ fun SwipeSelectTile(
                 .clipToBounds(),
             contentAlignment = Alignment.Center,
         ) {
-            // A 3-row column whose middle face is centred at rest; the layout offset keeps the
-            // centre face in bounds (drawn + accessible) and slides it ±1 row during a swipe.
+            // 3-row column; the layout offset keeps the centre face in bounds (drawn + accessible).
             Column(
                 modifier = Modifier
                     .requiredHeight(RowHeight * 3)
@@ -235,10 +222,9 @@ fun SwipeSelectTile(
 }
 
 /**
- * List-backed [SwipeSelectTile]: owns the cursor over a bounded [items] list — derives the selected
- * index, edge flags, neighbour faces and commit [key] — so a caller supplies only a [face] per item
- * and an [onSelect]. Swiping walks the list and bounces at the ends. Use the slot overload instead
- * for an unbounded sequence (e.g. dates). [placeholder] renders when [selected] is `null`.
+ * List-backed [SwipeSelectTile]: owns the cursor over a bounded [items] list, so callers pass only a
+ * [face] and [onSelect]. [placeholder] shows when [selected] is null. Use the slot overload for
+ * unbounded sequences (e.g. dates).
  */
 @Composable
 fun <T> SwipeSelectTile(

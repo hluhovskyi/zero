@@ -37,11 +37,8 @@ private const val QUICK_CHIP_COUNT = 6
 private val ChipShape = RoundedCornerShape(percent = 50)
 
 /**
- * Category selector for the transaction edit screen: a swipe-select tile (matches
- * Date/Account — swipe up/down to walk the category list, tap to open the full picker) and
- * — only as a first-time shortcut ([showShortcuts]) — a row of stateless quick chips for
- * frequent categories *other than* the current one. The tile is the single source of truth
- * for what's selected; the chips are one-tap switches that retire once the picker is used.
+ * Category selector: a swipe-select tile (swipe to walk categories, tap opens the picker) plus, as a
+ * first-time shortcut ([showShortcuts]), quick chips for frequent categories other than the current.
  */
 @Composable
 internal fun CategoryField(
