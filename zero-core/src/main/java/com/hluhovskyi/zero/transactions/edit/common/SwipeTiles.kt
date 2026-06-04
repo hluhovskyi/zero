@@ -29,9 +29,9 @@ private val DateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy")
 private fun TileFace(text: String) {
     Text(
         text = text,
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         fontWeight = FontWeight.Bold,
-        color = ZeroTheme.colors.primaryContainer,
+        color = ZeroTheme.colors.primary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
