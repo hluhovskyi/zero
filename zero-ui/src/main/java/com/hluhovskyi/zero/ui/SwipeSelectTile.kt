@@ -67,10 +67,10 @@ internal fun resolveSwipe(
 
 private val RowHeight = 40.dp
 private val SwipeEasing = CubicBezierEasing(0.34f, 0.1f, 0.2f, 1f)
-private const val SwipeDurationMs = 240
+private const val SWIPE_DURATION_MS = 240
 
 /** Opacity drop one row from centre (centre = 1f, neighbour = 0.3f). */
-private const val NeighbourFade = 0.7f
+private const val NEIGHBOUR_FADE = 0.7f
 
 /**
  * Vertical swipe-to-select tile (slot core): swipe up → next, down → previous, bounces at the edges.
@@ -96,7 +96,7 @@ fun SwipeSelectTile(
     val rowPx = with(density) { RowHeight.toPx() }
     val commitThreshold = with(density) { 14.dp.toPx() }
     val tapSlop = with(density) { 5.dp.toPx() }
-    val animSpec = remember { tween<Float>(SwipeDurationMs, easing = SwipeEasing) }
+    val animSpec = remember { tween<Float>(SWIPE_DURATION_MS, easing = SwipeEasing) }
 
     // Spinner offset (+down / -up). Written synchronously, so no cross-scope race can freeze it.
     var offsetPx by remember { mutableFloatStateOf(0f) }
@@ -268,7 +268,7 @@ private fun SwipeFace(
             .graphicsLayer {
                 // Distance of this face's centre from the viewport centre, in rows.
                 val rowsFromCentre = (abs(offsetPx() + slot * rowPx) / rowPx).coerceIn(0f, 1f)
-                alpha = 1f - NeighbourFade * rowsFromCentre
+                alpha = 1f - NEIGHBOUR_FADE * rowsFromCentre
             },
         contentAlignment = Alignment.CenterStart,
     ) { content() }
