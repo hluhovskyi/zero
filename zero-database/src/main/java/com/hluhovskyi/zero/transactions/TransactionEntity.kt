@@ -10,7 +10,9 @@ import com.hluhovskyi.zero.common.RateEntity
 import kotlinx.datetime.LocalDateTime
 
 @Entity(
-    indices = [Index("userId")],
+    // Composite index serves both userId-only lookups (leftmost prefix) and the
+    // (userId, enteredDateTime DESC) window scan used by selectWindow.
+    indices = [Index("userId", "enteredDateTime")],
 )
 internal data class TransactionEntity(
     @PrimaryKey val id: Id.Known,
