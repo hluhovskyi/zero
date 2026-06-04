@@ -30,6 +30,13 @@ interface DatabaseTestBridge {
     suspend fun seedExpenses()
 
     /**
+     * Inserts a single historical-dated ($137) expense, simulating an imported row landing while
+     * the Transactions screen is already attached. Call after [seedExpenses]. Regression guard for
+     * "imported transactions don't appear until the screen is recreated".
+     */
+    suspend fun seedHistoricalExpense()
+
+    /**
      * Seeds two accounts in different currencies — "Wallet" (USD) and "Revolut" (EUR) — plus a
      * bootstrap expense so the app lands on Transactions, not Welcome. Used by the FX e2e tests to
      * reach the foreign-currency conversion UI (expense currency ≠ account, and cross-currency

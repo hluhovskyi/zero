@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
@@ -64,31 +63,6 @@ class RoomTransactionRepositoryPaginationTest {
         updatedDateTime = dateTime,
     )
 
-    // --- Criteria.After ---
-
-    @Test
-    fun `Criteria_After emits transactions newer than given datetime`() = runTest {
-        val roomFlow = MutableSharedFlow<List<TransactionEntity>>(replay = 1)
-        whenever(transactionRoom.selectAfter("user1", jan15h08.toString()))
-            .thenReturn(roomFlow)
-
-        val results = mutableListOf<List<TransactionRepository.Transaction>>()
-        val job = launch {
-            repo.query(TransactionRepository.Criteria.After(jan15h08)).collect { results.add(it) }
-        }
-
-        roomFlow.emit(listOf(expenseEntity("t1", jan15h10)))
-        advanceUntilIdle()
-        assertEquals(listOf("t1"), results.last().map { it.id.value })
-
-        // Simulate new insert — Room re-emits
-        roomFlow.emit(listOf(expenseEntity("t2", LocalDateTime(2024, 1, 15, 11, 0)), expenseEntity("t1", jan15h10)))
-        advanceUntilIdle()
-        assertEquals(listOf("t2", "t1"), results.last().map { it.id.value })
-
-        job.cancel()
-    }
-
     // --- Criteria.All without trigger (one-shot fetch-all) ---
 
     @Test
@@ -101,31 +75,25 @@ class RoomTransactionRepositoryPaginationTest {
         assertEquals(listOf("t1", "t2"), result.map { it.id.value })
     }
 
-    // --- Criteria.All with trigger ---
+    // --- Criteria.All with trigger (reactive window) ---
 
     @Test
-    fun `Criteria_All initial page is padded to complete the last day`() = runTest {
-        whenever(transactionRoom.selectFirstPage("user1", 100))
-            .thenReturn(listOf(expenseEntity("t1", jan15h10)))
-        whenever(transactionRoom.selectRemainingOnDay("user1", "2024-01-15", jan15h10.toString()))
-            .thenReturn(listOf(expenseEntity("t2", jan15h08)))
+    fun `Criteria_All with trigger emits the first window`() = runTest {
+        whenever(transactionRoom.selectWindow("user1", 100))
+            .thenReturn(flowOf(listOf(expenseEntity("t1", jan15h10), expenseEntity("t2", jan15h08))))
 
-        // Pass an explicit trigger so we stay on the paginated path; a trigger-less
-        // Criteria.All() routes to selectAllAlive (covered by a separate test below).
         val result = repo.query(TransactionRepository.Criteria.All(), MutableSharedFlow<Unit>()).first()
 
         assertEquals(listOf("t1", "t2"), result.map { it.id.value })
     }
 
     @Test
-    fun `Criteria_All trigger loads next cursor page appended to first`() = runTest {
+    fun `Criteria_All trigger grows the window by one page`() = runTest {
         val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-        whenever(transactionRoom.selectFirstPage("user1", 100))
-            .thenReturn(listOf(expenseEntity("t1", jan15h10)))
-        whenever(transactionRoom.selectRemainingOnDay(any(), any(), any()))
-            .thenReturn(emptyList())
-        whenever(transactionRoom.selectNextPage("user1", "2024-01-15", 100))
-            .thenReturn(listOf(expenseEntity("t2", jan14h18)))
+        whenever(transactionRoom.selectWindow("user1", 100))
+            .thenReturn(flowOf(listOf(expenseEntity("t1", jan15h10))))
+        whenever(transactionRoom.selectWindow("user1", 200))
+            .thenReturn(flowOf(listOf(expenseEntity("t1", jan15h10), expenseEntity("t2", jan14h18))))
 
         val results = mutableListOf<List<TransactionRepository.Transaction>>()
         val job = launch {
@@ -135,9 +103,33 @@ class RoomTransactionRepositoryPaginationTest {
         advanceUntilIdle()
         assertEquals(listOf("t1"), results.last().map { it.id.value })
 
-        trigger.emit(Unit)
+        trigger.emit(Unit) // load more -> window 100 -> 200
         advanceUntilIdle()
         assertEquals(listOf("t1", "t2"), results.last().map { it.id.value })
+
+        job.cancel()
+    }
+
+    @Test
+    fun `Criteria_All window re-emits live when the table changes`() = runTest {
+        // selectWindow is a reactive Room query: Room re-emits on every write to the table,
+        // including an import landing historical-dated rows. No trigger / load-more involved.
+        val window = MutableSharedFlow<List<TransactionEntity>>(replay = 1)
+        whenever(transactionRoom.selectWindow("user1", 100)).thenReturn(window)
+
+        val results = mutableListOf<List<TransactionRepository.Transaction>>()
+        val job = launch {
+            repo.query(TransactionRepository.Criteria.All(), MutableSharedFlow<Unit>()).collect { results.add(it) }
+        }
+
+        window.emit(listOf(expenseEntity("t1", jan15h10)))
+        advanceUntilIdle()
+        assertEquals(listOf("t1"), results.last().map { it.id.value })
+
+        // An import writes rows -> Room re-runs selectWindow and re-emits, with no scroll.
+        window.emit(listOf(expenseEntity("t1", jan15h10), expenseEntity("imported", jan14h18)))
+        advanceUntilIdle()
+        assertEquals(listOf("t1", "imported"), results.last().map { it.id.value })
 
         job.cancel()
     }
