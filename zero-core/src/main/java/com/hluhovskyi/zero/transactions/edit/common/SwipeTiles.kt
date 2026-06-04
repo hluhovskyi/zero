@@ -1,8 +1,16 @@
 package com.hluhovskyi.zero.transactions.edit.common
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +37,8 @@ private fun TileFace(text: String) {
     )
 }
 
-/** Account tile: swipe up/down to walk the [accounts] list, bouncing at the edges. */
+/** Account tile: swipe up/down to walk the [accounts] list (bounces at the edges); tap opens a
+ * dropdown to jump straight to any account. */
 @Composable
 internal fun AccountSwipeTile(
     modifier: Modifier,
@@ -38,14 +47,29 @@ internal fun AccountSwipeTile(
     selected: TransactionEditAccount?,
     onSelect: (TransactionEditAccount) -> Unit,
 ) {
-    SwipeSelectTile(
-        modifier = modifier,
-        label = label,
-        items = accounts,
-        selected = selected,
-        onSelect = onSelect,
-        key = { it.id },
-    ) { account -> TileFace(account.name) }
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        SwipeSelectTile(
+            modifier = Modifier.fillMaxWidth(),
+            label = label,
+            items = accounts,
+            selected = selected,
+            onSelect = onSelect,
+            onClick = { expanded = true },
+            key = { it.id },
+        ) { account -> TileFace(account.name) }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            accounts.forEach { account ->
+                DropdownMenuItem(
+                    text = { Text(account.name) },
+                    onClick = {
+                        onSelect(account)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
 }
 
 /** Date tile: swipe ±1 day (unbounded); tap opens the calendar for any other date. */
