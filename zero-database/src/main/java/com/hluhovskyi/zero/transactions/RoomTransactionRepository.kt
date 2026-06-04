@@ -9,13 +9,12 @@ import com.hluhovskyi.zero.common.RateEntity
 import com.hluhovskyi.zero.common.coroutines.uncheckedCast
 import com.hluhovskyi.zero.common.requireCurrentUserId
 import com.hluhovskyi.zero.common.time.ZonedClock
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
 
 internal class RoomTransactionRepository(
@@ -24,11 +23,6 @@ internal class RoomTransactionRepository(
     private val incorrectStateDetector: IncorrectStateDetector,
     private val zonedClock: ZonedClock,
 ) : TransactionRepository {
-
-    private val deletionEvents = MutableSharedFlow<Id.Known>(
-        extraBufferCapacity = 10,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
 
     override fun <T> query(
         criteria: TransactionRepository.Criteria<T>,
@@ -45,9 +39,6 @@ internal class RoomTransactionRepository(
 
                 is TransactionRepository.Criteria.HasAny -> transactionRoom()
                     .selectHasAny(userId.value)
-                is TransactionRepository.Criteria.After -> transactionRoom()
-                    .selectAfter(userId.value, criteria.dateTime.toString())
-                    .map { entities -> entities.mapNotNull { it.toRepository() } }
 
                 is TransactionRepository.Criteria.ById ->
                     flow<TransactionRepository.Transaction> {
@@ -167,53 +158,19 @@ internal class RoomTransactionRepository(
         }
         .uncheckedCast()
 
-    private sealed interface PageEvent {
-        data object LoadMore : PageEvent
-        data class Delete(val id: Id.Known) : PageEvent
-    }
-
+    // Reactive paginated window: `trigger` grows the loaded depth by PAGE_SIZE per emission
+    // (scan seeds the first page before any trigger fires), and flatMapLatest re-subscribes
+    // selectWindow at the new size. Room keeps the active window live, so inserts/edits/deletes —
+    // including imports written through the sync sink with historical timestamps — surface
+    // without any hand-rolled accumulation, merge, or re-fetch.
     private fun paginatedFlow(
         userId: Id.Known,
         trigger: Flow<*>,
-    ): Flow<List<TransactionRepository.Transaction>> = flow {
-        val accumulated = mutableListOf<TransactionEntity>()
-
-        val firstPage = transactionRoom().selectFirstPage(userId.value, PAGE_SIZE)
-        accumulated.addAll(firstPage + loadDayPadding(userId, firstPage))
-        emit(accumulated.mapNotNull { it.toRepository() })
-
-        merge(
-            trigger.map { PageEvent.LoadMore as PageEvent },
-            deletionEvents.map { PageEvent.Delete(it) },
-        ).collect { event ->
-            when (event) {
-                PageEvent.LoadMore -> {
-                    val oldest = accumulated.lastOrNull() ?: return@collect
-                    val cursorDate = oldest.enteredDateTime.date.toString()
-                    val nextPage = transactionRoom().selectNextPage(userId.value, cursorDate, PAGE_SIZE)
-                    if (nextPage.isEmpty()) return@collect
-                    accumulated.addAll(nextPage + loadDayPadding(userId, nextPage))
-                    emit(accumulated.mapNotNull { it.toRepository() })
-                }
-                is PageEvent.Delete -> {
-                    accumulated.removeAll { it.id == event.id }
-                    emit(accumulated.mapNotNull { it.toRepository() })
-                }
-            }
-        }
-    }
-
-    private suspend fun loadDayPadding(
-        userId: Id.Known,
-        page: List<TransactionEntity>,
-    ): List<TransactionEntity> {
-        val oldest = page.lastOrNull() ?: return emptyList()
-        return transactionRoom().selectRemainingOnDay(
-            userId = userId.value,
-            day = oldest.enteredDateTime.date.toString(),
-            beforeDateTime = oldest.enteredDateTime.toString(),
-        )
-    }
+    ): Flow<List<TransactionRepository.Transaction>> = trigger
+        .map { Unit }
+        .scan(PAGE_SIZE) { size, _ -> size + PAGE_SIZE }
+        .flatMapLatest { size -> transactionRoom().selectWindow(userId.value, size) }
+        .map { entities -> entities.mapNotNull { it.toRepository() } }
 
     override suspend fun insert(transaction: TransactionRepository.Transaction) {
         incorrectStateDetector.requireCurrentUserId(currentUserId) { userId ->
@@ -237,7 +194,8 @@ internal class RoomTransactionRepository(
                 updatedDateTime = now,
             )
         }
-        deletionEvents.emit(id)
+        // No manual signal needed: softDelete writes the table, so the live selectWindow
+        // re-emits with the row filtered out (and backfills the freed slot).
     }
 
     private fun TransactionEntity.toRepository(): TransactionRepository.Transaction? {
