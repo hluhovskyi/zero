@@ -99,6 +99,11 @@ Polls every 15 s; exits 0 on pass, 1 on fail. Report failure if CI fails — the
 
 **If `is_worktree`:** run all git commands with `-C <main_repo_path>`.
 
+0. Release this worktree's emulator — do this **before** removing the worktree, while `.emulator-serial` is still readable:
+   ```bash
+   ./scripts/emulator/release --kill
+   ```
+   Kills only this worktree's emulator; a no-op if the Step 2 e2e check never acquired one. The host is CPU-bound, so don't leave the merge's emulator running.
 1. Remove the worktree (can't checkout master in a worktree when master is already in the main repo):
    ```bash
    git -C <main_repo_path> worktree remove <worktree_path> --force

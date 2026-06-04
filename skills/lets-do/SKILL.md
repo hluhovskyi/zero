@@ -129,6 +129,17 @@ is not validation.
 documentation, CI config, or build scripts with no runtime behaviour change. When in doubt,
 run it anyway.
 
+### Architecture review (structural changes only)
+
+When the change introduces or reshapes an **abstraction** — a new interface/sealed type, a DI
+component or binding, a module boundary, a new UseCase/Handler, or a flag threaded through
+several call sites — invoke `zero-project:pr-architecture-review` on the branch diff before
+flipping the PR. It checks conformance to the house patterns and flags structural smells
+(sentinel params, boolean-as-type, duplicated decisions, conflated responsibilities).
+
+Findings are **advisory** — fold the clear wins into the branch, note the rest in the PR body.
+Skip this for changes with no new abstraction (a copy tweak, a one-line fix, a pure UI layout).
+
 ## Step 6 — Mark PR ready
 
 The draft PR from Step 3 already exists. Verify the tree is clean, update title + body to
@@ -150,3 +161,15 @@ gh pr ready
 ```
 
 Don't report the task as done until the PR is ready-for-review.
+
+## Step 7 — Teardown
+
+Once the PR is ready, release the emulator so it doesn't keep a VM running —
+the host is CPU-bound, and idle emulators starve sibling sessions:
+
+```bash
+./scripts/emulator/release --kill
+```
+
+Kills only this worktree's emulator (via `.emulator-serial`); a no-op if you
+never reached UI verification (Step 5) and nothing was claimed.

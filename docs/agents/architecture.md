@@ -46,3 +46,20 @@ Without `onStartWithEmptyList()`, `combine` waits for ALL flows to emit before p
 ## Reactive + Paginated Data
 
 Transaction list uses a hybrid approach: a reactive Room `Flow` (for new/updated items via `updatedDateTime`) combined with a one-shot paginated flow (for historical data). Merge logic explicitly compares `updatedDateTime` to pick the fresher version of duplicates.
+
+## Lint Enforcement
+
+Much of the above is machine-enforced by custom detectors in `lint-rules/src/main/kotlin/com/hluhovskyi/zero/lint/` — CI gates them, so they fail the build on their own (don't re-flag them in review):
+
+- **`StateCollectionDerivationDetector`, `ViewProviderDependencyDetector`** — no derivation or domain deps in a ViewProvider (the ViewModel UI Shape split).
+- **`DefaultImplVisibilityDetector`, `ViewProviderVisibilityDetector`** — `Default*` impls and `*ViewProvider` stay `internal`.
+- **`ScopedComponentBuilderDetector`** — a feature `@Component` carries its `@Scope` + `Buildable` builder.
+- **`HandlerFunInterfaceDetector`** — screen-to-screen callbacks are `fun interface OnXxxHandler`.
+- **`UnhandledCloseableDetector`, `UnhandledJobDetector`** — `attach()` Closeables/Jobs are retained, not dropped.
+- **`ZeroThemeBypassDetector`** — Compose colors come from `ZeroTheme.colors`, never a hardcoded hex.
+- **`HardcodedComposableStringDetector`, `UppercaseStringResourceDetector`** — user-facing text is a string resource.
+- **`RemoteComponentEncapsulationDetector`, `DatabaseComponentEncapsulationDetector`, `KmpReadinessDetector`** — module boundaries: pure-Kotlin modules stay Android-free; component internals stay encapsulated.
+- **`TestBridgeBoundaryDetector`, `TestBridgeProductionPurityDetector`** — the e2e test seam can't leak into production.
+- **`SealedSubtypeDuplicatePropertyDetector`** — shared properties belong on the sealed parent.
+
+What lint **can't** see — the structural, judgment-call smells (a sentinel param, a boolean that's really a subtype, a special-case branch, conflated responsibilities) — is what the [Architecture Review](architecture-review.md) pass is for.
