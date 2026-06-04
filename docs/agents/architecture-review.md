@@ -6,7 +6,7 @@ Findings are **advisory**, not blocking. Each finding names the symptom, the cau
 
 ## The method
 
-- **Symptom → missing abstraction.** A good finding collapses several symptoms into one cause: "the sentinel arg, the boolean, and the duplicated `when` are three faces of a missing `File`/`Remote` split." Listing symptoms is noise; naming the abstraction is signal.
+- **Symptom → missing abstraction.** A good finding collapses several symptoms into one cause: a sentinel arg, a boolean flag, and a duplicated `when` are often three faces of one absent subtype split. Listing symptoms is noise; naming the abstraction is signal.
 - **Read the module, not the line.** Most structural smells (a duplicated decision, a flag switched at three sites) span files the diff doesn't all touch. A diff-only read is half-blind — open the package(s) the change lives in.
 - **Conformance first, then smells.** Check the change follows the house patterns below; then scan for the smell signatures. A change can compile, pass review, and still erode the architecture.
 - **Cite, don't assert.** Quote the file:line that shows the symptom. No quote, no finding.
@@ -15,7 +15,7 @@ Findings are **advisory**, not blocking. Each finding names the symptom, the cau
 
 - **Feature triad: Component → ViewModel → ViewProvider (+ optional UseCase).** A new screen that skips one, or puts logic in the wrong member, is off-pattern. Handlers (`fun interface OnXxxHandler`) carry screen-to-screen calls.
 - **ViewModel is a thin projection — no derivation.** No `.filter`/`.sortedBy`/`.sumOf`/`map`/`if (raw.field != null)` in the ViewModel *or* ViewProvider. Pre-shape on the producer (sealed `Item` rows, computed `val` predicates/totals); the composable pattern-matches. Enforced by the `ViewProviderDerivation` lint — a finding here is a lint escape or a VM doing the derivation instead.
-- **Orchestration lives in a UseCase, not the ViewModel.** signIn → fetch → import → state transitions belong in a UseCase; the ViewModel collects its state and dispatches actions. A ViewModel that sequences I/O is misplaced logic.
+- **Orchestration lives in a UseCase, not the ViewModel.** A multi-step flow (load → transform → persist, with its state transitions) belongs in a UseCase; the ViewModel collects that state and dispatches actions. A ViewModel that sequences I/O is misplaced logic.
 - **Side effects start in `attach()`, never in a constructor/`init`.** Resolve runtime state, launch collectors, kick off work from `attach()` (one-shot guard if it can re-run). Construction must be inert.
 - **`@BindsInstance` for lightweight values only** — handler callbacks, `Id`s. Never repositories, domain objects, or formatters; those come through the `Dependencies` interface.
 - **`internal` for impls** — `DefaultXxxViewModel`, `DefaultXxxUseCase`, `XxxViewProvider`. A `public` impl is a leak (Android Lint catches most).
@@ -36,12 +36,12 @@ Findings are **advisory**, not blocking. Each finding names the symptom, the cau
 
 ## Smell signatures — flag these
 
-- **Sentinel / ignored parameter.** A param passed only to satisfy a signature (a magic `Uri("x://latest")` the callee ignores, an unused `context`). → The interface doesn't fit that implementer; it wants a different method/type.
-- **Boolean (or enum) that is really a type discriminator.** A flag that travels *with* a polymorphic object and gets `when`/`if`'d at several call sites (`requiresFile`, `isRemote`, `mode: String`). → Make it a subtype; the type then *is* the flag.
-- **Duplicated decision.** The same literal or condition decided in N places (`key == "drive"` in the UI config, the action, and the use case). → One owner; everyone else reads it.
-- **An abstraction one implementer fakes.** An impl that ignores a contract param, throws "not supported", or has a wildly different failure surface than its siblings (a pure decoder next to one that authenticates + networks). → Split the abstraction along the real seam.
-- **Wrong-layer ownership.** A domain fact decided in a Composable/View (a `when (source.key)` in UI), or business branching in `zero-ui`. → Push the decision down to where the data/domain lives.
-- **Special-case-as-branch.** A conceptually separate operation living as an early-return branch inside a general engine (a "restore" fast-path buried in an import-with-review use case). → If it has different semantics, it's a different use case over the same engine.
+- **Sentinel / ignored parameter.** A param passed only to satisfy a signature (a magic string the callee never reads, a `context` the implementation ignores). → The interface doesn't fit that implementer; it wants a different method/type.
+- **Boolean (or enum) that is really a type discriminator.** A flag that travels *with* a polymorphic object and gets `when`/`if`'d at several call sites (an `isRecurring` on a budget, a `mode: String` switched in three places). → Make it a subtype; the type then *is* the flag.
+- **Duplicated decision.** The same literal or condition decided in N places (a category's "is income" test repeated in the row, the total, and the filter). → One owner; everyone else reads it.
+- **An abstraction one implementer fakes.** An impl that ignores a contract param, throws "not supported", or has a wildly different failure surface than its siblings (an in-memory provider next to one that does I/O and can fail mid-stream). → Split the abstraction along the real seam.
+- **Wrong-layer ownership.** A domain fact decided in a Composable/View (a `when (account.type)` deciding amount sign in UI), or business branching in `zero-ui`. → Push the decision down to where the data/domain lives.
+- **Special-case-as-branch.** A conceptually separate operation living as an early-return branch inside a general engine (a one-off "clear all" fast-path buried in a per-row delete use case). → If it has different semantics, it's a different use case over the same engine.
 - **Conflated responsibilities in one unit.** A class named for one job (`Parser`, `Mapper`, `Formatter`, `Repository`) that also does I/O, auth, or holds mutable state. → Name reveals intent; the extra job wants its own unit.
 - **God interface / aggregate dependency.** One interface forcing unrelated consumers to depend on methods they don't use. → Split by consumer need.
 - **Downstream shim instead of a producer fix.** A new adapter/Mapper that reshapes a value for one consumer when the producer could emit the canonical shape for all. → Fix at the producer.
