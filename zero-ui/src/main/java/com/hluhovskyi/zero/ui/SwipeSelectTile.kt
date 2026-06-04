@@ -1,7 +1,7 @@
 package com.hluhovskyi.zero.ui
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,8 +25,15 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -37,6 +44,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -68,11 +76,16 @@ private const val NeighbourFade = 0.7f
  * Generic vertical swipe-to-select tile. Swipe up → next, swipe down → previous; bounces at the
  * edges. The caller owns the data and supplies the [current] / [previous] / [next] face slots plus
  * the commit callbacks — the rendered content is intentionally out of scope here. The 40dp viewport
- * clips a three-face spinner (neighbours at reduced opacity) that slides one row on commit. The
- * dropdown arrow is replaced by a [Icons.Filled.SwapVert] affordance in the top-right corner.
+ * clips a three-face spinner whose opacity tracks distance from centre, so the arriving value lands
+ * crisp. The dropdown arrow is replaced by a [Icons.Filled.SwapVert] affordance in the top-right.
  *
- * Reused for the transaction-edit Date and Account tiles; the callback shape also fits an unbounded
- * sequence (dates) and a future Category tile.
+ * On commit the just-selected neighbour is shown in the centre *optimistically* — the tile folds
+ * back to the parent's value only once [currentKey] reports the new selection. That fold-back is
+ * derived during composition, so it's atomic with the parent's (async) state update and never
+ * flashes the previous value mid-swipe. Pass a stable [currentKey] (e.g. the selected id) to enable
+ * it; without one the tile still works but can flicker on slow state updates.
+ *
+ * Reused for the transaction-edit Date, Account and Category tiles.
  */
 @Composable
 fun SwipeSelectTile(
@@ -83,6 +96,7 @@ fun SwipeSelectTile(
     canSelectPrevious: Boolean = true,
     canSelectNext: Boolean = true,
     onClick: (() -> Unit)? = null,
+    currentKey: Any? = null,
     previous: (@Composable () -> Unit)? = null,
     next: (@Composable () -> Unit)? = null,
     current: @Composable () -> Unit,
@@ -91,44 +105,84 @@ fun SwipeSelectTile(
     val rowPx = with(density) { RowHeight.toPx() }
     val commitThreshold = with(density) { 14.dp.toPx() }
     val tapSlop = with(density) { 5.dp.toPx() }
+    val animSpec = remember { tween<Float>(SwipeDurationMs, easing = SwipeEasing) }
+
+    // Visual offset of the spinner column, +down / -up. Written synchronously by drag and by the
+    // settle/commit animation, so there's no cross-scope race to freeze the tile mid-swipe.
+    var offsetPx by remember { mutableFloatStateOf(0f) }
+
+    // Optimistic commit latch: while waiting for the parent to apply a committed selection, render
+    // its neighbour in the centre. `pending` clears the instant currentKey moves off the latched
+    // (pre-commit) key — the same composition that swaps in the parent's new value.
+    var committedKey by remember { mutableStateOf<Any?>(null) }
+    var committedDir by remember { mutableIntStateOf(0) }
+    val pending = committedKey != null && currentKey == committedKey
+    val shift = if (pending) committedDir else 0
+    LaunchedEffect(currentKey) {
+        if (committedKey != null && currentKey != committedKey) committedKey = null
+    }
 
     val scope = rememberCoroutineScope()
-    val offset = remember { Animatable(0f) }
-    val animSpec = tween<Float>(SwipeDurationMs, easing = SwipeEasing)
+    var settleJob by remember { mutableStateOf<Job?>(null) }
 
     val draggableState = rememberDraggableState { delta ->
-        scope.launch { offset.snapTo((offset.value + delta).coerceIn(-rowPx, rowPx)) }
+        offsetPx = (offsetPx + delta).coerceIn(-rowPx, rowPx)
     }
 
     val gesture = Modifier
         .draggable(
             state = draggableState,
             orientation = Orientation.Vertical,
+            onDragStarted = { settleJob?.cancel() },
             onDragStopped = {
                 val outcome =
-                    resolveSwipe(offset.value, commitThreshold, tapSlop, canSelectPrevious, canSelectNext)
-                // Settle on the SAME scope the per-delta snapTo()s use. draggable's onDragStopped
-                // runs on its own internal scope, so a settle animation started there can be
-                // cancelled by the final queued snapTo() landing afterwards — freezing the tile
-                // mid-swipe. Launching here keeps it FIFO-ordered after the drag updates.
-                scope.launch {
+                    resolveSwipe(offsetPx, commitThreshold, tapSlop, canSelectPrevious, canSelectNext)
+                settleJob = scope.launch {
                     when (outcome) {
                         SwipeOutcome.Next -> {
-                            offset.animateTo(-rowPx, animSpec)
+                            animate(offsetPx, -rowPx, animationSpec = animSpec) { v, _ -> offsetPx = v }
+                            // shift=+1 @ offset 0 renders identically to shift=0 @ offset -rowPx
+                            // (next centred), so this swap is seamless; the parent catches up later.
+                            Snapshot.withMutableSnapshot {
+                                committedDir = 1
+                                committedKey = currentKey
+                                offsetPx = 0f
+                            }
                             onSelectNext()
-                            offset.snapTo(0f)
                         }
                         SwipeOutcome.Previous -> {
-                            offset.animateTo(rowPx, animSpec)
+                            animate(offsetPx, rowPx, animationSpec = animSpec) { v, _ -> offsetPx = v }
+                            Snapshot.withMutableSnapshot {
+                                committedDir = -1
+                                committedKey = currentKey
+                                offsetPx = 0f
+                            }
                             onSelectPrevious()
-                            offset.snapTo(0f)
                         }
-                        SwipeOutcome.Tap, SwipeOutcome.None -> offset.animateTo(0f, animSpec)
+                        SwipeOutcome.Tap, SwipeOutcome.None ->
+                            animate(offsetPx, 0f, animationSpec = animSpec) { v, _ -> offsetPx = v }
                     }
                 }
             },
         )
         .let { if (onClick != null) it.clickable { onClick() } else it }
+
+    // The three rendered slots, shifted by the optimistic latch so the committed value sits centre.
+    val topFace = when (shift) {
+        1 -> current
+        -1 -> null
+        else -> previous
+    }
+    val centerFace = when (shift) {
+        1 -> next ?: current
+        -1 -> previous ?: current
+        else -> current
+    }
+    val bottomFace = when (shift) {
+        1 -> null
+        -1 -> current
+        else -> next
+    }
 
     Column(
         modifier = modifier
@@ -165,21 +219,16 @@ fun SwipeSelectTile(
                 .clipToBounds(),
             contentAlignment = Alignment.Center,
         ) {
-            // A 3-row column (previous / current / next). Center alignment parks the middle
-            // (current) face in the viewport at rest; the layout offset (not a draw shift) keeps
-            // the current face in bounds so it renders and stays in the accessibility tree. Drag
-            // moves it ±1 row to reveal a neighbour before the commit animation lands.
+            // A 3-row column whose middle face is centred at rest; the layout offset keeps the
+            // centre face in bounds (drawn + accessible) and slides it ±1 row during a swipe.
             Column(
                 modifier = Modifier
                     .requiredHeight(RowHeight * 3)
-                    .offset { IntOffset(0, offset.value.roundToInt()) },
+                    .offset { IntOffset(0, offsetPx.roundToInt()) },
             ) {
-                // Opacity tracks distance from the viewport centre, so a face brightens to full as
-                // it slides in and the committed value is already crisp when it lands — no grey
-                // lingering through the slide. slot ∈ {-1, 0, 1} = previous / current / next.
-                SwipeFace(slot = -1, offsetPx = { offset.value }, rowPx = rowPx) { previous?.invoke() }
-                SwipeFace(slot = 0, offsetPx = { offset.value }, rowPx = rowPx) { current() }
-                SwipeFace(slot = 1, offsetPx = { offset.value }, rowPx = rowPx) { next?.invoke() }
+                SwipeFace(slot = -1, offsetPx = { offsetPx }, rowPx = rowPx) { topFace?.invoke() }
+                SwipeFace(slot = 0, offsetPx = { offsetPx }, rowPx = rowPx) { centerFace() }
+                SwipeFace(slot = 1, offsetPx = { offsetPx }, rowPx = rowPx) { bottomFace?.invoke() }
             }
         }
     }

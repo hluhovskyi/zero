@@ -44,6 +44,7 @@ internal fun AccountSwipeTile(
         label = label,
         canSelectPrevious = index > 0,
         canSelectNext = index in 0 until accounts.lastIndex,
+        currentKey = selected?.id,
         onSelectPrevious = { onSelect(accounts[index - 1]) },
         onSelectNext = { onSelect(accounts[index + 1]) },
         previous = accounts.getOrNull(index - 1)?.let { acc -> { TileFace(acc.name) } },
@@ -74,6 +75,7 @@ internal fun DateSwipeTile(
     SwipeSelectTile(
         modifier = modifier,
         label = label,
+        currentKey = date,
         onSelectPrevious = { onDateSelected(shift(-1)) },
         onSelectNext = { onDateSelected(shift(1)) },
         onClick = {

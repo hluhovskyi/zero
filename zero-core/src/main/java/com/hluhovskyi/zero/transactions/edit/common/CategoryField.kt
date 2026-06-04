@@ -94,6 +94,7 @@ private fun CategorySwipeTile(
         label = stringResource(R.string.transaction_edit_category_label),
         canSelectPrevious = index > 0,
         canSelectNext = index in 0 until categories.lastIndex,
+        currentKey = selectedCategory?.id,
         onSelectPrevious = { onCategorySelected(categories[index - 1]) },
         onSelectNext = { onCategorySelected(categories[index + 1]) },
         onClick = onOpenPicker,
