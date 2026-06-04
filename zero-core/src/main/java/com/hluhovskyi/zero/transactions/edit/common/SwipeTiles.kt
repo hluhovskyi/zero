@@ -82,10 +82,9 @@ internal fun DateSwipeTile(
 ) {
     val context = LocalContext.current
 
-    fun shift(days: Long): LocalDateTime =
-        date.toJavaLocalDateTime().toLocalDate().plusDays(days).let {
-            LocalDateTime(it.year, it.monthValue, it.dayOfMonth, 0, 0, 0)
-        }
+    fun shift(days: Long): LocalDateTime = date.toJavaLocalDateTime().toLocalDate().plusDays(days).let {
+        LocalDateTime(it.year, it.monthValue, it.dayOfMonth, 0, 0, 0)
+    }
 
     fun face(value: LocalDateTime): @Composable () -> Unit = {
         TileFace(value.toJavaLocalDateTime().format(DateFormat))

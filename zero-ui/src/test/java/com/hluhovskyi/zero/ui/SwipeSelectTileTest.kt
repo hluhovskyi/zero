@@ -5,14 +5,13 @@ import org.junit.Test
 
 class SwipeSelectTileTest {
 
-    private fun resolve(dy: Float, canPrev: Boolean = true, canNext: Boolean = true) =
-        resolveSwipe(
-            totalDy = dy,
-            commitThreshold = 20f,
-            tapSlop = 6f,
-            canSelectPrevious = canPrev,
-            canSelectNext = canNext,
-        )
+    private fun resolve(dy: Float, canPrev: Boolean = true, canNext: Boolean = true) = resolveSwipe(
+        totalDy = dy,
+        commitThreshold = 20f,
+        tapSlop = 6f,
+        canSelectPrevious = canPrev,
+        canSelectNext = canNext,
+    )
 
     @Test
     fun `swipe up past threshold selects next`() {
