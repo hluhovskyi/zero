@@ -161,3 +161,15 @@ gh pr ready
 ```
 
 Don't report the task as done until the PR is ready-for-review.
+
+## Step 7 — Teardown
+
+Once the PR is ready, release the emulator so it doesn't keep a VM running —
+the host is CPU-bound, and idle emulators starve sibling sessions:
+
+```bash
+./scripts/emulator/release --kill
+```
+
+Kills only this worktree's emulator (via `.emulator-serial`); a no-op if you
+never reached UI verification (Step 5) and nothing was claimed.

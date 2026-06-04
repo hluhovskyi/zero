@@ -70,3 +70,9 @@ Use this skill **before committing any UI change** — not only when something l
    > **Do not use `adb exec-out screencap -p > /tmp/screen.png`** — it triggers permission prompts on this device.
 
 6. **Verify Fixes:** After applying UI or navigation fixes, rebuild, navigate back to the screen, and re-run the dump and `verify-screen.sh` to confirm. **Anti-Hallucination Rule:** When verifying any state change (focus, visibility, bounds, active screen), copy-paste the raw evidence from the dump before claiming success — never summarize without quoting it.
+
+7. **Teardown (standalone use only):** When you're done inspecting for this task — and only if you invoked this skill on its own, not as the verification sub-step of `/lets-do`, `/agent-do`, or `/agent-pr-verify` (which own their own teardown) — release the emulator so it doesn't keep a VM running. The host is CPU-bound; idle emulators starve sibling sessions.
+   ```bash
+   ./scripts/emulator/release --kill
+   ```
+   Kills only this worktree's emulator (via `.emulator-serial`); a no-op if nothing's claimed. Run it when the on-device work is finished, not between dump iterations.
