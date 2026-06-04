@@ -24,13 +24,16 @@ import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,6 +70,7 @@ private fun BackupDetailScreen(viewModel: BackupDetailViewModel) {
 
     val cancelledMessage = stringResource(R.string.backup_sign_in_cancelled)
     val failedMessage = stringResource(R.string.backup_sign_in_failed)
+    val deleteFailedMessage = stringResource(R.string.backup_disconnect_delete_failed)
 
     LaunchedEffect(state.signInFeedback) {
         when (state.signInFeedback) {
@@ -82,6 +86,20 @@ private fun BackupDetailScreen(viewModel: BackupDetailViewModel) {
         }
     }
 
+    LaunchedEffect(state.disconnectFeedback) {
+        when (state.disconnectFeedback) {
+            BackupDetailViewModel.DisconnectFeedback.DeleteFailed -> {
+                snackbarHostState.showSnackbar(deleteFailedMessage)
+                viewModel.perform(BackupDetailViewModel.Action.DisconnectFeedbackShown)
+            }
+            null -> Unit
+        }
+    }
+
+    if (state.confirmDialog == BackupDetailViewModel.ConfirmDialog.Disconnect) {
+        DisconnectConfirmDialog(onAction = viewModel::perform)
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = ZeroTheme.colors.surface,
@@ -92,6 +110,28 @@ private fun BackupDetailScreen(viewModel: BackupDetailViewModel) {
             onAction = viewModel::perform,
         )
     }
+}
+
+@Composable
+private fun DisconnectConfirmDialog(onAction: (BackupDetailViewModel.Action) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onAction(BackupDetailViewModel.Action.DisconnectDismiss) },
+        title = { Text(text = stringResource(R.string.backup_disconnect_title)) },
+        text = { Text(text = stringResource(R.string.backup_disconnect_body)) },
+        confirmButton = {
+            TextButton(onClick = { onAction(BackupDetailViewModel.Action.DisconnectConfirmed(deleteRemote = true)) }) {
+                Text(
+                    text = stringResource(R.string.backup_disconnect_delete),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onAction(BackupDetailViewModel.Action.DisconnectConfirmed(deleteRemote = false)) }) {
+                Text(text = stringResource(R.string.backup_disconnect_keep))
+            }
+        },
+    )
 }
 
 @Composable
