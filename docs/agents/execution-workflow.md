@@ -6,6 +6,10 @@ Plans are saved to `docs/superpowers/plans/` and serve as the contract between s
 
 **Fetch and read the design file before writing any layout code.** Text descriptions are ambiguous — "grid", "cards", "list" mean different things in different contexts. If a design URL or file is not provided, ask for it before starting implementation. Never infer column count, spacing, or component structure from prose alone.
 
+**Before building a helper component named in a `.jsx` design file, grep the parent screen for its instantiation (`<ComponentName`).** Designers leave earlier iterations as dead `const ComponentName = …` definitions that are never rendered — the design file (what the parent actually renders), not the plan, is authoritative. Building one cost ~900 LOC of component + destination + handler plumbing that had to be removed.
+
+**Don't put a destructive action behind a hidden long-press.** A gesture with no visual hint that jumps straight to delete/remove is undiscoverable — surface it where the user already manages the item (e.g. the edit sheet that opens on tap) as a visible affordance, keep the confirm step. Raise this even when a plan or design specifies long-press.
+
 ## UI Verification — Mandatory Loop
 
 **After every UI change, verify before claiming it works.** No exceptions.

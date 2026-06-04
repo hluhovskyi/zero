@@ -11,6 +11,12 @@ How the abuse-protected feedback pipe is wired. Phase 1 of [issue #81](https://g
 
 Operational. Existing CD (`.github/workflows/cd.yml`) uploads release builds to the Play **Internal Testing** track. Do not promote to Production while abuse risk is unmitigated. The on-device Play Integrity check (below) means a leaked AAB cannot mint valid tokens, so the cloud function rejects sideloaded copies.
 
+## Secret vs default
+
+**A value that ships in the AAB — endpoints, project numbers, package names, public IDs, the Sentry DSN — is a *default*, not a secret.** Anyone can extract it from the APK, so the right shape is a hardcoded value with an optional `System.getenv() ?: localProps[...] ?: "<default>"` override. Reserve secret infrastructure (Secret Manager, `gh secret`) for things that grant a capability the binary alone doesn't: signing keys, OAuth client secrets, PATs, service-account JSON. "Some doc calls it a secret" doesn't make it one.
+
+**Never restate a moved-out value in a public artifact.** Once a value lives in GitHub Variables/Secrets/env, don't paste it back into PR descriptions, commit messages, or public docs (this repo is public) — describe the *mechanism* (`referenced as ${{ vars.FOO }}`), not the value. "It's not a cryptographic secret" doesn't license displaying it; the goal is public-surface hygiene.
+
 ## Secrets matrix
 
 | Where | `FEEDBACK_ENDPOINT` | `FEEDBACK_INTEGRITY_PROJECT` | Other |

@@ -7,6 +7,10 @@
 - `DarkZeroColors` holds the tuned dark palette. Status bar dark mode comes from `app/src/main/res/values-night/themes.xml` (Android resource qualifier, not Compose).
 - Function-signature defaults can read `ZeroTheme.colors.*` only inside `@Composable` functions. For non-composable defaults (e.g. a `DrawScope` lambda), hoist the read to the call site and pass the resolved `Color` in.
 
+## The Material 2 island
+
+- **One M2 island remains by design** — the bottom-sheet navigator (`androidx.compose.material:material-navigation`; no M3 equivalent exists) in `MainActivityViewProvider` / `MainActivityScreenViewProvider`. **An M2 component left on screen reads M2-theme *defaults* for any color you don't set explicitly** (no M2 theme wraps the tree anymore), so pin every color on it — e.g. the M2-island `Scaffold` needs `backgroundColor = ZeroTheme.colors.surface`, or list-item cards paint over the M2 default white and vanish.
+
 ## Entity `ColorScheme` (domain palette)
 
 - `ColorScheme(swatch: Color, primary: Color, background: Color)` — three domain `Color` values, each with `id` and `value: ColorValue`:

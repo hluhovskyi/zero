@@ -16,7 +16,7 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 
 - **Feature packages**: `transactions/`, `accounts/`, `categories/`, `settings/`, `imports/`, `currencies/`, `colors/`, `icons/`
 - **Each feature package** contains: Component, ViewModel (interface + Default), ViewProvider, optional UseCase, Handler interfaces
-- **Edit sub-packages** (e.g., `transactions/edit/`): Separate components for create/edit flows
+- **Edit sub-packages** (e.g., `transactions/edit/`): Separate components for create/edit flows. Trap: `TransactionEditMapping` auto-selects the first ranked category, so `form.selectedCategory` is **never null** — gate any "no choice made yet" UI on an explicit chosen-by-user flag, not on `selectedCategory == null`.
 - **Preview sub-packages** (e.g., `transactions/preview/`): Read-only detail views
 
 ## Naming Conventions
