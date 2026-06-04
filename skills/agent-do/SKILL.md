@@ -83,11 +83,17 @@ that the fix actually works on a running emulator:
    the issue body asked for, citing resource IDs / class names from the inspector dump.
 
 If verification confirms the bug is gone → embed the screenshot path + verdict in
-the PR body's Verification section (Step 5). Then release the emulator.
+the PR body's Verification section (Step 5). Then tear down the emulator:
+`./scripts/emulator/release --kill`.
 
-If verification shows the bug is still present → do NOT open a PR. Exit non-zero
+If verification shows the bug is still present → tear down the emulator
+(`./scripts/emulator/release --kill`), then do NOT open a PR. Exit non-zero
 so the watcher labels the issue `agent-blocked`. A failed verify means the fix
 didn't actually work; opening a PR would waste the reviewer's time.
+
+`release --kill` ends only this worktree's emulator (via `.emulator-serial`) and
+is a no-op if nothing's claimed — run it on every exit path so the watcher's
+per-issue emulators don't pile up on a CPU-bound host.
 
 If acquire fails (exit 75) → retry once after 30s; if still busy, exit 75 and
 the watcher will retry next tick.
