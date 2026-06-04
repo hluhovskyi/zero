@@ -26,7 +26,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
-import com.hluhovskyi.zero.backup.DriveSnapshotParser
+import com.hluhovskyi.zero.backup.DriveSnapshotLoader
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditComponent
 import com.hluhovskyi.zero.budget.edit.BudgetEditPeriod
@@ -350,7 +350,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     .onRestoreSelectedHandler {
                         navigator.navigateTo(
                             Destinations.Import,
-                            Destinations.Import.InitialSource.withValue(DriveSnapshotParser.KEY),
+                            Destinations.Import.InitialSource.withValue(DriveSnapshotLoader.KEY),
                         )
                     }
                     .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) },

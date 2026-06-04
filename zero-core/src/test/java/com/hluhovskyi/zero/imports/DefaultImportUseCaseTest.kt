@@ -44,7 +44,9 @@ import org.mockito.kotlin.whenever
 @RunWith(MockitoJUnitRunner::class)
 class DefaultImportUseCaseTest {
 
-    @Mock private lateinit var parser: SnapshotParser
+    @Mock private lateinit var parser: SnapshotProvider.File
+
+    @Mock private lateinit var remoteProvider: SnapshotProvider.Remote
 
     @Mock private lateinit var syncEngine: SyncEngine
 
@@ -66,7 +68,7 @@ class DefaultImportUseCaseTest {
 
     @Before
     fun setUp() {
-        whenever(parser.source).thenReturn(source)
+        lenient().`when`(parser.source).thenReturn(source)
         whenever(currentUserRepository.query()).thenReturn(flowOf(User(id = userId)))
         lenient().`when`(categoryRepository.query(any<CategoryRepository.Criteria<List<CategoryRepository.Category>>>())).thenReturn(flowOf(emptyList()))
         lenient().`when`(accountRepository.query(any<AccountRepository.Criteria>())).thenReturn(flowOf(emptyList()))
@@ -76,7 +78,7 @@ class DefaultImportUseCaseTest {
     }
 
     private fun createUseCase(scope: CoroutineScope) = DefaultImportUseCase(
-        parsers = listOf(parser),
+        providers = listOf(parser),
         syncEngine = syncEngine,
         currentUserRepository = currentUserRepository,
         iconRepository = iconRepository,
@@ -302,17 +304,27 @@ class DefaultImportUseCaseTest {
     }
 
     @Test
-    fun `SelectSource for a fileless source skips FilePicker and loads immediately`() = runTest {
-        val filelessSource = object : Source {
+    fun `SelectSource for a file source shows the file picker`() = runTest {
+        val useCase = createUseCase(this)
+        useCase.perform(ImportUseCase.Action.SelectSource(source))
+        advanceUntilIdle()
+
+        val state = useCase.state.first()
+        assert(state is ImportUseCase.State.FilePicker) { "Expected FilePicker but got $state" }
+    }
+
+    @Test
+    fun `SelectSource for a remote source skips FilePicker and loads immediately`() = runTest {
+        val remoteSource = object : Source {
             override val key = "drive"
         }
         val snapshot = snapshotWith(categories = listOf(syncCategory("c1", "Food")))
-        whenever(parser.source).thenReturn(filelessSource)
-        whenever(parser.parse(any())).thenReturn(snapshot)
+        whenever(remoteProvider.source).thenReturn(remoteSource)
+        whenever(remoteProvider.load()).thenReturn(snapshot)
         whenever(syncEngine.delta(eq(snapshot), eq(userId))).thenReturn(snapshot)
 
         val useCase = DefaultImportUseCase(
-            parsers = listOf(parser),
+            providers = listOf(remoteProvider),
             syncEngine = syncEngine,
             currentUserRepository = currentUserRepository,
             iconRepository = iconRepository,
@@ -323,7 +335,7 @@ class DefaultImportUseCaseTest {
             onImportFinishedHandler = OnImportFinishedHandler.Noop,
             coroutineScope = this,
         )
-        useCase.perform(ImportUseCase.Action.SelectSource(filelessSource, requiresFile = false))
+        useCase.perform(ImportUseCase.Action.SelectSource(remoteSource))
         advanceUntilIdle()
 
         // Never paused on the file picker; went straight to importing the all-new snapshot.

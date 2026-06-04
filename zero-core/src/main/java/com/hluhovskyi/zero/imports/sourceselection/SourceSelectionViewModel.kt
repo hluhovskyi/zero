@@ -11,7 +11,7 @@ interface SourceSelectionViewModel : ActionStateModel<SourceSelectionViewModel.A
     )
 
     sealed interface Action {
-        data class SelectSource(val source: Source, val requiresFile: Boolean = true) : Action
+        data class SelectSource(val source: Source) : Action
         object Close : Action
         object DismissError : Action
         object Retry : Action

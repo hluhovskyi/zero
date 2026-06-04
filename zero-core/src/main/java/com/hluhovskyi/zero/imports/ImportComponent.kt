@@ -61,7 +61,7 @@ abstract class ImportComponent :
     companion object {
         fun builder(dependencies: Dependencies): Builder = DaggerImportComponent.builder()
             .dependencies(dependencies)
-            .parsers(emptyList())
+            .providers(emptyList())
             .initialSource(InitialSource(null))
             .onImportFinishedHandler(OnImportFinishedHandler.Noop)
     }
@@ -71,7 +71,7 @@ abstract class ImportComponent :
         fun dependencies(dependencies: Dependencies): Builder
 
         @BindsInstance
-        fun parsers(parsers: List<SnapshotParser>): Builder
+        fun providers(providers: List<SnapshotProvider>): Builder
 
         @BindsInstance
         fun initialSource(initialSource: InitialSource): Builder
@@ -89,7 +89,7 @@ abstract class ImportComponent :
         @Provides
         @ImportScope
         fun useCase(
-            parsers: List<SnapshotParser>,
+            providers: List<SnapshotProvider>,
             syncEngine: SyncEngine,
             currentUserRepository: CurrentUserRepository,
             iconRepository: IconRepository,
@@ -100,7 +100,7 @@ abstract class ImportComponent :
             onImportFinishedHandler: OnImportFinishedHandler,
             initialSource: InitialSource,
         ): ImportUseCase = DefaultImportUseCase(
-            parsers = parsers,
+            providers = providers,
             syncEngine = syncEngine,
             currentUserRepository = currentUserRepository,
             iconRepository = iconRepository,

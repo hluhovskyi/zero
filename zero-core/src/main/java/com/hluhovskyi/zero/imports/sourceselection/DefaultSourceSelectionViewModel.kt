@@ -18,7 +18,7 @@ internal class DefaultSourceSelectionViewModel(
     override fun perform(action: SourceSelectionViewModel.Action) {
         when (action) {
             is SourceSelectionViewModel.Action.SelectSource ->
-                importUseCase.perform(ImportUseCase.Action.SelectSource(action.source, action.requiresFile))
+                importUseCase.perform(ImportUseCase.Action.SelectSource(action.source))
             is SourceSelectionViewModel.Action.Close ->
                 onImportFinishedHandler.onFinished()
             is SourceSelectionViewModel.Action.DismissError ->
