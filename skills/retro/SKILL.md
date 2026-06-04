@@ -31,6 +31,8 @@ Count commits; "fix"/"revert"/"again" patterns = friction. If still on the featu
 
 **Relevant docs** — scan `docs/agents/` for any doc that covers the affected area (navigation, architecture, DI, etc.).
 
+**For doc/skill/process-heavy sessions, the diff won't show the friction.** The signals above (commit churn, `fix`/`revert`, AGENTS.md near changed packages) assume a code PR. When the work is authoring docs/skills or running a multi-step process, the friction lives in the **conversation** — trace the *user's course-corrections on scope or structure* ("don't focus on that", "we don't need a separate doc", "generalize it"), not the commits.
+
 Look for signals of friction:
 - **Success Chasing:** Multiple instances where you claimed "Fixed" only to have the user report it still fails.
 - **Approach Revision:** Multiple commits touching the same file with "fix", "revert", or "again".
