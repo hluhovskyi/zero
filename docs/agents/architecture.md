@@ -11,7 +11,18 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 - **Host-side scroll coordination** — if the host screen needs to react to a sub-component's internal scroll (e.g. collapsing a hero card as the sub-component's list scrolls), use `NestedScrollConnection` on the host's wrapping `Box`. Never add a header slot, content lambda, or layout parameter to the sub-component's `Builder` or `ViewProvider` to satisfy the host's layout needs — sub-components are black boxes; scroll events propagate up through the nested scroll system automatically.
 - **`Buildable<T>` on Builder** — `NavigatorScope.buildable()` rebuilds the component on every navigation, so each screen visit gets fresh state.
 - **Handler callbacks, not shared state** — screens communicate through `fun interface OnXxxHandler` passed via `@BindsInstance`. Handlers that trigger navigation must dispatch on `Dispatchers.Main`.
-- **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types).
+- **UseCase is optional** — only extract one when business logic is complex enough to warrant separation from the ViewModel (e.g., `TransactionEditUseCase` handles 3 transaction types). See [When to introduce a UseCase](#when-to-introduce-a-usecase).
+
+## When to introduce a UseCase
+
+**Default to no UseCase** — the ViewModel calls the repository directly. Build the interface only when a trigger fires *today* (anticipated future callers don't count):
+
+- **2+ callers** — the same operation runs from two ViewModels / components / call sites.
+- **Crosses a Dagger scope** — shared between, say, an `@ActivityScope` and a `@<Feature>Scope` consumer, so they must see the same instance.
+- **Non-trivial logic** — a single VM mixing a few hundred LOC of state plumbing with branching domain logic; extract the domain logic so the VM stays a thin projection. `DefaultBudgetUseCase` (period math + query observation + save + period replace) is the canonical example.
+- **Documented module contract** — the interface is a published seam other modules consume.
+
+A single-method `*UseCase` with one impl and one caller in the same feature graph earns no testability, no swapability, and no contract — that's the [speculative-UseCase smell](architecture-review.md). **Don't pre-declare UseCases in plans**: a brief naming `add a FooUseCase` is a candidate, not a directive (see [superpowers-workflow.md](superpowers-workflow.md)); the implementer extracts from observed concrete need.
 
 ## UseCase State Ownership
 
