@@ -24,10 +24,10 @@ import androidx.compose.ui.unit.dp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.transactions.edit.TransactionEditFocusTarget
 import com.hluhovskyi.zero.transactions.edit.TransactionEditViewModel
+import com.hluhovskyi.zero.transactions.edit.common.AccountSwipeTile
+import com.hluhovskyi.zero.transactions.edit.common.DateSwipeTile
 import com.hluhovskyi.zero.transactions.edit.common.TransactionEditRateField
 import com.hluhovskyi.zero.ui.AmountField
-import com.hluhovskyi.zero.ui.DatePickerCard
-import com.hluhovskyi.zero.ui.SelectorCard
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /** Transfer form: From/To amount fields + rate tile (when FX), From/swap/To selectors, date. */
@@ -96,13 +96,12 @@ internal fun TransferForm(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SelectorCard(
+            AccountSwipeTile(
                 modifier = Modifier.weight(1f),
                 label = stringResource(R.string.transfer_edit_from_label),
-                value = form.selectedAccount?.name ?: "",
-                items = form.accounts,
-                nameMapping = { it.name },
-                onItemSelected = { perform(TransactionEditViewModel.Action.SelectAccount(it)) },
+                accounts = form.accounts,
+                selected = form.selectedAccount,
+                onSelect = { perform(TransactionEditViewModel.Action.SelectAccount(it)) },
             )
             Box(
                 modifier = Modifier
@@ -118,18 +117,17 @@ internal fun TransferForm(
                     tint = ZeroTheme.colors.primaryContainer,
                 )
             }
-            SelectorCard(
+            AccountSwipeTile(
                 modifier = Modifier.weight(1f),
                 label = stringResource(R.string.transfer_edit_to_label),
-                value = form.selectedTargetAccount?.name ?: "",
-                items = form.targetAccounts,
-                nameMapping = { it.name },
-                onItemSelected = { perform(TransactionEditViewModel.Action.SelectTargetAccount(it)) },
+                accounts = form.targetAccounts,
+                selected = form.selectedTargetAccount,
+                onSelect = { perform(TransactionEditViewModel.Action.SelectTargetAccount(it)) },
             )
         }
 
         form.date?.let { date ->
-            DatePickerCard(
+            DateSwipeTile(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.transaction_edit_date_label),
                 date = date,

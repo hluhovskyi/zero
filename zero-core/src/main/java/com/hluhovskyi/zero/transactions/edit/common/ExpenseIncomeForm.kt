@@ -14,8 +14,6 @@ import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.transactions.edit.TransactionEditFocusTarget
 import com.hluhovskyi.zero.transactions.edit.TransactionEditViewModel
-import com.hluhovskyi.zero.ui.DatePickerCard
-import com.hluhovskyi.zero.ui.SelectorCard
 
 /** Expense / income form: Exchange-rate tile (when FX), category row, date + account selectors. */
 @Composable
@@ -60,20 +58,19 @@ internal fun ExpenseIncomeForm(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             form.date?.let { date ->
-                DatePickerCard(
+                DateSwipeTile(
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.transaction_edit_date_label),
                     date = date,
                     onDateSelected = { perform(TransactionEditViewModel.Action.ChangeDate(it)) },
                 )
             }
-            SelectorCard(
+            AccountSwipeTile(
                 modifier = Modifier.weight(1f),
                 label = stringResource(R.string.transaction_edit_account_label),
-                value = form.selectedAccount?.name ?: "",
-                items = form.accounts,
-                nameMapping = { it.name },
-                onItemSelected = { perform(TransactionEditViewModel.Action.SelectAccount(it)) },
+                accounts = form.accounts,
+                selected = form.selectedAccount,
+                onSelect = { perform(TransactionEditViewModel.Action.SelectAccount(it)) },
             )
         }
     }

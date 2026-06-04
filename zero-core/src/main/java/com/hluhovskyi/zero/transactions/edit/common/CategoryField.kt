@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +29,7 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategory
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.SwipeSelectTile
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -38,11 +37,8 @@ private const val QUICK_CHIP_COUNT = 6
 private val ChipShape = RoundedCornerShape(percent = 50)
 
 /**
- * Category selector for the transaction edit screen: a boxed field row (matches
- * Date/Account; shows the current category and opens the full picker) and — only as a
- * first-time shortcut ([showShortcuts]) — a row of stateless quick chips for frequent
- * categories *other than* the current one. The row is the single source of truth for
- * what's selected; the chips are one-tap switches that retire once the picker is used.
+ * Category selector: a swipe-select tile (swipe to walk categories, tap opens the picker) plus, as a
+ * first-time shortcut ([showShortcuts]), quick chips for frequent categories other than the current.
  */
 @Composable
 internal fun CategoryField(
@@ -60,10 +56,13 @@ internal fun CategoryField(
         emptyList()
     }
     Column(modifier = modifier) {
-        CategoryRow(
+        CategorySwipeTile(
+            modifier = Modifier.fillMaxWidth(),
             imageLoader = imageLoader,
+            categories = categories,
             selectedCategory = selectedCategory,
-            onClick = onOpenPicker,
+            onCategorySelected = onCategorySelected,
+            onOpenPicker = onOpenPicker,
         )
         if (shortcuts.isNotEmpty()) {
             QuickChipsRow(
@@ -76,75 +75,81 @@ internal fun CategoryField(
     }
 }
 
+/** Category tile: swipe up/down to walk [categories]; bounces at the edges; tap opens the picker. */
 @Composable
-private fun CategoryRow(
+private fun CategorySwipeTile(
+    modifier: Modifier,
     imageLoader: ImageLoader,
+    categories: List<TransactionEditCategory>,
     selectedCategory: TransactionEditCategory?,
-    onClick: () -> Unit,
+    onCategorySelected: (TransactionEditCategory) -> Unit,
+    onOpenPicker: () -> Unit,
 ) {
+    SwipeSelectTile(
+        modifier = modifier,
+        label = stringResource(R.string.transaction_edit_category_label),
+        items = categories,
+        selected = selectedCategory,
+        onSelect = onCategorySelected,
+        onClick = onOpenPicker,
+        key = { it.id },
+        placeholder = { CategoryPlaceholderFace() },
+    ) { category -> CategoryFace(imageLoader, category) }
+}
+
+@Composable
+private fun CategoryFace(imageLoader: ImageLoader, category: TransactionEditCategory) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(ZeroTheme.colors.surfaceContainerLow, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (selectedCategory != null) {
-            CategoryIconView(
-                colorScheme = selectedCategory.colorScheme.toUi(),
-                size = 38.dp,
-                contentPadding = 9.dp,
-            ) { iconTint ->
-                imageLoader.View(
-                    modifier = Modifier.sizeIn(maxHeight = 20.dp, maxWidth = 20.dp),
-                    image = selectedCategory.icon,
-                    tint = iconTint,
-                )
-            }
-        } else {
-            CategoryIconView(
-                color = ZeroTheme.colors.surfaceContainer,
-                size = 38.dp,
-                contentPadding = 9.dp,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Apps,
-                    contentDescription = null,
-                    modifier = Modifier.sizeIn(maxHeight = 20.dp, maxWidth = 20.dp),
-                    tint = ZeroTheme.colors.onSurfaceVariant,
-                )
-            }
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.transaction_edit_category_label).uppercase(),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.onSurfaceVariant,
-                letterSpacing = 1.sp,
-            )
-            Text(
-                modifier = Modifier.padding(top = 2.dp),
-                text = selectedCategory?.name
-                    ?: stringResource(R.string.transaction_edit_choose_category),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (selectedCategory != null) {
-                    ZeroTheme.colors.primary
-                } else {
-                    ZeroTheme.colors.onSurfaceVariant
-                },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        CategoryIconView(
+            colorScheme = category.colorScheme.toUi(),
+            size = 30.dp,
+            contentPadding = 7.dp,
+        ) { iconTint ->
+            imageLoader.View(
+                modifier = Modifier.sizeIn(maxHeight = 16.dp, maxWidth = 16.dp),
+                image = category.icon,
+                tint = iconTint,
             )
         }
-        Icon(
-            imageVector = Icons.Filled.ArrowDropDown,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = ZeroTheme.colors.onSurfaceVariant,
+        Text(
+            text = category.name,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = ZeroTheme.colors.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun CategoryPlaceholderFace() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        CategoryIconView(
+            color = ZeroTheme.colors.surfaceContainer,
+            size = 30.dp,
+            contentPadding = 7.dp,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Apps,
+                contentDescription = null,
+                modifier = Modifier.sizeIn(maxHeight = 16.dp, maxWidth = 16.dp),
+                tint = ZeroTheme.colors.onSurfaceVariant,
+            )
+        }
+        Text(
+            text = stringResource(R.string.transaction_edit_choose_category),
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = ZeroTheme.colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
