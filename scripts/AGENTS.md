@@ -29,6 +29,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - `ui/verify-screen.sh <landmark>` — re-dump and check a landmark is visible. Exit 0 if found.
 - `ui/open-screen.sh <name>` — pre-baked tap chains to common screens.
 - `ui/screenshot.sh [out-path] [--relaunch <pkg/activity>]` — one call: optionally force-stop + relaunch, wait for the app window, then capture + pull a PNG (default `/tmp/screen.png`). Use instead of inline wait-loops.
+- `ui/wait-stable.sh` — block until the UI is idle (one `uiautomator dump`, which waits for the accessibility stream to quiesce). `screenshot.sh` and `tap-label.sh --screenshot/--verify` call it automatically, so a capture taken right after a tap is post-transition/animation, not a mid-frame. Rarely needed standalone.
 
 ## install-app.sh — APK install (replaces `installDebug`)
 

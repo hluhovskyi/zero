@@ -54,12 +54,15 @@ echo "✓ Tapping '$LABEL' at ($CX,$CY)  bounds=$BOUNDS"
 "$ADB" shell input tap "$CX" "$CY"
 
 if $SCREENSHOT; then
+    # Settle first so the shot is post-transition / post-animation, not the frame
+    # right after the tap.
+    "$(dirname "$0")/wait-stable.sh" >/dev/null 2>&1 || true
     "$ADB" shell screencap -p /data/local/tmp/screen.png
     "$ADB" pull /data/local/tmp/screen.png /tmp/screen.png >/dev/null 2>&1
     echo "📸 /tmp/screen.png"
 fi
 
 if [ -n "$VERIFY" ]; then
-    sleep 0.5
+    "$(dirname "$0")/wait-stable.sh" >/dev/null 2>&1 || true
     "$(dirname "$0")/verify-screen.sh" "$VERIFY"
 fi

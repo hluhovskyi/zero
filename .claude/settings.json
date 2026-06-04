@@ -30,6 +30,8 @@
       "Bash(./scripts/ui/verify-screen.sh *)",
       "Bash(./scripts/ui/screenshot.sh)",
       "Bash(./scripts/ui/screenshot.sh *)",
+      "Bash(./scripts/ui/wait-stable.sh)",
+      "Bash(./scripts/ui/wait-stable.sh *)",
       "Bash(./scripts/install-app.sh)",
       "Bash(./scripts/run-android-tests.sh)",
       "Bash(./scripts/run-android-tests.sh *)",
