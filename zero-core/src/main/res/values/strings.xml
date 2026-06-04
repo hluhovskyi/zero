@@ -259,6 +259,9 @@
     <string name="transaction_type_transfer">Transfer</string>
     <string name="transaction_edit_save">Save Transaction</string>
     <string name="transaction_edit_date_label">Date</string>
+    <string name="transaction_edit_date_today">Today</string>
+    <string name="transaction_edit_date_yesterday">Yesterday</string>
+    <string name="transaction_edit_date_tomorrow">Tomorrow</string>
     <string name="transaction_edit_account_label">Account</string>
     <string name="transaction_edit_amount_label">Amount</string>
     <string name="transaction_edit_category_label">Category</string>
