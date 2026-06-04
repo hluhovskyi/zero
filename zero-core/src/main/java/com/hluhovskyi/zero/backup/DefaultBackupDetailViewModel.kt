@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
+    private val backupConnectionUseCase: BackupConnectionUseCase,
     private val backupScheduler: BackupScheduler,
     private val configurationRepository: ConfigurationRepository,
     private val onBackHandler: OnBackHandler,
@@ -28,7 +29,7 @@ internal class DefaultBackupDetailViewModel(
     override fun perform(action: BackupDetailViewModel.Action) {
         when (action) {
             is BackupDetailViewModel.Action.Connect ->
-                backupUseCase.perform(BackupUseCase.Action.Connect)
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.Connect)
             is BackupDetailViewModel.Action.BackupNow ->
                 backupUseCase.perform(BackupUseCase.Action.BackupNow)
             is BackupDetailViewModel.Action.Restore -> scope.launch(dispatchers.main()) {
@@ -40,15 +41,15 @@ internal class DefaultBackupDetailViewModel(
                 mutableState.update { it.copy(confirmDialog = null) }
             is BackupDetailViewModel.Action.DisconnectConfirmed -> {
                 mutableState.update { it.copy(confirmDialog = null) }
-                backupUseCase.perform(BackupUseCase.Action.Disconnect(action.deleteRemote))
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.Disconnect(action.deleteRemote))
             }
             is BackupDetailViewModel.Action.Back -> scope.launch(dispatchers.main()) {
                 onBackHandler.onBack()
             }
             is BackupDetailViewModel.Action.SignInFeedbackShown ->
-                backupUseCase.perform(BackupUseCase.Action.SignInFeedbackShown)
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.SignInFeedbackShown)
             is BackupDetailViewModel.Action.DisconnectFeedbackShown ->
-                backupUseCase.perform(BackupUseCase.Action.DisconnectFeedbackShown)
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.DisconnectFeedbackShown)
             is BackupDetailViewModel.Action.SetWifiOnly -> scope.launch(dispatchers.io()) {
                 configurationRepository.write(BackupConfigurationKey.WifiOnly, action.wifiOnly)
             }
@@ -59,23 +60,24 @@ internal class DefaultBackupDetailViewModel(
         scope.launch(dispatchers.io()) {
             combine(
                 backupUseCase.state,
+                backupConnectionUseCase.state,
                 configurationRepository.observe(BackupConfigurationKey.WifiOnly),
-            ) { backup, wifiOnly ->
-                backup to wifiOnly
-            }.collect { (backup, wifiOnly) ->
+            ) { backup, connection, wifiOnly ->
+                Triple(backup, connection, wifiOnly)
+            }.collect { (backup, connection, wifiOnly) ->
                 mutableState.update { current ->
                     current.copy(
-                        isSignedIn = backup.isSignedIn,
-                        accountLabel = backup.accountLabel,
+                        isSignedIn = connection.isSignedIn,
+                        accountLabel = connection.accountLabel,
                         phase = backup.phase,
                         lastSuccessAt = backup.lastSuccessAt,
                         lastError = backup.lastError,
-                        signInFeedback = backup.signInFeedback,
-                        disconnectFeedback = backup.disconnectFeedback,
+                        signInFeedback = connection.signInFeedback,
+                        disconnectFeedback = connection.disconnectFeedback,
                         wifiOnly = wifiOnly,
                     )
                 }
-                if (backup.isSignedIn) {
+                if (connection.isSignedIn) {
                     backupScheduler.enable(wifiOnly = wifiOnly)
                 } else {
                     backupScheduler.disable()

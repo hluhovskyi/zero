@@ -21,6 +21,7 @@ interface BackupComponent {
     }
 
     val backupUseCase: BackupUseCase
+    val backupConnectionUseCase: BackupConnectionUseCase
     val signal: Flow<BackupSignal>
 
     class Factory(private val dependencies: Dependencies) {
@@ -43,8 +44,15 @@ internal class DefaultBackupComponent(dependencies: BackupComponent.Dependencies
         DefaultBackupUseCase(
             syncEngine = dependencies.syncEngine,
             backupClient = dependencies.backupClient,
-            oauthTokenProvider = dependencies.oauthTokenProvider,
             currentUserRepository = dependencies.currentUserRepository,
+            coroutineScope = dependencies.backupCoroutineScope,
+        )
+    }
+
+    override val backupConnectionUseCase: BackupConnectionUseCase by lazy {
+        DefaultBackupConnectionUseCase(
+            backupClient = dependencies.backupClient,
+            oauthTokenProvider = dependencies.oauthTokenProvider,
             coroutineScope = dependencies.backupCoroutineScope,
         )
     }

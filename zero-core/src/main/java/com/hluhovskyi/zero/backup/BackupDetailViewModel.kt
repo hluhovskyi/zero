@@ -27,8 +27,8 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
         val lastSuccessAt: LocalDateTime? = null,
         val lastError: BackupError? = null,
-        val signInFeedback: BackupUseCase.SignInFeedback? = null,
-        val disconnectFeedback: BackupUseCase.DisconnectFeedback? = null,
+        val signInFeedback: BackupConnectionUseCase.SignInFeedback? = null,
+        val disconnectFeedback: BackupConnectionUseCase.DisconnectFeedback? = null,
         val confirmDialog: ConfirmDialog? = null,
         val wifiOnly: Boolean = true,
     )

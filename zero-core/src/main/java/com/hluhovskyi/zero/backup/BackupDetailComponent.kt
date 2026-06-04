@@ -31,6 +31,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
 
     interface Dependencies {
         val backupUseCase: BackupUseCase
+        val backupConnectionUseCase: BackupConnectionUseCase
         val backupScheduler: BackupScheduler
         val configurationRepository: ConfigurationRepository
         val dispatchers: DispatcherProvider
@@ -61,6 +62,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
         @BackupDetailScope
         fun viewModel(
             backupUseCase: BackupUseCase,
+            backupConnectionUseCase: BackupConnectionUseCase,
             backupScheduler: BackupScheduler,
             configurationRepository: ConfigurationRepository,
             onBackHandler: OnBackHandler,
@@ -68,6 +70,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
             dispatchers: DispatcherProvider,
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
+            backupConnectionUseCase = backupConnectionUseCase,
             backupScheduler = backupScheduler,
             configurationRepository = configurationRepository,
             onBackHandler = onBackHandler,

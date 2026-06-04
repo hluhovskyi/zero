@@ -74,11 +74,11 @@ private fun BackupDetailScreen(viewModel: BackupDetailViewModel) {
 
     LaunchedEffect(state.signInFeedback) {
         when (state.signInFeedback) {
-            BackupUseCase.SignInFeedback.Cancelled -> {
+            BackupConnectionUseCase.SignInFeedback.Cancelled -> {
                 snackbarHostState.showSnackbar(cancelledMessage)
                 viewModel.perform(BackupDetailViewModel.Action.SignInFeedbackShown)
             }
-            is BackupUseCase.SignInFeedback.Failed -> {
+            is BackupConnectionUseCase.SignInFeedback.Failed -> {
                 snackbarHostState.showSnackbar(failedMessage)
                 viewModel.perform(BackupDetailViewModel.Action.SignInFeedbackShown)
             }
@@ -88,7 +88,7 @@ private fun BackupDetailScreen(viewModel: BackupDetailViewModel) {
 
     LaunchedEffect(state.disconnectFeedback) {
         when (state.disconnectFeedback) {
-            BackupUseCase.DisconnectFeedback.DeleteFailed -> {
+            BackupConnectionUseCase.DisconnectFeedback.DeleteFailed -> {
                 snackbarHostState.showSnackbar(deleteFailedMessage)
                 viewModel.perform(BackupDetailViewModel.Action.DisconnectFeedbackShown)
             }

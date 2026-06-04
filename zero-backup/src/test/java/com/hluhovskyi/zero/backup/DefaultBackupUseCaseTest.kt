@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.backup
 
-import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.sync.SyncEngine
@@ -19,7 +18,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -193,138 +191,11 @@ class DefaultBackupUseCaseTest {
         assertEquals(BackupUseCase.Phase.Failed(BackupError.ParseFailure), end.phase)
     }
 
-    @Test
-    fun `Connect success - signed in with account label`() = runTest {
-        val oauth = FakeOAuthTokenProvider(
-            signInResult = OAuthTokenProvider.Result.Success("Google Drive"),
-            initiallySignedIn = false,
-        )
-        val useCase = useCase(client = FakeBackupClient(), oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Connect)
-        advanceUntilIdle()
-
-        val end = useCase.state.first()
-        assertTrue(end.isSignedIn)
-        assertEquals("Google Drive", end.accountLabel)
-        assertNull(end.signInFeedback)
-        assertEquals(1, oauth.signInCount)
-    }
-
-    @Test
-    fun `Connect cancelled - one-shot Cancelled feedback, still signed out`() = runTest {
-        val oauth = FakeOAuthTokenProvider(signInResult = OAuthTokenProvider.Result.Cancelled, initiallySignedIn = false)
-        val useCase = useCase(client = FakeBackupClient(), oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Connect)
-        advanceUntilIdle()
-
-        val end = useCase.state.first()
-        assertFalse(end.isSignedIn)
-        assertSame(BackupUseCase.SignInFeedback.Cancelled, end.signInFeedback)
-    }
-
-    @Test
-    fun `Connect failure - one-shot Failed feedback`() = runTest {
-        val oauth = FakeOAuthTokenProvider(
-            signInResult = OAuthTokenProvider.Result.Failure(BackupError.NetworkUnavailable),
-            initiallySignedIn = false,
-        )
-        val useCase = useCase(client = FakeBackupClient(), oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Connect)
-        advanceUntilIdle()
-
-        assertEquals(
-            BackupUseCase.SignInFeedback.Failed(BackupError.NetworkUnavailable),
-            useCase.state.first().signInFeedback,
-        )
-    }
-
-    @Test
-    fun `SignInFeedbackShown clears the one-shot`() = runTest {
-        val oauth = FakeOAuthTokenProvider(signInResult = OAuthTokenProvider.Result.Cancelled, initiallySignedIn = false)
-        val useCase = useCase(client = FakeBackupClient(), oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Connect)
-        advanceUntilIdle()
-        useCase.perform(BackupUseCase.Action.SignInFeedbackShown)
-        advanceUntilIdle()
-
-        assertNull(useCase.state.first().signInFeedback)
-    }
-
-    @Test
-    fun `Disconnect with delete - deletes remote then revokes, no failure feedback`() = runTest {
-        val oauth = FakeOAuthTokenProvider(token = "tok")
-        val client = FakeBackupClient(latestResult = success(backupId = "backup-1"), deleteResult = success())
-        val useCase = useCase(client = client, oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Disconnect(deleteRemote = true))
-        advanceUntilIdle()
-
-        assertEquals(listOf("backup-1"), client.deletedIds)
-        assertEquals(1, oauth.revokeCount)
-        val end = useCase.state.first()
-        assertFalse(end.isSignedIn)
-        assertNull(end.disconnectFeedback)
-    }
-
-    @Test
-    fun `Disconnect with delete failure - still revokes and surfaces DeleteFailed`() = runTest {
-        val oauth = FakeOAuthTokenProvider(token = "tok")
-        val client = FakeBackupClient(
-            latestResult = success(backupId = "backup-1"),
-            deleteResult = failure(BackupError.NetworkUnavailable),
-        )
-        val useCase = useCase(client = client, oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Disconnect(deleteRemote = true))
-        advanceUntilIdle()
-
-        assertEquals(listOf("backup-1"), client.deletedIds)
-        assertEquals(1, oauth.revokeCount)
-        assertSame(BackupUseCase.DisconnectFeedback.DeleteFailed, useCase.state.first().disconnectFeedback)
-    }
-
-    @Test
-    fun `Disconnect with delete - NotFound is treated as success`() = runTest {
-        val oauth = FakeOAuthTokenProvider(token = "tok")
-        val client = FakeBackupClient(latestResult = BackupClient.Result.NotFound)
-        val useCase = useCase(client = client, oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Disconnect(deleteRemote = true))
-        advanceUntilIdle()
-
-        assertTrue(client.deletedIds.isEmpty())
-        assertEquals(1, oauth.revokeCount)
-        assertNull(useCase.state.first().disconnectFeedback)
-    }
-
-    @Test
-    fun `Disconnect keeping backup - revokes without touching remote`() = runTest {
-        val oauth = FakeOAuthTokenProvider(token = "tok")
-        val client = FakeBackupClient(latestResult = success(backupId = "backup-1"), deleteResult = success())
-        val useCase = useCase(client = client, oauth = oauth)
-
-        useCase.perform(BackupUseCase.Action.Disconnect(deleteRemote = false))
-        advanceUntilIdle()
-
-        assertEquals(0, client.latestCount)
-        assertTrue(client.deletedIds.isEmpty())
-        assertEquals(1, oauth.revokeCount)
-        assertFalse(useCase.state.first().isSignedIn)
-    }
-
     // --- helpers ---
 
-    private fun TestScope.useCase(
-        client: BackupClient,
-        oauth: OAuthTokenProvider = FakeOAuthTokenProvider(token = "tok"),
-    ): DefaultBackupUseCase = DefaultBackupUseCase(
+    private fun TestScope.useCase(client: BackupClient): DefaultBackupUseCase = DefaultBackupUseCase(
         syncEngine = FakeSyncEngine(emptySnapshot),
         backupClient = client,
-        oauthTokenProvider = oauth,
         currentUserRepository = FakeCurrentUserRepository(Id.Known("user-1")),
         coroutineScope = this,
     )
