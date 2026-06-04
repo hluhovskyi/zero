@@ -67,7 +67,7 @@ internal fun resolveSwipe(
 
 private val RowHeight = 40.dp
 private val SwipeEasing = CubicBezierEasing(0.34f, 0.1f, 0.2f, 1f)
-private const val SwipeDurationMs = 180
+private const val SwipeDurationMs = 240
 
 /** Opacity drop for a face one full row away from the viewport centre (centre = 1f, neighbour = 0.3f). */
 private const val NeighbourFade = 0.7f
