@@ -38,19 +38,14 @@ internal fun AccountSwipeTile(
     selected: TransactionEditAccount?,
     onSelect: (TransactionEditAccount) -> Unit,
 ) {
-    val index = accounts.indexOf(selected)
     SwipeSelectTile(
         modifier = modifier,
         label = label,
-        canSelectPrevious = index > 0,
-        canSelectNext = index in 0 until accounts.lastIndex,
-        currentKey = selected?.id,
-        onSelectPrevious = { onSelect(accounts[index - 1]) },
-        onSelectNext = { onSelect(accounts[index + 1]) },
-        previous = accounts.getOrNull(index - 1)?.let { acc -> { TileFace(acc.name) } },
-        next = accounts.getOrNull(index + 1)?.let { acc -> { TileFace(acc.name) } },
-        current = { TileFace(selected?.name ?: "") },
-    )
+        items = accounts,
+        selected = selected,
+        onSelect = onSelect,
+        key = { it.id },
+    ) { account -> TileFace(account.name) }
 }
 
 /** Date tile: swipe ±1 day (unbounded); tap opens the calendar for any other date. */

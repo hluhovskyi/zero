@@ -234,6 +234,40 @@ fun SwipeSelectTile(
     }
 }
 
+/**
+ * List-backed [SwipeSelectTile]: owns the cursor over a bounded [items] list — derives the selected
+ * index, edge flags, neighbour faces and commit [key] — so a caller supplies only a [face] per item
+ * and an [onSelect]. Swiping walks the list and bounces at the ends. Use the slot overload instead
+ * for an unbounded sequence (e.g. dates). [placeholder] renders when [selected] is `null`.
+ */
+@Composable
+fun <T> SwipeSelectTile(
+    label: String,
+    items: List<T>,
+    selected: T?,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    key: (T) -> Any? = { it },
+    placeholder: (@Composable () -> Unit)? = null,
+    face: @Composable (T) -> Unit,
+) {
+    val index = selected?.let { sel -> items.indexOfFirst { key(it) == key(sel) } } ?: -1
+    SwipeSelectTile(
+        modifier = modifier,
+        label = label,
+        canSelectPrevious = index > 0,
+        canSelectNext = index in 0 until items.lastIndex,
+        currentKey = selected?.let(key),
+        onClick = onClick,
+        onSelectPrevious = { onSelect(items[index - 1]) },
+        onSelectNext = { onSelect(items[index + 1]) },
+        previous = items.getOrNull(index - 1)?.let { item -> { face(item) } },
+        next = items.getOrNull(index + 1)?.let { item -> { face(item) } },
+        current = { if (selected != null) face(selected) else placeholder?.invoke() },
+    )
+}
+
 @Composable
 private fun SwipeFace(
     slot: Int,

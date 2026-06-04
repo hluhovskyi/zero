@@ -88,26 +88,16 @@ private fun CategorySwipeTile(
     onCategorySelected: (TransactionEditCategory) -> Unit,
     onOpenPicker: () -> Unit,
 ) {
-    val index = selectedCategory?.let { sel -> categories.indexOfFirst { it.id == sel.id } } ?: -1
     SwipeSelectTile(
         modifier = modifier,
         label = stringResource(R.string.transaction_edit_category_label),
-        canSelectPrevious = index > 0,
-        canSelectNext = index in 0 until categories.lastIndex,
-        currentKey = selectedCategory?.id,
-        onSelectPrevious = { onCategorySelected(categories[index - 1]) },
-        onSelectNext = { onCategorySelected(categories[index + 1]) },
+        items = categories,
+        selected = selectedCategory,
+        onSelect = onCategorySelected,
         onClick = onOpenPicker,
-        previous = categories.getOrNull(index - 1)?.let { c -> { CategoryFace(imageLoader, c) } },
-        next = categories.getOrNull(index + 1)?.let { c -> { CategoryFace(imageLoader, c) } },
-        current = {
-            if (selectedCategory != null) {
-                CategoryFace(imageLoader, selectedCategory)
-            } else {
-                CategoryPlaceholderFace()
-            }
-        },
-    )
+        key = { it.id },
+        placeholder = { CategoryPlaceholderFace() },
+    ) { category -> CategoryFace(imageLoader, category) }
 }
 
 @Composable
