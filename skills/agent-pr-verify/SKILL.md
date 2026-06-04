@@ -117,6 +117,19 @@ VERDICT: <one paragraph>
   - Decision: bug is GONE / bug is STILL PRESENT
 ```
 
+## Step 6.5 — Teardown
+
+Release the emulator before exiting, **regardless of verdict** and after the
+final screenshot is pulled — the watcher spawns one of these per PR, so idle
+emulators pile up fast on a CPU-bound host:
+
+```bash
+./scripts/emulator/release --kill
+```
+
+Kills only this worktree's emulator (via `.emulator-serial`); a no-op when
+`ANDROID_SERIAL` was injected (parallel-workers path) and nothing was claimed.
+
 ## Step 7 — Exit codes
 
 - `exit 0` — bug confirmed gone. Watcher will record `.agent-state/pr-<N>.verified`.
