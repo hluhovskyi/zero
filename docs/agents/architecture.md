@@ -22,7 +22,7 @@ Every feature follows: `FeatureComponent → FeatureViewModel → FeatureViewPro
 - **Non-trivial logic** — a single VM mixing a few hundred LOC of state plumbing with branching domain logic; extract the domain logic so the VM stays a thin projection. `DefaultBudgetUseCase` (period math + query observation + save + period replace) is the canonical example.
 - **Documented module contract** — the interface is a published seam other modules consume.
 
-A single-method `*UseCase` with one impl and one caller in the same feature graph earns no testability, no swapability, and no contract — that's the [speculative-UseCase smell](architecture-review.md). **Don't pre-declare UseCases in plans**: a brief naming `add a FooUseCase` is a candidate, not a directive (see [superpowers-workflow.md](superpowers-workflow.md)); the implementer extracts from observed concrete need.
+A single-method `*UseCase` with one impl and one caller is the [speculative-UseCase smell](architecture-review.md) — inline it. **Don't pre-declare UseCases in plans**: `add a FooUseCase` is a candidate, not a directive (see [superpowers-workflow.md](superpowers-workflow.md)); extract from observed need.
 
 ## UseCase State Ownership
 

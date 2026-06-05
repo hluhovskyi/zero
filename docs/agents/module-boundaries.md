@@ -17,11 +17,6 @@ zero-crash          (CrashComponent — Sentry crash reporting, attach-only)
 
 **Any type referenced in a `zero-api` interface signature must itself live in `zero-api`** — placing it in the implementing module creates a circular dependency the moment any other module implements that interface. If you find yourself adding an import from `zero-sync` or `zero-database` inside `zero-api`, the type is in the wrong module.
 
-## Producer/Consumer Encapsulation
-
-- **When a value's format is wrong for a consumer, fix it at the producer so the value is canonical for *every* consumer — don't add a downstream `Mapper`/adapter/interceptor that only that consumer sees.** A shim treats the symptom and lives forever as version-specific glue; fixing the source emits the correct form once for all readers (e.g. `AndroidUriResourceFactory` emits the numeric `android.resource://` URI directly, instead of a Coil `Mapper` rewriting it). Same instinct as fixing a blocking DAO read with a `suspend` query rather than caller-side `flowOn`.
-- **A producer/agnostic module names its consumers nowhere — not in code, not even in comments.** Comments describe the value's own properties (canonical form, invariants); consumer-specific rationale ("Coil 3 needs numeric URIs") goes in the commit/PR, never in the module. Same encapsulation the `RemoteComponentEncapsulation` lint rule enforces.
-
 ## New Module Scaffolding
 
 **Every new Gradle module needs a `module/.gitignore` containing `/build`** — without it, Gradle build outputs get staged by `git add` and the pre-commit hook blocks the commit.

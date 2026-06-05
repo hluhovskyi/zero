@@ -53,7 +53,7 @@ Reuse a single qualifier across multiple Builder types — Dagger picks the matc
 
 ## Lift Individual Bindings, Not the Whole Build
 
-**When a reviewer says a binding (handler, use case) "should be provided on a higher level," lift only that `@BindsInstance` to the caller — keep the child component still receiving the inner `Builder`, not a pre-built component.** The caller sets the binding on the inner Builder before passing it (`homeBuilder.transactionComponentBuilder(transactionBuilder.onXxxHandler(...))`); the child's Module still does `@Provides fun innerComponent(builder) = builder.build()`. Moving the whole build up is an over-correction — the smallest surgical scope that satisfies the comment is the goal.
+**When a reviewer says a binding (handler, use case) "should be provided on a higher level," lift only that `@BindsInstance` to the caller — keep the child component still receiving the inner `Builder`, not a pre-built component.** The caller sets the binding on the inner Builder before passing it (`homeBuilder.transactionComponentBuilder(transactionBuilder.onXxxHandler(...))`); the child's Module still does `@Provides fun innerComponent(builder) = builder.build()`. Moving the whole build up is the over-correction to avoid.
 
 ## Lifecycle Timing
 
