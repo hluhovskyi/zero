@@ -40,6 +40,8 @@ This downloads to `/tmp/design-<hash>.tar.gz` and extracts to `/tmp/design-<hash
 
 **Never write layout code before fetching** — "cards", "grid", "list" are ambiguous in prose; the file is the authoritative spec.
 
+**Check the exploration `.jsx`, not just the named file** — `index.html` inlines simplified placeholders; a component's real spec lives in its sibling exploration file. Read both.
+
 **README first** — it maps screen names to file paths; skipping it causes wrong-file reads.
 
 **Skip `chats/` entirely** — these are design iteration logs, not layout specs; reading one will overflow context before implementation starts.
