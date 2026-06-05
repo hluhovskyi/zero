@@ -16,7 +16,7 @@ Android library module. Contains all feature logic: ViewModels, UseCases, Dagger
 
 - **Feature packages**: `transactions/`, `accounts/`, `categories/`, `settings/`, `imports/`, `currencies/`, `colors/`, `icons/`
 - **Each feature package** contains: Component, ViewModel (interface + Default), ViewProvider, optional UseCase, Handler interfaces
-- **Edit sub-packages** (e.g., `transactions/edit/`): Separate components for create/edit flows
+- **Edit sub-packages** (e.g., `transactions/edit/`): Separate components for create/edit flows. Trap: `TransactionEditMapping.resolve` defaults `selectedCategory` to the first type-matching category — it's null only when the list is empty, never "user hasn't chosen." Gate "no choice yet" UI on the explicit `categoryChosenByUser` flag, not on `selectedCategory == null`.
 - **Preview sub-packages** (e.g., `transactions/preview/`): Read-only detail views
 
 ## Naming Conventions

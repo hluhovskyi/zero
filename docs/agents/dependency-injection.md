@@ -51,6 +51,10 @@ fun homeNavigationEntry(
 
 Reuse a single qualifier across multiple Builder types — Dagger picks the matching `@Provides` by parameter type at each injection site.
 
+## Lift Individual Bindings, Not the Whole Build
+
+**When a reviewer says a binding (handler, use case) "should be provided on a higher level," lift only that `@BindsInstance` to the caller — keep the child component still receiving the inner `Builder`, not a pre-built component.** The caller sets the binding on the inner Builder before passing it (`homeBuilder.transactionComponentBuilder(transactionBuilder.onXxxHandler(...))`); the child's Module still does `@Provides fun innerComponent(builder) = builder.build()`. Moving the whole build up is the over-correction to avoid.
+
 ## Lifecycle Timing
 
 Resolve dependencies that require runtime state (e.g. looking up a scheme by ID) in `attach()`, not in the constructor or `@Provides` methods. This ensures the component is fully wired before resolution occurs.

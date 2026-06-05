@@ -63,6 +63,12 @@ class MyViewModelTest {
 }
 ```
 
+## E2e: Seed Before the Activity Launches
+
+**Don't use `createAndroidComposeRule<MainActivity>()` as a `@Rule` for e2e tests that seed data** — it launches the activity *before* the test body, so the seed runs after the app has subscribed, and the transaction list's `selectAfter(updatedDateTime > initialTimestamp)` races the seed (past-timestamp rows always lose, blank screens time out). Use `createEmptyComposeRule()` + a lazy `ActivityScenario.launch(MainActivity::class.java)` inside `onTransactions()` / `onBudget()`, so the body seeds first and the activity attaches against a populated DB — no `Clock.now() + 1.hour` timestamp hacks. (PR #282, `BaseE2eTest`.)
+
+**Lazy launch skips the production preset seed** (`PresetsAttachable.attach()` seeds default categories/accounts on attach) — restore it explicitly via `DatabaseTestBridge.seedPresets()` in `clearDataRule` so every test starts at the fresh-install baseline.
+
 ## Coroutines Testing
 
 *   **`runTest`:** Always use `runTest` for testing suspending functions or `Flow` collections.
