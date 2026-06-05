@@ -289,9 +289,7 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    // The paginated window is reactive end-to-end (Room re-emits on every table write), so it
-    // already reflects imports, edits, and deletes live — no separate "recently changed" overlay
-    // to merge on top.
+    // The paginated window is reactive end-to-end, so no "recently changed" overlay to merge on top.
     private fun allTransactionsFlow(): Flow<List<TransactionRepository.Transaction>> =
         transactionRepository.query(
             TransactionRepository.Criteria.All(),

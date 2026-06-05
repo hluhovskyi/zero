@@ -35,11 +35,8 @@ internal interface TransactionRoom {
     )
     fun selectAllAlive(userId: String): Flow<List<TransactionEntity>>
 
-    // Reactive paginated window — the most recent :limit alive transactions, re-emitted by Room
-    // on every write to the table (insert/update/delete, from any DAO incl. the sync sink), so
-    // imports and edits surface live. Sorts on the raw column (not datetime(...)) so the
-    // (userId, enteredDateTime) index serves the ORDER BY + LIMIT as an O(limit) range scan.
-    // Safe because enteredDateTime is stored as canonical ISO-8601 (lexicographic == chronological).
+    // Reactive window of the newest :limit alive rows; Room re-emits on any table write.
+    // Raw-column sort (not datetime(...)) so the (userId, enteredDateTime) index serves ORDER BY+LIMIT.
     @Query(
         """
         SELECT * FROM TransactionEntity

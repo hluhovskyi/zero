@@ -213,8 +213,7 @@ internal class DefaultDatabaseTestBridge(
     override suspend fun seedHistoricalExpense() {
         currentUserRepository.query().first()
 
-        // Historical updatedDateTime (years in the past) mimics an imported row, which used to
-        // escape the live list. Inserted while the Transactions screen is already attached.
+        // Historical updatedDateTime mimics an imported row (used to escape the live list).
         val historical = LocalDateTime(2019, 6, 15, 9, 0)
         transactionRepository.insert(
             TransactionRepository.Transaction.Expense(

@@ -158,11 +158,8 @@ internal class RoomTransactionRepository(
         }
         .uncheckedCast()
 
-    // Reactive paginated window: `trigger` grows the loaded depth by PAGE_SIZE per emission
-    // (scan seeds the first page before any trigger fires), and flatMapLatest re-subscribes
-    // selectWindow at the new size. Room keeps the active window live, so inserts/edits/deletes —
-    // including imports written through the sync sink with historical timestamps — surface
-    // without any hand-rolled accumulation, merge, or re-fetch.
+    // trigger grows the window by PAGE_SIZE (scan seeds the first page); flatMapLatest keeps one
+    // live selectWindow at the current size, so Room surfaces inserts/edits/deletes without re-fetch.
     private fun paginatedFlow(
         userId: Id.Known,
         trigger: Flow<*>,
@@ -194,8 +191,7 @@ internal class RoomTransactionRepository(
                 updatedDateTime = now,
             )
         }
-        // No manual signal needed: softDelete writes the table, so the live selectWindow
-        // re-emits with the row filtered out (and backfills the freed slot).
+        // softDelete writes the table -> the live selectWindow re-emits with the row gone.
     }
 
     private fun TransactionEntity.toRepository(): TransactionRepository.Transaction? {

@@ -29,11 +29,7 @@ interface DatabaseTestBridge {
      */
     suspend fun seedExpenses()
 
-    /**
-     * Inserts a single historical-dated ($137) expense, simulating an imported row landing while
-     * the Transactions screen is already attached. Call after [seedExpenses]. Regression guard for
-     * "imported transactions don't appear until the screen is recreated".
-     */
+    /** Inserts a historical-dated ($137) expense post-attach (mimics an import). Call after [seedExpenses]. */
     suspend fun seedHistoricalExpense()
 
     /**

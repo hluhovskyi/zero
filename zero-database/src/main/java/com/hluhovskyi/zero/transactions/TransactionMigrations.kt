@@ -9,9 +9,7 @@ internal val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
-// Replaces the single-column userId index with a (userId, enteredDateTime) composite so the
-// Transactions window query (ORDER BY enteredDateTime DESC LIMIT) is an index range scan
-// instead of a full-table sort. The composite also covers the prior userId-only lookups.
+// Swap the userId index for a (userId, enteredDateTime) composite so the window query range-scans.
 internal val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("DROP INDEX IF EXISTS index_TransactionEntity_userId")
