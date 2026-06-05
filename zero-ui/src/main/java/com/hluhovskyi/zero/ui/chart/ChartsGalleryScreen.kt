@@ -1,3 +1,7 @@
+// Debug-only chart gallery (Settings → Developer → Charts). Its labels are dev-facing scaffolding,
+// never shipped to users, so they stay inline rather than in the localized string table.
+@file:Suppress("HardcodedComposableString")
+
 package com.hluhovskyi.zero.ui.chart
 
 import androidx.compose.foundation.background
@@ -83,8 +87,7 @@ private fun flowBars(rows: List<Triple<String, Float, Float>>): BarChartData {
     return BarChartData(rows.map { BarGroup(it.first, listOf(BarValue(it.second, inC), BarValue(it.third, outC))) })
 }
 
-private fun donut(n: Int): DonutChartData =
-    DonutChartData(ChartMockData.categories.take(n).map { DonutSegment(it.third, it.second) })
+private fun donut(n: Int): DonutChartData = DonutChartData(ChartMockData.categories.take(n).map { DonutSegment(it.third, it.second) })
 
 @Composable
 private fun BarsNoHistory() {

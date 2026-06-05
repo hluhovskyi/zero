@@ -65,7 +65,6 @@ import com.hluhovskyi.zero.security.BiometricAuthenticator
 import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.settings.SettingsCurrencyUseCase
-import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.transactions.DisplayConfig
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.edit.TransactionEditCategoryUseCase
@@ -74,6 +73,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
