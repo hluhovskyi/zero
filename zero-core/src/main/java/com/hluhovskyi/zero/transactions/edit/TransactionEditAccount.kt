@@ -7,4 +7,6 @@ data class TransactionEditAccount(
     override val id: Id.Known,
     val name: String,
     val currencyId: Id.Known,
+    val balance: String = "",
+    val isNegative: Boolean = false,
 ) : Identifiable
