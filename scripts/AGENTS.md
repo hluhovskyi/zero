@@ -34,7 +34,7 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 ## install-app.sh — APK install (replaces `installDebug`)
 
 - `install-app.sh` — builds `assembleDebug` and installs the APK via `ui/adb install -r`. Use this instead of `./gradlew :app:installDebug`, which installs to every connected device.
-- **Debug installs as `com.hluhovskyi.zero.debug`** (`.debug` suffix, red-dot icon); the release variant stays `com.hluhovskyi.zero`, and both coexist on device. If a launch no-ops, confirm the id with `ui/adb shell pm list packages | grep hluhovskyi` rather than retrying — a stale `com.hluhovskyi.zero` install may linger.
+- **Debug and release coexist under different ids** — debug is `com.hluhovskyi.zero.debug`, release is `com.hluhovskyi.zero`. Target the right one explicitly; if a launch no-ops, confirm with `pm list packages`, don't retry blind.
 
 ## run-android-tests.sh — pinned instrumented tests
 
@@ -62,5 +62,5 @@ All UI scripts pin to this worktree's emulator via `.emulator-serial`. Never cal
 - **Fail loud.** Scripts that swallow stderr/exit codes turn into silent no-ops; surface the actual adb / curl / gradle error.
 - **One responsibility per script.** If you reach for `&&`/`;` to chain unrelated work, write a second script instead.
 - **Don't poll with inline `until`/`while` + `sleep` loops.** Await background-task completion notifications, use `ui/screenshot.sh`, or write a single-call script under `scripts/` (then allowlist it). The hook will deny them.
-- **Tear down the emulator after ad-hoc device work** — `./scripts/emulator/release --kill` as soon as a one-off install/inspect is done. Only `lets-do` and `agent-pr-verify` auto-teardown; ad-hoc work otherwise leaves stray VMs that starve the CPU-bound host.
-- **A remediation message that suggests touching shared state must say "STOP — ask the user," never name a command to run.** Agents act on script output literally, so "in another worktree run `release --kill`" gets executed against a sibling session's live emulator. Phrase shared-state fixes as questions for the user; only local-only fixes (retry, delete a local file) may be imperative.
+- **Ad-hoc device work has no auto-teardown — `release --kill` when you're done.** Only `lets-do` / `agent-pr-verify` clean up after themselves; otherwise stray VMs accumulate and starve the CPU-bound host.
+- **Agents act on script output literally — a remediation that touches shared state (another worktree/session, a remote) must say "STOP, ask the user," not name a command.** Only local-only fixes (retry, delete a local file) may be phrased as an imperative.

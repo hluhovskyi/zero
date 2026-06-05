@@ -8,7 +8,7 @@ Plans are saved to `docs/superpowers/plans/` and serve as the contract between s
 
 **Before building a helper component named in a `.jsx` design file, grep the parent screen for its instantiation (`<ComponentName`).** Designers leave earlier iterations as dead `const ComponentName = …` definitions that are never rendered — the design file (what the parent actually renders), not the plan, is authoritative. Building one cost ~900 LOC of component + destination + handler plumbing that had to be removed.
 
-**When a design ships multiple explored directions, the `.jsx` face marked ★PREFERRED / CHOSEN is the spec — not `index.html`.** `index.html` inlines a *simplified placeholder* of the chosen direction; building from it shipped a wrong layout (PR #338). Read the chosen exploration `.jsx`, not just the named entry file.
+**A design's authoritative spec is the exploration face marked ★PREFERRED / CHOSEN, not `index.html`** — `index.html` inlines a *simplified placeholder*, so building from it produces the wrong layout. Read the chosen `.jsx`.
 
 ## Interaction Conventions
 
@@ -32,4 +32,4 @@ Pass `--raw` to `dump-ui.sh` when you need full XML attribute detail.
 
 ## Diagnose, Don't Retry
 
-**After an action fails twice, the third attempt is a state query, not a re-run with tweaks.** Stop varying the command and ask the environment *why* it failed. Example: a freshly-booted emulator returning "No activities found" / "Activity … does not exist" is almost always a **locked** device sitting on `FallbackHome`, not a bad build — check `./scripts/ui/adb shell am stack list`, dismiss the keyguard (or ask the user to unlock), don't rebuild/reinstall.
+**After an action fails twice, the third attempt is a state query, not a re-run with tweaks.** Stop varying the command and ask the environment *why* it failed — a misleading error usually points at the wrong cause (e.g. a fresh emulator's "No activities found" is a locked device, not a bad build, so the fix is unlock, not rebuild).
