@@ -6,6 +6,10 @@ Zero is a personal finance Android app (Kotlin, Jetpack Compose, Dagger, Room). 
 
 If you discover a non-obvious gotcha, a new pattern, or a rule that isn't documented — update the relevant doc file. Don't document things the code already says clearly. Only document the "why" and the traps.
 
+- **Write traps as flat `**bold-lead** — why/trap` bullets** — no tables, no value dumps, no recipe sections; 2–3 sharp bullets beat 6 padded ones.
+- **Keep comments and KDoc terse** — one-liners only for genuinely non-obvious logic; push lengthy "why" into the commit/PR, not the source.
+- **Don't add a `docs/agents/<feature>.md` for a contained feature** — a module's own `AGENTS.md` is enough; reserve `docs/agents/` for cross-module rules, traps, and patterns.
+
 **Repo-First Documentation**: All plans and architectural docs MUST be saved directly to the repository (e.g. `docs/superpowers/plans/`). Never leave artifacts in temporary tool directories. **Commit the plan doc on the feature branch before starting implementation** — an untracked plan is a lost plan.
 
 **Doc-With-Code**: When implementing changes that affect a domain type, invariant, or pattern already described in `docs/agents/`, update the relevant doc file in the **same commit** as the code change — never defer doc updates to a retro or a follow-up PR.

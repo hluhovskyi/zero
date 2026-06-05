@@ -45,3 +45,7 @@ Run the following script to configure your local environment to use these hooks:
 ```
 
 This will set your `core.hooksPath` to `.githooks/`, making the `pre-commit` and `pre-push` checks active.
+
+## Worktree Branches
+
+**A worktree branches from the fetched *remote* tip, which is ahead of the stale local `master`/`origin/master` refs — so to uncommit, reset to the branch's base from `git reflog`, never to `master`.** Resetting to a local ref rebases onto an older commit and surfaces already-merged work as phantom diffs.
