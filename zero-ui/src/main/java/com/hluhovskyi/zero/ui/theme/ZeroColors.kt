@@ -26,6 +26,11 @@ data class ZeroExtraColors(
     val importErrorContainer: Color,
     val importErrorContent: Color,
     val welcomeCardLine: Color,
+    val chartCashIn: Color,
+    val chartCashOut: Color,
+    val chartHeroSurface: Color,
+    val chartHeroContent: Color,
+    val chartHeroContentDim: Color,
     val isLight: Boolean,
 )
 
@@ -100,6 +105,11 @@ val LightZeroExtraColors = ZeroExtraColors(
     importErrorContainer = Color(0xFFFFEBEE),
     importErrorContent = Color(0xFF93000A),
     welcomeCardLine = Color(0xFFFFFFFF),
+    chartCashIn = Color(0xFF5DDBA8),
+    chartCashOut = Color(0xFFEBA07C),
+    chartHeroSurface = Color(0xFF1A2E52),
+    chartHeroContent = Color(0xFFFFFFFF),
+    chartHeroContentDim = Color(0x80FFFFFF),
     isLight = true,
 )
 
@@ -114,6 +124,11 @@ val DarkZeroExtraColors = ZeroExtraColors(
     importErrorContainer = Color(0xFF3A0F12),
     importErrorContent = Color(0xFFFFB4AB),
     welcomeCardLine = Color(0xFFFFFFFF),
+    chartCashIn = Color(0xFF5DDBA8),
+    chartCashOut = Color(0xFFEBA07C),
+    chartHeroSurface = Color(0xFF1A2E52),
+    chartHeroContent = Color(0xFFFFFFFF),
+    chartHeroContentDim = Color(0x80FFFFFF),
     isLight = false,
 )
 
@@ -165,6 +180,11 @@ class ZeroColors(
     val importErrorContainer get() = extras.importErrorContainer
     val importErrorContent get() = extras.importErrorContent
     val welcomeCardLine get() = extras.welcomeCardLine
+    val chartCashIn get() = extras.chartCashIn
+    val chartCashOut get() = extras.chartCashOut
+    val chartHeroSurface get() = extras.chartHeroSurface
+    val chartHeroContent get() = extras.chartHeroContent
+    val chartHeroContentDim get() = extras.chartHeroContentDim
     val isLight get() = extras.isLight
 }
 
