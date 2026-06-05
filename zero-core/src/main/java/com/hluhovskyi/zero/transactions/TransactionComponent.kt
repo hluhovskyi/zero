@@ -117,8 +117,6 @@ abstract class TransactionComponent : AttachableViewComponent {
             filter: TransactionFilter,
             transactionFilterUseCase: TransactionFilterUseCase,
             transactionFilterApplicator: TransactionFilterApplicator,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
             dispatchers: DispatcherProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
@@ -134,8 +132,6 @@ abstract class TransactionComponent : AttachableViewComponent {
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
             transactionFilterApplicator = transactionFilterApplicator,
-            clock = clock,
-            zoneProvider = zoneProvider,
             dispatchers = dispatchers,
         )
 

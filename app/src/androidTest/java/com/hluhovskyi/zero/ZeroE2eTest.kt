@@ -40,6 +40,15 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun importedHistoricalTransactionAppearsLive() {
+        seedExpenses()
+        onTransactions().assertHasExpense(amount = "42")
+        // A historical-dated insert (like an import) while the list is already attached.
+        seedHistoricalExpense()
+        onTransactions().assertHasExpense(amount = "137")
+    }
+
+    @Test
     fun applyTypeFilterUpdatesListAcrossNavigation() {
         seedDefaultSetup()
         onTransactions()

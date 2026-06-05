@@ -11,8 +11,6 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -75,12 +73,6 @@ class DefaultTransactionViewModelTest {
 
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
-    private val fakeClock = object : Clock {
-        override fun now() = fixedInstant
-    }
-    private val fakeZoneProvider = object : ZoneProvider {
-        override fun timeZone() = testTimeZone
-    }
     private val now: LocalDateTime = fixedInstant.toLocalDateTime(testTimeZone)
 
     @Before
@@ -121,20 +113,6 @@ class DefaultTransactionViewModelTest {
     }
 
     @Test
-    fun `attach queries Criteria_After with a recent timestamp`() = runTest {
-        val viewModel = createViewModel(testScheduler)
-        viewModel.attach()
-        runCurrent()
-
-        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
-        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
-
-        val afterCriteria = criteriaCaptor.allValues
-            .filterIsInstance<TransactionRepository.Criteria.After>()
-        assertEquals(1, afterCriteria.size)
-    }
-
-    @Test
     fun `attach maps Transfer repository items to ViewModel Transfer items`() = runTest {
         val transaction = TransactionRepository.Transaction.Transfer(
             id = Id.Known("t1"),
@@ -168,7 +146,7 @@ class DefaultTransactionViewModelTest {
         val currency2 = Currency(id = Id.Known("c2"), name = "Euro", symbol = "€")
         val primaryCurrency = currency1
 
-        whenever(transactionRepository.query(any<TransactionRepository.Criteria.After>(), any())).thenReturn(flowOf(listOf(transaction)))
+        whenever(transactionRepository.query(any<TransactionRepository.Criteria.All>(), any())).thenReturn(flowOf(listOf(transaction)))
         whenever(accountRepository.query(any<AccountRepository.Criteria.All>())).thenReturn(flowOf(listOf(sourceAccount, targetAccount)))
         whenever(currencyRepository.query(any<CurrencyRepository.Criteria.All>())).thenReturn(flowOf(listOf(currency1, currency2)))
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
@@ -439,8 +417,6 @@ class DefaultTransactionViewModelTest {
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterApplicator = TransactionFilterApplicator.Identity,
-            clock = fakeClock,
-            zoneProvider = fakeZoneProvider,
             dispatchers = dispatchers,
         )
     }
