@@ -2,11 +2,14 @@ package com.hluhovskyi.zero.transactions.edit
 
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
+import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
+import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.d
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
@@ -26,6 +29,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.Closeable
@@ -41,6 +45,7 @@ internal class DefaultTransactionEditUseCase(
     private val accountRepository: AccountRepository,
     private val currencyRepository: CurrencyRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
+    private val amountFormatter: AmountFormatter,
     private val transactionRepository: TransactionRepository,
     private val categoriesQueryUseCase: CategoriesQueryUseCase,
     private val idGenerator: IdGenerator,
@@ -198,17 +203,25 @@ internal class DefaultTransactionEditUseCase(
             launch { loadTransaction() }
 
             launch {
-                accountRepository.query(AccountRepository.Criteria.All())
-                    .map { accounts ->
-                        accounts.map { account ->
-                            TransactionEditAccount(
-                                id = account.id,
-                                name = account.name,
-                                currencyId = account.currencyId,
-                            )
-                        }
+                combine(
+                    accountRepository.query(AccountRepository.Criteria.All()),
+                    transactionRepository.query(TransactionRepository.Criteria.AccountBalanceDeltas())
+                        .onEmpty { emit(emptyMap()) },
+                    currencyRepository.query(CurrencyRepository.Criteria.All())
+                        .onEmptyReturnEmptyList(),
+                ) { accounts, accountIdToDelta, currencies ->
+                    val symbolByCurrency = currencies.associate { it.id to it.symbol }
+                    accounts.map { account ->
+                        val balance = account.initialBalance + (accountIdToDelta[account.id] ?: Amount.zero())
+                        TransactionEditAccount(
+                            id = account.id,
+                            name = account.name,
+                            currencyId = account.currencyId,
+                            balance = amountFormatter.format(balance, symbolByCurrency[account.currencyId].orEmpty()),
+                            isNegative = balance < 0L,
+                        )
                     }
-                    .collect { accountsState.value = it }
+                }.collect { accountsState.value = it }
             }
 
             launch { collectRankedCategories() }

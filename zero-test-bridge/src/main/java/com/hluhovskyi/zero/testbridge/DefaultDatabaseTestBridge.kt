@@ -209,4 +209,23 @@ internal class DefaultDatabaseTestBridge(
             ),
         )
     }
+
+    override suspend fun seedHistoricalExpense() {
+        currentUserRepository.query().first()
+
+        // Historical updatedDateTime mimics an imported row (used to escape the live list).
+        val historical = LocalDateTime(2019, 6, 15, 9, 0)
+        transactionRepository.insert(
+            TransactionRepository.Transaction.Expense(
+                id = Id.Known("historical-137"),
+                amount = Amount(BigDecimal("137")),
+                accountId = Id.Known("test-account"),
+                currencyId = Id.Known("USD"),
+                dateTime = historical,
+                updatedDateTime = historical,
+                categoryId = Id.Known("test-category"),
+                rate = Rate.Same,
+            ),
+        )
+    }
 }

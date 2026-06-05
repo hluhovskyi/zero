@@ -14,9 +14,6 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -39,7 +36,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -55,8 +51,6 @@ internal class DefaultTransactionViewModel(
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
     private val transactionFilterApplicator: TransactionFilterApplicator,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     TransactionViewModel {
@@ -161,8 +155,6 @@ internal class DefaultTransactionViewModel(
                 }
             }
 
-            val initialTimestamp = clock.localDateTime(zoneProvider.timeZone())
-
             // Use DB-level query for simple category or account filters (e.g. detail screens).
             // All other cases load everything and apply the filter in memory.
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when {
@@ -178,7 +170,7 @@ internal class DefaultTransactionViewModel(
                     filter.categoryIds == null ->
                     forAccountsTransactionsFlow(filter.accountIds)
 
-                else -> allTransactionsFlow(initialTimestamp)
+                else -> allTransactionsFlow()
             }
 
             // null = "no search active, use paged"; non-null = search results
@@ -296,28 +288,13 @@ internal class DefaultTransactionViewModel(
         }
     }
 
-    private fun allTransactionsFlow(
-        initialTimestamp: LocalDateTime,
-    ): Flow<List<TransactionRepository.Transaction>> = combine(
-        transactionRepository.query(TransactionRepository.Criteria.After(initialTimestamp))
-            .onStartWithEmptyList()
-            .onEmptyReturnEmptyList(),
-        transactionRepository.query(
-            TransactionRepository.Criteria.All(),
-            trigger = loadMoreTrigger,
-        )
-            .onStartWithEmptyList()
-            .onEmptyReturnEmptyList(),
-    ) { new, paged ->
-        val freshById = new.associateBy { it.id }
-        val merged = paged.map { transaction ->
-            val fresh = freshById[transaction.id]
-            if (fresh != null && fresh.updatedDateTime >= transaction.updatedDateTime) fresh else transaction
-        }
-        val existingIds = paged.map { it.id }.toSet()
-        val added = new.filter { it.id !in existingIds }
-        (added + merged).sortedByDescending { it.dateTime }
-    }
+    // The paginated window is reactive end-to-end, so no "recently changed" overlay to merge on top.
+    private fun allTransactionsFlow(): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(
+        TransactionRepository.Criteria.All(),
+        trigger = loadMoreTrigger,
+    )
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
 
     private fun forCategoriesTransactionsFlow(
         categoryIds: Set<Id.Known>,

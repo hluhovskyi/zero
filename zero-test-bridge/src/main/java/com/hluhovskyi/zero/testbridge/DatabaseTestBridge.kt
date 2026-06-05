@@ -29,6 +29,9 @@ interface DatabaseTestBridge {
      */
     suspend fun seedExpenses()
 
+    /** Inserts a historical-dated ($137) expense post-attach (mimics an import). Call after [seedExpenses]. */
+    suspend fun seedHistoricalExpense()
+
     /**
      * Seeds two accounts in different currencies — "Wallet" (USD) and "Revolut" (EUR) — plus a
      * bootstrap expense so the app lands on Transactions, not Welcome. Used by the FX e2e tests to

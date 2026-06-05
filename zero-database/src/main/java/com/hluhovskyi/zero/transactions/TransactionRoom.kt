@@ -35,61 +35,18 @@ internal interface TransactionRoom {
     )
     fun selectAllAlive(userId: String): Flow<List<TransactionEntity>>
 
-    // Reactive — Room re-emits when any matching row is inserted/updated/deleted
-    // after: ISO datetime string e.g. "2024-01-15T10:30:00"
-    @Query(
-        """
-        SELECT * FROM TransactionEntity
-        WHERE userId = :userId
-          AND datetime(updatedDateTime) > datetime(:after)
-          AND deletedAt IS NULL
-        ORDER BY datetime(enteredDateTime) DESC
-    """,
-    )
-    fun selectAfter(userId: String, after: String): Flow<List<TransactionEntity>>
-
-    // One-shot — first page, most recent :limit transactions
+    // Reactive window of the newest :limit alive rows; Room re-emits on any table write.
+    // Raw-column sort (not datetime(...)) so the (userId, enteredDateTime) index serves ORDER BY+LIMIT.
     @Query(
         """
         SELECT * FROM TransactionEntity
         WHERE userId = :userId
           AND deletedAt IS NULL
-        ORDER BY datetime(enteredDateTime) DESC
+        ORDER BY enteredDateTime DESC
         LIMIT :limit
     """,
     )
-    suspend fun selectFirstPage(userId: String, limit: Int): List<TransactionEntity>
-
-    // One-shot — next cursor page, strictly before cursorDate "YYYY-MM-DD"
-    @Query(
-        """
-        SELECT * FROM TransactionEntity
-        WHERE userId = :userId
-          AND date(enteredDateTime) < date(:cursorDate)
-          AND deletedAt IS NULL
-        ORDER BY datetime(enteredDateTime) DESC
-        LIMIT :limit
-    """,
-    )
-    suspend fun selectNextPage(userId: String, cursorDate: String, limit: Int): List<TransactionEntity>
-
-    // One-shot — all transactions on :day older than :beforeDateTime (day padding)
-    // day: "YYYY-MM-DD", beforeDateTime: ISO datetime string
-    @Query(
-        """
-        SELECT * FROM TransactionEntity
-        WHERE userId = :userId
-          AND date(enteredDateTime) = date(:day)
-          AND datetime(enteredDateTime) < datetime(:beforeDateTime)
-          AND deletedAt IS NULL
-        ORDER BY datetime(enteredDateTime) DESC
-    """,
-    )
-    suspend fun selectRemainingOnDay(
-        userId: String,
-        day: String,
-        beforeDateTime: String,
-    ): List<TransactionEntity>
+    fun selectWindow(userId: String, limit: Int): Flow<List<TransactionEntity>>
 
     fun selectByUserId(userId: Id.Known): Flow<List<TransactionEntity>> {
         Log.d("GOVNO", "ahuet, ${Thread.currentThread().name}")

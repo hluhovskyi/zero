@@ -29,7 +29,7 @@ abstract class BaseE2eTest {
     // Launched lazily inside onTransactions/onBudget so the test body can seed the DB BEFORE
     // the app subscribes. Otherwise HomeViewModel observes an empty DB on attach, paints the
     // Welcome screen, and the test races a re-emission to flip back to Transactions — which
-    // loses under host load and the transaction list's selectAfter race never resolves.
+    // loses under host load.
     private var scenario: ActivityScenario<MainActivity>? = null
 
     @get:Rule(order = 0)
@@ -56,6 +56,8 @@ abstract class BaseE2eTest {
     protected fun seedBudgetOverScenario() = runBlocking { container.database.seedBudgetOverScenario() }
 
     protected fun seedExpenses() = runBlocking { container.database.seedExpenses() }
+
+    protected fun seedHistoricalExpense() = runBlocking { container.database.seedHistoricalExpense() }
 
     protected fun seedFxAccounts() = runBlocking { container.database.seedFxAccounts() }
 

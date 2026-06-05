@@ -27,7 +27,6 @@ interface TransactionRepository {
         class All : Criteria<List<Transaction>>
         class HasAny : Criteria<Boolean>
         data class ById(val id: Id.Known) : Criteria<Transaction>
-        data class After(val dateTime: LocalDateTime) : Criteria<List<Transaction>>
         class CategoryUsageStatistics : Criteria<List<CategoryUsageStatistic>>
         data class CategoryUsageStatisticsByAccount(val accountId: Id.Known) : Criteria<List<CategoryUsageStatistic>>
         data class CategoryUsageStatisticsByMonth(val month: Int) : Criteria<List<CategoryUsageStatistic>>
