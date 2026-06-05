@@ -22,6 +22,8 @@ internal class DefaultSettingsViewModel(
     private val settingsCurrencyUseCase: SettingsCurrencyUseCase,
     private val onImportSelected: OnImportSelectedHandler,
     private val onBackupSelected: OnBackupSelectedHandler,
+    private val onDevChartsSelected: OnDevChartsSelectedHandler,
+    private val isDebugBuild: Boolean,
     private val exportUseCase: ExportUseCase,
     private val biometricLockUseCase: BiometricLockUseCase,
     private val biometricAuthenticator: BiometricAuthenticator,
@@ -30,7 +32,7 @@ internal class DefaultSettingsViewModel(
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : SettingsViewModel {
 
-    private val mutableState = MutableStateFlow(SettingsViewModel.State())
+    private val mutableState = MutableStateFlow(SettingsViewModel.State(showDeveloperOptions = isDebugBuild))
     override val state: Flow<SettingsViewModel.State> = mutableState
 
     override fun perform(action: SettingsViewModel.Action) {
@@ -40,6 +42,9 @@ internal class DefaultSettingsViewModel(
             }
             is SettingsViewModel.Action.OpenBackup -> coroutineScope.launch(Dispatchers.Main) {
                 onBackupSelected.onSelected()
+            }
+            is SettingsViewModel.Action.OpenDevCharts -> coroutineScope.launch(Dispatchers.Main) {
+                onDevChartsSelected.onSelected()
             }
             is SettingsViewModel.Action.Export -> coroutineScope.launch {
                 when (val result = exportUseCase.export(action.uri)) {

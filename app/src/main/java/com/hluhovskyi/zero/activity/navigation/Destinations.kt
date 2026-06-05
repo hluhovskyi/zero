@@ -97,4 +97,8 @@ internal object Destinations {
         object InitialSource : Argument<String> by stringOptionalValueOf("initialSource")
     }
     object Feedback : Destination by destinationOf("feedback")
+
+    sealed interface Dev : Destination {
+        object Charts : Dev, Destination by destinationOf("dev/charts")
+    }
 }

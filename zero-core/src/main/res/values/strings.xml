@@ -124,6 +124,11 @@
     <string name="settings_backup_saved">Backup saved</string>
     <string name="settings_export_failed">Export failed: %1$s</string>
 
+    <!-- Developer (debug builds only) -->
+    <string name="settings_section_developer">Developer</string>
+    <string name="settings_dev_charts">Charts</string>
+    <string name="settings_dev_charts_description">Preview chart components</string>
+
     <!-- Backup -->
     <string name="settings_section_backup">Backup</string>
     <string name="settings_backup_row_title">Cloud Backup</string>

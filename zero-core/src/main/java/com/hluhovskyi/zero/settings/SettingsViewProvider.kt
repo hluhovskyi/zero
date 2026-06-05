@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Fingerprint
@@ -170,6 +171,18 @@ private fun MoreView(viewModel: SettingsViewModel) {
                         checked = state.biometricLockEnabled,
                         onToggle = { viewModel.perform(SettingsViewModel.Action.ToggleBiometricLock) },
                     )
+                }
+            }
+            if (state.showDeveloperOptions) {
+                item {
+                    MoreSection(title = stringResource(R.string.settings_section_developer).uppercase()) {
+                        MoreRow(
+                            icon = Icons.Outlined.BarChart,
+                            primaryText = stringResource(R.string.settings_dev_charts),
+                            secondaryText = stringResource(R.string.settings_dev_charts_description),
+                            onClick = { viewModel.perform(SettingsViewModel.Action.OpenDevCharts) },
+                        )
+                    }
                 }
             }
             item { Spacer(modifier = Modifier.height(24.dp)) }

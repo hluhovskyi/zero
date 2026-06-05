@@ -13,6 +13,7 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         data class Export(val uri: Uri.NonEmpty) : Action
         object OpenCurrencyPicker : Action
         object OpenBackup : Action
+        object OpenDevCharts : Action
         object ToggleBiometricLock : Action
         object BiometricFeedbackShown : Action
     }
@@ -33,6 +34,7 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         val biometricLockEnabled: Boolean = false,
         val biometricFeedback: BiometricFeedback? = null,
         val backup: BackupSummary = BackupSummary(),
+        val showDeveloperOptions: Boolean = false,
     )
 
     /**
