@@ -45,3 +45,7 @@ Run the following script to configure your local environment to use these hooks:
 ```
 
 This will set your `core.hooksPath` to `.githooks/`, making the `pre-commit` and `pre-push` checks active.
+
+## Worktree Branches
+
+**To uncommit or rebuild commits on a worktree branch, reset to its base from `git reflog` — never to `master` / `origin/master`.** A fresh worktree branches from the freshly-fetched *remote* tip, which is usually ahead of the stale local `master`/`origin/master` refs; resetting to those rebases your branch onto an older commit and surfaces unrelated already-merged work as phantom adds/deletes. Find the true base via the `Branch: …` creation entry in `git reflog` and `git reset <that-sha>`. The PR still diffs correctly against GitHub's real master regardless of the stale local refs.
