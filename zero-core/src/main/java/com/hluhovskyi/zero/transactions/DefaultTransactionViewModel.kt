@@ -14,7 +14,6 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
-import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -290,13 +289,12 @@ internal class DefaultTransactionViewModel(
     }
 
     // The paginated window is reactive end-to-end, so no "recently changed" overlay to merge on top.
-    private fun allTransactionsFlow(): Flow<List<TransactionRepository.Transaction>> =
-        transactionRepository.query(
-            TransactionRepository.Criteria.All(),
-            trigger = loadMoreTrigger,
-        )
-            .onStartWithEmptyList()
-            .onEmptyReturnEmptyList()
+    private fun allTransactionsFlow(): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(
+        TransactionRepository.Criteria.All(),
+        trigger = loadMoreTrigger,
+    )
+        .onStartWithEmptyList()
+        .onEmptyReturnEmptyList()
 
     private fun forCategoriesTransactionsFlow(
         categoryIds: Set<Id.Known>,
