@@ -33,6 +33,14 @@ fi
 
 [ "$is_branch_op" -eq 0 ] && exit 0
 
+# ── 1b. Allow restoring the workspace TO the default branch ─────────────────
+# Switching to master/main is the one safe branch op in the main workspace — and the
+# corrective action when it drifts onto a stray branch. Create flags (-b/-B/-c) put a
+# *new* branch name after checkout/switch, so those don't match and still block.
+if echo "$cmd" | grep -qE '(^|[|;][[:space:]]*)git (checkout|switch)[[:space:]]+(master|main)([[:space:]]|$)'; then
+  exit 0
+fi
+
 # ── 2. Check if already in a worktree ───────────────────────────────────────
 
 git_dir=$(git rev-parse --git-dir 2>/dev/null) || exit 0
@@ -43,4 +51,4 @@ common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || exit 0
 
 # ── 3. Block — we're in the main workspace ───────────────────────────────────
 
-printf '%s\n' '{"continue":false,"stopReason":"Branch switch blocked: you are in the main workspace (master). Use '\''git worktree add'\'' or the using-git-worktrees skill to create an isolated worktree first. Never switch branches on master."}'
+printf '%s\n' '{"continue":false,"stopReason":"Branch switch blocked: you are in the main workspace (master). Use '\''git worktree add'\'' or the using-git-worktrees skill to create an isolated worktree first. Never create or switch to a feature branch here (it leaves a stray branch). Switching back to master/main IS allowed for restoring the workspace."}'

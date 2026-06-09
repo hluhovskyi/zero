@@ -27,3 +27,7 @@ Pass `--raw` to `dump-ui.sh` when you need full XML attribute detail.
 ## Complexity Circuit Breaker
 
 **The "Hacky Code" Circuit Breaker:** If you iterate on a fix more than twice and your solution requires dropping down to low-level framework APIs (e.g., `PointerEventPass.Initial`, Reflection, or Global Registries) for a common UI or logic problem, you must STOP. Revert your changes and present the fundamental constraint to the user before proceeding. Do not brute-force the framework.
+
+## Diagnose, Don't Retry
+
+**After an action fails twice, the third attempt is a state query, not a re-run with tweaks.** Stop varying the command and ask the environment *why* it failed — a misleading error usually points at the wrong cause (e.g. a fresh emulator's "No activities found" is a locked device, not a bad build, so the fix is unlock, not rebuild).
