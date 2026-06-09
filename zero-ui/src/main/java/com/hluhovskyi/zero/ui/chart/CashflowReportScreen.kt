@@ -365,5 +365,4 @@ private fun incomeIcon(index: Int): ImageVector = when (index) {
 
 private fun fmt0(value: Float): String = "$" + "%,d".format(value.roundToInt())
 
-private fun fmtSign(value: Float): String =
-    (if (value >= 0f) "+$" else "–$") + "%,d".format(abs(value).roundToInt())
+private fun fmtSign(value: Float): String = (if (value >= 0f) "+$" else "–$") + "%,d".format(abs(value).roundToInt())
