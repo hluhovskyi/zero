@@ -14,6 +14,7 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
         object OpenCurrencyPicker : Action
         object OpenBackup : Action
         object OpenDevCharts : Action
+        object OpenDevCashFlow : Action
         object ToggleBiometricLock : Action
         object BiometricFeedbackShown : Action
     }

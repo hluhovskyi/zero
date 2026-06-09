@@ -23,6 +23,7 @@ internal class DefaultSettingsViewModel(
     private val onImportSelected: OnImportSelectedHandler,
     private val onBackupSelected: OnBackupSelectedHandler,
     private val onDevChartsSelected: OnDevChartsSelectedHandler,
+    private val onDevCashFlowSelected: OnDevCashFlowSelectedHandler,
     private val isDebugBuild: Boolean,
     private val exportUseCase: ExportUseCase,
     private val biometricLockUseCase: BiometricLockUseCase,
@@ -45,6 +46,9 @@ internal class DefaultSettingsViewModel(
             }
             is SettingsViewModel.Action.OpenDevCharts -> coroutineScope.launch(Dispatchers.Main) {
                 onDevChartsSelected.onSelected()
+            }
+            is SettingsViewModel.Action.OpenDevCashFlow -> coroutineScope.launch(Dispatchers.Main) {
+                onDevCashFlowSelected.onSelected()
             }
             is SettingsViewModel.Action.Export -> coroutineScope.launch {
                 when (val result = exportUseCase.export(action.uri)) {

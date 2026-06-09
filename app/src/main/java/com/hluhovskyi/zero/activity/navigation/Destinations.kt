@@ -100,5 +100,6 @@ internal object Destinations {
 
     sealed interface Dev : Destination {
         object Charts : Dev, Destination by destinationOf("dev/charts")
+        object CashFlow : Dev, Destination by destinationOf("dev/cashflow")
     }
 }

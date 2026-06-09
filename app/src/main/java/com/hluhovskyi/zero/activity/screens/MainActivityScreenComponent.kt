@@ -73,6 +73,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.ui.chart.CashflowReportScreen
 import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
@@ -958,6 +959,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .onBackupSelectedHandler { navigator.navigateTo(Destinations.Backup) }
                 .onDevChartsSelectedHandler { navigator.navigateTo(Destinations.Dev.Charts) }
+                .onDevCashFlowSelectedHandler { navigator.navigateTo(Destinations.Dev.CashFlow) }
                 .isDebugBuild(BuildConfig.DEBUG)
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .biometricLockUseCase(biometricLockUseCase)
@@ -972,6 +974,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Dev.Charts) {
             ChartsGalleryScreen(onBack = { navigator.back() })
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun devCashFlowNavigationEntry(
+            navigatorScope: NavigatorScope,
+        ): NavigatorEntry = navigatorScope.composable(Destinations.Dev.CashFlow) {
+            CashflowReportScreen(onBack = { navigator.back() })
         }
 
         @Provides

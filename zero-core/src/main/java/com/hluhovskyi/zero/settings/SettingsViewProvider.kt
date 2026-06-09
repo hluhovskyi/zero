@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.MoveToInbox
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -181,6 +182,12 @@ private fun MoreView(viewModel: SettingsViewModel) {
                             primaryText = stringResource(R.string.settings_dev_charts),
                             secondaryText = stringResource(R.string.settings_dev_charts_description),
                             onClick = { viewModel.perform(SettingsViewModel.Action.OpenDevCharts) },
+                        )
+                        MoreRow(
+                            icon = Icons.AutoMirrored.Outlined.ShowChart,
+                            primaryText = stringResource(R.string.settings_dev_cashflow),
+                            secondaryText = stringResource(R.string.settings_dev_cashflow_description),
+                            onClick = { viewModel.perform(SettingsViewModel.Action.OpenDevCashFlow) },
                         )
                     }
                 }
