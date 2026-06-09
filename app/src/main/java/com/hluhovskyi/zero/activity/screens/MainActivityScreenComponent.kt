@@ -5,6 +5,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.navigation.BottomSheetNavigator
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
+import com.hluhovskyi.zero.BuildConfig
 import com.hluhovskyi.zero.accounts.AccountComponent
 import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
@@ -72,6 +73,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
 import dagger.Provides
@@ -955,10 +957,21 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             componentBuilder
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .onBackupSelectedHandler { navigator.navigateTo(Destinations.Backup) }
+                .onDevChartsSelectedHandler { navigator.navigateTo(Destinations.Dev.Charts) }
+                .isDebugBuild(BuildConfig.DEBUG)
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .biometricLockUseCase(biometricLockUseCase)
                 .biometricAuthenticator(biometricAuthenticator)
                 .logging(logger)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun devChartsNavigationEntry(
+            navigatorScope: NavigatorScope,
+        ): NavigatorEntry = navigatorScope.composable(Destinations.Dev.Charts) {
+            ChartsGalleryScreen(onBack = { navigator.back() })
         }
 
         @Provides
