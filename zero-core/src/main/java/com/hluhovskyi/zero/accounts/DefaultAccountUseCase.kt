@@ -6,6 +6,9 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -22,7 +25,9 @@ internal class DefaultAccountUseCase(
     iconRepository: IconRepository,
     private val colorRepository: ColorRepository,
     currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-    currencyConvertUseCase: CurrencyConvertUseCase,
+    private val currencyConvertUseCase: CurrencyConvertUseCase,
+    private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
 ) : AccountUseCase {
 
     override val state: Flow<AccountUseCase.State> = combine(
@@ -35,7 +40,9 @@ internal class DefaultAccountUseCase(
         iconRepository.query(IconRepository.Criteria.All())
             .onEmptyReturnEmptyList()
             .associateById(),
-    ) { accounts, accountIdToBalance, idToCurrency, idToIcon ->
+        transactionRepository.query(TransactionRepository.Criteria.All())
+            .onEmpty { emit(emptyList()) },
+    ) { accounts, accountIdToBalance, idToCurrency, idToIcon, allTransactions ->
         val resultAccounts = accounts.map { account ->
             val colorScheme = (account.colorId as? Id.Known)
                 ?.let { colorRepository.schemeFor(it) }
@@ -69,12 +76,24 @@ internal class DefaultAccountUseCase(
             }
         }
 
+        val deltasByMonth: Map<Int, Amount> = allTransactions
+            .mapNotNull { transaction ->
+                transaction.netWorthContribution()?.let { (currencyId, signed) ->
+                    transaction.dateTime.monthIndex() to
+                        currencyConvertUseCase.convertToPrimary(signed, currencyId)
+                }
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, deltas) -> deltas.fold(Amount.zero(), Amount::plus) }
+        val anchorMonthIndex = clock.localDateTime(zoneProvider.timeZone()).monthIndex()
+
         AccountUseCase.State(
             balance = balance,
             assets = assets,
             liabilities = liabilities,
             currency = currencyPrimaryUseCase.getPrimaryCurrency(),
             accounts = resultAccounts,
+            netWorthTrend = reconstructNetWorthTrend(balance, deltasByMonth, anchorMonthIndex),
         )
     }
 

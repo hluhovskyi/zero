@@ -7,6 +7,8 @@ import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -40,6 +42,8 @@ abstract class AccountComponent : AttachableViewComponent {
         val dispatchers: DispatcherProvider
         val iamgeLoader: ImageLoader
         val amountFormatter: AmountFormatter
+        val clock: Clock
+        val zoneProvider: ZoneProvider
 
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
@@ -99,6 +103,8 @@ abstract class AccountComponent : AttachableViewComponent {
             colorRepository: ColorRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
@@ -107,6 +113,8 @@ abstract class AccountComponent : AttachableViewComponent {
             colorRepository = colorRepository,
             currencyConvertUseCase = currencyConvertUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
+            clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides

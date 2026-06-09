@@ -107,6 +107,8 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             colorRepository: ColorRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
@@ -115,6 +117,8 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             colorRepository = colorRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
+            clock = clock,
+            zoneProvider = zoneProvider,
         )
 
         @Provides

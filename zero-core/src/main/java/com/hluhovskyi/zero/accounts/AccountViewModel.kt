@@ -25,6 +25,7 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
         val activeAccounts: List<Account> = emptyList(),
         val archivedAccounts: List<Account> = emptyList(),
         val hasAddedAccount: Boolean = true,
+        val netWorthTrend: List<Amount> = emptyList(),
     ) {
         /**
          * Active accounts grouped by [AccountCategory] and ordered by the category's declared

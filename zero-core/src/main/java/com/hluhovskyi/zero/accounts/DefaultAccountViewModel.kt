@@ -59,6 +59,7 @@ internal class DefaultAccountViewModel(
                             activeAccounts = useCaseState.accounts.filter { it.archivedAt == null },
                             archivedAccounts = useCaseState.accounts.filter { it.archivedAt != null },
                             hasAddedAccount = hasAdded,
+                            netWorthTrend = useCaseState.netWorthTrend,
                         )
                     }
                 }
