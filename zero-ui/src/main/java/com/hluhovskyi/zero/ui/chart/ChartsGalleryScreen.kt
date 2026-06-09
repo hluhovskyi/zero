@@ -43,10 +43,22 @@ fun ChartsGalleryScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             LineSection()
+            SignedLineSection()
             BarSection()
             TrendSection()
             DonutSection()
         }
+    }
+}
+
+@Composable
+private fun SignedLineSection() {
+    SectionHeader("Signed line (zero baseline · red below / green above)")
+    GalleryCard("Negative (net worth underwater)") {
+        SignedLineChart(LineChartData(ChartMockData.netWorthNegative), Modifier.fillMaxWidth().height(74.dp))
+    }
+    GalleryCard("Crosses zero (underwater → positive)") {
+        SignedLineChart(LineChartData(ChartMockData.netWorthCrossing), Modifier.fillMaxWidth().height(74.dp))
     }
 }
 

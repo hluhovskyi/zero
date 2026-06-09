@@ -19,6 +19,17 @@ internal object ChartMockData {
 
     val netWorth6: List<Float> = listOf(18200f, 19000f, 20400f, 21500f, 22600f, 23900f)
 
+    // Net worth underwater (improving but still negative) — for the signed chart, all below zero.
+    val netWorthNegative: List<Float> = listOf(
+        -14200f, -15100f, -13800f, -14600f, -12900f, -13400f,
+        -11800f, -12500f, -10900f, -11600f, -9800f, -8400f,
+    )
+
+    // Net worth that climbs from underwater up through zero into the black.
+    val netWorthCrossing: List<Float> = listOf(
+        -3200f, -2400f, -2600f, -1500f, -800f, 300f, 1100f, 900f, 2200f, 3000f, 4100f, 5200f,
+    )
+
     // Single-series category spend per month (label, amount) — for the trend bar chart.
     val categoryTrend: List<Pair<String, Float>> = listOf(
         "Nov" to 220f,

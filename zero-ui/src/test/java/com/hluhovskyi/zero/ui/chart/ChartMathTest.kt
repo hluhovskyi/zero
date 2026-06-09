@@ -35,4 +35,28 @@ class ChartMathTest {
         assertEquals(true, shouldShowBarLabels(14))
         assertEquals(false, shouldShowBarLabels(15))
     }
+
+    @Test fun `signed scale puts zero at top for all-negative data`() {
+        val s = signedScale(listOf(-10f, -20f))
+        assertEquals(0.5f, s.fractions[0], 0.0001f)
+        assertEquals(0f, s.fractions[1], 0.0001f)
+        assertEquals(1f, s.zeroFraction, 0.0001f)
+    }
+
+    @Test fun `signed scale puts zero at bottom for all-positive data`() {
+        val s = signedScale(listOf(10f, 20f))
+        assertEquals(0f, s.zeroFraction, 0.0001f)
+        assertEquals(1f, s.fractions[1], 0.0001f)
+    }
+
+    @Test fun `signed scale puts zero mid for symmetric crossing data`() {
+        val s = signedScale(listOf(-10f, 10f))
+        assertEquals(0.5f, s.zeroFraction, 0.0001f)
+        assertEquals(0f, s.fractions[0], 0.0001f)
+        assertEquals(1f, s.fractions[1], 0.0001f)
+    }
+
+    @Test fun `signed scale of empty is empty`() {
+        assertEquals(emptyList<Float>(), signedScale(emptyList()).fractions)
+    }
 }
