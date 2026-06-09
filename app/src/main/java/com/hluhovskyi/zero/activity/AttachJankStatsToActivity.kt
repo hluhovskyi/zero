@@ -6,13 +6,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.metrics.performance.FrameData
 import androidx.metrics.performance.JankStats
+import com.hluhovskyi.zero.BuildConfig
 import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.Closeable
 import kotlin.time.Duration.Companion.nanoseconds
@@ -34,15 +39,21 @@ class AttachJankStatsToActivity(
         awaitClose { stats.isTrackingEnabled = false }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        activity.lifecycleScope.launch {
-            activity.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                jankFlow
-                    .filter { it.isJank }
-                    .collect {
-                        val millis = it.frameDurationUiNanos.nanoseconds.inWholeMilliseconds
-                        logger.d("$millis ms, ${it.states}")
-                    }
+    override fun attach(): Closeable {
+        if (!BuildConfig.JANK_TRACKING) return Closeables.empty()
+        return Closeables.of {
+            activity.lifecycleScope.launch {
+                activity.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    jankFlow
+                        .filter { it.isJank }
+                        .onEach {
+                            val millis = it.frameDurationUiNanos.nanoseconds.inWholeMilliseconds
+                            logger.d("$millis ms, ${it.states}")
+                        }
+                        // Keep the filtering + logging off the main thread so measuring jank doesn't add to it.
+                        .flowOn(Dispatchers.Default)
+                        .collect()
+                }
             }
         }
     }

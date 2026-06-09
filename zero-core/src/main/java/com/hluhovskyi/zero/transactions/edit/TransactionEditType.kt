@@ -5,7 +5,8 @@ import com.hluhovskyi.zero.categories.CategoryType
 enum class TransactionEditType {
     EXPENSE,
     INCOME,
-    TRANSFER;
+    TRANSFER,
+    ;
 
     companion object {
 

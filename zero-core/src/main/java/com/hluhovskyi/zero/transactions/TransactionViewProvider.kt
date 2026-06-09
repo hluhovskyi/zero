@@ -111,8 +111,11 @@ private fun TransactionView(
     LaunchedEffect(performanceHolder, lazyListState) {
         snapshotFlow { lazyListState.isScrollInProgress }
             .collect { scrolling ->
-                if (scrolling) performanceHolder.state?.putState(TAG, "scroll")
-                else performanceHolder.state?.removeState(TAG)
+                if (scrolling) {
+                    performanceHolder.state?.putState(TAG, "scroll")
+                } else {
+                    performanceHolder.state?.removeState(TAG)
+                }
             }
     }
 
