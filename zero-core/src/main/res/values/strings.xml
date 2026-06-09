@@ -15,6 +15,9 @@
     <string name="account_assets">Assets</string>
     <string name="account_liabilities">Liabilities</string>
     <string name="account_my_accounts">My Accounts</string>
+    <string name="account_view_trend">View trend</string>
+    <string name="account_net_worth_growth">%1$s%% · 1Y</string>
+    <string name="account_net_worth_improvement">+%1$s · 1Y</string>
     <string name="account_add">Add Account</string>
     <string name="account_header_cash">Cash</string>
     <string name="account_header_bank">Bank</string>
