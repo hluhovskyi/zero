@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
@@ -111,13 +112,13 @@ private fun AccountView(
             item {
                 val netWorth = state.netWorth
                 val symbol = netWorth.currency?.symbol.orEmpty()
-                val growthChip: String? = when (val change = netWorth.change) {
-                    is NetWorthChange.Growth ->
-                        stringResource(R.string.account_net_worth_growth, change.percent.toString())
-                    is NetWorthChange.Improvement ->
+                val chipText: String? = when (val change = netWorth.change) {
+                    is NetWorthChange.Percent ->
+                        stringResource(R.string.account_net_worth_trend_percent, change.magnitude.toString())
+                    is NetWorthChange.Delta ->
                         stringResource(
-                            R.string.account_net_worth_improvement,
-                            amountFormatter.format(amount = change.delta, currencySymbol = symbol),
+                            R.string.account_net_worth_trend_amount,
+                            amountFormatter.format(amount = change.magnitude, currencySymbol = symbol),
                         )
                     null -> null
                 }
@@ -127,7 +128,8 @@ private fun AccountView(
                     liabilities = amountFormatter.format(amount = netWorth.liabilities, currencySymbol = symbol),
                     trendPoints = netWorth.trendPoints,
                     isNegative = netWorth.isNegative,
-                    growthChip = growthChip,
+                    chipText = chipText,
+                    chipRising = netWorth.change?.rising == true,
                 )
             }
             item {
@@ -196,7 +198,8 @@ private fun NetWorthHeader(
     liabilities: String,
     trendPoints: List<Float>,
     isNegative: Boolean,
-    growthChip: String?,
+    chipText: String?,
+    chipRising: Boolean,
 ) {
     Column(
         modifier = Modifier
@@ -230,8 +233,8 @@ private fun NetWorthHeader(
                     ),
                 )
             }
-            if (growthChip != null) {
-                GrowthChip(text = growthChip)
+            if (chipText != null) {
+                TrendChip(text = chipText, rising = chipRising)
             }
         }
         if (isNegative) {
@@ -273,26 +276,27 @@ private fun NetWorthHeader(
 }
 
 @Composable
-private fun GrowthChip(text: String) {
+private fun TrendChip(text: String, rising: Boolean) {
+    val color = if (rising) ZeroTheme.colors.secondary else ZeroTheme.colors.error
     Row(
         modifier = Modifier
-            .background(ZeroTheme.colors.secondary.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Icon(
-            imageVector = Icons.Filled.ArrowDropUp,
+            imageVector = if (rising) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = ZeroTheme.colors.secondary,
+            tint = color,
         )
         Text(
             text = text,
             style = TextStyle(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.secondary,
+                color = color,
             ),
         )
     }

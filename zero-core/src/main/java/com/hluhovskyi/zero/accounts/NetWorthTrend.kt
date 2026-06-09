@@ -4,6 +4,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.datetime.LocalDateTime
+import kotlin.math.abs
 
 /** Trailing months kept in the net-worth trend (matches the design's 12-month window). */
 internal const val NET_WORTH_TREND_MONTHS = 12
@@ -22,30 +23,37 @@ internal fun TransactionRepository.Transaction.netWorthContribution(): Pair<Id.K
 }
 
 /**
- * The headline change shown next to the net-worth number. Absent (null) when there is nothing
- * to celebrate — fewer than two points, a zero starting point, or no growth/improvement.
+ * The headline change shown next to the net-worth number, over the 1-year window. [rising]
+ * drives the chip's direction (green ▲ up / red ▼ down); the magnitude is always non-negative,
+ * since the arrow + colour carry the sign. Null only when there's no movement to show.
  */
 sealed interface NetWorthChange {
-    /** Net worth grew over the window, by [percent] (always > 0). */
-    data class Growth(val percent: Int) : NetWorthChange
+    val rising: Boolean
 
-    /** Net worth is underwater but improved (debt shrank) over the window, by [delta] (> 0). */
-    data class Improvement(val delta: Amount) : NetWorthChange
+    /** Solvent net worth with a real baseline → a percentage move (e.g. 12 → "12%"). */
+    data class Percent(val magnitude: Int, override val rising: Boolean) : NetWorthChange
+
+    /** Underwater or zero-baseline (where a percentage is undefined) → an absolute amount move. */
+    data class Delta(val magnitude: Amount, override val rising: Boolean) : NetWorthChange
 }
 
-/** Net-worth change over [trend] (first → last), or null when there's nothing meaningful to show. */
+/**
+ * Net-worth change over [trend] (first → last). A percentage when solvent with a non-zero
+ * baseline; otherwise (underwater, or a zero baseline where a percentage is undefined) the
+ * absolute amount moved. Null for fewer than two points or a flat window (no movement).
+ */
 internal fun netWorthChange(trend: List<Amount>): NetWorthChange? {
     if (trend.size < 2) return null
     val first = trend.first().value
     val last = trend.last().value
-    if (first.signum() == 0) return null
-    return if (last.signum() < 0) {
-        (trend.last() - trend.first()).takeIf { it.value.signum() > 0 }
-            ?.let(NetWorthChange::Improvement)
+    val delta = last - first
+    if (delta.signum() == 0) return null
+    val rising = delta.signum() > 0
+    return if (last.signum() >= 0 && first.signum() != 0) {
+        val percent = (delta.toDouble() / first.abs().toDouble() * 100).toInt()
+        NetWorthChange.Percent(abs(percent), rising)
     } else {
-        ((last - first).toDouble() / first.abs().toDouble() * 100).toInt()
-            .takeIf { it > 0 }
-            ?.let(NetWorthChange::Growth)
+        NetWorthChange.Delta(Amount(delta.abs()), rising)
     }
 }
 

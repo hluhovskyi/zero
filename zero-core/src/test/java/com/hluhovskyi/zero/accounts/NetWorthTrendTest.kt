@@ -45,26 +45,35 @@ class NetWorthTrendTest {
     }
 
     @Test
-    fun `change is growth percent when net worth grew`() {
-        val change = netWorthChange(trend("800", "1000"))
-        assertEquals(NetWorthChange.Growth(25), change)
+    fun `change is rising percent when net worth grew`() {
+        assertEquals(NetWorthChange.Percent(25, rising = true), netWorthChange(trend("800", "1000")))
     }
 
     @Test
-    fun `change is improvement delta when net worth is underwater but improving`() {
-        val change = netWorthChange(trend("-14200", "-8400"))
-        assertEquals(NetWorthChange.Improvement(Amount(BigDecimal("5800"))), change)
+    fun `change is falling percent when net worth declined`() {
+        assertEquals(NetWorthChange.Percent(10, rising = false), netWorthChange(trend("1000", "900")))
     }
 
     @Test
-    fun `change is null when net worth declined`() {
-        assertNull(netWorthChange(trend("1000", "900")))
+    fun `change is rising delta when underwater but improving`() {
+        assertEquals(
+            NetWorthChange.Delta(Amount(BigDecimal("5800")), rising = true),
+            netWorthChange(trend("-14200", "-8400")),
+        )
     }
 
     @Test
-    fun `change is null for a single point or zero start`() {
+    fun `change is falling delta when net worth drops below zero`() {
+        assertEquals(
+            NetWorthChange.Delta(Amount(BigDecimal("100")), rising = false),
+            netWorthChange(trend("0", "-100")),
+        )
+    }
+
+    @Test
+    fun `change is null for a single point or a flat window`() {
         assertNull(netWorthChange(trend("1000")))
-        assertNull(netWorthChange(trend("0", "500")))
+        assertNull(netWorthChange(trend("500", "500")))
     }
 
     private fun trend(vararg values: String) = values.map { Amount(BigDecimal(it)) }
