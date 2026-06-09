@@ -46,9 +46,10 @@ All carry only primitives + `Color` — no domain types (zero-ui rule).
 ### `LineChart` — `LineChart.kt`
 Canvas sparkline. Min/max normalized polyline with `preserveAspectRatio:none`-style
 non-uniform fit, gradient area fill (alpha 0.28 → 0), end-point dot. Params: `data`,
-`lineColor`, `modifier`, `strokeWidth`, `showArea`, `showEndpoint`.
-Degenerate handling — **the real engineering**: empty → draw nothing (caller shows empty
-state); 1 point → dot only, no line; `min == max` (flat) → centered horizontal line.
+`lineColor`, `modifier`, `strokeWidth`, `showArea`, `showEndpoint`, `baselineColor`.
+Degenerate handling — **degrades on its own terms** (revised design): empty → a flat **dashed
+baseline** at mid-height (never a blank box; caller overlays a message); 1 point → a lone dot,
+no line (a line needs two points); `min == max` (flat) → centered horizontal line.
 
 ### `BarChart` — `BarChart.kt`
 Layout vertical bars, grouped or single. Adaptive bar width by bucket count
@@ -72,10 +73,11 @@ the gallery by composing this primitive with overlays (ghost bars at 18% alpha +
 
 ### `DonutChart` — `DonutChart.kt`
 Canvas multi-segment ring over a full track. `drawArc` per segment, start −90°, swept by
-`value/total`, round-capped, with a small gap. Center content via a `content: @Composable
-BoxScope.() -> Unit` slot. Params: `data`, `modifier`, `strokeWidth`, `trackColor`, `content`.
-Degenerate: total 0 / empty → track ring only (so an empty-state label can sit in center);
-1 segment → full ring.
+`value/total`. Center content via a `content: @Composable BoxScope.() -> Unit` slot. Params:
+`data`, `modifier`, `strokeWidth`, `trackColor`, `content`.
+Degenerate — **degrades on its own terms** (revised design): total 0 / empty → a hollow **dashed
+ring** (reads as "no spending yet", not a filled circle; center can hold a "$0" label);
+1 segment → full ring (= 100%).
 
 ### Accent tokens — extend `ZeroExtraColors` (theme package, lint-clean)
 Add: `chartCashIn` (green `#5DDBA8`), `chartCashOut` (orange `#EBA07C`), `chartHeroSurface`

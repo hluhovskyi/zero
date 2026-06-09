@@ -8,15 +8,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * Sparkline: min/max-normalized polyline with a gradient area fill and an end-point dot.
- * Degenerate: empty → nothing; 1 point → dot only; flat series → centered line.
+ * Degrades on its own terms: empty → a flat dashed baseline (never a blank box); 1 point →
+ * a lone dot, no line (a line needs two points); flat series → centered line.
  */
 @Composable
 fun LineChart(
@@ -26,11 +29,23 @@ fun LineChart(
     strokeWidth: Dp = 2.5.dp,
     showArea: Boolean = true,
     showEndpoint: Boolean = true,
+    baselineColor: Color = ZeroTheme.colors.surfaceContainer,
 ) {
     val points = data.points
     val fractions = remember(points) { normalizeToFractions(points) }
     Canvas(modifier = modifier) {
-        if (points.isEmpty()) return@Canvas
+        if (points.isEmpty()) {
+            val y = size.height / 2f
+            drawLine(
+                color = baselineColor,
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = strokeWidth.toPx(),
+                cap = StrokeCap.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 16f)),
+            )
+            return@Canvas
+        }
         val pad = strokeWidth.toPx()
         val usableH = size.height - pad * 2
         val dotR = strokeWidth.toPx() * 1.4f

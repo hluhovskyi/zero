@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
@@ -18,7 +19,8 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
 /**
  * Donut: one arc per segment (swept by value/total) over a full track ring, with a centered
- * [content] slot. Degenerate: total 0 / empty → track ring only (center can hold an empty label).
+ * [content] slot. Degrades on its own terms: total 0 / empty → a hollow dashed ring (so it reads
+ * as "no spending yet", not a filled circle); the center [content] can hold an empty label.
  */
 @Composable
 fun DonutChart(
@@ -36,8 +38,19 @@ fun DonutChart(
             val diameter = size.minDimension - stroke
             val arcSize = Size(diameter, diameter)
             val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
+            if (total <= 0f) {
+                drawArc(
+                    color = trackColor,
+                    startAngle = 0f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(stroke, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 22f))),
+                )
+                return@Canvas
+            }
             drawArc(trackColor, 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
-            if (total <= 0f) return@Canvas
             var start = -90f
             segments.forEach { seg ->
                 val sweep = seg.value / total * 360f

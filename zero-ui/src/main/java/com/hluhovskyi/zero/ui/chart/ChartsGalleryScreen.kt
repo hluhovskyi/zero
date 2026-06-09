@@ -52,8 +52,8 @@ fun ChartsGalleryScreen(onBack: () -> Unit) {
 @Composable
 private fun LineSection() {
     SectionHeader("Line chart")
-    GalleryCard("No data") { LineChart(LineChartData(emptyList()), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(56.dp)) }
-    GalleryCard("1 point") { LineChart(LineChartData(listOf(42f)), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(56.dp)) }
+    GalleryCard("No data (dashed baseline)") { LineNoData() }
+    GalleryCard("1 point (lone dot, no line)") { LineChart(LineChartData(listOf(42f)), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(56.dp)) }
     GalleryCard("6 months") { LineChart(LineChartData(ChartMockData.netWorth6), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(60.dp)) }
     GalleryCard("12 months") { LineChart(LineChartData(ChartMockData.netWorth12), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(60.dp)) }
 }
@@ -73,8 +73,8 @@ private fun BarSection() {
 @Composable
 private fun DonutSection() {
     SectionHeader("Donut chart")
-    GalleryCard("No data") { DonutBox(DonutChartData(emptyList())) }
-    GalleryCard("1 segment") { DonutBox(donut(1)) }
+    GalleryCard("No data (dashed ring)") { DonutNoData() }
+    GalleryCard("1 segment (full ring = 100%)") { DonutBox(donut(1)) }
     GalleryCard("3 segments") { DonutBox(donut(3)) }
     GalleryCard("All categories") { DonutBox(donut(ChartMockData.categories.size)) }
 }
@@ -137,6 +137,32 @@ private fun BarsZeroPeriod() {
                 .padding(horizontal = 12.dp, vertical = 5.dp),
             style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant),
         )
+    }
+}
+
+@Composable
+private fun LineNoData() {
+    Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
+        LineChart(LineChartData(emptyList()), ZeroTheme.colors.secondary, Modifier.fillMaxWidth().height(56.dp))
+        Text(
+            text = "Not enough history to plot a trend",
+            modifier = Modifier
+                .background(ZeroTheme.colors.surfaceContainerLowest, RoundedCornerShape(20.dp))
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+            style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant),
+        )
+    }
+}
+
+@Composable
+private fun DonutNoData() {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        DonutChart(DonutChartData(emptyList()), Modifier.size(140.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("SPENT", style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant))
+                Text("$0", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.outline))
+            }
+        }
     }
 }
 
