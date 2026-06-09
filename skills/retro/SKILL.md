@@ -27,7 +27,7 @@ gh pr view <pr_number> --json files --jq '.files[].path'
 ```
 Count commits; "fix"/"revert"/"again" patterns = friction. If still on the feature branch, also run `git diff master...HEAD --stat`.
 
-**Affected AGENTS.md files** — read the AGENTS.md nearest to each changed package. These are the ground truth for what's documented vs. not. **Flag new-surface doc gaps:** if the diff adds a new package, a reusable component family, or a public API and that AGENTS.md's "What Lives Here" / `docs/agents` TOC doesn't index it, the missing entry is itself a retro item — a discoverability gap, not friction.
+**Affected AGENTS.md files** — read the AGENTS.md nearest to each changed package. These are the ground truth for what's documented vs. not. **Audit them for gaps and improvements, not just friction:** is the relevant section now stale, missing a case this session exposed, thinner than the work warrants, or silent on a surface the work shipped? Improving existing docs is a first-class retro outcome even when nothing broke.
 
 **Relevant docs** — scan `docs/agents/` for any doc that covers the affected area (navigation, architecture, DI, etc.).
 
@@ -69,7 +69,7 @@ Answer these questions internally before writing anything:
 - [the most impactful single rule, or "—" if none]
 
 ## Actionable items (apply filters to each; empty axes are valid)
-- **Docs** — [insight → file/section]; or a **new-surface doc gap** — a subsystem / component family / public API shipped this session with no AGENTS.md section or TOC entry (exempt from Filter 1: the value is discoverability, not preventing a trap — index it where future authors will look)
+- **Docs** — gaps & improvements in the docs this session touched or exposed: a stale or incomplete section, a missing case/pattern, an unindexed surface, a clarification the work proved necessary [insight → file/section]
 - **Repo/infra** — [one-time setting or script tweak]
 - **Speed/token** — [recurring per-session win — Claude behavior or process]
 - **Behavior (no artifact)** — [self-correction; not committed anywhere]
@@ -108,6 +108,6 @@ Cap: one edit per retro. Do not meta-retro this self-check.
 
 ## Guardrails
 
-- Don't document things the code already says clearly — only the "why" and the traps. **Exception:** a newly shipped public surface still needs a doc *home* — a one-line "What Lives Here" index entry plus a short why/shape section — even though the code states the API; the value is discoverability, not restating signatures.
+- Don't document things the code already says clearly — only the "why" and the traps. (A "where to look" index entry or a why/shape pointer is fine — that's not restating signatures.)
 - If the friction was a one-off or the fix is already in the code, skip it.
 - Prioritize rules that prevent "operating blind" or "success chasing".
