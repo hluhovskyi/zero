@@ -44,6 +44,31 @@ class NetWorthTrendTest {
         assertEquals(BigDecimal("1000"), series.last().value)
     }
 
+    @Test
+    fun `change is growth percent when net worth grew`() {
+        val change = netWorthChange(trend("800", "1000"))
+        assertEquals(NetWorthChange.Growth(25), change)
+    }
+
+    @Test
+    fun `change is improvement delta when net worth is underwater but improving`() {
+        val change = netWorthChange(trend("-14200", "-8400"))
+        assertEquals(NetWorthChange.Improvement(Amount(BigDecimal("5800"))), change)
+    }
+
+    @Test
+    fun `change is null when net worth declined`() {
+        assertNull(netWorthChange(trend("1000", "900")))
+    }
+
+    @Test
+    fun `change is null for a single point or zero start`() {
+        assertNull(netWorthChange(trend("1000")))
+        assertNull(netWorthChange(trend("0", "500")))
+    }
+
+    private fun trend(vararg values: String) = values.map { Amount(BigDecimal(it)) }
+
     private fun income(v: String) = TransactionRepository.Transaction.Income(
         id = Id.Known("i"), amount = Amount(BigDecimal(v)), accountId = Id.Known("a"),
         currencyId = Id.Known("c"), dateTime = DT, updatedDateTime = DT,

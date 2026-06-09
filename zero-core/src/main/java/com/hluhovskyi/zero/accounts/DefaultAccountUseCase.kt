@@ -86,6 +86,7 @@ internal class DefaultAccountUseCase(
             .groupBy({ it.first }, { it.second })
             .mapValues { (_, deltas) -> deltas.fold(Amount.zero(), Amount::plus) }
         val anchorMonthIndex = clock.localDateTime(zoneProvider.timeZone()).monthIndex()
+        val netWorthTrend = reconstructNetWorthTrend(balance, deltasByMonth, anchorMonthIndex)
 
         AccountUseCase.State(
             balance = balance,
@@ -93,7 +94,8 @@ internal class DefaultAccountUseCase(
             liabilities = liabilities,
             currency = currencyPrimaryUseCase.getPrimaryCurrency(),
             accounts = resultAccounts,
-            netWorthTrend = reconstructNetWorthTrend(balance, deltasByMonth, anchorMonthIndex),
+            netWorthTrend = netWorthTrend,
+            netWorthChange = netWorthChange(netWorthTrend),
         )
     }
 

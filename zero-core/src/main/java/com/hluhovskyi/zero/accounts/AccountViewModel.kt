@@ -18,14 +18,10 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
     }
 
     data class State(
-        val balance: Amount = Amount.zero(),
-        val assets: Amount = Amount.zero(),
-        val liabilities: Amount = Amount.zero(),
-        val currency: Currency? = null,
+        val netWorth: NetWorth = NetWorth(),
         val activeAccounts: List<Account> = emptyList(),
         val archivedAccounts: List<Account> = emptyList(),
         val hasAddedAccount: Boolean = true,
-        val netWorthTrend: List<Amount> = emptyList(),
     ) {
         /**
          * Active accounts grouped by [AccountCategory] and ordered by the category's declared
@@ -36,5 +32,19 @@ interface AccountViewModel : AttachableActionStateModel<AccountViewModel.Action,
             .entries
             .sortedBy { it.key.ordinal }
             .map { it.key to it.value }
+
+        /**
+         * Net-worth hero data, pre-shaped for the header: the headline number and its breakdown,
+         * the trend chart points, and the change chip — so the view does no arithmetic.
+         */
+        data class NetWorth(
+            val balance: Amount = Amount.zero(),
+            val assets: Amount = Amount.zero(),
+            val liabilities: Amount = Amount.zero(),
+            val currency: Currency? = null,
+            val trendPoints: List<Float> = emptyList(),
+            val change: NetWorthChange? = null,
+            val isNegative: Boolean = false,
+        )
     }
 }

@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
-import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
@@ -110,29 +109,24 @@ private fun AccountView(
             contentPadding = PaddingValues(bottom = 96.dp),
         ) {
             item {
-                val symbol = state.currency?.symbol.orEmpty()
-                val trend = state.netWorthTrend
-                val first = trend.firstOrNull()?.value
-                val last = trend.lastOrNull()?.value
-                val isNegative = (last?.signum() ?: 0) < 0
-                val growthChip: String? = when {
-                    first == null || last == null || trend.size < 2 || first.signum() == 0 -> null
-                    isNegative -> (last - first).takeIf { it.signum() > 0 }?.let {
+                val netWorth = state.netWorth
+                val symbol = netWorth.currency?.symbol.orEmpty()
+                val growthChip: String? = when (val change = netWorth.change) {
+                    is NetWorthChange.Growth ->
+                        stringResource(R.string.account_net_worth_growth, change.percent.toString())
+                    is NetWorthChange.Improvement ->
                         stringResource(
                             R.string.account_net_worth_improvement,
-                            amountFormatter.format(amount = Amount(it), currencySymbol = symbol),
+                            amountFormatter.format(amount = change.delta, currencySymbol = symbol),
                         )
-                    }
-                    else -> ((last - first).toDouble() / first.abs().toDouble() * 100).toInt()
-                        .takeIf { it > 0 }
-                        ?.let { stringResource(R.string.account_net_worth_growth, it.toString()) }
+                    null -> null
                 }
                 NetWorthHeader(
-                    balance = amountFormatter.format(amount = state.balance, currencySymbol = symbol),
-                    assets = amountFormatter.format(amount = state.assets, currencySymbol = symbol),
-                    liabilities = amountFormatter.format(amount = state.liabilities, currencySymbol = symbol),
-                    trendPoints = trend.map { it.value.toFloat() },
-                    isNegative = isNegative,
+                    balance = amountFormatter.format(amount = netWorth.balance, currencySymbol = symbol),
+                    assets = amountFormatter.format(amount = netWorth.assets, currencySymbol = symbol),
+                    liabilities = amountFormatter.format(amount = netWorth.liabilities, currencySymbol = symbol),
+                    trendPoints = netWorth.trendPoints,
+                    isNegative = netWorth.isNegative,
                     growthChip = growthChip,
                 )
             }
