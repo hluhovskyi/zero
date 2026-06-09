@@ -73,6 +73,8 @@ internal object Destinations {
 
     object Home : Destination by destinationOf("home")
 
+    object Analytics : Destination by destinationOf("analytics")
+
     sealed interface Budget : Destination {
         object All : Budget, Destination by destinationOf("budget")
 

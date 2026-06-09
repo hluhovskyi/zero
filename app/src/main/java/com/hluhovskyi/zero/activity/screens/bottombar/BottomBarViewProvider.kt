@@ -121,7 +121,7 @@ private fun Id.Known.labelRes(): Int = when (this) {
     BottomBarViewModel.HomeId -> R.string.bottom_bar_home
     BottomBarViewModel.AccountsId -> R.string.bottom_bar_accounts
     BottomBarViewModel.BudgetId -> R.string.bottom_bar_budget
-    BottomBarViewModel.CategoriesId -> R.string.bottom_bar_categories
+    BottomBarViewModel.AnalyticsId -> R.string.bottom_bar_analytics
     BottomBarViewModel.SettingsId -> R.string.bottom_bar_settings
     else -> error("Unknown bottom bar item id: $value")
 }
@@ -130,7 +130,7 @@ private fun Id.Known.iconDescriptionRes(): Int = when (this) {
     BottomBarViewModel.HomeId -> R.string.bottom_bar_home_icon_description
     BottomBarViewModel.AccountsId -> R.string.bottom_bar_accounts_icon_description
     BottomBarViewModel.BudgetId -> R.string.bottom_bar_budget_icon_description
-    BottomBarViewModel.CategoriesId -> R.string.bottom_bar_categories_icon_description
+    BottomBarViewModel.AnalyticsId -> R.string.bottom_bar_analytics_icon_description
     BottomBarViewModel.SettingsId -> R.string.bottom_bar_settings_icon_description
     else -> error("Unknown bottom bar item id: $value")
 }

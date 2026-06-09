@@ -10,6 +10,7 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.analytics.AnalyticsComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -92,6 +93,7 @@ abstract class ActivityComponent :
     CategoryPickerComponent.Dependencies,
     CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
+    AnalyticsComponent.Dependencies,
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
@@ -193,6 +195,11 @@ abstract class ActivityComponent :
         fun categoryComponentBuilder(
             component: ActivityComponent,
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
+
+        @Provides
+        fun analyticsComponentBuilder(
+            component: ActivityComponent,
+        ): AnalyticsComponent.Builder = AnalyticsComponent.builder(component)
 
         @Provides
         fun budgetComponentBuilder(
