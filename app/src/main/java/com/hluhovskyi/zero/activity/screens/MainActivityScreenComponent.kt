@@ -987,7 +987,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             componentBuilder
                 .onBackHandler { navigator.back() }
-                .onRestoreSelectedHandler { navigator.navigateTo(Destinations.Import) }
+                .onRestoreSelectedHandler {
+                    navigator.navigateTo(
+                        Destinations.Import,
+                        Destinations.Import.InitialSource.withValue(DriveSnapshotLoader.KEY),
+                    )
+                }
                 .logging(logger)
         }
 
