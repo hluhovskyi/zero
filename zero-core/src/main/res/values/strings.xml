@@ -164,6 +164,11 @@
     <string name="backup_error_unknown">Something went wrong. %1$s</string>
     <string name="backup_sign_in_cancelled">Sign-in cancelled.</string>
     <string name="backup_sign_in_failed">Sign-in failed. Please try again.</string>
+    <string name="backup_disconnect_title">Disconnect Google Drive?</string>
+    <string name="backup_disconnect_body">Also delete the existing backup from your Google Drive? You can always create a new backup later.</string>
+    <string name="backup_disconnect_delete">Delete backup</string>
+    <string name="backup_disconnect_keep">Keep backup</string>
+    <string name="backup_disconnect_delete_failed">Couldn\'t delete cloud backup. You can delete it manually in your Google Drive\'s app settings.</string>
     <string name="backup_mobile_data_title">Back up over mobile data</string>
     <string name="backup_mobile_data_body">Off by default. Automatic backups run on Wi-Fi only.</string>
 

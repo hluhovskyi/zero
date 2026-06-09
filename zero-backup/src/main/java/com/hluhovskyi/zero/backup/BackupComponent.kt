@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.backup
 
+import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.sync.SyncEngine
 import com.hluhovskyi.zero.users.CurrentUserRepository
 import kotlinx.coroutines.CoroutineScope
@@ -14,11 +15,13 @@ interface BackupComponent {
     interface Dependencies {
         val syncEngine: SyncEngine
         val backupClient: BackupClient
+        val oauthTokenProvider: OAuthTokenProvider
         val currentUserRepository: CurrentUserRepository
         val backupCoroutineScope: CoroutineScope
     }
 
     val backupUseCase: BackupUseCase
+    val backupConnectionUseCase: BackupConnectionUseCase
     val signal: Flow<BackupSignal>
 
     class Factory(private val dependencies: Dependencies) {
@@ -42,6 +45,14 @@ internal class DefaultBackupComponent(dependencies: BackupComponent.Dependencies
             syncEngine = dependencies.syncEngine,
             backupClient = dependencies.backupClient,
             currentUserRepository = dependencies.currentUserRepository,
+            coroutineScope = dependencies.backupCoroutineScope,
+        )
+    }
+
+    override val backupConnectionUseCase: BackupConnectionUseCase by lazy {
+        DefaultBackupConnectionUseCase(
+            backupClient = dependencies.backupClient,
+            oauthTokenProvider = dependencies.oauthTokenProvider,
             coroutineScope = dependencies.backupCoroutineScope,
         )
     }

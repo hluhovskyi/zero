@@ -13,8 +13,11 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         object BackupNow : Action
         object Restore : Action
         object Disconnect : Action
+        object DisconnectDismiss : Action
+        data class DisconnectConfirmed(val deleteRemote: Boolean) : Action
         object Back : Action
         object SignInFeedbackShown : Action
+        object DisconnectFeedbackShown : Action
         data class SetWifiOnly(val wifiOnly: Boolean) : Action
     }
 
@@ -24,13 +27,15 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
         val lastSuccessAt: LocalDateTime? = null,
         val lastError: BackupError? = null,
-        val signInFeedback: SignInFeedback? = null,
+        val signInFeedback: BackupConnectionUseCase.SignInFeedback? = null,
+        val disconnectFeedback: BackupConnectionUseCase.DisconnectFeedback? = null,
+        val confirmDialog: ConfirmDialog? = null,
         val wifiOnly: Boolean = true,
     )
 
-    sealed interface SignInFeedback {
-        object Cancelled : SignInFeedback
-        data class Failed(val error: BackupError) : SignInFeedback
+    /** Pure-UI state for the disconnect confirm dialog; the connection lifecycle itself lives in [BackupUseCase]. */
+    sealed interface ConfirmDialog {
+        object Disconnect : ConfirmDialog
     }
 
     object Noop : BackupDetailViewModel {

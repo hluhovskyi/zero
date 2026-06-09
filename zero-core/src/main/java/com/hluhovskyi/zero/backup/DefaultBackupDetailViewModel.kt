@@ -1,6 +1,5 @@
 package com.hluhovskyi.zero.backup
 
-import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
@@ -15,8 +14,8 @@ import kotlinx.coroutines.launch
 
 internal class DefaultBackupDetailViewModel(
     private val backupUseCase: BackupUseCase,
+    private val backupConnectionUseCase: BackupConnectionUseCase,
     private val backupScheduler: BackupScheduler,
-    private val oauthTokenProvider: OAuthTokenProvider,
     private val configurationRepository: ConfigurationRepository,
     private val onBackHandler: OnBackHandler,
     private val onRestoreSelectedHandler: OnRestoreSelectedHandler,
@@ -29,36 +28,28 @@ internal class DefaultBackupDetailViewModel(
 
     override fun perform(action: BackupDetailViewModel.Action) {
         when (action) {
-            is BackupDetailViewModel.Action.Connect -> scope.launch(dispatchers.io()) {
-                when (val result = oauthTokenProvider.signIn()) {
-                    is OAuthTokenProvider.Result.Success ->
-                        mutableState.update { it.copy(accountLabel = result.accountLabel) }
-                    is OAuthTokenProvider.Result.Failure ->
-                        mutableState.update {
-                            it.copy(signInFeedback = BackupDetailViewModel.SignInFeedback.Failed(result.error))
-                        }
-                    OAuthTokenProvider.Result.Cancelled ->
-                        mutableState.update {
-                            it.copy(signInFeedback = BackupDetailViewModel.SignInFeedback.Cancelled)
-                        }
-                }
-            }
-            is BackupDetailViewModel.Action.BackupNow -> scope.launch(dispatchers.io()) {
+            is BackupDetailViewModel.Action.Connect ->
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.Connect)
+            is BackupDetailViewModel.Action.BackupNow ->
                 backupUseCase.perform(BackupUseCase.Action.BackupNow)
-            }
             is BackupDetailViewModel.Action.Restore -> scope.launch(dispatchers.main()) {
                 onRestoreSelectedHandler.onSelected()
             }
-            is BackupDetailViewModel.Action.Disconnect -> scope.launch(dispatchers.io()) {
-                oauthTokenProvider.revoke()
-                mutableState.update { it.copy(accountLabel = null) }
+            is BackupDetailViewModel.Action.Disconnect ->
+                mutableState.update { it.copy(confirmDialog = BackupDetailViewModel.ConfirmDialog.Disconnect) }
+            is BackupDetailViewModel.Action.DisconnectDismiss ->
+                mutableState.update { it.copy(confirmDialog = null) }
+            is BackupDetailViewModel.Action.DisconnectConfirmed -> {
+                mutableState.update { it.copy(confirmDialog = null) }
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.Disconnect(action.deleteRemote))
             }
             is BackupDetailViewModel.Action.Back -> scope.launch(dispatchers.main()) {
                 onBackHandler.onBack()
             }
-            is BackupDetailViewModel.Action.SignInFeedbackShown -> {
-                mutableState.update { it.copy(signInFeedback = null) }
-            }
+            is BackupDetailViewModel.Action.SignInFeedbackShown ->
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.SignInFeedbackShown)
+            is BackupDetailViewModel.Action.DisconnectFeedbackShown ->
+                backupConnectionUseCase.perform(BackupConnectionUseCase.Action.DisconnectFeedbackShown)
             is BackupDetailViewModel.Action.SetWifiOnly -> scope.launch(dispatchers.io()) {
                 configurationRepository.write(BackupConfigurationKey.WifiOnly, action.wifiOnly)
             }
@@ -68,23 +59,25 @@ internal class DefaultBackupDetailViewModel(
     override fun attachOnMain() {
         scope.launch(dispatchers.io()) {
             combine(
-                oauthTokenProvider.isSignedIn,
                 backupUseCase.state,
+                backupConnectionUseCase.state,
                 configurationRepository.observe(BackupConfigurationKey.WifiOnly),
-            ) { isSignedIn, backup, wifiOnly ->
-                Triple(isSignedIn, backup, wifiOnly)
-            }.collect { (isSignedIn, backup, wifiOnly) ->
+            ) { backup, connection, wifiOnly ->
+                Triple(backup, connection, wifiOnly)
+            }.collect { (backup, connection, wifiOnly) ->
                 mutableState.update { current ->
                     current.copy(
-                        isSignedIn = isSignedIn,
+                        isSignedIn = connection.isSignedIn,
+                        accountLabel = connection.accountLabel,
                         phase = backup.phase,
                         lastSuccessAt = backup.lastSuccessAt,
                         lastError = backup.lastError,
-                        accountLabel = if (isSignedIn) current.accountLabel else null,
+                        signInFeedback = connection.signInFeedback,
+                        disconnectFeedback = connection.disconnectFeedback,
                         wifiOnly = wifiOnly,
                     )
                 }
-                if (isSignedIn) {
+                if (connection.isSignedIn) {
                     backupScheduler.enable(wifiOnly = wifiOnly)
                 } else {
                     backupScheduler.disable()
