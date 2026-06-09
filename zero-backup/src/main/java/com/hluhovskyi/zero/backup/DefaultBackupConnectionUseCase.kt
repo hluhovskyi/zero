@@ -70,10 +70,9 @@ internal class DefaultBackupConnectionUseCase(
      * Deletes the remote backup file. Returns `false` only when a present file could not be
      * deleted; a missing file (`NotFound`) is treated as success — there is nothing to delete.
      */
-    private suspend fun deleteRemoteBackup(): Boolean =
-        when (val latest = backupClient.latest()) {
-            is BackupClient.Result.Success -> backupClient.delete(latest.metadata.backupId) !is BackupClient.Result.Failure
-            BackupClient.Result.NotFound -> true
-            is BackupClient.Result.Failure -> false
-        }
+    private suspend fun deleteRemoteBackup(): Boolean = when (val latest = backupClient.latest()) {
+        is BackupClient.Result.Success -> backupClient.delete(latest.metadata.backupId) !is BackupClient.Result.Failure
+        BackupClient.Result.NotFound -> true
+        is BackupClient.Result.Failure -> false
+    }
 }

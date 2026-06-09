@@ -455,8 +455,7 @@ abstract class ApplicationComponent :
         fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
 
         @Provides
-        fun backupConnectionUseCase(backupComponent: BackupComponent): BackupConnectionUseCase =
-            backupComponent.backupConnectionUseCase
+        fun backupConnectionUseCase(backupComponent: BackupComponent): BackupConnectionUseCase = backupComponent.backupConnectionUseCase
 
         @Provides
         @ApplicationScope
