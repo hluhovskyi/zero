@@ -11,13 +11,17 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
@@ -74,6 +78,12 @@ class DefaultTransactionViewModelTest {
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
     private val now: LocalDateTime = fixedInstant.toLocalDateTime(testTimeZone)
+    private val fakeClock = object : Clock {
+        override fun now() = fixedInstant
+    }
+    private val fakeZoneProvider = object : ZoneProvider {
+        override fun timeZone() = testTimeZone
+    }
 
     @Before
     fun setUp() {
@@ -394,9 +404,39 @@ class DefaultTransactionViewModelTest {
         assertEquals("Transaction ID mismatch", oneExpenseTransaction.id, transactionItems.first().id)
     }
 
+    @Test
+    fun `active filter is resolved to a Criteria_Filtered SQL query`() = runTest {
+        val viewModel = createViewModel(
+            testScheduler,
+            transactionFilterUseCase = appliedFilter(
+                TransactionFilter(type = TransactionFilter.TransactionType.Income, categoryIds = setOf(Id.Known("cat1"))),
+            ),
+        )
+        viewModel.attach()
+        runCurrent()
+        advanceUntilIdle()
+
+        val criteriaCaptor = argumentCaptor<TransactionRepository.Criteria<*>>()
+        verify(transactionRepository, atLeastOnce()).query(criteriaCaptor.capture(), any())
+
+        val filtered = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.Filtered>()
+        assertEquals(1, filtered.size)
+        assertEquals(TransactionRepository.Type.Income, filtered.first().type)
+        assertEquals(setOf(Id.Known("cat1")), filtered.first().categoryIds)
+    }
+
+    private fun appliedFilter(filter: TransactionFilter) = object : TransactionFilterUseCase {
+        override val pendingFilter: Flow<TransactionFilter> = flowOf(TransactionFilter())
+        override val state: Flow<TransactionFilterUseCase.State> =
+            flowOf(TransactionFilterUseCase.State.Applied(filter))
+
+        override fun perform(action: TransactionFilterUseCase.Action) = Unit
+    }
+
     private fun createViewModel(
         scheduler: TestCoroutineScheduler,
         filter: TransactionFilter = TransactionFilter.All,
+        transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
     ): DefaultTransactionViewModel {
         val dispatcher = StandardTestDispatcher(scheduler)
         val dispatchers = object : DispatcherProvider {
@@ -416,7 +456,8 @@ class DefaultTransactionViewModelTest {
             onTransactionSelectedHandler = onTransactionSelectedHandler,
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
-            transactionFilterApplicator = TransactionFilterApplicator.Identity,
+            transactionFilterUseCase = transactionFilterUseCase,
+            transactionFilterCriteria = TransactionFilterCriteria(fakeClock, fakeZoneProvider),
             dispatchers = dispatchers,
         )
     }

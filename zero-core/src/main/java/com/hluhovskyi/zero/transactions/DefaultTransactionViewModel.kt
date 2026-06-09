@@ -50,7 +50,7 @@ internal class DefaultTransactionViewModel(
     private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
-    private val transactionFilterApplicator: TransactionFilterApplicator,
+    private val transactionFilterCriteria: TransactionFilterCriteria,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     TransactionViewModel {
@@ -190,14 +190,27 @@ internal class DefaultTransactionViewModel(
                     }
                 }
 
-            val rawTransactions = combine(pagedTransactions, searchTransactions) { paged, searchResult ->
-                searchResult ?: paged
-            }
+            // An active filter is resolved to a SQL-level query, so the DB does the filtering and
+            // returns only matching rows (no full-table load). null = "no filter, use paged".
+            val activeFilterTransactions: Flow<List<TransactionRepository.Transaction>?> =
+                mutableState
+                    .map { it.activeFilter }
+                    .distinctUntilChanged()
+                    .flatMapLatest { activeFilter ->
+                        if (activeFilter.isActive) {
+                            transactionRepository.query(transactionFilterCriteria.create(activeFilter))
+                        } else {
+                            flowOf(null)
+                        }
+                    }
 
-            val activeFilterFlow = mutableState.map { it.activeFilter }.distinctUntilChanged()
-
-            val filteredRawTransactions = combine(rawTransactions, activeFilterFlow) { transactions, activeFilter ->
-                transactionFilterApplicator.apply(transactions, activeFilter)
+            // Precedence: search > active filter > the paged window.
+            val rawTransactions = combine(
+                pagedTransactions,
+                searchTransactions,
+                activeFilterTransactions,
+            ) { paged, searchResult, filtered ->
+                searchResult ?: filtered ?: paged
             }
 
             val categoriesFlow = categoriesQueryUseCase.queryAll()
@@ -210,7 +223,7 @@ internal class DefaultTransactionViewModel(
                 .associateById()
 
             combine(
-                filteredRawTransactions,
+                rawTransactions,
                 categoriesFlow,
                 accountsFlow,
                 currencyRepository.query(CurrencyRepository.Criteria.All())
