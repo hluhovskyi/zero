@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Unarchive
@@ -45,6 +47,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -57,11 +60,15 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.ZeroFab
+import com.hluhovskyi.zero.ui.chart.LineChart
+import com.hluhovskyi.zero.ui.chart.LineChartData
+import com.hluhovskyi.zero.ui.chart.SignedLineChart
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -103,19 +110,30 @@ private fun AccountView(
             contentPadding = PaddingValues(bottom = 96.dp),
         ) {
             item {
+                val symbol = state.currency?.symbol.orEmpty()
+                val trend = state.netWorthTrend
+                val first = trend.firstOrNull()?.value
+                val last = trend.lastOrNull()?.value
+                val isNegative = (last?.signum() ?: 0) < 0
+                val growthChip: String? = when {
+                    first == null || last == null || trend.size < 2 || first.signum() == 0 -> null
+                    isNegative -> (last - first).takeIf { it.signum() > 0 }?.let {
+                        stringResource(
+                            R.string.account_net_worth_improvement,
+                            amountFormatter.format(amount = Amount(it), currencySymbol = symbol),
+                        )
+                    }
+                    else -> ((last - first).toDouble() / first.abs().toDouble() * 100).toInt()
+                        .takeIf { it > 0 }
+                        ?.let { stringResource(R.string.account_net_worth_growth, it.toString()) }
+                }
                 NetWorthHeader(
-                    balance = amountFormatter.format(
-                        amount = state.balance,
-                        currencySymbol = state.currency?.symbol.orEmpty(),
-                    ),
-                    assets = amountFormatter.format(
-                        amount = state.assets,
-                        currencySymbol = state.currency?.symbol.orEmpty(),
-                    ),
-                    liabilities = amountFormatter.format(
-                        amount = state.liabilities,
-                        currencySymbol = state.currency?.symbol.orEmpty(),
-                    ),
+                    balance = amountFormatter.format(amount = state.balance, currencySymbol = symbol),
+                    assets = amountFormatter.format(amount = state.assets, currencySymbol = symbol),
+                    liabilities = amountFormatter.format(amount = state.liabilities, currencySymbol = symbol),
+                    trendPoints = trend.map { it.value.toFloat() },
+                    isNegative = isNegative,
+                    growthChip = growthChip,
                 )
             }
             item {
@@ -182,87 +200,158 @@ private fun NetWorthHeader(
     balance: String,
     assets: String,
     liabilities: String,
+    trendPoints: List<Float>,
+    isNegative: Boolean,
+    growthChip: String?,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(ZeroTheme.colors.surfaceContainerLow)
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = stringResource(R.string.account_total_net_worth).uppercase(),
-            style = TextStyle(
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = ZeroTheme.colors.onSurfaceVariant,
-                letterSpacing = 1.sp,
-            ),
-        )
-        Text(
-            text = balance,
-            style = TextStyle(
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.primary,
-                letterSpacing = (-0.5).sp,
-            ),
-        )
-        Spacer(Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column {
                 Text(
-                    text = stringResource(R.string.account_assets).uppercase(),
+                    text = stringResource(R.string.account_total_net_worth).uppercase(),
                     style = TextStyle(
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = ZeroTheme.colors.onSurfaceVariant,
                         letterSpacing = 1.sp,
                     ),
                 )
                 Text(
-                    text = assets,
+                    text = balance,
                     style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZeroTheme.colors.secondary,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isNegative) ZeroTheme.colors.error else ZeroTheme.colors.primary,
+                        letterSpacing = (-0.5).sp,
                     ),
                 )
             }
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(32.dp)
-                    .background(ZeroTheme.colors.outlineVariant)
-                    .align(Alignment.CenterVertically),
-            )
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.account_liabilities).uppercase(),
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZeroTheme.colors.onSurfaceVariant,
-                        letterSpacing = 1.sp,
-                    ),
-                )
-                Text(
-                    text = liabilities,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ZeroTheme.colors.error,
-                    ),
-                )
+            if (growthChip != null) {
+                GrowthChip(text = growthChip)
             }
         }
+        if (isNegative) {
+            SignedLineChart(
+                data = LineChartData(trendPoints),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(74.dp),
+            )
+        } else {
+            LineChart(
+                data = LineChartData(trendPoints),
+                lineColor = ZeroTheme.colors.secondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(74.dp),
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                MiniStat(
+                    label = stringResource(R.string.account_assets),
+                    value = assets,
+                    valueColor = ZeroTheme.colors.secondary,
+                )
+                MiniStat(
+                    label = stringResource(R.string.account_liabilities),
+                    value = liabilities,
+                    valueColor = ZeroTheme.colors.error,
+                )
+            }
+            ViewTrend()
+        }
+    }
+}
+
+@Composable
+private fun GrowthChip(text: String) {
+    Row(
+        modifier = Modifier
+            .background(ZeroTheme.colors.secondary.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.ArrowDropUp,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = ZeroTheme.colors.secondary,
+        )
+        Text(
+            text = text,
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = ZeroTheme.colors.secondary,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun MiniStat(label: String, value: String, valueColor: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = label.uppercase(),
+            style = TextStyle(
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = ZeroTheme.colors.onSurfaceVariant,
+                letterSpacing = 0.8.sp,
+            ),
+        )
+        Text(
+            text = value,
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = valueColor,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun ViewTrend() {
+    Row(
+        // The trend destination screen is out of scope; the affordance is present but inert.
+        modifier = Modifier.clickable {},
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.account_view_trend),
+            style = TextStyle(
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = ZeroTheme.colors.primary,
+            ),
+        )
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = ZeroTheme.colors.primary,
+        )
     }
 }
 
