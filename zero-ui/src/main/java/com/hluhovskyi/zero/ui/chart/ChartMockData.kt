@@ -19,6 +19,16 @@ internal object ChartMockData {
 
     val netWorth6: List<Float> = listOf(18200f, 19000f, 20400f, 21500f, 22600f, 23900f)
 
+    // Single-series category spend per month (label, amount) — for the trend bar chart.
+    val categoryTrend: List<Pair<String, Float>> = listOf(
+        "Nov" to 220f,
+        "Dec" to 290f,
+        "Jan" to 240f,
+        "Feb" to 260f,
+        "Mar" to 280f,
+        "Apr" to 290f,
+    )
+
     // Donut category split (name, dark-mapped swatch, spend). Dark-mapped because the app is dark.
     val categories: List<Triple<String, Color, Float>> = listOf(
         Triple("Housing", Color(0xFF9FAAE5), 9000f),

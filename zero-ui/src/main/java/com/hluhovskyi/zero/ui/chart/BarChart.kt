@@ -32,6 +32,10 @@ import com.hluhovskyi.zero.ui.theme.ZeroTheme
  * Keeps the chart frame for sparse data: a bucket with no bars renders a dashed baseline
  * placeholder; an all-zero series renders faint solid baseline tracks (never a blank box or a
  * misleading flat colored line). A lone zero among real values still shows a 2dp colored stub.
+ *
+ * Per-bar [BarValue.color] carries emphasis (e.g. a dimmed past month vs a vivid current month),
+ * and [BarGroup.topLabel] renders a value caption above the bar(s) — together these cover the
+ * single-series "category trend" chart (value on top, current period highlighted).
  */
 @Composable
 fun BarChart(
@@ -39,6 +43,8 @@ fun BarChart(
     modifier: Modifier = Modifier,
     barAreaHeight: Dp = 104.dp,
     showLabels: Boolean = true,
+    barCornerRadius: Dp = 3.dp,
+    barWidth: Dp? = null,
     emptyBarColor: Color = ZeroTheme.colors.surfaceContainer,
     placeholderColor: Color = ZeroTheme.colors.outlineVariant,
 ) {
@@ -52,11 +58,31 @@ fun BarChart(
     val maxValue = groups.flatMap { it.bars }.maxOfOrNull { it.value } ?: 0f
     val hasData = maxValue > 0f
     val n = groups.size
-    val barW = adaptiveBarWidthDp(n).dp
+    val barW = barWidth ?: adaptiveBarWidthDp(n).dp
     val innerGap = adaptiveInnerGapDp(n).dp
     val outerGap = if (n > 16) 1.dp else 4.dp
     val labelsVisible = showLabels && shouldShowBarLabels(n)
+    val topLabelsVisible = groups.any { it.topLabel != null }
     Column(modifier) {
+        if (topLabelsVisible) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(outerGap),
+            ) {
+                groups.forEach { group ->
+                    Text(
+                        text = group.topLabel.orEmpty(),
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        style = TextStyle(
+                            fontSize = if (n > 9) 10.sp else 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ZeroTheme.colors.onSurface,
+                        ),
+                    )
+                }
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth().height(barAreaHeight),
             horizontalArrangement = Arrangement.spacedBy(outerGap),
@@ -87,7 +113,7 @@ fun BarChart(
                                     modifier = Modifier
                                         .width(barW)
                                         .height(h)
-                                        .clip(RoundedCornerShape(3.dp))
+                                        .clip(RoundedCornerShape(barCornerRadius))
                                         .background(bar.color),
                                 )
                             }

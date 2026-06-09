@@ -44,6 +44,7 @@ fun ChartsGalleryScreen(onBack: () -> Unit) {
         ) {
             LineSection()
             BarSection()
+            TrendSection()
             DonutSection()
         }
     }
@@ -67,6 +68,29 @@ private fun BarSection() {
     GalleryCard("Data") { BarChart(flowBars(ChartMockData.flow6), Modifier.fillMaxWidth()) }
     GalleryCard("1 point") { BarChart(flowBars(ChartMockData.flow6.take(1)), Modifier.fillMaxWidth()) }
     GalleryCard("Empty") { BarChart(BarChartData(emptyList()), Modifier.fillMaxWidth()) }
+}
+
+@Composable
+private fun TrendSection() {
+    SectionHeader("Single-series trend (value labels + current highlighted)")
+    GalleryCard("6-month trend") { CategoryTrend() }
+}
+
+@Composable
+private fun CategoryTrend() {
+    val accent = ZeroTheme.colors.chartCashOut
+    val dim = accent.copy(alpha = 0.45f)
+    val rows = ChartMockData.categoryTrend
+    val data = BarChartData(
+        rows.mapIndexed { i, (month, value) ->
+            BarGroup(
+                label = month,
+                bars = listOf(BarValue(value, if (i == rows.lastIndex) accent else dim)),
+                topLabel = "$" + value.toInt(),
+            )
+        },
+    )
+    BarChart(data, Modifier.fillMaxWidth(), barCornerRadius = 6.dp, barWidth = 28.dp)
 }
 
 @Composable
