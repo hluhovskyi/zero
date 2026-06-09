@@ -44,7 +44,9 @@ fun BarChart(
 ) {
     val groups = data.groups
     if (groups.isEmpty()) {
-        Box(modifier.height(barAreaHeight))
+        Box(modifier.height(barAreaHeight), contentAlignment = Alignment.BottomCenter) {
+            DashedBaseline(placeholderColor, Modifier.fillMaxWidth())
+        }
         return
     }
     val maxValue = groups.flatMap { it.bars }.maxOfOrNull { it.value } ?: 0f
