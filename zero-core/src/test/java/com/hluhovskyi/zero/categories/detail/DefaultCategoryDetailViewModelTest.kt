@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.categories.CategorySpendingUseCase
 import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
@@ -41,6 +42,8 @@ class DefaultCategoryDetailViewModelTest {
 
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
 
+    @Mock private lateinit var amountFormatter: AmountFormatter
+
     @Mock private lateinit var onEditHandler: OnCategoryDetailEditHandler
 
     private val categoryId = Id.Known("cat1")
@@ -58,6 +61,7 @@ class DefaultCategoryDetailViewModelTest {
     fun setUp() {
         whenever(categoriesQueryUseCase.queryById(categoryId)).thenReturn(emptyFlow())
         whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(null))
+        whenever(categorySpendingUseCase.queryMonthlyTrend(any(), any())).thenReturn(flowOf(emptyList()))
     }
 
     @Test
@@ -157,11 +161,38 @@ class DefaultCategoryDetailViewModelTest {
         assertEquals(LocalDate(2026, 5, 1), vm.state.first().periodDate)
     }
 
+    @Test
+    fun `state maps monthly trend with current month flagged`() = runTest {
+        whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
+        whenever(amountFormatter.format(any(), any()))
+            .thenAnswer { "$" + (it.arguments[0] as Amount).value.toInt() }
+        whenever(categorySpendingUseCase.queryMonthlyTrend(categoryId, 6)).thenReturn(
+            flowOf(
+                listOf(
+                    CategorySpendingUseCase.MonthlySpending(LocalDate(2026, 3, 1), Amount(BigDecimal("280"))),
+                    CategorySpendingUseCase.MonthlySpending(LocalDate(2026, 4, 1), Amount(BigDecimal("290"))),
+                ),
+            ),
+        )
+
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        val trend = vm.state.first().trend
+        assertEquals(2, trend.size)
+        assertEquals(false, trend.first().isCurrent)
+        assertEquals(true, trend.last().isCurrent)
+        assertEquals(290f, trend.last().value, 0.01f)
+        assertEquals("$290", trend.last().amountLabel)
+    }
+
     private fun createViewModel(coroutineScope: CoroutineScope) = DefaultCategoryDetailViewModel(
         categoryId = categoryId,
         categoriesQueryUseCase = categoriesQueryUseCase,
         categorySpendingUseCase = categorySpendingUseCase,
         currencyPrimaryUseCase = currencyPrimaryUseCase,
+        amountFormatter = amountFormatter,
         onEditHandler = onEditHandler,
         onBackHandler = OnBackHandler.Noop,
         onCreateTransactionHandler = OnCategoryDetailCreateTransactionHandler.Noop,

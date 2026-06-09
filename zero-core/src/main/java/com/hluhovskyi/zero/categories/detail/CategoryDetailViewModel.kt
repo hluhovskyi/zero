@@ -27,6 +27,14 @@ interface CategoryDetailViewModel : AttachableActionStateModel<CategoryDetailVie
         val transactionCount: Int = 0,
         val averageAmount: Amount = Amount.zero(),
         val largestAmount: Amount = Amount.zero(),
+        val trend: List<TrendPoint> = emptyList(),
+    )
+
+    data class TrendPoint(
+        val value: Float,
+        val label: String,
+        val amountLabel: String,
+        val isCurrent: Boolean,
     )
 
     object Noop : CategoryDetailViewModel {

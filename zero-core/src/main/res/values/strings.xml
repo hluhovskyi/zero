@@ -86,6 +86,7 @@
     <string name="category_detail_stat_transactions">Transactions</string>
     <string name="category_detail_stat_avg_per_tx">Avg per tx</string>
     <string name="category_detail_stat_largest">Largest</string>
+    <string name="category_detail_trend_title">6-month trend</string>
 
     <!-- Category Edit -->
     <string name="category_edit_title">Add Category</string>
