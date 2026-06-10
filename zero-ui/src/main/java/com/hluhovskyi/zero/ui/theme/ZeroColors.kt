@@ -26,13 +26,9 @@ data class ZeroExtraColors(
     val importErrorContainer: Color,
     val importErrorContent: Color,
     val welcomeCardLine: Color,
-    val chartCashIn: Color,
-    val chartCashOut: Color,
-    val chartHeroSurface: Color,
-    val chartHeroContent: Color,
-    val chartHeroContentDim: Color,
-    // Navy "stat island" palette for the transaction filter summary card. Overlaps the chart*
-    // tokens above (same surface/accents) — TODO reconcile into one shared island palette.
+    // Shared navy "stat island" palette — the dark surfaces (transaction filter summary card,
+    // analytics charts). Positive/Negative double as chart cash-in/cash-out. Theme-independent:
+    // always navy in light and dark. `content` is white, applied with alpha for dim/faint text.
     val islandBackground: Color,
     val islandContent: Color,
     val islandPositive: Color,
@@ -112,11 +108,6 @@ val LightZeroExtraColors = ZeroExtraColors(
     importErrorContainer = Color(0xFFFFEBEE),
     importErrorContent = Color(0xFF93000A),
     welcomeCardLine = Color(0xFFFFFFFF),
-    chartCashIn = Color(0xFF5DDBA8),
-    chartCashOut = Color(0xFFEBA07C),
-    chartHeroSurface = Color(0xFF1A2E52),
-    chartHeroContent = Color(0xFFFFFFFF),
-    chartHeroContentDim = Color(0x80FFFFFF),
     islandBackground = Color(0xFF1A2E52),
     islandContent = Color(0xFFFFFFFF),
     islandPositive = Color(0xFF5DDBA8),
@@ -136,11 +127,6 @@ val DarkZeroExtraColors = ZeroExtraColors(
     importErrorContainer = Color(0xFF3A0F12),
     importErrorContent = Color(0xFFFFB4AB),
     welcomeCardLine = Color(0xFFFFFFFF),
-    chartCashIn = Color(0xFF5DDBA8),
-    chartCashOut = Color(0xFFEBA07C),
-    chartHeroSurface = Color(0xFF1A2E52),
-    chartHeroContent = Color(0xFFFFFFFF),
-    chartHeroContentDim = Color(0x80FFFFFF),
     islandBackground = Color(0xFF1A2E52),
     islandContent = Color(0xFFFFFFFF),
     islandPositive = Color(0xFF5DDBA8),
@@ -197,11 +183,6 @@ class ZeroColors(
     val importErrorContainer get() = extras.importErrorContainer
     val importErrorContent get() = extras.importErrorContent
     val welcomeCardLine get() = extras.welcomeCardLine
-    val chartCashIn get() = extras.chartCashIn
-    val chartCashOut get() = extras.chartCashOut
-    val chartHeroSurface get() = extras.chartHeroSurface
-    val chartHeroContent get() = extras.chartHeroContent
-    val chartHeroContentDim get() = extras.chartHeroContentDim
     val islandBackground get() = extras.islandBackground
     val islandContent get() = extras.islandContent
     val islandPositive get() = extras.islandPositive
