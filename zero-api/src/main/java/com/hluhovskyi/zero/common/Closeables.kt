@@ -19,6 +19,8 @@ object Closeables {
 
     inline fun of(provider: () -> Job): Closeable = JobCloseable(provider())
 
+    fun merge(closeables: Collection<Closeable>): Closeable = MergedCloseable(closeables.toList())
+
     fun merge(vararg closeables: Closeable): Closeable = MergedCloseable(closeables.toList())
 }
 

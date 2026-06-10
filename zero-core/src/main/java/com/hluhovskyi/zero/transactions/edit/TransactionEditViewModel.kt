@@ -40,7 +40,7 @@ interface TransactionEditViewModel : ActionStateModel<TransactionEditViewModel.A
 
     /** Chrome: the pinned header, type toggle, hero amount, and keypad routing. */
     data class State(
-        val transactionTypes: List<TransactionEditType> = TransactionEditType.values().toList(),
+        val transactionTypes: List<TransactionEditType> = TransactionEditType.List,
         val selectedTransactionType: TransactionEditType = TransactionEditType.EXPENSE,
         val headerMode: HeaderMode = HeaderMode.New,
         val notes: String = "",

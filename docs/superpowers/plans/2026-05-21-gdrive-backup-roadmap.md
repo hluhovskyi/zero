@@ -16,14 +16,14 @@ Update the **Status** column when a phase merges. Acceptable values:
 
 | # | Plan | Ships | Status |
 |---|------|-------|--------|
-| 0 | [Auto Backup](2026-05-21-gdrive-backup-phase-0-auto-backup.md) | `backup_rules.xml` + `data_extraction_rules.xml` + manifest wiring; closes the OS device-transfer gap | ☐ Pending |
-| 1 | [Foundation](2026-05-21-gdrive-backup-phase-1-foundation.md) | New `zero-backup` module; `zero-api` backup interfaces; `BackupEnvelope`; `DefaultBackupUseCase` skeleton + tests; lint rule | ☐ Pending |
-| 2 | [Drive Client + OAuth](2026-05-21-gdrive-backup-phase-2-drive-client.md) | `DriveBackupClient`; `OkHttpHttpExecutor`; `DriveOAuthTokenProvider`; `AndroidSecureKeyValueStore`; Drive REST integration tests | ☐ Pending |
-| 3 | [Settings UI](2026-05-21-gdrive-backup-phase-3-settings-ui.md) | `BackupComponent` settings detail screen; new `BACKUP` section in settings; manual "Back up now" loop end-to-end | ☐ Pending |
-| 4 | [Auto Schedule](2026-05-21-gdrive-backup-phase-4-auto-schedule.md) | WorkManager periodic worker; Wi-Fi-only default with toggle; 3-strike failure notification; coalescing | ☐ Pending |
-| 5 | [Restore](2026-05-21-gdrive-backup-phase-5-restore.md) | `DriveSnapshotParser`; new Drive source in source-selection; "Restore now" in settings; all-new fast path in `DefaultImportUseCase` | ☐ Pending |
-| 6 | [Welcome Restore](2026-05-21-gdrive-backup-phase-6-welcome.md) | Welcome screen gains "Restore from Google Drive?" step before presets | ☐ Pending |
-| 7 | [Disconnect + Remote Delete](2026-05-21-gdrive-backup-phase-7-disconnect.md) | Confirm dialog on disconnect; token revoke; optional remote file delete; orphan-cleanup helpers | ☐ Pending |
+| 0 | [Auto Backup](2026-05-21-gdrive-backup-phase-0-auto-backup.md) | `backup_rules.xml` + `data_extraction_rules.xml` + manifest wiring; closes the OS device-transfer gap | ✅ Merged (PR #254) |
+| 1 | [Foundation](2026-05-21-gdrive-backup-phase-1-foundation.md) | New `zero-backup` module; `zero-api` backup interfaces; `BackupEnvelope`; `DefaultBackupUseCase` skeleton + tests; lint rule | ✅ Merged (PR #245) |
+| 2 | [Drive Client + OAuth](2026-05-21-gdrive-backup-phase-2-drive-client.md) | `DriveBackupClient`; `OkHttpHttpExecutor`; `DriveOAuthTokenProvider`; `AndroidSecureKeyValueStore`; Drive REST integration tests | ✅ Merged (PR #252) |
+| 3 | [Settings UI](2026-05-21-gdrive-backup-phase-3-settings-ui.md) | `BackupComponent` settings detail screen; new `BACKUP` section in settings; manual "Back up now" loop end-to-end | ✅ Merged (PR #279) |
+| 4 | [Auto Schedule](2026-05-21-gdrive-backup-phase-4-auto-schedule.md) | WorkManager periodic worker; Wi-Fi-only default with toggle; 3-strike failure notification; coalescing | ✅ Merged (PR #283) |
+| 5 | [Restore](2026-05-21-gdrive-backup-phase-5-restore.md) | `DriveSnapshotParser`; new Drive source in source-selection; "Restore now" in settings; all-new fast path in `DefaultImportUseCase` | ✅ Merged (PR #289) |
+| 6 | [Welcome Restore](2026-05-21-gdrive-backup-phase-6-welcome.md) | Welcome screen gains "Restore from Google Drive?" step before presets | ✅ Merged (PR #300) |
+| 7 | [Disconnect + Remote Delete](2026-05-21-gdrive-backup-phase-7-disconnect.md) | Confirm dialog on disconnect; token revoke; optional remote file delete; orphan-cleanup helpers | ▶ In progress (PR #340) |
 
 Phases 0 and 1 can run in parallel (Phase 0 is XML, Phase 1 is Kotlin). Phases 2–7 are sequential.
 

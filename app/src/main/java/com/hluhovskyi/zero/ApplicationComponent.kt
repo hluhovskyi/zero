@@ -15,6 +15,7 @@ import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.AttachBackupToNotifications
 import com.hluhovskyi.zero.backup.BackupClient
 import com.hluhovskyi.zero.backup.BackupComponent
+import com.hluhovskyi.zero.backup.BackupConnectionUseCase
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.BackupScheduler
 import com.hluhovskyi.zero.backup.BackupUseCase
@@ -438,11 +439,13 @@ abstract class ApplicationComponent :
         fun backupComponent(
             syncEngine: SyncEngine,
             backupClient: BackupClient,
+            oauthTokenProvider: OAuthTokenProvider,
             currentUserRepository: CurrentUserRepository,
         ): BackupComponent = BackupComponent.factory(
             object : BackupComponent.Dependencies {
                 override val syncEngine = syncEngine
                 override val backupClient = backupClient
+                override val oauthTokenProvider = oauthTokenProvider
                 override val currentUserRepository = currentUserRepository
                 override val backupCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             },
@@ -450,6 +453,9 @@ abstract class ApplicationComponent :
 
         @Provides
         fun backupUseCase(backupComponent: BackupComponent): BackupUseCase = backupComponent.backupUseCase
+
+        @Provides
+        fun backupConnectionUseCase(backupComponent: BackupComponent): BackupConnectionUseCase = backupComponent.backupConnectionUseCase
 
         @Provides
         @ApplicationScope
