@@ -9,6 +9,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -44,8 +45,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         val transactionRepository: TransactionRepository
         val currencyConvertUseCase: CurrencyConvertUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
         val configurationRepository: ConfigurationRepository
         val dispatchers: DispatcherProvider
     }
@@ -73,13 +73,11 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun spendingUseCase(
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
             transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
@@ -108,13 +106,11 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun categorySpendingUseCase(
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
             transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides

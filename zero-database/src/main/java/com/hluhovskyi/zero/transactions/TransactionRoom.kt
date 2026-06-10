@@ -230,6 +230,33 @@ internal interface TransactionRoom {
     )
     fun selectByAccounts(userId: String, accountIds: List<String>): Flow<List<TransactionEntity>>
 
+    // Universal filter — every dimension AND-combined. Nullable scalars gate with `IS NULL`;
+    // each set gates with an int flag because an empty `IN ()` is a SQL error, so the caller
+    // passes a never-empty sentinel list whenever its flag is 0.
+    @Query(
+        """
+        SELECT * FROM TransactionEntity
+        WHERE userId = :userId
+          AND deletedAt IS NULL
+          AND (:from IS NULL OR date(enteredDateTime) >= date(:from))
+          AND (:to   IS NULL OR date(enteredDateTime) <= date(:to))
+          AND (:type IS NULL OR type = :type)
+          AND (:filterCategories = 0 OR categoryId IN (:categoryIds))
+          AND (:filterAccounts   = 0 OR accountId  IN (:accountIds))
+        ORDER BY datetime(enteredDateTime) DESC
+    """,
+    )
+    fun selectFiltered(
+        userId: String,
+        from: String?,
+        to: String?,
+        type: String?,
+        filterCategories: Int,
+        categoryIds: List<String>,
+        filterAccounts: Int,
+        accountIds: List<String>,
+    ): Flow<List<TransactionEntity>>
+
     @Query(
         """
         SELECT * FROM TransactionEntity

@@ -47,6 +47,10 @@ import com.hluhovskyi.zero.ui.DetailStatColumn
 import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.UiColorScheme
 import com.hluhovskyi.zero.ui.ZeroFab
+import com.hluhovskyi.zero.ui.chart.BarChart
+import com.hluhovskyi.zero.ui.chart.BarChartData
+import com.hluhovskyi.zero.ui.chart.BarGroup
+import com.hluhovskyi.zero.ui.chart.BarValue
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 import kotlinx.datetime.toJavaLocalDate
@@ -102,7 +106,12 @@ internal class CategoryDetailViewProvider(
                         },
                     )
                 },
-                hero = { HeroCard(state, colorScheme, imageLoader, amountFormatter) },
+                hero = {
+                    Column {
+                        HeroCard(state, colorScheme, imageLoader, amountFormatter)
+                        TrendCard(state, colorScheme)
+                    }
+                },
                 content = { transactionComponent.AttachWithView() },
             )
             ZeroFab(
@@ -195,5 +204,49 @@ private fun HeroCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TrendCard(
+    state: CategoryDetailViewModel.State,
+    colorScheme: UiColorScheme,
+) {
+    if (state.trend.isEmpty()) return
+    val accent = colorScheme.primary
+    val dim = colorScheme.primary.copy(alpha = 0.4f)
+    val data = BarChartData(
+        state.trend.map { point ->
+            BarGroup(
+                label = point.label,
+                bars = listOf(BarValue(point.value, if (point.isCurrent) accent else dim)),
+                topLabel = point.amountLabel,
+            )
+        },
+    )
+    Column(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(ZeroTheme.colors.surfaceContainerLowest)
+            .fillMaxWidth()
+            .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 14.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.category_detail_trend_title).uppercase(),
+            style = TextStyle(
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = ZeroTheme.colors.onSurfaceVariant,
+                letterSpacing = 1.0.sp,
+            ),
+        )
+        Spacer(Modifier.size(14.dp))
+        BarChart(
+            data = data,
+            modifier = Modifier.fillMaxWidth(),
+            barCornerRadius = 6.dp,
+            barWidth = 28.dp,
+        )
     }
 }
