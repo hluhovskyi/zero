@@ -37,6 +37,7 @@ import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -113,6 +114,7 @@ abstract class ActivityComponent :
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter

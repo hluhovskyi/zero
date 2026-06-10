@@ -14,9 +14,7 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -54,8 +52,7 @@ internal class DefaultTransactionViewModel(
     private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     TransactionViewModel {
@@ -203,7 +200,7 @@ internal class DefaultTransactionViewModel(
                     .distinctUntilChanged()
                     .flatMapLatest { activeFilter ->
                         if (activeFilter.isActive) {
-                            val today = clock.localDateTime(zoneProvider.timeZone()).date
+                            val today = zonedClock.localDateTime().date
                             transactionRepository.query(activeFilter.toFilteredCriteria(today))
                         } else {
                             flowOf(null)

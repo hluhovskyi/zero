@@ -11,8 +11,7 @@ import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -79,10 +78,8 @@ class DefaultTransactionViewModelTest {
     private val fixedInstant = Instant.parse("2024-06-01T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
     private val now: LocalDateTime = fixedInstant.toLocalDateTime(testTimeZone)
-    private val fakeClock = object : Clock {
+    private val fakeZonedClock = object : ZonedClock {
         override fun now() = fixedInstant
-    }
-    private val fakeZoneProvider = object : ZoneProvider {
         override fun timeZone() = testTimeZone
     }
 
@@ -465,8 +462,7 @@ class DefaultTransactionViewModelTest {
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
-            clock = fakeClock,
-            zoneProvider = fakeZoneProvider,
+            zonedClock = fakeZonedClock,
             dispatchers = dispatchers,
         )
     }
