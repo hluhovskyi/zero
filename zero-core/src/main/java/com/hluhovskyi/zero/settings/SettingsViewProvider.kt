@@ -303,8 +303,8 @@ private fun backupRowSubtitle(backup: SettingsViewModel.BackupSummary): String =
     backup.phase is BackupUseCase.Phase.Restoring -> stringResource(R.string.settings_backup_row_restoring)
     backup.phase is BackupUseCase.Phase.Failed && backup.consecutiveFailures > 0 ->
         stringResource(R.string.settings_backup_row_failed)
-    backup.lastSuccessAge != null ->
-        stringResource(R.string.settings_backup_row_last_at, backup.lastSuccessAge.toLabel())
+    backup.lastSuccessAgo != null ->
+        stringResource(R.string.settings_backup_row_last_at, backup.lastSuccessAgo.toLabel())
     else -> stringResource(R.string.settings_backup_row_on)
 }
 

@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupUseCase
-import com.hluhovskyi.zero.backup.RelativeAge
+import com.hluhovskyi.zero.backup.TimeAgo
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -114,7 +114,7 @@ internal class DefaultSettingsViewModel(
                     SettingsViewModel.BackupSummary(
                         isSignedIn = isSignedIn,
                         phase = backup.phase,
-                        lastSuccessAge = backup.lastSuccessAt?.let { RelativeAge.of(it, clock) },
+                        lastSuccessAgo = backup.lastSuccessAt?.let { TimeAgo.of(it, clock) },
                         lastError = backup.lastError,
                         consecutiveFailures = backup.consecutiveFailures,
                     )

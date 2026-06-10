@@ -2,7 +2,7 @@ package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.backup.BackupError
 import com.hluhovskyi.zero.backup.BackupUseCase
-import com.hluhovskyi.zero.backup.RelativeAge
+import com.hluhovskyi.zero.backup.TimeAgo
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Uri
 
@@ -39,14 +39,14 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
 
     /**
      * Passthrough of [BackupUseCase.State] plus the [isSignedIn] flag, projected so the row
-     * composable can pattern-match without re-querying the use case. [lastSuccessAge] is the one
+     * composable can pattern-match without re-querying the use case. [lastSuccessAgo] is the one
      * derived field (time math belongs in the ViewModel); the composable only maps fields to the
      * row's secondary text.
      */
     data class BackupSummary(
         val isSignedIn: Boolean = false,
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
-        val lastSuccessAge: RelativeAge? = null,
+        val lastSuccessAgo: TimeAgo? = null,
         val lastError: BackupError? = null,
         val consecutiveFailures: Int = 0,
     )

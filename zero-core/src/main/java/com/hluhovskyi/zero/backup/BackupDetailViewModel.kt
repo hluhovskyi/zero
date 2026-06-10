@@ -24,7 +24,7 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val isSignedIn: Boolean = false,
         val accountLabel: String? = null,
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
-        val lastSuccessAge: RelativeAge? = null,
+        val lastSuccessAgo: TimeAgo? = null,
         val lastError: BackupError? = null,
         val signInFeedback: BackupConnectionUseCase.SignInFeedback? = null,
         val disconnectFeedback: BackupConnectionUseCase.DisconnectFeedback? = null,

@@ -16,14 +16,14 @@ import kotlin.time.Duration.Companion.minutes
  * Coarse "how long ago" bucket for the last successful backup. Derived in ViewModels via [of]
  * (time math is a derivation, not formatting); the view only pattern-matches and formats.
  */
-sealed interface RelativeAge {
-    object JustNow : RelativeAge
-    data class Minutes(val count: Int) : RelativeAge
-    data class Hours(val count: Int) : RelativeAge
-    data class Days(val count: Int) : RelativeAge
+sealed interface TimeAgo {
+    object JustNow : TimeAgo
+    data class Minutes(val count: Int) : TimeAgo
+    data class Hours(val count: Int) : TimeAgo
+    data class Days(val count: Int) : TimeAgo
 
     companion object {
-        fun of(at: LocalDateTime, clock: Clock): RelativeAge {
+        fun of(at: LocalDateTime, clock: Clock): TimeAgo {
             val diff = clock.now() - at.toInstant(TimeZone.currentSystemDefault())
             return when {
                 diff < 1.minutes -> JustNow
@@ -37,9 +37,9 @@ sealed interface RelativeAge {
 
 /** Formats as "just now" / "N minutes ago" / "N hours ago" / "N days ago". */
 @Composable
-internal fun RelativeAge.toLabel(): String = when (this) {
-    RelativeAge.JustNow -> stringResource(R.string.backup_relative_just_now)
-    is RelativeAge.Minutes -> pluralStringResource(R.plurals.backup_relative_minutes_ago, count, count)
-    is RelativeAge.Hours -> pluralStringResource(R.plurals.backup_relative_hours_ago, count, count)
-    is RelativeAge.Days -> pluralStringResource(R.plurals.backup_relative_days_ago, count, count)
+internal fun TimeAgo.toLabel(): String = when (this) {
+    TimeAgo.JustNow -> stringResource(R.string.backup_relative_just_now)
+    is TimeAgo.Minutes -> pluralStringResource(R.plurals.backup_relative_minutes_ago, count, count)
+    is TimeAgo.Hours -> pluralStringResource(R.plurals.backup_relative_hours_ago, count, count)
+    is TimeAgo.Days -> pluralStringResource(R.plurals.backup_relative_days_ago, count, count)
 }

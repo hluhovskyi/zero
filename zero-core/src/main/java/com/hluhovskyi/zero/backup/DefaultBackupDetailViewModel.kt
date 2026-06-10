@@ -72,7 +72,7 @@ internal class DefaultBackupDetailViewModel(
                         isSignedIn = connection.isSignedIn,
                         accountLabel = connection.accountLabel,
                         phase = backup.phase,
-                        lastSuccessAge = backup.lastSuccessAt?.let { RelativeAge.of(it, clock) },
+                        lastSuccessAgo = backup.lastSuccessAt?.let { TimeAgo.of(it, clock) },
                         lastError = backup.lastError,
                         signInFeedback = connection.signInFeedback,
                         disconnectFeedback = connection.disconnectFeedback,

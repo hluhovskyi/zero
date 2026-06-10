@@ -147,7 +147,7 @@ private fun BackupDetailBody(
         item { BackupTopBar(onBack = { onAction(BackupDetailViewModel.Action.Back) }) }
         if (state.isSignedIn) {
             item { ConnectedHeader(label = state.accountLabel ?: stringResource(R.string.backup_account_placeholder)) }
-            item { BackupStatusBlock(phase = state.phase, lastSuccessAge = state.lastSuccessAge, lastError = state.lastError) }
+            item { BackupStatusBlock(phase = state.phase, lastSuccessAgo = state.lastSuccessAgo, lastError = state.lastError) }
             if (state.phase is BackupUseCase.Phase.Idle || state.phase is BackupUseCase.Phase.Failed) {
                 item {
                     BackupPrimaryActions(
@@ -303,10 +303,10 @@ private fun ConnectedHeader(label: String) {
 @Composable
 private fun BackupStatusBlock(
     phase: BackupUseCase.Phase,
-    lastSuccessAge: RelativeAge?,
+    lastSuccessAgo: TimeAgo?,
     lastError: BackupError?,
 ) {
-    val relativeTime = lastSuccessAge?.toLabel()
+    val relativeTime = lastSuccessAgo?.toLabel()
     when (phase) {
         is BackupUseCase.Phase.Idle -> StatusCard(
             iconColor = ZeroTheme.colors.secondary,
