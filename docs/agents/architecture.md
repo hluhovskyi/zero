@@ -69,6 +69,7 @@ Much of the above is machine-enforced by custom detectors in `lint-rules/src/mai
 - **`NoNamedAnnotation`** — duplicate bindings of one type get dedicated `@Qualifier` annotations, never `@Named("string")`.
 - **`UnhandledCloseable`, `UnhandledJob`** — `attach()` Closeables/Jobs are retained, not dropped.
 - **`DirectClockUsage`** — inject `common.time.Clock`; `Clock.System` is allowed only in the Clock impls (`common/time/`) and the test bridge.
+- **`ZonedClockPreferred`** — a constructor taking both `Clock` and `ZoneProvider` should inject `ZonedClock` instead; it combines them and exposes `localDateTime()`.
 - **`NoDispatchersDefault`** — `Dispatchers.IO`, or `DispatcherProvider.cpu()` for CPU-bound work; raw `Dispatchers.Default` lives only in the provider impl.
 - **`ZeroThemeBypass`** — Compose colors come from `ZeroTheme.colors`, never a hardcoded hex.
 - **`MaterialTwoImport`** — `androidx.compose.material3` only; M2 imports are allowed only in the bottom-sheet navigator island and the `material.icons` packs.

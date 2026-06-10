@@ -29,6 +29,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         BreadcrumbsLiteralOnlyDetector.ISSUE,
         ScopedComponentBuilderDetector.ISSUE,
         ZeroThemeBypassDetector.ISSUE,
+        ZonedClockPreferredDetector.ISSUE,
         DirectClockUsageDetector.ISSUE,
         DispatchersDefaultDetector.ISSUE,
         MaterialTwoImportDetector.ISSUE,
