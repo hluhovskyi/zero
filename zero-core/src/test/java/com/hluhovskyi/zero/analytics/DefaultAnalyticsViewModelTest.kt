@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.analytics
 
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
@@ -92,6 +93,18 @@ class DefaultAnalyticsViewModelTest {
         assertEquals(4, breakdown.legend.last().sharePercent) // 100 / 2800 ≈ 4%
         assertEquals(9, breakdown.categoryCount)
         assertEquals(0, BigDecimal("2800").compareTo(breakdown.totalSpent.value))
+    }
+
+    @Test
+    fun `donut total style is Whole under the threshold and Short above it`() = runTest {
+        analytics.value = analyticsWith(breakdown = sevenCategories(), categoryCount = 9) // total 2,800
+        assertEquals(AmountFormatter.Style.Whole, attached().breakdown!!.totalStyle)
+
+        analytics.value = analyticsWith(
+            breakdown = listOf(spend("big", amount = "150000", recent = "75000", prior = "75000")),
+            categoryCount = 1,
+        )
+        assertEquals(AmountFormatter.Style.Short, attached().breakdown!!.totalStyle)
     }
 
     @Test

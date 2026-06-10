@@ -99,14 +99,25 @@ private fun Header() {
             text = stringResource(R.string.analytics_title),
             style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primary),
         )
-        Text(
-            text = stringResource(R.string.analytics_period_last_6_months),
+        Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(11.dp))
                 .background(ZeroTheme.colors.surfaceContainerLow)
-                .padding(horizontal = 14.dp, vertical = 9.dp),
-            style = TextStyle(fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.primary),
-        )
+                .padding(start = 14.dp, end = 8.dp, top = 9.dp, bottom = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.analytics_period_last_6_months),
+                style = TextStyle(fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.primary),
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+                tint = ZeroTheme.colors.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }
 
@@ -195,11 +206,12 @@ private fun BreakdownCard(
             DonutChart(
                 data = DonutChartData(breakdown.donut.map { DonutSegment(it.value, it.colorScheme?.primary?.toUi() ?: ZeroTheme.colors.outlineVariant) }),
                 modifier = Modifier.size(140.dp),
+                strokeWidth = 18.dp,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.analytics_spent), style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant))
                     Text(
-                        text = amountFormatter.format(breakdown.totalSpent, currencySymbol, AmountFormatter.Style.Whole),
+                        text = amountFormatter.format(breakdown.totalSpent, currencySymbol, breakdown.totalStyle),
                         style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primary),
                     )
                 }

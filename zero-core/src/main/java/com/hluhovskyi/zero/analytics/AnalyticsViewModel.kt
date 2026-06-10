@@ -2,6 +2,7 @@ package com.hluhovskyi.zero.analytics
 
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
@@ -35,6 +36,7 @@ interface AnalyticsViewModel : AttachableActionStateModel<AnalyticsViewModel.Act
     /** Category breakdown: donut + legend + ranked rows. */
     data class Breakdown(
         val totalSpent: Amount,
+        val totalStyle: AmountFormatter.Style,
         val donut: List<Slice>,
         val legend: List<LegendItem>,
         val rows: List<Row>,

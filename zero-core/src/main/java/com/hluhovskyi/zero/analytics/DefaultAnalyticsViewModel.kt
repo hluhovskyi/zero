@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.analytics
 
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.time.Clock
@@ -111,6 +112,7 @@ internal class DefaultAnalyticsViewModel(
         }
         return AnalyticsViewModel.Breakdown(
             totalSpent = total,
+            totalStyle = if (total > LARGE_TOTAL) AmountFormatter.Style.Short else AmountFormatter.Style.Whole,
             donut = donut,
             legend = legend,
             rows = rows,
@@ -141,5 +143,6 @@ internal class DefaultAnalyticsViewModel(
         const val ROWS = 5
         const val PERCENT = 100.0
         const val FLAT_THRESHOLD = 0.02
+        const val LARGE_TOTAL = 100_000L // above this the donut total switches to the compact style
     }
 }
