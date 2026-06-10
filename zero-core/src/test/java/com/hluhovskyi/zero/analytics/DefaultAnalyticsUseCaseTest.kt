@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.transactions.TransactionFilterCriteria
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +38,7 @@ class DefaultAnalyticsUseCaseTest {
     // The category breakdown is the shared use case's job; here it's a stub we pass through.
     private var breakdown = emptyBreakdown()
     private val spendingBreakdownUseCase = object : SpendingBreakdownUseCase {
-        override fun query(criteria: TransactionRepository.Criteria.Filtered, trendSince: LocalDate?): Flow<SpendingBreakdownUseCase.Breakdown> = flowOf(breakdown)
+        override fun query(filter: TransactionFilterCriteria, trendSince: LocalDate?): Flow<SpendingBreakdownUseCase.Breakdown> = flowOf(breakdown)
     }
 
     // Jan 1 – Apr 30: buckets Jan/Feb/Mar/Apr.

@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.analytics
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
+import com.hluhovskyi.zero.transactions.TransactionFilterCriteria
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.flow.Flow
@@ -13,10 +14,8 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 
 /**
- * Composes the Analytics hub model. Cash flow (monthly money in/out) is analytics-specific and
- * derived here; the category breakdown is delegated to the shared [SpendingBreakdownUseCase] so the
- * hub and the Spending report rank spend the same way. Monthly bucketing works for any range — the
- * bar chart adapts to the bucket count.
+ * Composes the Analytics hub model: monthly cash flow (derived here) plus the category breakdown
+ * (delegated to the shared [SpendingBreakdownUseCase]). Bucketing works for any range.
  */
 internal class DefaultAnalyticsUseCase(
     private val transactionRepository: TransactionRepository,
@@ -25,17 +24,14 @@ internal class DefaultAnalyticsUseCase(
 ) : AnalyticsUseCase {
 
     override fun query(range: DateRange): Flow<AnalyticsUseCase.Analytics> {
-        val criteria = TransactionRepository.Criteria.Filtered(
-            from = range.start,
-            to = range.end,
-            type = null,
-            categoryIds = null,
-            accountIds = null,
-        )
+        // The whole range, unscoped — shared by both queries. Cash flow reads every type (type = null);
+        // the breakdown narrows to expenses itself.
+        val filter = TransactionFilterCriteria(from = range.start, to = range.end)
+        val allInRange = TransactionRepository.Criteria.Filtered(filter = filter, type = null)
         val midpoint = range.start.plus(range.start.daysUntil(range.end) / 2, DateTimeUnit.DAY)
         return combine(
-            transactionRepository.query(criteria),
-            spendingBreakdownUseCase.query(criteria, trendSince = midpoint),
+            transactionRepository.query(allInRange),
+            spendingBreakdownUseCase.query(filter, trendSince = midpoint),
         ) { transactions, breakdown ->
             val cashFlow = buildCashFlow(range, transactions)
             AnalyticsUseCase.Analytics(
