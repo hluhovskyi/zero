@@ -11,13 +11,9 @@ import com.hluhovskyi.zero.common.Attachable
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.d
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.Closeable
 import kotlin.time.Duration.Companion.nanoseconds
@@ -42,17 +38,16 @@ class AttachJankStatsToActivity(
     override fun attach(): Closeable {
         if (!BuildConfig.JANK_TRACKING) return Closeables.empty()
         return Closeables.of {
+            // JankStats must be created and delivers frames on the main thread, so collect here —
+            // the filter passes only jank frames, so the per-frame logging cost stays bounded.
             activity.lifecycleScope.launch {
                 activity.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                     jankFlow
                         .filter { it.isJank }
-                        .onEach {
+                        .collect {
                             val millis = it.frameDurationUiNanos.nanoseconds.inWholeMilliseconds
                             logger.d("$millis ms, ${it.states}")
                         }
-                        // Keep the filtering + logging off the main thread so measuring jank doesn't add to it.
-                        .flowOn(Dispatchers.Default)
-                        .collect()
                 }
             }
         }
