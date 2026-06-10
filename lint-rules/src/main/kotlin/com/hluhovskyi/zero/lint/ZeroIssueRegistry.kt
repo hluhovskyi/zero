@@ -29,6 +29,7 @@ class ZeroIssueRegistry : IssueRegistry() {
         BreadcrumbsLiteralOnlyDetector.ISSUE,
         ScopedComponentBuilderDetector.ISSUE,
         ZeroThemeBypassDetector.ISSUE,
+        ZonedClockPreferredDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
