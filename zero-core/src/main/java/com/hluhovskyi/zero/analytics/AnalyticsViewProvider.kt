@@ -197,10 +197,10 @@ private fun BreakdownCard(
             .background(ZeroTheme.colors.surfaceContainerLowest)
             .padding(18.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.analytics_by_category), style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface))
-            Text(stringResource(R.string.analytics_vs_prior), style = TextStyle(fontSize = 12.sp, color = ZeroTheme.colors.onSurfaceVariant))
-        }
+        Text(
+            text = stringResource(R.string.analytics_by_category),
+            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface),
+        )
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             DonutChart(
@@ -223,6 +223,7 @@ private fun BreakdownCard(
         }
         Spacer(Modifier.height(14.dp))
         Box(Modifier.fillMaxWidth().height(1.dp).background(ZeroTheme.colors.surfaceContainer))
+        TrendKey()
         breakdown.rows.forEach { row ->
             CategoryRow(row, currencySymbol, amountFormatter, imageLoader, onCategory)
         }
@@ -231,11 +232,30 @@ private fun BreakdownCard(
 }
 
 @Composable
+private fun TrendKey() {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 9.dp, bottom = 3.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
+            Icon(Icons.Filled.ArrowDropUp, contentDescription = null, tint = ZeroTheme.colors.error, modifier = Modifier.size(16.dp))
+            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = ZeroTheme.colors.secondary, modifier = Modifier.size(16.dp))
+        }
+        Spacer(Modifier.width(5.dp))
+        Text(
+            text = stringResource(R.string.analytics_vs_prior),
+            style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant),
+        )
+    }
+}
+
+@Composable
 private fun LegendRow(item: AnalyticsViewModel.LegendItem) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
         Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(item.colorScheme?.primary?.toUi() ?: ZeroTheme.colors.outlineVariant))
         Text(
-            text = item.name ?: stringResource(R.string.analytics_other),
+            text = item.name ?: stringResource(R.string.analytics_remaining),
             modifier = Modifier.weight(1f),
             style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurface),
         )
