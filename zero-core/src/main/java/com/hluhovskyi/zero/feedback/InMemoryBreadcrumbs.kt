@@ -17,7 +17,7 @@ private const val LOG_CAPACITY = 200
 class InMemoryBreadcrumbs(
     private val routes: Flow<String>,
     private val clock: Clock,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Breadcrumbs,
     Attachable {
 

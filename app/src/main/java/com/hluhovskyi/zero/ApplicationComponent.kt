@@ -387,6 +387,7 @@ abstract class ApplicationComponent :
         fun syncComponent(
             databaseComponent: DatabaseComponent,
             resourceResolver: ResourceResolver,
+            clock: Clock,
         ): SyncComponent = SyncComponent.factory(
             object : SyncComponent.Dependencies {
                 override val categorySyncSource = databaseComponent.categorySyncSource()
@@ -398,6 +399,7 @@ abstract class ApplicationComponent :
                 override val budgetSyncSource = databaseComponent.budgetSyncSource()
                 override val budgetSyncSink = databaseComponent.budgetSyncSink()
                 override val resourceResolver = resourceResolver
+                override val clock = clock
             },
         ).create()
 

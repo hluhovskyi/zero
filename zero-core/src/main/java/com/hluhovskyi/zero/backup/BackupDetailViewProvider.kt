@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
-import kotlinx.datetime.LocalDateTime
 
 internal class BackupDetailViewProvider(
     private val viewModel: BackupDetailViewModel,
@@ -148,7 +147,7 @@ private fun BackupDetailBody(
         item { BackupTopBar(onBack = { onAction(BackupDetailViewModel.Action.Back) }) }
         if (state.isSignedIn) {
             item { ConnectedHeader(label = state.accountLabel ?: stringResource(R.string.backup_account_placeholder)) }
-            item { BackupStatusBlock(phase = state.phase, lastSuccessAt = state.lastSuccessAt, lastError = state.lastError) }
+            item { BackupStatusBlock(phase = state.phase, lastSuccessAge = state.lastSuccessAge, lastError = state.lastError) }
             if (state.phase is BackupUseCase.Phase.Idle || state.phase is BackupUseCase.Phase.Failed) {
                 item {
                     BackupPrimaryActions(
@@ -304,10 +303,10 @@ private fun ConnectedHeader(label: String) {
 @Composable
 private fun BackupStatusBlock(
     phase: BackupUseCase.Phase,
-    lastSuccessAt: LocalDateTime?,
+    lastSuccessAge: RelativeAge?,
     lastError: BackupError?,
 ) {
-    val relativeTime = rememberRelativeTime(lastSuccessAt)
+    val relativeTime = lastSuccessAge?.toLabel()
     when (phase) {
         is BackupUseCase.Phase.Idle -> StatusCard(
             iconColor = ZeroTheme.colors.secondary,
@@ -576,6 +575,3 @@ private fun backupErrorMessage(error: BackupError): String = when (error) {
     is BackupError.ParseFailure -> stringResource(R.string.backup_error_parse)
     is BackupError.Unknown -> stringResource(R.string.backup_error_unknown, error.message)
 }
-
-@Composable
-private fun rememberRelativeTime(at: LocalDateTime?): String? = at?.let { rememberBackupRelativeTime(it) }
