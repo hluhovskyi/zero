@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -66,7 +67,7 @@ internal fun FilterSummaryCard(
                 style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = islandContent(ALPHA_STRONG)),
             )
             Text(
-                text = dateFormatter.formatSpan(summary.dateSpan),
+                text = dateFormatter.formatSpan(summary.dateRange),
                 style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = islandContent(ALPHA_DIM)),
             )
         }
@@ -151,10 +152,10 @@ private fun StatColumn(
 @ReadOnlyComposable
 private fun islandContent(alpha: Float): Color = ZeroTheme.colors.islandContent.copy(alpha = alpha)
 
-private fun DateFormatter.formatSpan(span: FilterSummary.DateSpan): String {
-    val start = format(span.start, DateFormatter.DayConfig.WithoutZero, DateFormatter.MonthConfig.Readable, DateFormatter.YearConfig.SkipCurrent)
-    if (span.start == span.end) return start
-    val end = format(span.end, DateFormatter.DayConfig.WithoutZero, DateFormatter.MonthConfig.Readable, DateFormatter.YearConfig.SkipCurrent)
+private fun DateFormatter.formatSpan(range: DateRange): String {
+    val start = format(range.start, DateFormatter.DayConfig.WithoutZero, DateFormatter.MonthConfig.Readable, DateFormatter.YearConfig.SkipCurrent)
+    if (range.start == range.end) return start
+    val end = format(range.end, DateFormatter.DayConfig.WithoutZero, DateFormatter.MonthConfig.Readable, DateFormatter.YearConfig.SkipCurrent)
     return "$start – $end"
 }
 

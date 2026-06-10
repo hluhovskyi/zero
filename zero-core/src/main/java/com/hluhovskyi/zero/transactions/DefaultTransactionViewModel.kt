@@ -8,6 +8,7 @@ import com.hluhovskyi.zero.colors.schemeForOrGrey
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Currency
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
@@ -392,7 +393,7 @@ internal class DefaultTransactionViewModel(
 
         return TransactionViewModel.FilterSummary(
             count = resolved.size,
-            dateSpan = TransactionViewModel.FilterSummary.DateSpan(
+            dateRange = DateRange(
                 start = resolved.minOf { it.date.date },
                 end = resolved.maxOf { it.date.date },
             ),
