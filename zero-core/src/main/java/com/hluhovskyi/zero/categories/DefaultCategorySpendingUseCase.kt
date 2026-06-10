@@ -2,8 +2,7 @@ package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -13,13 +12,11 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 
 internal class DefaultCategorySpendingUseCase(
     private val transactionRepository: TransactionRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
 ) : CategorySpendingUseCase {
 
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
@@ -37,7 +34,7 @@ internal class DefaultCategorySpendingUseCase(
     }
 
     override fun queryMonthlyTrend(id: Id.Known, months: Int): Flow<List<CategorySpendingUseCase.MonthlySpending>> {
-        val today = clock.now().toLocalDateTime(zoneProvider.timeZone()).date
+        val today = zonedClock.localDateTime().date
         val firstMonth = LocalDate(today.year, today.month, 1).minus(months - 1, DateTimeUnit.MONTH)
         val buckets = (0 until months).map { firstMonth.plus(it, DateTimeUnit.MONTH) }
         return transactionRepository
@@ -100,7 +97,7 @@ internal class DefaultCategorySpendingUseCase(
     }
 
     private fun CategorySpendingUseCase.Period.resolve(): Pair<LocalDate, LocalDate> {
-        val today = clock.now().toLocalDateTime(zoneProvider.timeZone()).date
+        val today = zonedClock.localDateTime().date
         return when (this) {
             is CategorySpendingUseCase.Period.CurrentMonth ->
                 LocalDate(today.year, today.month, 1) to today

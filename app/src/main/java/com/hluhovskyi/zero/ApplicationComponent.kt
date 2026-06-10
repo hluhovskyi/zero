@@ -313,6 +313,7 @@ abstract class ApplicationComponent :
             budgetRepository: BudgetRepository,
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
+            zonedClock: ZonedClock,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): BudgetQueryUseCase = BudgetComponent.queryUseCase(
@@ -321,8 +322,7 @@ abstract class ApplicationComponent :
             categorySpendingUseCase = CategoryComponent.spendingUseCase(
                 transactionRepository = transactionRepository,
                 currencyConvertUseCase = currencyConvertUseCase,
-                clock = clock,
-                zoneProvider = zoneProvider,
+                zonedClock = zonedClock,
             ),
             clock = clock,
             zoneProvider = zoneProvider,

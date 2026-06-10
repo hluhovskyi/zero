@@ -3,8 +3,7 @@ package com.hluhovskyi.zero.categories
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Rate
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.first
@@ -34,18 +33,15 @@ class DefaultCategorySpendingUseCaseTest {
 
     // 2026-04-15 → current month April, so a 6-month trend spans Nov 2025 → Apr 2026.
     private val fixedInstant = Instant.parse("2026-04-15T12:00:00Z")
-    private val fakeClock = object : Clock {
+    private val fakeZonedClock = object : ZonedClock {
         override fun now() = fixedInstant
-    }
-    private val fakeZone = object : ZoneProvider {
         override fun timeZone() = TimeZone.UTC
     }
 
     private fun createUseCase() = DefaultCategorySpendingUseCase(
         transactionRepository = transactionRepository,
         currencyConvertUseCase = currencyConvertUseCase,
-        clock = fakeClock,
-        zoneProvider = fakeZone,
+        zonedClock = fakeZonedClock,
     )
 
     @Test

@@ -7,8 +7,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.OnBackHandler
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toLocalDateTime
 import java.io.Closeable
 import java.time.format.TextStyle
 import java.util.Locale
@@ -35,8 +33,7 @@ internal class DefaultCategoryDetailViewModel(
     private val onEditHandler: OnCategoryDetailEditHandler,
     private val onBackHandler: OnBackHandler,
     private val onCreateTransactionHandler: OnCategoryDetailCreateTransactionHandler,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : CategoryDetailViewModel {
 
@@ -58,7 +55,7 @@ internal class DefaultCategoryDetailViewModel(
     }
 
     override fun attach(): Closeable = Closeables.of {
-        val today = clock.now().toLocalDateTime(zoneProvider.timeZone()).date
+        val today = zonedClock.localDateTime().date
         val periodDate = LocalDate(today.year, today.month, 1)
 
         coroutineScope.launch {

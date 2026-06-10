@@ -11,8 +11,7 @@ import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.OnBackHandler
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.emptyFlow
@@ -50,10 +49,8 @@ class DefaultCategoryDetailViewModelTest {
     private val primaryCurrency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
     private val fixedInstant = Instant.parse("2026-05-02T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
-    private val fakeClock = object : Clock {
+    private val fakeZonedClock = object : ZonedClock {
         override fun now() = fixedInstant
-    }
-    private val fakeZoneProvider = object : ZoneProvider {
         override fun timeZone() = testTimeZone
     }
 
@@ -196,8 +193,7 @@ class DefaultCategoryDetailViewModelTest {
         onEditHandler = onEditHandler,
         onBackHandler = OnBackHandler.Noop,
         onCreateTransactionHandler = OnCategoryDetailCreateTransactionHandler.Noop,
-        clock = fakeClock,
-        zoneProvider = fakeZoneProvider,
+        zonedClock = fakeZonedClock,
         coroutineScope = coroutineScope,
     )
 }

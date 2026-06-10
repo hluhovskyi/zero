@@ -10,8 +10,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.DisplayConfig
@@ -50,8 +49,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         val currencyConvertUseCase: CurrencyConvertUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val transactionRepository: TransactionRepository
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
     }
 
     companion object {
@@ -94,13 +92,11 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
         fun categorySpendingUseCase(
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
             transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides
@@ -114,8 +110,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             onEditHandler: OnCategoryDetailEditHandler,
             onBackHandler: OnBackHandler,
             onCreateTransactionHandler: OnCategoryDetailCreateTransactionHandler,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategoryDetailViewModel = DefaultCategoryDetailViewModel(
             categoryId = categoryId,
             categoriesQueryUseCase = categoriesQueryUseCase,
@@ -125,8 +120,7 @@ abstract class CategoryDetailComponent : AttachableViewComponent {
             onEditHandler = onEditHandler,
             onBackHandler = onBackHandler,
             onCreateTransactionHandler = onCreateTransactionHandler,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides
