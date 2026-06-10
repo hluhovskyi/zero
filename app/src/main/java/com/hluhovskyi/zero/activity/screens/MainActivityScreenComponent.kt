@@ -504,6 +504,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                         Destinations.Category.Edit.InitialType.withValue(type.name),
                     )
                 }
+                .onBackHandler { navigator.back() }
                 .logging(logger)
         }
 

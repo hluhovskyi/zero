@@ -38,8 +38,10 @@ import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
+import com.hluhovskyi.zero.ui.DetailTopBar
 import com.hluhovskyi.zero.ui.SwipeableSegmentedTabs
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
@@ -52,6 +54,7 @@ internal class CategoryViewProvider(
     private val imageLoader: ImageLoader,
     private val amountFormatter: AmountFormatter,
     private val onAddCategory: OnAddCategoryHandler,
+    private val onBack: OnBackHandler,
 ) : ViewProvider {
 
     @Composable
@@ -61,6 +64,7 @@ internal class CategoryViewProvider(
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             onAddCategory = onAddCategory,
+            onBack = onBack,
         )
     }
 }
@@ -71,6 +75,7 @@ private fun CategoryView(
     imageLoader: ImageLoader,
     amountFormatter: AmountFormatter,
     onAddCategory: OnAddCategoryHandler,
+    onBack: OnBackHandler,
 ) {
     val state by viewModel.state.collectAsState()
     val expenseLabel = stringResource(R.string.transaction_type_expense)
@@ -78,14 +83,9 @@ private fun CategoryView(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = stringResource(R.string.category_title),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp),
-                style = TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = ZeroTheme.colors.primary,
-                ),
+            DetailTopBar(
+                title = stringResource(R.string.category_title),
+                onBack = { onBack.onBack() },
             )
 
             SwipeableSegmentedTabs(
