@@ -9,14 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
 
-/**
- * Shared spending breakdown: ranks the expenses matched by [filter] by category, in the primary
- * currency. Income and transfers are excluded. Consumed by the Analytics hub (date-range scoped) and
- * the scoped Spending report (filter scoped) so both rank spend the same way — and both speak in the
- * domain [TransactionFilterCriteria], independent of the data layer. When [trendSince] is non-null
- * each row also carries its recent (on/after [trendSince]) vs prior (before) sub-totals, for a
- * recent-vs-prior trend.
- */
+/** Ranks expenses matched by [filter] by category (primary currency); [trendSince] splits each row recent/prior. */
 interface SpendingBreakdownUseCase {
 
     fun query(

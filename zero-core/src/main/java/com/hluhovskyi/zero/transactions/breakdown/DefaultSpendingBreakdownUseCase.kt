@@ -28,14 +28,7 @@ internal class DefaultSpendingBreakdownUseCase(
         aggregate(transactions, categories, trendSince)
     }
 
-    // A spending breakdown is expenses only — narrow at the SQL level so we don't fetch income/transfers.
-    private fun TransactionFilterCriteria.toExpenseCriteria() = TransactionRepository.Criteria.Filtered(
-        from = from,
-        to = to,
-        type = TransactionRepository.Type.Expense,
-        categoryIds = categoryIds,
-        accountIds = accountIds,
-    )
+    private fun TransactionFilterCriteria.toExpenseCriteria() = TransactionRepository.Criteria.Filtered(filter = this, type = TransactionRepository.Type.Expense)
 
     private suspend fun aggregate(
         transactions: List<TransactionRepository.Transaction>,

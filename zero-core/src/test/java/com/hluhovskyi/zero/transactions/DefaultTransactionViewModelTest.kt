@@ -427,9 +427,9 @@ class DefaultTransactionViewModelTest {
         val filtered = criteriaCaptor.allValues.filterIsInstance<TransactionRepository.Criteria.Filtered>()
         assertEquals(1, filtered.size)
         assertEquals(TransactionRepository.Type.Income, filtered.first().type)
-        assertEquals(setOf(Id.Known("cat1")), filtered.first().categoryIds)
-        assertEquals(LocalDate(2024, 6, 1), filtered.first().from)
-        assertEquals(LocalDate(2024, 6, 1), filtered.first().to)
+        assertEquals(setOf(Id.Known("cat1")), filtered.first().filter.categoryIds)
+        assertEquals(LocalDate(2024, 6, 1), filtered.first().filter.from)
+        assertEquals(LocalDate(2024, 6, 1), filtered.first().filter.to)
     }
 
     @Test

@@ -36,7 +36,7 @@ class DefaultSpendingBreakdownUseCaseTest {
         override suspend fun convertToPrimary(amount: Amount, currencyId: Id.Known) = amount
     }
 
-    // Filter values don't matter — the repository is mocked. trendSince splits recent (>=) vs prior.
+    // Filter is irrelevant (repository mocked); trendSince = Mar 1 splits recent (>=) vs prior.
     private val filter = TransactionFilterCriteria()
     private val trendSince = LocalDate(2026, 3, 1)
 
