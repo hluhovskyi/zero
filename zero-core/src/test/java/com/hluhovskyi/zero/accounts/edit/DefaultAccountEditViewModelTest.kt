@@ -6,12 +6,12 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -51,6 +51,11 @@ class DefaultAccountEditViewModelTest {
     @Mock private lateinit var accountEditCurrencyUseCase: AccountEditCurrencyUseCase
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val dispatchers = object : DispatcherProvider {
+        override fun io() = testDispatcher
+        override fun cpu() = testDispatcher
+        override fun main() = testDispatcher
+    }
     private val iconId = Id.Known("icon-1")
     private val currencyId = Id.Known("cur-1")
     private val accountId = Id.Known("acc-1")
@@ -121,6 +126,6 @@ class DefaultAccountEditViewModelTest {
         accountEditIconUseCase = accountEditIconUseCase,
         accountEditCurrencyUseCase = accountEditCurrencyUseCase,
         onAccountSavedHandler = OnAccountSavedHandler.Noop,
-        coroutineScope = CoroutineScope(testDispatcher),
+        dispatchers = dispatchers,
     )
 }

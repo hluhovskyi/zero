@@ -15,6 +15,33 @@ Android library module. Design system and dumb reusable Compose components.
 - **Theme**: `Theme.kt`, `Color.kt`, `Type.kt`, `Shape.kt` — Material 3 theme setup
 - **Shared components**: Reusable atomic/molecular Compose components (e.g., `AmountDisplay`)
 - **Design tokens**: Color palette, typography scale, corner radii
+- **Charts**: `chart/` — `LineChart`, `SignedLineChart`, `BarChart`, `DonutChart` + data models. See [Charts](#charts).
+
+## Charts
+
+Canvas/layout chart primitives in `com.hluhovskyi.zero.ui.chart`, **color- and data-agnostic** —
+they take a `Color` and a primitive data class (`LineChartData`, `BarChartData`, `DonutChartData`),
+so a feature ViewModel builds the data and passes it in. Built for the Insights feature; not yet
+wired to real data.
+
+- **Composables**: `LineChart` (gradient-area sparkline), `SignedLineChart` (net-worth area with a
+  dashed zero baseline — red below / green above, area anchored to zero), `BarChart` (grouped cash
+  in/out or single series; adaptive bar width; `BarGroup.topLabel` + `barWidth`/`barCornerRadius`
+  cover the single-series category trend with value labels + a highlighted current period),
+  `DonutChart` (multi-segment ring with a center `content` slot).
+- **Each chart degrades on its own terms — never a blank box or a misleading flat line.** Keep this
+  when adding states: empty line/bar → dashed baseline; empty donut → hollow dashed ring; a missing
+  bar bucket → dashed placeholder; an all-zero bar series → faint baseline tracks; a single point →
+  a lone dot (no line).
+- **Chart accent colors are tokens on `ZeroExtraColors`** (`chartCashIn`, `chartCashOut`,
+  `chartHeroSurface`, …) — same reason as rule 5; don't hardcode chart hex. Per-bar/segment
+  (category/entity) colors are the caller's to pass in.
+- **Keep the math in `ChartMath.kt`, the drawing thin** — normalization, adaptive widths, and the
+  signed (zero-inclusive) scale are pure functions covered by `ChartMathTest`; the composables just
+  draw. Add a test there before reaching for new geometry.
+- The debug gallery (`ChartsGalleryScreen`, reached via **Settings → Developer → Charts** in debug
+  builds) is the live reference for every chart × state. Its dev-only labels file-suppress
+  `HardcodedComposableString` rather than bloating the localized string table.
 
 ## Adding a Shared Component
 

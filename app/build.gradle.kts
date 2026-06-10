@@ -59,6 +59,8 @@ android {
             "FEEDBACK_INTEGRITY_PROJECT",
             "\"${System.getenv("FEEDBACK_INTEGRITY_PROJECT") ?: localProps.getProperty("feedbackIntegrityProject") ?: ""}\"",
         )
+        // JankStats tracking + per-frame logging is diagnostics only; enabled in debug/perf, off in release.
+        buildConfigField("boolean", "JANK_TRACKING", "false")
     }
 
     signingConfigs {
@@ -76,6 +78,7 @@ android {
             // Distinct package so debug installs alongside a Play-store release build.
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            buildConfigField("boolean", "JANK_TRACKING", "true")
         }
         release {
             signingConfig = signingConfigs.getByName("release")
@@ -90,6 +93,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
             isProfileable = true
+            buildConfigField("boolean", "JANK_TRACKING", "true")
         }
     }
 
@@ -152,6 +156,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.compose.uiToolingPreview)
+    implementation(libs.androidx.metrics.performance)
     "perfImplementation"(libs.androidx.compose.runtime.tracing)
     debugImplementation(libs.androidx.compose.uiTooling)
 

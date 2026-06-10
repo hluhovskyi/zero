@@ -57,6 +57,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.rememberPerformanceHolder
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
@@ -92,6 +93,8 @@ internal class TransactionViewProvider(
     }
 }
 
+private const val TAG = "TransactionView"
+
 @Composable
 private fun TransactionView(
     viewModel: TransactionViewModel,
@@ -103,6 +106,18 @@ private fun TransactionView(
 ) {
     val state by viewModel.state.collectAsState()
     val lazyListState = rememberLazyListState()
+
+    val performanceHolder = rememberPerformanceHolder()
+    LaunchedEffect(performanceHolder, lazyListState) {
+        snapshotFlow { lazyListState.isScrollInProgress }
+            .collect { scrolling ->
+                if (scrolling) {
+                    performanceHolder.state?.putState(TAG, "scroll")
+                } else {
+                    performanceHolder.state?.removeState(TAG)
+                }
+            }
+    }
 
     BackHandler(enabled = state.inSelectionMode) {
         viewModel.perform(TransactionViewModel.Action.ExitSelection)

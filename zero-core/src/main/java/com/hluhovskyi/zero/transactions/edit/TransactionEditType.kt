@@ -6,6 +6,12 @@ enum class TransactionEditType {
     EXPENSE,
     INCOME,
     TRANSFER,
+    ;
+
+    companion object {
+
+        val List: List<TransactionEditType> = entries.toList()
+    }
 }
 
 /** Category type to rank/filter by; null for transfers, which have no category. */

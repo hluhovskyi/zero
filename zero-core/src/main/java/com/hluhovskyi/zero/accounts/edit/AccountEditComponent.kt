@@ -7,6 +7,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.IdGenerator
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -37,6 +38,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
     interface Dependencies {
         val idGenerator: IdGenerator
         val imageLoader: ImageLoader
+        val dispatcherProvider: DispatcherProvider
 
         val accountRepository: AccountRepository
         val currencyRepository: CurrencyRepository
@@ -92,6 +94,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
             accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
             onAccountSavedHandler: OnAccountSavedHandler,
             configurationRepository: ConfigurationRepository,
+            dispatcherProvider: DispatcherProvider,
         ): AccountEditViewModel = DefaultAccountEditViewModel(
             accountId = accountId,
             accountRepository = accountRepository,
@@ -102,6 +105,7 @@ abstract class AccountEditComponent : AttachableViewComponent {
             accountEditCurrencyUseCase = accountEditCurrencyUseCase,
             onAccountSavedHandler = onAccountSavedHandler,
             configurationRepository = configurationRepository,
+            dispatchers = dispatcherProvider,
         )
 
         @Provides
