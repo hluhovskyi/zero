@@ -36,9 +36,18 @@ class DefaultAmountFormatterTest {
         assertEquals("-$2.2K", formatter.format(amount("-2200"), "$", SHORT))
     }
 
+    @Test
+    fun `whole style drops the fractional part and keeps grouping`() {
+        assertEquals("1,234", formatter.format(amount("1234.99"), style = WHOLE))
+        assertEquals("100", formatter.format(amount("100.50"), style = WHOLE))
+        assertEquals("$2,200", formatter.format(amount("2200"), "$", WHOLE))
+        assertEquals("-$2,200", formatter.format(amount("-2200.75"), "$", WHOLE))
+    }
+
     private fun amount(value: String): Amount = Amount(BigDecimal(value))
 
     private companion object {
         val SHORT = AmountFormatter.Style.Short
+        val WHOLE = AmountFormatter.Style.Whole
     }
 }

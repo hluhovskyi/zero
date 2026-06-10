@@ -199,7 +199,7 @@ private fun BreakdownCard(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.analytics_spent), style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant))
                     Text(
-                        text = amountFormatter.format(breakdown.totalSpent, currencySymbol),
+                        text = amountFormatter.format(breakdown.totalSpent, currencySymbol, AmountFormatter.Style.Whole),
                         style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primary),
                     )
                 }

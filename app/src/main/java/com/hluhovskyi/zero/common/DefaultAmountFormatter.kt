@@ -14,6 +14,9 @@ internal class DefaultAmountFormatter(
         val formatted = when (style) {
             AmountFormatter.Style.Full -> DecimalFormat(pattern).format(magnitude)
             AmountFormatter.Style.Short -> formatShort(magnitude)
+            AmountFormatter.Style.Whole -> DecimalFormat("#,##0")
+                .apply { roundingMode = RoundingMode.DOWN }
+                .format(magnitude)
         }
         return if (isNegative) "-$currencySymbol$formatted" else "$currencySymbol$formatted"
     }
