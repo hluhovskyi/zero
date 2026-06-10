@@ -99,10 +99,6 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @Provides
         @TransactionScope
-        fun transactionFilterCriteria(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterCriteria = TransactionFilterCriteria(clock, zoneProvider)
-
-        @Provides
-        @TransactionScope
         fun viewModel(
             transactionRepository: TransactionRepository,
             accountRepository: AccountRepository,
@@ -116,7 +112,8 @@ abstract class TransactionComponent : AttachableViewComponent {
             onDuplicateTransactionHandler: OnDuplicateTransactionHandler,
             filter: TransactionFilter,
             transactionFilterUseCase: TransactionFilterUseCase,
-            transactionFilterCriteria: TransactionFilterCriteria,
+            clock: Clock,
+            zoneProvider: ZoneProvider,
             dispatchers: DispatcherProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
@@ -131,7 +128,8 @@ abstract class TransactionComponent : AttachableViewComponent {
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
-            transactionFilterCriteria = transactionFilterCriteria,
+            clock = clock,
+            zoneProvider = zoneProvider,
             dispatchers = dispatchers,
         )
 

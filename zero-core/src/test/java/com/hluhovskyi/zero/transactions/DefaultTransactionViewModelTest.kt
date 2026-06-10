@@ -34,6 +34,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -406,10 +407,15 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `active filter is resolved to a Criteria_Filtered SQL query`() = runTest {
+        // fakeClock is fixed at 2024-06-01, so ThisMonth resolves to 2024-06-01..2024-06-01.
         val viewModel = createViewModel(
             testScheduler,
             transactionFilterUseCase = appliedFilter(
-                TransactionFilter(type = TransactionFilter.TransactionType.Income, categoryIds = setOf(Id.Known("cat1"))),
+                TransactionFilter(
+                    period = TransactionFilter.DatePeriod.ThisMonth,
+                    type = TransactionFilter.TransactionType.Income,
+                    categoryIds = setOf(Id.Known("cat1")),
+                ),
             ),
         )
         viewModel.attach()
@@ -423,6 +429,8 @@ class DefaultTransactionViewModelTest {
         assertEquals(1, filtered.size)
         assertEquals(TransactionRepository.Type.Income, filtered.first().type)
         assertEquals(setOf(Id.Known("cat1")), filtered.first().categoryIds)
+        assertEquals(LocalDate(2024, 6, 1), filtered.first().from)
+        assertEquals(LocalDate(2024, 6, 1), filtered.first().to)
     }
 
     private fun appliedFilter(filter: TransactionFilter) = object : TransactionFilterUseCase {
@@ -457,7 +465,8 @@ class DefaultTransactionViewModelTest {
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
-            transactionFilterCriteria = TransactionFilterCriteria(fakeClock, fakeZoneProvider),
+            clock = fakeClock,
+            zoneProvider = fakeZoneProvider,
             dispatchers = dispatchers,
         )
     }

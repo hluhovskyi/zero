@@ -14,6 +14,9 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
 import com.hluhovskyi.zero.common.coroutines.onStartWithEmptyList
+import com.hluhovskyi.zero.common.time.Clock
+import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.localDateTime
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 internal class DefaultTransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -50,7 +54,8 @@ internal class DefaultTransactionViewModel(
     private val onDuplicateTransactionHandler: OnDuplicateTransactionHandler = OnDuplicateTransactionHandler.Noop,
     private val filter: TransactionFilter = TransactionFilter.All,
     private val transactionFilterUseCase: TransactionFilterUseCase = TransactionFilterUseCase.Noop,
-    private val transactionFilterCriteria: TransactionFilterCriteria,
+    private val clock: Clock,
+    private val zoneProvider: ZoneProvider,
     private val dispatchers: DispatcherProvider,
 ) : BaseViewModel(dispatchers),
     TransactionViewModel {
@@ -198,7 +203,8 @@ internal class DefaultTransactionViewModel(
                     .distinctUntilChanged()
                     .flatMapLatest { activeFilter ->
                         if (activeFilter.isActive) {
-                            transactionRepository.query(transactionFilterCriteria.create(activeFilter))
+                            val today = clock.localDateTime(zoneProvider.timeZone()).date
+                            transactionRepository.query(activeFilter.toFilteredCriteria(today))
                         } else {
                             flowOf(null)
                         }
@@ -414,4 +420,24 @@ internal class DefaultTransactionViewModel(
             }
         }
     }
+}
+
+// Maps the screen's active filter to a SQL-level criterion, resolving the relative period to a
+// concrete range against [today]. The DB then does the filtering — no in-memory pass.
+private fun TransactionFilter.toFilteredCriteria(today: LocalDate): TransactionRepository.Criteria.Filtered {
+    val range = period?.toDateRange(today)
+    return TransactionRepository.Criteria.Filtered(
+        from = range?.start,
+        to = range?.end,
+        type = type.toCriteriaType(),
+        categoryIds = categoryIds,
+        accountIds = accountIds,
+    )
+}
+
+private fun TransactionFilter.TransactionType.toCriteriaType(): TransactionRepository.Type? = when (this) {
+    TransactionFilter.TransactionType.All -> null
+    TransactionFilter.TransactionType.Expense -> TransactionRepository.Type.Expense
+    TransactionFilter.TransactionType.Income -> TransactionRepository.Type.Income
+    TransactionFilter.TransactionType.Transfer -> TransactionRepository.Type.Transfer
 }
