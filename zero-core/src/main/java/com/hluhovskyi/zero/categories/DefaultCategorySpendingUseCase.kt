@@ -2,8 +2,7 @@ package com.hluhovskyi.zero.categories
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.Id
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -12,13 +11,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.plus
 
 internal class DefaultCategorySpendingUseCase(
     private val transactionRepository: TransactionRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
 ) : CategorySpendingUseCase {
 
     override fun query(period: CategorySpendingUseCase.Period): Flow<List<CategorySpendingUseCase.CategorySpending>> {
@@ -33,6 +31,29 @@ internal class DefaultCategorySpendingUseCase(
         return transactionRepository
             .query(TransactionRepository.Criteria.ForCategoryBetween(id, from, to))
             .flatMapLatest { transactions -> flow { emit(aggregateForCategory(id, transactions)) } }
+    }
+
+    override fun queryMonthlyTrend(id: Id.Known, months: Int): Flow<List<CategorySpendingUseCase.MonthlySpending>> {
+        val today = zonedClock.localDateTime().date
+        val firstMonth = LocalDate(today.year, today.month, 1).minus(months - 1, DateTimeUnit.MONTH)
+        val buckets = (0 until months).map { firstMonth.plus(it, DateTimeUnit.MONTH) }
+        return transactionRepository
+            .query(TransactionRepository.Criteria.ForCategoryBetween(id, firstMonth, today))
+            .flatMapLatest { transactions -> flow { emit(bucketByMonth(transactions, buckets)) } }
+    }
+
+    private suspend fun bucketByMonth(
+        transactions: List<TransactionRepository.Transaction>,
+        buckets: List<LocalDate>,
+    ): List<CategorySpendingUseCase.MonthlySpending> {
+        val totals = buckets.associateWith { Amount.zero() }.toMutableMap()
+        for (tx in transactions) {
+            if (tx is TransactionRepository.Transaction.Transfer) continue
+            val key = LocalDate(tx.dateTime.year, tx.dateTime.month, 1)
+            val converted = currencyConvertUseCase.convertToPrimary(tx.amount, tx.currencyId)
+            totals[key]?.let { totals[key] = it + converted }
+        }
+        return buckets.map { CategorySpendingUseCase.MonthlySpending(it, totals.getValue(it)) }
     }
 
     private suspend fun aggregate(
@@ -76,7 +97,7 @@ internal class DefaultCategorySpendingUseCase(
     }
 
     private fun CategorySpendingUseCase.Period.resolve(): Pair<LocalDate, LocalDate> {
-        val today = clock.now().toLocalDateTime(zoneProvider.timeZone()).date
+        val today = zonedClock.localDateTime().date
         return when (this) {
             is CategorySpendingUseCase.Period.CurrentMonth ->
                 LocalDate(today.year, today.month, 1) to today

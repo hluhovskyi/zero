@@ -12,11 +12,19 @@ interface CategorySpendingUseCase {
 
     fun queryForCategory(id: Id.Known, period: Period): Flow<CategorySpending?>
 
+    /** [months] monthly buckets for a category, oldest → newest, zero-filled for empty months. */
+    fun queryMonthlyTrend(id: Id.Known, months: Int): Flow<List<MonthlySpending>>
+
     data class CategorySpending(
         val categoryId: Id.Known,
         val totalAmount: Amount,
         val transactionCount: Int,
         val largestTransactionAmount: Amount = Amount.zero(),
+    )
+
+    data class MonthlySpending(
+        val month: LocalDate, // first day of the month
+        val totalAmount: Amount,
     )
 
     sealed class Period {
@@ -29,5 +37,6 @@ interface CategorySpendingUseCase {
     object Noop : CategorySpendingUseCase {
         override fun query(period: Period): Flow<List<CategorySpending>> = emptyFlow()
         override fun queryForCategory(id: Id.Known, period: Period): Flow<CategorySpending?> = emptyFlow()
+        override fun queryMonthlyTrend(id: Id.Known, months: Int): Flow<List<MonthlySpending>> = emptyFlow()
     }
 }
