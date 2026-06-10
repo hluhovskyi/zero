@@ -35,8 +35,10 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.merge
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -113,6 +115,7 @@ abstract class ActivityComponent :
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
@@ -272,9 +275,23 @@ abstract class ActivityComponent :
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
             biometricLockComponent: BiometricLockComponent,
-        ): Attachable = AttachActivityComponent(
-            presetsComponent = presetsComponent,
-            biometricLockComponent = biometricLockComponent,
+            attachJankStatsToActivity: AttachJankStatsToActivity,
+        ): Attachable = Attachable.merge(
+            AttachActivityComponent(
+                presetsComponent = presetsComponent,
+                biometricLockComponent = biometricLockComponent,
+            ),
+            attachJankStatsToActivity,
+        )
+
+        @Provides
+        @ActivityScope
+        fun attachJankStatsToActivity(
+            fragmentActivity: FragmentActivity,
+            logger: Logger,
+        ): AttachJankStatsToActivity = AttachJankStatsToActivity(
+            activity = fragmentActivity,
+            logger = logger,
         )
 
         @Provides

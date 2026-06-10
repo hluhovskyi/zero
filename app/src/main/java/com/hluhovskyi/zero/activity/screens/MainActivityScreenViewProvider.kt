@@ -38,6 +38,7 @@ import com.hluhovskyi.zero.activity.navigation.BundleArguments
 import com.hluhovskyi.zero.activity.navigation.Destination
 import com.hluhovskyi.zero.activity.navigation.NavigatorEntry
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.rememberPerformanceHolder
 import com.hluhovskyi.zero.ui.DragHandle
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
 
@@ -68,6 +69,14 @@ internal class MainActivityScreenViewProvider(
             if (modalBottomSheetState.targetValue != ModalBottomSheetValue.Hidden) {
                 focusManager.clearFocus()
             }
+        }
+
+        val performanceHolder = rememberPerformanceHolder()
+        LaunchedEffect(navController, performanceHolder) {
+            navController.currentBackStackEntryFlow
+                .collect {
+                    performanceHolder.state?.putState("Screen", it.destination.route.orEmpty())
+                }
         }
 
         ModalBottomSheetLayout(
