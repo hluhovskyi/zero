@@ -11,6 +11,8 @@ import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.transactions.breakdown.DefaultSpendingBreakdownUseCase
+import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -68,14 +70,26 @@ abstract class AnalyticsComponent : AttachableViewComponent {
 
         @Provides
         @AnalyticsScope
-        fun analyticsUseCase(
+        fun spendingBreakdownUseCase(
             transactionRepository: TransactionRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
-        ): AnalyticsUseCase = DefaultAnalyticsUseCase(
+        ): SpendingBreakdownUseCase = DefaultSpendingBreakdownUseCase(
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
+        )
+
+        @Provides
+        @AnalyticsScope
+        fun analyticsUseCase(
+            transactionRepository: TransactionRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+            spendingBreakdownUseCase: SpendingBreakdownUseCase,
+        ): AnalyticsUseCase = DefaultAnalyticsUseCase(
+            transactionRepository = transactionRepository,
+            currencyConvertUseCase = currencyConvertUseCase,
+            spendingBreakdownUseCase = spendingBreakdownUseCase,
         )
 
         @Provides

@@ -85,20 +85,21 @@ internal class DefaultAnalyticsViewModel(
     )
 
     private fun AnalyticsUseCase.Analytics.toBreakdown(): AnalyticsViewModel.Breakdown? {
-        if (breakdown.isEmpty()) return null
-        val total = breakdown.fold(Amount.zero()) { sum, row -> sum + row.amount }
-        val otherValue = breakdown.drop(DONUT_SLICES).fold(Amount.zero()) { sum, row -> sum + row.amount }
+        val categories = breakdown.categories
+        if (categories.isEmpty()) return null
+        val total = breakdown.total
+        val otherValue = categories.drop(DONUT_SLICES).fold(Amount.zero()) { sum, row -> sum + row.amount }
         val hasOther = otherValue > 0L
 
-        val donut = breakdown.take(DONUT_SLICES)
+        val donut = categories.take(DONUT_SLICES)
             .map { AnalyticsViewModel.Slice(it.colorScheme, it.amount.value.toFloat()) }
             .plusOther(hasOther) { AnalyticsViewModel.Slice(colorScheme = null, value = otherValue.value.toFloat()) }
 
-        val legend = breakdown.take(LEGEND_ITEMS)
+        val legend = categories.take(LEGEND_ITEMS)
             .map { AnalyticsViewModel.LegendItem(it.colorScheme, it.name, share(it.amount, total)) }
             .plusOther(hasOther) { AnalyticsViewModel.LegendItem(colorScheme = null, name = null, sharePercent = share(otherValue, total)) }
 
-        val rows = breakdown.take(ROWS).map {
+        val rows = categories.take(ROWS).map {
             AnalyticsViewModel.Row(
                 categoryId = it.categoryId,
                 name = it.name,
@@ -116,7 +117,7 @@ internal class DefaultAnalyticsViewModel(
             donut = donut,
             legend = legend,
             rows = rows,
-            categoryCount = categoryCount,
+            categoryCount = breakdown.categoryCount,
         )
     }
 

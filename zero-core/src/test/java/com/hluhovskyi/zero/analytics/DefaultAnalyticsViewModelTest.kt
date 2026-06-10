@@ -10,6 +10,7 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
+import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -170,14 +171,18 @@ class DefaultAnalyticsViewModelTest {
         totalIn: String = "0",
         totalOut: String = "0",
         cashFlow: List<AnalyticsUseCase.CashFlowBucket> = emptyList(),
-        breakdown: List<AnalyticsUseCase.CategorySpend> = emptyList(),
+        breakdown: List<SpendingBreakdownUseCase.CategorySpend> = emptyList(),
         categoryCount: Int = 0,
     ) = AnalyticsUseCase.Analytics(
         totalIn = Amount(BigDecimal(totalIn)),
         totalOut = Amount(BigDecimal(totalOut)),
         cashFlow = cashFlow,
-        breakdown = breakdown,
-        categoryCount = categoryCount,
+        breakdown = SpendingBreakdownUseCase.Breakdown(
+            total = breakdown.fold(Amount.zero()) { sum, row -> sum + row.amount },
+            transactionCount = breakdown.sumOf { it.transactionCount },
+            categoryCount = categoryCount,
+            categories = breakdown,
+        ),
     )
 
     private fun bucket(label: String, income: String, expense: String) = AnalyticsUseCase.CashFlowBucket(
@@ -197,7 +202,7 @@ class DefaultAnalyticsViewModelTest {
         spend("c7", amount = "100", recent = "50", prior = "50"),
     )
 
-    private fun spend(id: String, amount: String, recent: String, prior: String) = AnalyticsUseCase.CategorySpend(
+    private fun spend(id: String, amount: String, recent: String, prior: String) = SpendingBreakdownUseCase.CategorySpend(
         categoryId = Id.Known(id),
         name = "Cat $id",
         icon = Image.empty(),
