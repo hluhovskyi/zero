@@ -35,6 +35,7 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.merge
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
@@ -272,9 +273,23 @@ abstract class ActivityComponent :
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
             biometricLockComponent: BiometricLockComponent,
-        ): Attachable = AttachActivityComponent(
-            presetsComponent = presetsComponent,
-            biometricLockComponent = biometricLockComponent,
+            attachJankStatsToActivity: AttachJankStatsToActivity,
+        ): Attachable = Attachable.merge(
+            AttachActivityComponent(
+                presetsComponent = presetsComponent,
+                biometricLockComponent = biometricLockComponent,
+            ),
+            attachJankStatsToActivity,
+        )
+
+        @Provides
+        @ActivityScope
+        fun attachJankStatsToActivity(
+            fragmentActivity: FragmentActivity,
+            logger: Logger,
+        ): AttachJankStatsToActivity = AttachJankStatsToActivity(
+            activity = fragmentActivity,
+            logger = logger,
         )
 
         @Provides

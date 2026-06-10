@@ -1,12 +1,17 @@
 package com.hluhovskyi.zero.accounts.edit
 
+import androidx.compose.runtime.Stable
 import com.hluhovskyi.zero.accounts.AccountCategory
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Image
+import kotlinx.coroutines.flow.StateFlow
 
+@Stable
 interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel.Action, AccountEditViewModel.State> {
+
+    override val state: StateFlow<State>
 
     sealed interface Action {
         data class ChangeName(val name: String) : Action
@@ -19,6 +24,7 @@ interface AccountEditViewModel : AttachableActionStateModel<AccountEditViewModel
         object Save : Action
     }
 
+    @Stable
     data class State(
         val name: String = "",
         val balance: String = "",
