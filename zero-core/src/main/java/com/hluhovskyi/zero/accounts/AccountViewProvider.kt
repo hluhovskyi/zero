@@ -118,14 +118,14 @@ private fun AccountView(
                     is NetWorthChange.Delta ->
                         stringResource(
                             R.string.account_net_worth_trend_amount,
-                            amountFormatter.format(amount = change.magnitude, currencySymbol = symbol),
+                            amountFormatter.format(change.magnitude, symbol, AmountFormatter.Style.Short),
                         )
                     null -> null
                 }
                 NetWorthHeader(
-                    balance = amountFormatter.format(amount = netWorth.balance, currencySymbol = symbol),
-                    assets = amountFormatter.format(amount = netWorth.assets, currencySymbol = symbol),
-                    liabilities = amountFormatter.format(amount = netWorth.liabilities, currencySymbol = symbol),
+                    balance = amountFormatter.format(netWorth.balance, symbol, AmountFormatter.Style.Short),
+                    assets = amountFormatter.format(netWorth.assets, symbol, AmountFormatter.Style.Short),
+                    liabilities = amountFormatter.format(netWorth.liabilities, symbol, AmountFormatter.Style.Short),
                     trendPoints = netWorth.trendPoints,
                     isNegative = netWorth.isNegative,
                     chipText = chipText,
