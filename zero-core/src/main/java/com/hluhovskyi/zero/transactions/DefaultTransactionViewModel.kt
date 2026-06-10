@@ -508,11 +508,13 @@ internal class DefaultTransactionViewModel(
 private fun TransactionFilter.toFilteredCriteria(today: LocalDate): TransactionRepository.Criteria.Filtered {
     val range = period?.toDateRange(today)
     return TransactionRepository.Criteria.Filtered(
-        from = range?.start,
-        to = range?.end,
+        filter = TransactionFilterCriteria(
+            from = range?.start,
+            to = range?.end,
+            categoryIds = categoryIds,
+            accountIds = accountIds,
+        ),
         type = type.toCriteriaType(),
-        categoryIds = categoryIds,
-        accountIds = accountIds,
     )
 }
 

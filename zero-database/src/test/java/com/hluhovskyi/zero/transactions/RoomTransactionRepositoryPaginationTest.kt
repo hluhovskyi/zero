@@ -228,11 +228,13 @@ class RoomTransactionRepositoryPaginationTest {
 
         repo.query(
             TransactionRepository.Criteria.Filtered(
-                from = LocalDate(2024, 1, 1),
-                to = LocalDate(2024, 1, 31),
+                filter = TransactionFilterCriteria(
+                    from = LocalDate(2024, 1, 1),
+                    to = LocalDate(2024, 1, 31),
+                    categoryIds = setOf(Id.Known("c1")),
+                    accountIds = null,
+                ),
                 type = TransactionRepository.Type.Income,
-                categoryIds = setOf(Id.Known("c1")),
-                accountIds = null,
             ),
         ).first()
 
@@ -255,7 +257,7 @@ class RoomTransactionRepositoryPaginationTest {
         ).thenReturn(flowOf(emptyList()))
 
         repo.query(
-            TransactionRepository.Criteria.Filtered(from = null, to = null, type = null, categoryIds = null, accountIds = null),
+            TransactionRepository.Criteria.Filtered(filter = TransactionFilterCriteria(), type = null),
         ).first()
 
         verify(transactionRoom).selectFiltered(

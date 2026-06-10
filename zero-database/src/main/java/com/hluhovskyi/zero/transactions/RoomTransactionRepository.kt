@@ -152,13 +152,13 @@ internal class RoomTransactionRepository(
                 is TransactionRepository.Criteria.Filtered -> transactionRoom()
                     .selectFiltered(
                         userId = userId.value,
-                        from = criteria.from?.toString(),
-                        to = criteria.to?.toString(),
+                        from = criteria.filter.from?.toString(),
+                        to = criteria.filter.to?.toString(),
                         type = criteria.type?.toEntityName(),
-                        filterCategories = if (criteria.categoryIds == null) 0 else 1,
-                        categoryIds = criteria.categoryIds.orSentinel(),
-                        filterAccounts = if (criteria.accountIds == null) 0 else 1,
-                        accountIds = criteria.accountIds.orSentinel(),
+                        filterCategories = if (criteria.filter.categoryIds == null) 0 else 1,
+                        categoryIds = criteria.filter.categoryIds.orSentinel(),
+                        filterAccounts = if (criteria.filter.accountIds == null) 0 else 1,
+                        accountIds = criteria.filter.accountIds.orSentinel(),
                     )
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
 
