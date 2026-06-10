@@ -10,8 +10,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -44,8 +43,7 @@ abstract class TransactionComponent : AttachableViewComponent {
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
 
         val transactionRepository: TransactionRepository
         val accountRepository: AccountRepository
@@ -99,10 +97,6 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @Provides
         @TransactionScope
-        fun transactionFilterApplicator(clock: Clock, zoneProvider: ZoneProvider): TransactionFilterApplicator = DefaultTransactionFilterApplicator(clock, zoneProvider)
-
-        @Provides
-        @TransactionScope
         fun viewModel(
             transactionRepository: TransactionRepository,
             accountRepository: AccountRepository,
@@ -116,7 +110,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             onDuplicateTransactionHandler: OnDuplicateTransactionHandler,
             filter: TransactionFilter,
             transactionFilterUseCase: TransactionFilterUseCase,
-            transactionFilterApplicator: TransactionFilterApplicator,
+            zonedClock: ZonedClock,
             dispatchers: DispatcherProvider,
         ): TransactionViewModel = DefaultTransactionViewModel(
             transactionRepository = transactionRepository,
@@ -131,7 +125,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             onDuplicateTransactionHandler = onDuplicateTransactionHandler,
             filter = filter,
             transactionFilterUseCase = transactionFilterUseCase,
-            transactionFilterApplicator = transactionFilterApplicator,
+            zonedClock = zonedClock,
             dispatchers = dispatchers,
         )
 
