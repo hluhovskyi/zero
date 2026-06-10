@@ -8,10 +8,10 @@ Conventions to keep code consistent across the codebase.
 
 ## Naming Conventions
 
-**Name concrete implementations `Default*`, never `*Impl`** — `DefaultFooViewModel`, not `FooViewModelImpl`. A lint rule (`DefaultImplMustBeInternal`) enforces that `Default*` classes are `internal`; violating the naming convention silently bypasses that guard.
+**Name concrete implementations `Default*`, never `*Impl`** — `DefaultFooViewModel`, not `FooViewModelImpl`. A lint rule (`DefaultImplMustBeInternal`) enforces that `Default*` classes are `internal`; the `NoImplSuffix` lint blocks the `*Impl` names that would bypass that guard.
 
 ## Imports vs Fully Qualified Class Names
-Always use specific imports. NEVER use fully qualified class names in code bodies. NEVER use wildcard imports (`import com.package.*`).
+Always use specific imports. NEVER use fully qualified class names in code bodies (enforced by the `FullyQualifiedReference` lint). NEVER use wildcard imports (`import com.package.*`) — ktlint via spotless rejects them.
 
 ## Date / Time
 Use `kotlinx.datetime` types throughout the codebase:
@@ -21,13 +21,17 @@ Use `kotlinx.datetime` types throughout the codebase:
 - `kotlinx.datetime.TimeZone` — what `ZoneProvider.timeZone()` returns
 - `kotlin.time.Duration` — durations (Kotlin stdlib, no extra import needed)
 
-Do NOT use `java.time.*` in domain code (`zero-api`, `zero-core`, `zero-database`).
-`java.time.format.DateTimeFormatter` is allowed only in `app` (for locale-aware formatting)
-and `zero-ui` (via `toJavaLocalDateTime()` bridge). This boundary is intentional — it will
-become an `expect/actual` when the project goes KMP.
+Do NOT use `java.time.*` in the KMP-bound modules (`zero-api`, `zero-sync`, `zero-backup`) —
+enforced by the `KmpReadiness` lint; these modules will become `commonMain`. View-layer
+*formatting* (`app`, `zero-ui` components, and `zero-core` ViewProviders/parsers) may use
+`java.time.format.DateTimeFormatter` and friends via the `toJavaLocalDateTime()` bridge for
+locale-aware output. Domain logic — ViewModels, UseCases, repositories, entities — stays on
+`kotlinx.datetime`.
 
 Always inject `Clock` from `com.hluhovskyi.zero.common.time.Clock` instead of calling
-`LocalDateTime.now()` or `kotlinx.datetime.Clock.System.now()` directly. This keeps code testable.
+`LocalDateTime.now()` or `kotlinx.datetime.Clock.System.now()` directly. This keeps code
+testable. Enforced by the `DirectClockUsage` lint — only the Clock impls under `common/time/`
+and the test bridge may read `Clock.System`.
 
 ## Use `Id.Unknown` Instead of `null`
 For missing or unset identifiers, use `Id.Unknown` — never `null`.

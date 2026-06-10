@@ -32,6 +32,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    lintChecks(project(":lint-rules"))
+
     implementation(libs.dagger.runtime)
     ksp(libs.dagger.compiler)
 

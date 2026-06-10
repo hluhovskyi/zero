@@ -8,11 +8,11 @@ Domain interfaces, types, and contracts shared by all other modules. This is the
 
 ## Rules
 
-1. **No Android imports** — this module must remain pure Kotlin/JVM. No `android.*`, no `androidx.*`.
+1. **No Android imports** — this module must remain pure Kotlin/JVM. No `android.*`, no `androidx.*`, no `java.time.*` (enforced by the `KmpReadiness` lint).
 2. **Interfaces only for repositories** — implementations live in `zero-database`. Define `query()` returning `Flow<T>` and `suspend fun insert()`.
-5. **Feature use cases do NOT live here** — `ImportUseCase`, `TransactionEditUseCase`, etc. belong in `zero-core`. Only cross-module contracts (repositories, base interfaces) belong in `zero-api`.
-3. **Every repository needs a `Noop` object** — used for safe defaults in Dagger builders and testing.
-4. **Sealed `Criteria<T>`** — repository query criteria must be sealed with a type parameter for type-safe returns.
+3. **Feature use cases do NOT live here** — `ImportUseCase`, `TransactionEditUseCase`, etc. belong in `zero-core`. Only cross-module contracts (repositories, base interfaces) belong in `zero-api`.
+4. **Every repository needs a `Noop` object** — used for safe defaults in Dagger builders and testing.
+5. **Sealed `Criteria<T>`** — repository query criteria must be sealed with a type parameter for type-safe returns.
 
 ## What Lives Here
 

@@ -59,4 +59,4 @@ Correct order:
 4. Build and install — verify the migration runs without crash
 5. Commit entity + migration + version bump together
 
-If you do get a hash mismatch during development (crash on launch), `adb shell pm clear com.hluhovskyi.zero` resets the local DB. This is acceptable locally — it is not a fix for production, which is why the order above matters.
+If you do get a hash mismatch during development (crash on launch), `./scripts/ui/adb shell pm clear com.hluhovskyi.zero.debug` resets the local DB (bare `adb` is hook-blocked, and debug installs use the `.debug` package id). This is acceptable locally — it is not a fix for production, which is why the order above matters.

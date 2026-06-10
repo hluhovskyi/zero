@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.sync
 
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.resource.ResourceResolver
 
 interface SyncComponent {
@@ -14,6 +15,7 @@ interface SyncComponent {
         val budgetSyncSource: EntitySyncSource<SyncBudget>
         val budgetSyncSink: EntitySyncSink<SyncBudget>
         val resourceResolver: ResourceResolver
+        val clock: Clock
     }
 
     val syncEngine: SyncEngine
@@ -56,6 +58,7 @@ internal class DefaultSyncComponent(dependencies: SyncComponent.Dependencies) : 
             ),
             resourceResolver = dependencies.resourceResolver,
             serializer = serializer,
+            clock = dependencies.clock,
         )
     }
 }

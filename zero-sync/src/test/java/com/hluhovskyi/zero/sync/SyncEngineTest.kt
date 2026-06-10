@@ -1,8 +1,10 @@
 package com.hluhovskyi.zero.sync
 
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.resource.ResourceResolver
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -207,6 +209,9 @@ class SyncEngineTest {
         ),
         resourceResolver = ResourceResolver.Noop,
         serializer = SyncSerializer(),
+        clock = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-01-01T00:00:00Z")
+        },
     )
 
     private fun syncCategory(id: String, updatedAt: String, deletedAt: LocalDateTime? = null) = SyncCategory(
