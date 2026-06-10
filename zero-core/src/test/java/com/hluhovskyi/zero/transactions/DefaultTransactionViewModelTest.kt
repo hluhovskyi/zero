@@ -18,6 +18,7 @@ import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconCategory
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary.Emphasis
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -404,7 +406,7 @@ class DefaultTransactionViewModelTest {
 
     @Test
     fun `active filter is resolved to a Criteria_Filtered SQL query`() = runTest {
-        // fakeClock is fixed at 2024-06-01, so ThisMonth resolves to 2024-06-01..2024-06-01.
+        // fakeZonedClock is fixed at 2024-06-01, so ThisMonth resolves to 2024-06-01..2024-06-01.
         val viewModel = createViewModel(
             testScheduler,
             transactionFilterUseCase = appliedFilter(
@@ -430,6 +432,70 @@ class DefaultTransactionViewModelTest {
         assertEquals(LocalDate(2024, 6, 1), filtered.first().to)
     }
 
+    @Test
+    fun `filter summary on search shows Net Out In for mixed transactions`() = runTest {
+        val summary = searchSummary(listOf(income("t1", 100), expense("t2", 30)))!!
+
+        assertEquals(2, summary.count)
+        assertEquals(3, summary.columns.size)
+        assertColumn(summary.columns[0], TransactionViewModel.FilterSummary.Label.Net, 70L, Emphasis.Positive)
+        assertColumn(summary.columns[1], TransactionViewModel.FilterSummary.Label.Out, 30L, Emphasis.Neutral)
+        assertColumn(summary.columns[2], TransactionViewModel.FilterSummary.Label.In, 100L, Emphasis.Positive)
+    }
+
+    @Test
+    fun `filter summary net is a magnitude with negative emphasis when spending exceeds income`() = runTest {
+        val summary = searchSummary(listOf(income("t1", 30), expense("t2", 100)))!!
+
+        // Magnitude (70), not -70 — the card prepends the sign, so a signed value would double up.
+        assertColumn(summary.columns[0], TransactionViewModel.FilterSummary.Label.Net, 70L, Emphasis.Negative)
+    }
+
+    @Test
+    fun `filter summary with no income shows Spent Avg Largest`() = runTest {
+        val summary = searchSummary(listOf(expense("t1", 40), expense("t2", 20)))!!
+
+        assertColumn(summary.columns[0], TransactionViewModel.FilterSummary.Label.Spent, 60L, Emphasis.Neutral)
+        assertColumn(summary.columns[1], TransactionViewModel.FilterSummary.Label.Avg, 30L, Emphasis.Neutral)
+        assertColumn(summary.columns[2], TransactionViewModel.FilterSummary.Label.Largest, 40L, Emphasis.Neutral)
+    }
+
+    @Test
+    fun `filter summary with no expense shows Received Avg Largest`() = runTest {
+        val summary = searchSummary(listOf(income("t1", 80), income("t2", 20)))!!
+
+        assertColumn(summary.columns[0], TransactionViewModel.FilterSummary.Label.Received, 100L, Emphasis.Positive)
+        assertColumn(summary.columns[1], TransactionViewModel.FilterSummary.Label.Avg, 50L, Emphasis.Neutral)
+        assertColumn(summary.columns[2], TransactionViewModel.FilterSummary.Label.Largest, 80L, Emphasis.Neutral)
+    }
+
+    @Test
+    fun `filter summary with only transfers shows zero net and faint placeholders`() = runTest {
+        val summary = searchSummary(listOf(transfer("t1")))!!
+
+        assertEquals(1, summary.count)
+        assertColumn(summary.columns[0], TransactionViewModel.FilterSummary.Label.Net, 0L, Emphasis.Neutral)
+        assertEquals(TransactionViewModel.FilterSummary.Label.Out, summary.columns[1].label)
+        assertEquals(null, summary.columns[1].amount)
+        assertEquals(Emphasis.Faint, summary.columns[1].emphasis)
+        assertEquals(null, summary.columns[2].amount)
+        assertEquals(Emphasis.Faint, summary.columns[2].emphasis)
+    }
+
+    @Test
+    fun `no filter summary when neither search nor filter is active`() = runTest {
+        stubReferenceData()
+        whenever(transactionRepository.query(isA<TransactionRepository.Criteria.All>(), any()))
+            .thenReturn(flowOf(listOf(expense("t1", 40))))
+
+        val viewModel = createViewModel(testScheduler)
+        viewModel.attach()
+        runCurrent()
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.filterSummary)
+    }
+
     private fun appliedFilter(filter: TransactionFilter) = object : TransactionFilterUseCase {
         override val pendingFilter: Flow<TransactionFilter> = flowOf(TransactionFilter())
         override val state: Flow<TransactionFilterUseCase.State> =
@@ -437,6 +503,74 @@ class DefaultTransactionViewModelTest {
 
         override fun perform(action: TransactionFilterUseCase.Action) = Unit
     }
+
+    private suspend fun TestScope.searchSummary(
+        transactions: List<TransactionRepository.Transaction>,
+    ): TransactionViewModel.FilterSummary? {
+        stubReferenceData()
+        whenever(transactionRepository.query(isA<TransactionRepository.Criteria.Search>(), any()))
+            .thenReturn(flowOf(transactions))
+
+        val viewModel = createViewModel(testScheduler)
+        viewModel.attach()
+        runCurrent()
+        viewModel.perform(TransactionViewModel.Action.UpdateSearchQuery("x"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+        return viewModel.state.value.filterSummary
+    }
+
+    private fun assertColumn(
+        column: TransactionViewModel.FilterSummary.Column,
+        label: TransactionViewModel.FilterSummary.Label,
+        value: Long,
+        emphasis: Emphasis,
+    ) {
+        assertEquals(label, column.label)
+        assertEquals(value, column.amount?.value?.toLong())
+        assertEquals(emphasis, column.emphasis)
+    }
+
+    private suspend fun stubReferenceData() {
+        whenever(accountRepository.query(isA<AccountRepository.Criteria.All>()))
+            .thenReturn(flowOf(listOf(summaryAccount, summaryAccount2)))
+        whenever(currencyRepository.query(isA<CurrencyRepository.Criteria.All>()))
+            .thenReturn(flowOf(listOf(summaryCurrency)))
+        whenever(iconRepository.query(isA<IconRepository.Criteria.All>()))
+            .thenReturn(flowOf(listOf(summaryIcon)))
+        whenever(categoriesQueryUseCase.queryAll()).thenReturn(flowOf(listOf(summaryCategory)))
+        whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(summaryCurrency)
+        whenever(currencyConvertUseCase.convertToPrimary(any(), any()))
+            .thenAnswer { it.getArgument<Amount>(0) }
+    }
+
+    private val summaryCurrency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
+    private val summaryAccount = AccountRepository.Account(
+        id = Id.Known("a1"), name = "Checking", currencyId = Id.Known("c1"),
+        iconId = Id.Known("i1"), initialBalance = Amount.zero(), category = AccountCategory.OTHER, details = null,
+    )
+    private val summaryAccount2 = AccountRepository.Account(
+        id = Id.Known("a2"), name = "Savings", currencyId = Id.Known("c1"),
+        iconId = Id.Known("i1"), initialBalance = Amount.zero(), category = AccountCategory.OTHER, details = null,
+    )
+    private val summaryIcon = Icon(id = Id.Known("i1"), image = Image.empty(), category = IconCategory.unknown())
+    private val summaryCategory = CategoriesQueryUseCase.Category(Id.Known("cat1"), "Food", Image.empty(), ColorScheme.Grey)
+
+    private fun expense(id: String, amount: Long) = TransactionRepository.Transaction.Expense(
+        id = Id.Known(id), dateTime = now, updatedDateTime = now, amount = Amount(BigDecimal.valueOf(amount)),
+        currencyId = Id.Known("c1"), accountId = Id.Known("a1"), categoryId = Id.Known("cat1"), rate = Rate.Same,
+    )
+
+    private fun income(id: String, amount: Long) = TransactionRepository.Transaction.Income(
+        id = Id.Known(id), dateTime = now, updatedDateTime = now, amount = Amount(BigDecimal.valueOf(amount)),
+        currencyId = Id.Known("c1"), accountId = Id.Known("a1"), categoryId = Id.Known("cat1"), rate = Rate.Same,
+    )
+
+    private fun transfer(id: String) = TransactionRepository.Transaction.Transfer(
+        id = Id.Known(id), dateTime = now, updatedDateTime = now, amount = Amount(BigDecimal.TEN),
+        currencyId = Id.Known("c1"), accountId = Id.Known("a1"), targetAccount = Id.Known("a2"),
+        targetAmount = Amount(BigDecimal.TEN),
+    )
 
     private fun createViewModel(
         scheduler: TestCoroutineScheduler,

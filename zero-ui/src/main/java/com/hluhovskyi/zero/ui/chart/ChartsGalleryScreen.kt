@@ -90,7 +90,7 @@ private fun TrendSection() {
 
 @Composable
 private fun CategoryTrend() {
-    val accent = ZeroTheme.colors.chartCashOut
+    val accent = ZeroTheme.colors.islandNegative
     val dim = accent.copy(alpha = 0.45f)
     val rows = ChartMockData.categoryTrend
     val data = BarChartData(
@@ -116,8 +116,8 @@ private fun DonutSection() {
 /** Builds grouped cash in/out bars from (label, in, out) rows using the theme accent colors. */
 @Composable
 private fun flowBars(rows: List<Triple<String, Float, Float>>): BarChartData {
-    val inC = ZeroTheme.colors.chartCashIn
-    val outC = ZeroTheme.colors.chartCashOut
+    val inC = ZeroTheme.colors.islandPositive
+    val outC = ZeroTheme.colors.islandNegative
     return BarChartData(rows.map { BarGroup(it.first, listOf(BarValue(it.second, inC), BarValue(it.third, outC))) })
 }
 

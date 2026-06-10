@@ -60,6 +60,22 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun filterSummaryCardShowsCorrectAggregate() {
+        // Two USD expenses (42 + 99). Filtering to Expenses surfaces the summary card:
+        // no-income branch → Spent 141, Avg 70.5, Largest 99 over the complete filtered set.
+        seedExpenses()
+        onTransactions()
+            .openFilter()
+            .selectType("Expenses")
+            .apply()
+            .assertFilterSummaryCount("2 transactions")
+            .assertFilterSummaryStat("SPENT", "141")
+            .assertFilterSummaryStat("AVG", "70.5")
+            .assertFilterSummaryStat("LARGEST", "99")
+            .assertShowBreakdownVisible()
+    }
+
+    @Test
     fun pickingCurrencyInPickerUpdatesTransactionEditChip() {
         seedDefaultSetup()
         onTransactions()
