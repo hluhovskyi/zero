@@ -35,6 +35,8 @@ dependencies {
 
     implementation(libs.timber)
 
+    lintChecks(project(":lint-rules"))
+
     testImplementation(libs.junit)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)

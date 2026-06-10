@@ -45,9 +45,10 @@ class KmpReadinessDetector :
             ISSUE,
             node,
             context.getLocation(node),
-            "$moduleName is KMP-ready — Android, OkHttp, and coroutines-android symbols would " +
-                "break the portability guarantee. Move the implementation to an Android-bound " +
-                "module (e.g. :app, :zero-remote) and expose only a pure-Kotlin interface here. " +
+            "$moduleName is KMP-ready — Android, OkHttp, coroutines-android, and java.time " +
+                "symbols would break the portability guarantee. Move the implementation to an " +
+                "Android-bound module (e.g. :app, :zero-remote) and expose only a pure-Kotlin " +
+                "interface here (kotlinx.datetime for time). " +
                 "Forbidden import: $fqn (matched prefix $matched).",
         )
     }
@@ -68,6 +69,7 @@ class KmpReadinessDetector :
             "android.",
             "androidx.",
             "kotlinx.coroutines.android.",
+            "java.time.",
         )
 
         val ISSUE: Issue = Issue.create(
@@ -75,7 +77,8 @@ class KmpReadinessDetector :
             briefDescription = "KMP-ready module must not import JVM/Android-only symbols",
             explanation = "Modules listed in KmpReadinessDetector.KMP_READY_MODULE_PATHS are " +
                 "intentionally pure-Kotlin so they can be migrated to Kotlin Multiplatform later. " +
-                "Android, OkHttp, and coroutines-android imports break that guarantee. " +
+                "Android, OkHttp, coroutines-android, and java.time imports break that guarantee " +
+                "(time goes through kotlinx.datetime). " +
                 "Implementations of HTTP transport, OAuth, secure storage, and other platform " +
                 "concerns belong in Android-bound modules (:app, :zero-remote, :zero-auth, …).",
             category = Category.CORRECTNESS,
