@@ -7,8 +7,7 @@ import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -44,10 +43,8 @@ class DefaultAnalyticsViewModelTest {
     private var seeAllInvoked = false
     private var selectedCategory: Id.Known? = null
 
-    private val fakeClock = object : Clock {
+    private val fakeClock = object : ZonedClock {
         override fun now() = Instant.parse("2026-04-15T12:00:00Z")
-    }
-    private val fakeZone = object : ZoneProvider {
         override fun timeZone() = TimeZone.UTC
     }
     private val fakeCurrency = object : CurrencyPrimaryUseCase {
@@ -160,8 +157,7 @@ class DefaultAnalyticsViewModelTest {
         currencyPrimaryUseCase = fakeCurrency,
         onSeeAllCategoriesHandler = { seeAllInvoked = true },
         onAnalyticsCategorySelectedHandler = { selectedCategory = it },
-        clock = fakeClock,
-        zoneProvider = fakeZone,
+        zonedClock = fakeClock,
         coroutineScope = scope,
     )
 

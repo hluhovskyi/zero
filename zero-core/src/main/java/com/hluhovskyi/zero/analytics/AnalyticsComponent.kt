@@ -6,8 +6,7 @@ import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -43,8 +42,7 @@ abstract class AnalyticsComponent : AttachableViewComponent {
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val amountFormatter: AmountFormatter
         val imageLoader: ImageLoader
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
     }
 
     companion object {
@@ -99,15 +97,13 @@ abstract class AnalyticsComponent : AttachableViewComponent {
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
             onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): AnalyticsViewModel = DefaultAnalyticsViewModel(
             analyticsUseCase = analyticsUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onSeeAllCategoriesHandler = onSeeAllCategoriesHandler,
             onAnalyticsCategorySelectedHandler = onAnalyticsCategorySelectedHandler,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides

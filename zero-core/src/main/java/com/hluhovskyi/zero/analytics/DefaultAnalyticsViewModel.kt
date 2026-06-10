@@ -4,8 +4,7 @@ import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.Closeables
 import com.hluhovskyi.zero.common.DateRange
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
 import java.io.Closeable
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -32,8 +30,7 @@ internal class DefaultAnalyticsViewModel(
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
     private val onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val zonedClock: ZonedClock,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : AnalyticsViewModel {
 
@@ -66,7 +63,7 @@ internal class DefaultAnalyticsViewModel(
     }
 
     private fun lastSixMonths(): DateRange {
-        val today = clock.now().toLocalDateTime(zoneProvider.timeZone()).date
+        val today = zonedClock.localDateTime().date
         val start = LocalDate(today.year, today.monthNumber, 1).minus(MONTHS_BACK, DateTimeUnit.MONTH)
         return DateRange(start = start, end = today)
     }
