@@ -111,10 +111,6 @@ private annotation class ForAccountTab
 
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-private annotation class ForCategoryTab
-
-@Qualifier
-@Retention(AnnotationRetention.RUNTIME)
 private annotation class ForAnalyticsTab
 
 private const val TAG = "MainActivityScreenComponent"
@@ -143,9 +139,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
     @get:ForAccountTab
     protected abstract val accountTab: AttachableViewComponent
 
-    @get:ForCategoryTab
-    protected abstract val categoryTab: AttachableViewComponent
-
     @get:ForAnalyticsTab
     protected abstract val analyticsTab: AttachableViewComponent
 
@@ -154,7 +147,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         homeTab.attach(),
         budgetTab.attach(),
         accountTab.attach(),
-        categoryTab.attach(),
         analyticsTab.attach(),
     )
 
@@ -492,36 +484,27 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
-        @MainActivityScreenScope
-        @ForCategoryTab
-        fun categoryTabComponent(
-            componentBuilder: CategoryComponent.Builder,
-            navigator: Navigator,
-            logger: Logger,
-        ): AttachableViewComponent = componentBuilder
-            .onCategorySelectedHandler { categoryId ->
-                navigator.navigateTo(
-                    Destinations.Category.Item.Detail,
-                    Destinations.Category.Item.CategoryId.withValue(categoryId),
-                )
-            }
-            .onAddCategoryHandler { type ->
-                navigator.navigateTo(
-                    Destinations.Category.Edit,
-                    Destinations.Category.Edit.InitialType.withValue(type.name),
-                )
-            }
-            .logging(logger)
-            .build()
-
-        @Provides
         @IntoSet
         @MainActivityScreenScope
         fun categoryNavigationEntry(
-            @ForCategoryTab component: AttachableViewComponent,
+            componentBuilder: CategoryComponent.Builder,
             navigatorScope: NavigatorScope,
-        ): NavigatorEntry = navigatorScope.composable(Destinations.Category.All) {
-            component.AttachWithView()
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.All) {
+            componentBuilder
+                .onCategorySelectedHandler { categoryId ->
+                    navigator.navigateTo(
+                        Destinations.Category.Item.Detail,
+                        Destinations.Category.Item.CategoryId.withValue(categoryId),
+                    )
+                }
+                .onAddCategoryHandler { type ->
+                    navigator.navigateTo(
+                        Destinations.Category.Edit,
+                        Destinations.Category.Edit.InitialType.withValue(type.name),
+                    )
+                }
+                .logging(logger)
         }
 
         @Provides
