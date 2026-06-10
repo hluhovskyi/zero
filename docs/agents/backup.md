@@ -1,6 +1,6 @@
 # Backup
 
-Android Auto Backup rules live in `app/src/main/res/xml/backup_rules.xml` (SDK ≤30) and `data_extraction_rules.xml` (SDK 31+), wired on `<application>` in the manifest. Explicit Google Drive backup (the `zero-backup` module) arrives in later phases.
+Android Auto Backup rules live in `app/src/main/res/xml/backup_rules.xml` (SDK ≤30) and `data_extraction_rules.xml` (SDK 31+), wired on `<application>` in the manifest. Explicit Google Drive backup is shipped: orchestration and the Drive REST client live in `zero-backup` (see its AGENTS.md), auth in `zero-auth` (below), and the settings/detail/restore UI in `zero-core`.
 
 ## Non-obvious conventions
 

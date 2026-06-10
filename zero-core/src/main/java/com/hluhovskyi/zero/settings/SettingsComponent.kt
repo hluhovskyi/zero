@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.backup.BackupUseCase
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.export.DefaultExportUseCase
 import com.hluhovskyi.zero.export.ExportUseCase
@@ -38,6 +39,7 @@ abstract class SettingsComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
+        val clock: Clock
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val syncEngine: SyncEngine
         val currentUserRepository: CurrentUserRepository
@@ -114,6 +116,7 @@ abstract class SettingsComponent : AttachableViewComponent {
             biometricAuthenticator: BiometricAuthenticator,
             oauthTokenProvider: OAuthTokenProvider,
             backupUseCase: BackupUseCase,
+            clock: Clock,
         ): SettingsViewModel = DefaultSettingsViewModel(
             onImportSelected = onImportSelected,
             onBackupSelected = onBackupSelected,
@@ -126,6 +129,7 @@ abstract class SettingsComponent : AttachableViewComponent {
             biometricAuthenticator = biometricAuthenticator,
             oauthTokenProvider = oauthTokenProvider,
             backupUseCase = backupUseCase,
+            clock = clock,
         )
 
         @Provides

@@ -314,6 +314,7 @@ abstract class ApplicationComponent :
             budgetRepository: BudgetRepository,
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
+            zonedClock: ZonedClock,
             clock: Clock,
             zoneProvider: ZoneProvider,
         ): BudgetQueryUseCase = BudgetComponent.queryUseCase(
@@ -322,8 +323,7 @@ abstract class ApplicationComponent :
             categorySpendingUseCase = CategoryComponent.spendingUseCase(
                 transactionRepository = transactionRepository,
                 currencyConvertUseCase = currencyConvertUseCase,
-                clock = clock,
-                zoneProvider = zoneProvider,
+                zonedClock = zonedClock,
             ),
             clock = clock,
             zoneProvider = zoneProvider,
@@ -387,6 +387,7 @@ abstract class ApplicationComponent :
         fun syncComponent(
             databaseComponent: DatabaseComponent,
             resourceResolver: ResourceResolver,
+            clock: Clock,
         ): SyncComponent = SyncComponent.factory(
             object : SyncComponent.Dependencies {
                 override val categorySyncSource = databaseComponent.categorySyncSource()
@@ -398,6 +399,7 @@ abstract class ApplicationComponent :
                 override val budgetSyncSource = databaseComponent.budgetSyncSource()
                 override val budgetSyncSink = databaseComponent.budgetSyncSink()
                 override val resourceResolver = resourceResolver
+                override val clock = clock
             },
         ).create()
 

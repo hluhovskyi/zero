@@ -45,3 +45,5 @@ This downloads to `/tmp/design-<hash>.tar.gz` and extracts to `/tmp/design-<hash
 **README first** — it maps screen names to file paths; skipping it causes wrong-file reads.
 
 **Skip `chats/` entirely** — these are design iteration logs, not layout specs; reading one will overflow context before implementation starts.
+
+**Revised design (a new URL for a feature you already started)? Diff it against the previous archive** — `diff /tmp/design-<oldhash>/.../file.jsx /tmp/design-<newhash>/.../file.jsx` scopes exactly what changed so you re-implement only the delta, not the whole kit. If `/tmp/design-<oldhash>/` was gc'd between sessions, re-run `./scripts/fetch-design.sh <oldhash>` first.

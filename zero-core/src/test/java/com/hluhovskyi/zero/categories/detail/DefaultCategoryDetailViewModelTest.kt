@@ -5,13 +5,13 @@ import com.hluhovskyi.zero.categories.CategorySpendingUseCase
 import com.hluhovskyi.zero.colors.Color
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.ColorValue
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.OnBackHandler
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.emptyFlow
@@ -41,16 +41,16 @@ class DefaultCategoryDetailViewModelTest {
 
     @Mock private lateinit var currencyPrimaryUseCase: CurrencyPrimaryUseCase
 
+    @Mock private lateinit var amountFormatter: AmountFormatter
+
     @Mock private lateinit var onEditHandler: OnCategoryDetailEditHandler
 
     private val categoryId = Id.Known("cat1")
     private val primaryCurrency = Currency(id = Id.Known("c1"), name = "US Dollar", symbol = "$")
     private val fixedInstant = Instant.parse("2026-05-02T12:00:00Z")
     private val testTimeZone = TimeZone.UTC
-    private val fakeClock = object : Clock {
+    private val fakeZonedClock = object : ZonedClock {
         override fun now() = fixedInstant
-    }
-    private val fakeZoneProvider = object : ZoneProvider {
         override fun timeZone() = testTimeZone
     }
 
@@ -58,6 +58,7 @@ class DefaultCategoryDetailViewModelTest {
     fun setUp() {
         whenever(categoriesQueryUseCase.queryById(categoryId)).thenReturn(emptyFlow())
         whenever(categorySpendingUseCase.queryForCategory(any(), any())).thenReturn(flowOf(null))
+        whenever(categorySpendingUseCase.queryMonthlyTrend(any(), any())).thenReturn(flowOf(emptyList()))
     }
 
     @Test
@@ -157,16 +158,42 @@ class DefaultCategoryDetailViewModelTest {
         assertEquals(LocalDate(2026, 5, 1), vm.state.first().periodDate)
     }
 
+    @Test
+    fun `state maps monthly trend with current month flagged`() = runTest {
+        whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
+        whenever(amountFormatter.format(any(), any(), any()))
+            .thenAnswer { "$" + (it.arguments[0] as Amount).value.toInt() }
+        whenever(categorySpendingUseCase.queryMonthlyTrend(categoryId, 6)).thenReturn(
+            flowOf(
+                listOf(
+                    CategorySpendingUseCase.MonthlySpending(LocalDate(2026, 3, 1), Amount(BigDecimal("280"))),
+                    CategorySpendingUseCase.MonthlySpending(LocalDate(2026, 4, 1), Amount(BigDecimal("290"))),
+                ),
+            ),
+        )
+
+        val vm = createViewModel(backgroundScope)
+        vm.attach()
+        runCurrent()
+
+        val trend = vm.state.first().trend
+        assertEquals(2, trend.size)
+        assertEquals(false, trend.first().isCurrent)
+        assertEquals(true, trend.last().isCurrent)
+        assertEquals(290f, trend.last().value, 0.01f)
+        assertEquals("$290", trend.last().amountLabel)
+    }
+
     private fun createViewModel(coroutineScope: CoroutineScope) = DefaultCategoryDetailViewModel(
         categoryId = categoryId,
         categoriesQueryUseCase = categoriesQueryUseCase,
         categorySpendingUseCase = categorySpendingUseCase,
         currencyPrimaryUseCase = currencyPrimaryUseCase,
+        amountFormatter = amountFormatter,
         onEditHandler = onEditHandler,
         onBackHandler = OnBackHandler.Noop,
         onCreateTransactionHandler = OnCategoryDetailCreateTransactionHandler.Noop,
-        clock = fakeClock,
-        zoneProvider = fakeZoneProvider,
+        zonedClock = fakeZonedClock,
         coroutineScope = coroutineScope,
     )
 }

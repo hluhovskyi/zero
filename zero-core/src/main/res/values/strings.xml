@@ -86,6 +86,7 @@
     <string name="category_detail_stat_transactions">Transactions</string>
     <string name="category_detail_stat_avg_per_tx">Avg per tx</string>
     <string name="category_detail_stat_largest">Largest</string>
+    <string name="category_detail_trend_title">6-month trend</string>
 
     <!-- Category Edit -->
     <string name="category_edit_title">Add Category</string>
@@ -258,6 +259,21 @@
     <!-- Transaction Edit -->
     <string name="transaction_edit_amount_display_label">Amount</string>
     <string name="transaction_search_placeholder">Search…</string>
+
+    <!-- Filter summary card -->
+    <plurals name="filter_summary_count">
+        <item quantity="one">%1$d transaction</item>
+        <item quantity="other">%1$d transactions</item>
+    </plurals>
+    <string name="filter_summary_label_net">Net</string>
+    <string name="filter_summary_label_out">Out</string>
+    <string name="filter_summary_label_in">In</string>
+    <string name="filter_summary_label_spent">Spent</string>
+    <string name="filter_summary_label_avg">Avg</string>
+    <string name="filter_summary_label_largest">Largest</string>
+    <string name="filter_summary_label_received">Received</string>
+    <string name="filter_summary_placeholder">—</string>
+    <string name="filter_summary_show_breakdown">See breakdown for this filter</string>
     <string name="transaction_edit_title">Edit Transaction</string>
     <string name="transaction_new_title">New Transaction</string>
     <string name="transaction_duplicate_from_title">Duplicate from</string>

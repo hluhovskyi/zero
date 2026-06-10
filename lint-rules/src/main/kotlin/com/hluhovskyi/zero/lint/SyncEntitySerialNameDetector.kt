@@ -8,8 +8,10 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UField
 
 class SyncEntitySerialNameDetector :
     Detector(),
@@ -25,7 +27,7 @@ class SyncEntitySerialNameDetector :
             if (node.findAnnotation("kotlinx.serialization.Serializable") == null) return
 
             for (field in node.fields) {
-                if (field.findAnnotation("kotlinx.serialization.SerialName") == null) {
+                if (!field.hasSerialName()) {
                     context.report(
                         ISSUE,
                         field,
@@ -37,6 +39,14 @@ class SyncEntitySerialNameDetector :
                 }
             }
         }
+    }
+
+    private fun UField.hasSerialName(): Boolean {
+        if (findAnnotation("kotlinx.serialization.SerialName") != null) return true
+        // Annotations on Kotlin constructor properties land on the parameter, not the field —
+        // the standalone JVM lint task doesn't surface them on the UField, so check the PSI.
+        val psi = sourcePsi as? KtAnnotated ?: return false
+        return psi.annotationEntries.any { it.shortName?.asString() == "SerialName" }
     }
 
     companion object {

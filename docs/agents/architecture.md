@@ -60,17 +60,27 @@ Transaction list uses a hybrid approach: a reactive Room `Flow` (for new/updated
 
 ## Lint Enforcement
 
-Much of the above is machine-enforced by custom detectors in `lint-rules/src/main/kotlin/com/hluhovskyi/zero/lint/` — CI gates them, so they fail the build on their own (don't re-flag them in review):
+Much of the above is machine-enforced by custom detectors in `lint-rules/src/main/kotlin/com/hluhovskyi/zero/lint/` — CI gates them via `./gradlew lint`, so they fail the build on their own (don't re-flag them in review). The list below is pinned to `ZeroIssueRegistry` by `DocsConsistencyTest` — a new detector must be documented here in the same change. Rules by issue ID:
 
-- **`StateCollectionDerivationDetector`, `ViewProviderDependencyDetector`** — no derivation or domain deps in a ViewProvider (the ViewModel UI Shape split).
-- **`DefaultImplVisibilityDetector`, `ViewProviderVisibilityDetector`** — `Default*` impls and `*ViewProvider` stay `internal`.
-- **`ScopedComponentBuilderDetector`** — a feature `@Component` carries its `@Scope` + `Buildable` builder.
-- **`HandlerFunInterfaceDetector`** — screen-to-screen callbacks are `fun interface OnXxxHandler`.
-- **`UnhandledCloseableDetector`, `UnhandledJobDetector`** — `attach()` Closeables/Jobs are retained, not dropped.
-- **`ZeroThemeBypassDetector`** — Compose colors come from `ZeroTheme.colors`, never a hardcoded hex.
-- **`HardcodedComposableStringDetector`, `UppercaseStringResourceDetector`** — user-facing text is a string resource.
-- **`RemoteComponentEncapsulationDetector`, `DatabaseComponentEncapsulationDetector`, `KmpReadinessDetector`** — module boundaries: pure-Kotlin modules stay Android-free; component internals stay encapsulated.
-- **`TestBridgeBoundaryDetector`, `TestBridgeProductionPurityDetector`** — the e2e test seam can't leak into production.
-- **`SealedSubtypeDuplicatePropertyDetector`** — shared properties belong on the sealed parent.
+- **`ViewProviderDerivation`, `ViewProviderMustNotInjectRepository`** — no derivation or domain deps in a ViewProvider (the ViewModel UI Shape split).
+- **`DefaultImplMustBeInternal`, `ViewProviderMustBeInternal`, `NoImplSuffix`** — impls stay `internal` and are named `Default*`, never `*Impl` (the `Default*` prefix is what the visibility rules key on).
+- **`ScopedComponentBuilder`** — a feature `@Component` carries its `@Scope` + `Buildable` builder; Builder `@Provides` stay unscoped.
+- **`HandlerMustBeFunInterface`** — screen-to-screen callbacks are `fun interface OnXxxHandler`.
+- **`NoNamedAnnotation`** — duplicate bindings of one type get dedicated `@Qualifier` annotations, never `@Named("string")`.
+- **`UnhandledCloseable`, `UnhandledJob`** — `attach()` Closeables/Jobs are retained, not dropped.
+- **`DirectClockUsage`** — inject `common.time.Clock`; `Clock.System` is allowed only in the Clock impls (`common/time/`) and the test bridge.
+- **`ZonedClockPreferred`** — a constructor taking both `Clock` and `ZoneProvider` should inject `ZonedClock` instead; it combines them and exposes `localDateTime()`.
+- **`NoDispatchersDefault`** — `Dispatchers.IO`, or `DispatcherProvider.cpu()` for CPU-bound work; raw `Dispatchers.Default` lives only in the provider impl.
+- **`ZeroThemeBypass`** — Compose colors come from `ZeroTheme.colors`, never a hardcoded hex.
+- **`MaterialTwoImport`** — `androidx.compose.material3` only; M2 imports are allowed only in the bottom-sheet navigator island and the `material.icons` packs.
+- **`HardcodedComposableString`, `UppercaseStringResource`** — user-facing text is a string resource.
+- **`FullyQualifiedReference`** — import types; no fully-qualified names in code bodies.
+- **`RemoteComponentEncapsulation`, `DatabaseComponentEncapsulation`, `KmpReadiness`** — module boundaries: KMP-bound modules stay free of Android/OkHttp/java.time; component internals stay encapsulated.
+- **`SyncEntityFieldMustHaveSerialName`** — every `@Serializable` sync field pins its JSON key.
+- **`TestBridgeBoundary`, `TestBridgeProductionPurity`** — the e2e test seam can't leak into production.
+- **`SealedSubtypeDuplicateProperty`** — shared properties belong on the sealed parent.
+- **`BreadcrumbsLiteralOnly`** — `Breadcrumbs.log()` takes string literals only (breadcrumbs end up in public GitHub issues; interpolation risks PII).
+
+**A new module must wire `lintChecks(project(":lint-rules"))` — the registry does not propagate from other modules.** Pure-JVM modules additionally apply `id("com.android.lint")` (the standalone lint plugin, which registers their `lint` task). An unwired module silently skips every rule above; six modules sat unwired (and their boundary rules dead) until 2026-06.
 
 What lint **can't** see — the structural, judgment-call smells (a sentinel param, a boolean that's really a subtype, a special-case branch, conflated responsibilities) — is what the [Architecture Review](architecture-review.md) pass is for.

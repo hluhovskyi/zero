@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import dagger.BindsInstance
 import dagger.Provides
@@ -30,6 +31,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
     override fun attach(): Closeable = viewModel.attach()
 
     interface Dependencies {
+        val clock: Clock
         val backupUseCase: BackupUseCase
         val backupConnectionUseCase: BackupConnectionUseCase
         val backupScheduler: BackupScheduler
@@ -68,6 +70,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
             onBackHandler: OnBackHandler,
             onRestoreSelectedHandler: OnRestoreSelectedHandler,
             dispatchers: DispatcherProvider,
+            clock: Clock,
         ): BackupDetailViewModel = DefaultBackupDetailViewModel(
             backupUseCase = backupUseCase,
             backupConnectionUseCase = backupConnectionUseCase,
@@ -76,6 +79,7 @@ abstract class BackupDetailComponent : AttachableViewComponent {
             onBackHandler = onBackHandler,
             onRestoreSelectedHandler = onRestoreSelectedHandler,
             dispatchers = dispatchers,
+            clock = clock,
         )
 
         @Provides

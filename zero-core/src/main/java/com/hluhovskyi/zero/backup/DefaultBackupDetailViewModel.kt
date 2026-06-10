@@ -3,6 +3,7 @@ package com.hluhovskyi.zero.backup
 import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.observe
 import com.hluhovskyi.zero.config.write
@@ -20,6 +21,7 @@ internal class DefaultBackupDetailViewModel(
     private val onBackHandler: OnBackHandler,
     private val onRestoreSelectedHandler: OnRestoreSelectedHandler,
     private val dispatchers: DispatcherProvider,
+    private val clock: Clock,
 ) : BaseViewModel(dispatchers),
     BackupDetailViewModel {
 
@@ -70,7 +72,7 @@ internal class DefaultBackupDetailViewModel(
                         isSignedIn = connection.isSignedIn,
                         accountLabel = connection.accountLabel,
                         phase = backup.phase,
-                        lastSuccessAt = backup.lastSuccessAt,
+                        lastSuccessAgo = backup.lastSuccessAt?.let { TimeAgo.of(it, clock) },
                         lastError = backup.lastError,
                         signInFeedback = connection.signInFeedback,
                         disconnectFeedback = connection.disconnectFeedback,

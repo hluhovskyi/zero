@@ -47,10 +47,45 @@ jobs:
 
       - if: steps.changes.outputs.runtime == 'true'
         name: Run lint
-        run: ./gradlew lintDebug
+        # `lint`, not `lintDebug` — the pure-JVM modules (zero-api, zero-sync, zero-backup)
+        # use the standalone lint plugin, which only registers a `lint` task.
+        run: ./gradlew lint
 
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: '**/build/reports/tests/'
+
+  # Docs-only PRs skip gradle in the main job, so agent-doc edits get their own cheap gate.
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: changes
+        name: Detect agent-doc changes
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '(^|/)AGENTS\.md$|^docs/agents/'; then
+            echo "docs=true" >> "$GITHUB_OUTPUT"
+            echo "Agent docs changed — running consistency checks."
+          else
+            echo "No agent-doc changes — skipping."
+          fi
+
+      - if: steps.changes.outputs.docs == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - if: steps.changes.outputs.docs == 'true'
+        uses: gradle/actions/setup-gradle@v3
+
+      - if: steps.changes.outputs.docs == 'true'
+        name: Run docs consistency test
+        run: ./gradlew :lint-rules:test --tests 'com.hluhovskyi.zero.lint.DocsConsistencyTest'
