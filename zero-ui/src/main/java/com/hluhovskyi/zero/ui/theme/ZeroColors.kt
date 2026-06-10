@@ -31,6 +31,13 @@ data class ZeroExtraColors(
     val chartHeroSurface: Color,
     val chartHeroContent: Color,
     val chartHeroContentDim: Color,
+    // Navy "stat island" palette for the transaction filter summary card. Overlaps the chart*
+    // tokens above (same surface/accents) — TODO reconcile into one shared island palette.
+    val islandBackground: Color,
+    val islandContent: Color,
+    val islandPositive: Color,
+    val islandNegative: Color,
+    val islandAction: Color,
     val isLight: Boolean,
 )
 
@@ -110,6 +117,11 @@ val LightZeroExtraColors = ZeroExtraColors(
     chartHeroSurface = Color(0xFF1A2E52),
     chartHeroContent = Color(0xFFFFFFFF),
     chartHeroContentDim = Color(0x80FFFFFF),
+    islandBackground = Color(0xFF1A2E52),
+    islandContent = Color(0xFFFFFFFF),
+    islandPositive = Color(0xFF5DDBA8),
+    islandNegative = Color(0xFFFF8A65),
+    islandAction = Color(0xFF9CC0FF),
     isLight = true,
 )
 
@@ -129,6 +141,11 @@ val DarkZeroExtraColors = ZeroExtraColors(
     chartHeroSurface = Color(0xFF1A2E52),
     chartHeroContent = Color(0xFFFFFFFF),
     chartHeroContentDim = Color(0x80FFFFFF),
+    islandBackground = Color(0xFF1A2E52),
+    islandContent = Color(0xFFFFFFFF),
+    islandPositive = Color(0xFF5DDBA8),
+    islandNegative = Color(0xFFFF8A65),
+    islandAction = Color(0xFF9CC0FF),
     isLight = false,
 )
 
@@ -185,6 +202,11 @@ class ZeroColors(
     val chartHeroSurface get() = extras.chartHeroSurface
     val chartHeroContent get() = extras.chartHeroContent
     val chartHeroContentDim get() = extras.chartHeroContentDim
+    val islandBackground get() = extras.islandBackground
+    val islandContent get() = extras.islandContent
+    val islandPositive get() = extras.islandPositive
+    val islandNegative get() = extras.islandNegative
+    val islandAction get() = extras.islandAction
     val isLight get() = extras.isLight
 }
 

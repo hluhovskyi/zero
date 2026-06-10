@@ -62,6 +62,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onTransactionSelectHandler(OnTransactionSelectedHandler.Noop)
             .onAddTransactionHandler(OnAddTransactionHandler.Noop)
+            .onShowBreakdownHandler(OnShowBreakdownHandler.Noop)
             .onDuplicateTransactionHandler(OnDuplicateTransactionHandler.Noop)
             .transactionFilter(TransactionFilter.All)
             .transactionFilterUseCase(TransactionFilterUseCase.Noop)
@@ -78,6 +79,9 @@ abstract class TransactionComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAddTransactionHandler(handler: OnAddTransactionHandler): Builder
+
+        @BindsInstance
+        fun onShowBreakdownHandler(handler: OnShowBreakdownHandler): Builder
 
         @BindsInstance
         fun onDuplicateTransactionHandler(handler: OnDuplicateTransactionHandler): Builder
@@ -138,6 +142,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             dateFormatter: DateFormatter,
             displayConfig: DisplayConfig,
             onAddTransactionHandler: OnAddTransactionHandler,
+            onShowBreakdownHandler: OnShowBreakdownHandler,
         ): ViewProvider = TransactionViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
@@ -145,6 +150,7 @@ abstract class TransactionComponent : AttachableViewComponent {
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
             onAddTransaction = onAddTransactionHandler,
+            onShowBreakdown = onShowBreakdownHandler,
         )
     }
 }

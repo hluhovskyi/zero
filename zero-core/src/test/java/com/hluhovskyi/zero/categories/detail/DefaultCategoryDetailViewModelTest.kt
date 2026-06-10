@@ -161,7 +161,7 @@ class DefaultCategoryDetailViewModelTest {
     @Test
     fun `state maps monthly trend with current month flagged`() = runTest {
         whenever(currencyPrimaryUseCase.getPrimaryCurrency()).thenReturn(primaryCurrency)
-        whenever(amountFormatter.format(any(), any()))
+        whenever(amountFormatter.format(any(), any(), any()))
             .thenAnswer { "$" + (it.arguments[0] as Amount).value.toInt() }
         whenever(categorySpendingUseCase.queryMonthlyTrend(categoryId, 6)).thenReturn(
             flowOf(

@@ -39,11 +39,37 @@ interface TransactionViewModel : AttachableActionStateModel<TransactionViewModel
         val searchQuery: String = "",
         val activeFilter: TransactionFilter = TransactionFilter(),
         val selectedIds: Set<Id.Known> = emptySet(),
+        val filterSummary: FilterSummary? = null,
     ) {
         val inSelectionMode: Boolean = selectedIds.isNotEmpty()
         val selectionCount: Int = selectedIds.size
 
         fun isSelected(id: Id.Known): Boolean = id in selectedIds
+    }
+
+    // Aggregate over the visible transactions when a search/filter narrows the list.
+    // Columns are pre-decided here (which stat, which emphasis); the View maps Label →
+    // string, Emphasis → colour, and derives the +/– sign. amount == null renders "—".
+    data class FilterSummary(
+        val count: Int,
+        val dateSpan: DateSpan,
+        val currencySymbol: String,
+        val columns: List<Column>,
+    ) {
+        data class Column(
+            val label: Label,
+            val amount: Amount?,
+            val emphasis: Emphasis,
+        )
+
+        data class DateSpan(
+            val start: LocalDate,
+            val end: LocalDate,
+        )
+
+        enum class Label { Net, Out, In, Spent, Avg, Largest, Received }
+
+        enum class Emphasis { Positive, Negative, Neutral, Faint }
     }
 
     @Stable

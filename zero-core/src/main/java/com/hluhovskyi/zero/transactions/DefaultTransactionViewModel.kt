@@ -20,6 +20,10 @@ import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.Icon
 import com.hluhovskyi.zero.icons.IconRepository
+import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary.Emphasis.Faint
+import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary.Emphasis.Negative
+import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary.Emphasis.Neutral
+import com.hluhovskyi.zero.transactions.TransactionViewModel.FilterSummary.Emphasis.Positive
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
@@ -157,8 +161,9 @@ internal class DefaultTransactionViewModel(
                 }
             }
 
-            // Use DB-level query for simple category or account filters (e.g. detail screens).
-            // All other cases load everything and apply the filter in memory.
+            // DB-level query for simple category or account base filters (e.g. detail screens);
+            // everything else uses the paged window. A runtime filter is handled separately by
+            // activeFilterTransactions (a SQL-level Criteria.Filtered query), so no full load here.
             val pagedTransactions: Flow<List<TransactionRepository.Transaction>> = when {
                 filter.categoryIds != null &&
                     filter.period == null &&
@@ -238,44 +243,25 @@ internal class DefaultTransactionViewModel(
             ) { transactions, idToCategories, idToAccounts, idToCurrencies, idToIcons ->
                 val primaryCurrency = currencyPrimaryUseCase.getPrimaryCurrency()
 
-                val items = transactions
-                    .mapNotNull { transaction ->
-                        resolve(
-                            transaction = transaction,
-                            idToAccounts = idToAccounts,
-                            idToCategories = idToCategories,
-                            idToCurrencies = idToCurrencies,
-                            idToIcons = idToIcons,
-                        )
-                    }
+                val resolved = transactions.mapNotNull { transaction ->
+                    resolve(
+                        transaction = transaction,
+                        idToAccounts = idToAccounts,
+                        idToCategories = idToCategories,
+                        idToCurrencies = idToCurrencies,
+                        idToIcons = idToIcons,
+                    )
+                }
+
+                val items = resolved
                     .groupBy { it.date.date }
                     .flatMap { (date, transactions) ->
                         val amount: Amount = transactions.fold(Amount.zero()) { amount, transaction ->
                             when (transaction) {
-                                is TransactionViewModel.Item.Transaction.Expense -> {
-                                    amount - if (transaction.conversion is TransactionViewModel.Conversion.WithAmount &&
-                                        transaction.conversion.currencyId == primaryCurrency.id
-                                    ) {
-                                        transaction.conversion.amount
-                                    } else {
-                                        currencyConvertUseCase.convertToPrimary(
-                                            transaction.amount,
-                                            transaction.currencyId,
-                                        )
-                                    }
-                                }
-                                is TransactionViewModel.Item.Transaction.Income -> {
-                                    amount + if (transaction.conversion is TransactionViewModel.Conversion.WithAmount &&
-                                        transaction.conversion.currencyId == primaryCurrency.id
-                                    ) {
-                                        transaction.conversion.amount
-                                    } else {
-                                        currencyConvertUseCase.convertToPrimary(
-                                            transaction.amount,
-                                            transaction.currencyId,
-                                        )
-                                    }
-                                }
+                                is TransactionViewModel.Item.Transaction.Expense ->
+                                    amount - primaryAmount(transaction, primaryCurrency.id)
+                                is TransactionViewModel.Item.Transaction.Income ->
+                                    amount + primaryAmount(transaction, primaryCurrency.id)
                                 is TransactionViewModel.Item.Transaction.Transfer -> amount - currencyConvertUseCase.convertToPrimary(
                                     transaction.amount,
                                     transaction.currencyId,
@@ -295,10 +281,18 @@ internal class DefaultTransactionViewModel(
                         ) + transactions
                     }
 
-                items
-            }.collectLatest { items ->
+                val summaryActive = mutableState.value.searchQuery.isNotBlank() ||
+                    mutableState.value.activeFilter.isActive
+                val filterSummary = if (summaryActive && resolved.isNotEmpty()) {
+                    computeFilterSummary(resolved, primaryCurrency)
+                } else {
+                    null
+                }
+
+                items to filterSummary
+            }.collectLatest { (items, filterSummary) ->
                 mutableState.update { state ->
-                    state.copy(transactions = items)
+                    state.copy(transactions = items, filterSummary = filterSummary)
                 }
             }
         }
@@ -323,6 +317,95 @@ internal class DefaultTransactionViewModel(
     ): Flow<List<TransactionRepository.Transaction>> = transactionRepository.query(TransactionRepository.Criteria.ForAccounts(accountIds))
         .onStartWithEmptyList()
         .onEmptyReturnEmptyList()
+
+    // Amount of an income/expense in the primary currency: prefer the already-converted
+    // amount when it matches the primary, otherwise convert. Transfers fall back to source.
+    private suspend fun primaryAmount(
+        transaction: TransactionViewModel.Item.Transaction,
+        primaryCurrencyId: Id.Known,
+    ): Amount = when (transaction) {
+        is TransactionViewModel.Item.Transaction.Expense ->
+            primaryAmountOf(transaction.amount, transaction.currencyId, transaction.conversion, primaryCurrencyId)
+        is TransactionViewModel.Item.Transaction.Income ->
+            primaryAmountOf(transaction.amount, transaction.currencyId, transaction.conversion, primaryCurrencyId)
+        is TransactionViewModel.Item.Transaction.Transfer ->
+            currencyConvertUseCase.convertToPrimary(transaction.amount, transaction.currencyId)
+    }
+
+    private suspend fun primaryAmountOf(
+        amount: Amount,
+        currencyId: Id.Known,
+        conversion: TransactionViewModel.Conversion,
+        primaryCurrencyId: Id.Known,
+    ): Amount = if (conversion is TransactionViewModel.Conversion.WithAmount &&
+        conversion.currencyId == primaryCurrencyId
+    ) {
+        conversion.amount
+    } else {
+        currencyConvertUseCase.convertToPrimary(amount, currencyId)
+    }
+
+    private suspend fun computeFilterSummary(
+        resolved: List<TransactionViewModel.Item.Transaction>,
+        primaryCurrency: Currency,
+    ): TransactionViewModel.FilterSummary {
+        val incomeAmounts = resolved
+            .filterIsInstance<TransactionViewModel.Item.Transaction.Income>()
+            .map { primaryAmount(it, primaryCurrency.id) }
+        val expenseAmounts = resolved
+            .filterIsInstance<TransactionViewModel.Item.Transaction.Expense>()
+            .map { primaryAmount(it, primaryCurrency.id) }
+
+        val totalIn = incomeAmounts.fold(Amount.zero()) { acc, amount -> acc + amount }
+        val totalOut = expenseAmounts.fold(Amount.zero()) { acc, amount -> acc + amount }
+        val moneyCount = incomeAmounts.size + expenseAmounts.size
+        val net = totalIn - totalOut
+        val average = if (moneyCount > 0) (totalIn + totalOut) / moneyCount else Amount.zero()
+        val largest = (incomeAmounts + expenseAmounts).maxByOrNull { it.value } ?: Amount.zero()
+        val hasIn = totalIn > 0L
+        val hasOut = totalOut > 0L
+
+        val columns = when {
+            hasIn && hasOut -> listOf(
+                // Magnitude only — the card derives the +/– from the emphasis, so passing a
+                // signed net would double up with the formatter's own minus.
+                column(TransactionViewModel.FilterSummary.Label.Net, Amount(net.value.abs()), if (net >= 0L) Positive else Negative),
+                column(TransactionViewModel.FilterSummary.Label.Out, totalOut, Neutral),
+                column(TransactionViewModel.FilterSummary.Label.In, totalIn, Positive),
+            )
+            hasOut -> listOf(
+                column(TransactionViewModel.FilterSummary.Label.Spent, totalOut, Neutral),
+                column(TransactionViewModel.FilterSummary.Label.Avg, average, Neutral),
+                column(TransactionViewModel.FilterSummary.Label.Largest, largest, Neutral),
+            )
+            hasIn -> listOf(
+                column(TransactionViewModel.FilterSummary.Label.Received, totalIn, Positive),
+                column(TransactionViewModel.FilterSummary.Label.Avg, average, Neutral),
+                column(TransactionViewModel.FilterSummary.Label.Largest, largest, Neutral),
+            )
+            else -> listOf(
+                column(TransactionViewModel.FilterSummary.Label.Net, Amount.zero(), Neutral),
+                column(TransactionViewModel.FilterSummary.Label.Out, null, Faint),
+                column(TransactionViewModel.FilterSummary.Label.In, null, Faint),
+            )
+        }
+
+        return TransactionViewModel.FilterSummary(
+            count = resolved.size,
+            dateSpan = TransactionViewModel.FilterSummary.DateSpan(
+                start = resolved.minOf { it.date.date },
+                end = resolved.maxOf { it.date.date },
+            ),
+            currencySymbol = primaryCurrency.symbol,
+            columns = columns,
+        )
+    }
+
+    private fun column(
+        label: TransactionViewModel.FilterSummary.Label,
+        amount: Amount?,
+        emphasis: TransactionViewModel.FilterSummary.Emphasis,
+    ) = TransactionViewModel.FilterSummary.Column(label, amount, emphasis)
 
     private fun resolve(
         transaction: TransactionRepository.Transaction,
