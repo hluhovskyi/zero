@@ -2,16 +2,22 @@
 
 ```
 app
- └── zero-core      (ViewModels, UseCases, Components)
-      └── zero-ui   (Design System, Composables: CategoryIconView, etc.)
-      └── zero-api  (Domain interfaces: ColorRepository, ColorScheme, Id, etc.)
-zero-image-loading  (ImageLoader interface + Coil impl)
-zero-crash          (CrashComponent — Sentry crash reporting, attach-only)
+ ├── zero-core        (ViewModels, UseCases, Components)
+ │    ├── zero-ui     (Design System, dumb Compose components, charts)
+ │    ├── zero-api    (Domain interfaces: ColorRepository, ColorScheme, Id, etc.)
+ │    └── zero-image-loading  (ImageLoader interface + Coil impl)
+ ├── zero-database    (Room impls of zero-api repositories)
+ ├── zero-sync        (pure Kotlin JVM — JSON export/import + LWW delta sync)
+ ├── zero-backup      (pure Kotlin JVM — backup orchestration + Drive REST client)
+ ├── zero-auth        (Google OAuth via Play services)
+ ├── zero-remote      (server-side HTTP: feedback, exchange rates)
+ ├── zero-crash       (CrashComponent — Sentry crash reporting, attach-only)
+ └── zero-test-bridge (e2e test seam; ships in the APK, no test-framework deps)
 ```
 
 - `zero-core` cannot import from `app` — no `Navigator`, no navigation types.
 - `:zero-ui` is the host for the **Design System** (Theme, Color, Type, Shape) and dumb reusable Compose components. It has no dependencies on other `zero-*` modules — no domain types, no business logic.
-- No Android framework dependencies in `zero-api`.
+- No Android framework dependencies in `zero-api`, `zero-sync`, or `zero-backup` — they are KMP-bound (enforced by `KmpReadiness` lint).
 
 ## zero-api Co-location Rule
 
@@ -23,11 +29,6 @@ zero-crash          (CrashComponent — Sentry crash reporting, attach-only)
 
 ## Mechanical Enforcement
 
-The above rules are enforced by custom Android Lint rules in the `:lint-rules` module.
-Run `./gradlew :zero-core:lintDebug` to check. Violations are errors (build fails).
+Boundary and architecture rules are enforced by the custom lint registry in `:lint-rules`. The full rule list lives in [Architecture — Lint Enforcement](architecture.md#lint-enforcement) — the single source, pinned to `ZeroIssueRegistry` by `DocsConsistencyTest`; don't restate it here. Run `./gradlew lint` to check; violations are errors (build fails).
 
-The 4 enforced invariants:
-- `Default*` classes must be `internal` (`DefaultImplMustBeInternal`)
-- `*ViewProvider` classes must be `internal` (`ViewProviderMustBeInternal`)
-- `*ViewProvider` must not inject `*Repository` or `*UseCase` (`ViewProviderMustNotInjectRepository`)
-- `On*Handler` interfaces must be `fun interface` (`HandlerMustBeFunInterface`)
+**New modules must wire `lintChecks(project(":lint-rules"))`** (JVM modules also apply `id("com.android.lint")`) — without it, none of the custom rules run for that module.
