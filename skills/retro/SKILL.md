@@ -27,7 +27,7 @@ gh pr view <pr_number> --json files --jq '.files[].path'
 ```
 Count commits; "fix"/"revert"/"again" patterns = friction. If still on the feature branch, also run `git diff master...HEAD --stat`.
 
-**Affected AGENTS.md files** — read the AGENTS.md nearest to each changed package. These are the ground truth for what's documented vs. not.
+**Affected AGENTS.md files** — read the AGENTS.md nearest to each changed package. These are the ground truth for what's documented vs. not. **Audit them for gaps and improvements, not just friction:** is the relevant section now stale, missing a case this session exposed, thinner than the work warrants, or silent on a surface the work shipped? Improving existing docs is a first-class retro outcome even when nothing broke.
 
 **Relevant docs** — scan `docs/agents/` for any doc that covers the affected area (navigation, architecture, DI, etc.).
 
@@ -69,7 +69,7 @@ Answer these questions internally before writing anything:
 - [the most impactful single rule, or "—" if none]
 
 ## Actionable items (apply filters to each; empty axes are valid)
-- **Docs** — [insight → file/section]
+- **Docs** — gaps & improvements in the docs this session touched or exposed: a stale or incomplete section, a missing case/pattern, an unindexed surface, a clarification the work proved necessary [insight → file/section]
 - **Repo/infra** — [one-time setting or script tweak]
 - **Speed/token** — [recurring per-session win — Claude behavior or process]
 - **Behavior (no artifact)** — [self-correction; not committed anywhere]
@@ -108,6 +108,6 @@ Cap: one edit per retro. Do not meta-retro this self-check.
 
 ## Guardrails
 
-- Don't document things the code already says clearly — only the "why" and the traps.
+- Don't document things the code already says clearly — only the "why" and the traps. (A "where to look" index entry or a why/shape pointer is fine — that's not restating signatures.)
 - If the friction was a one-off or the fix is already in the code, skip it.
 - Prioritize rules that prevent "operating blind" or "success chasing".
