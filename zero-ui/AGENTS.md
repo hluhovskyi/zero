@@ -14,7 +14,6 @@ Android library module. Design system and dumb reusable Compose components.
 
 - **Theme**: `theme/Theme.kt`, `theme/ZeroColors.kt`, `theme/Type.kt`, `theme/Shape.kt` — Material 3 theme setup (`Color.kt` consts are deleted on purpose; see [ColorScheme](../docs/agents/color-scheme.md))
 - **Shared components**: Reusable atomic/molecular Compose components (e.g., `AmountDisplay`)
-- **Charts**: `ui/chart/` — line, signed-line, bar, donut + `ChartsGalleryScreen` (dev-only gallery)
 - **Design tokens**: Color palette, typography scale, corner radii
 - **Charts**: `chart/` — `LineChart`, `SignedLineChart`, `BarChart`, `DonutChart` + data models. See [Charts](#charts).
 
