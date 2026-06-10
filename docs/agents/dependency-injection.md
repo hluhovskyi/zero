@@ -16,7 +16,7 @@
 @Qualifier @Retention(AnnotationRetention.BINARY) private annotation class SelectedIconId
 ```
 
-Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.).
+Applies to any repeated primitive type (`Id`, `String`, `Boolean`, etc.). Enforced by the `NoNamedAnnotation` lint.
 
 ## Use Case Scope
 

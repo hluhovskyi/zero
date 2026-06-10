@@ -46,11 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hluhovskyi.zero.R
 import com.hluhovskyi.zero.backup.BackupUseCase
-import com.hluhovskyi.zero.backup.rememberBackupRelativeTime
+import com.hluhovskyi.zero.backup.toLabel
 import com.hluhovskyi.zero.common.Uri
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
-import kotlinx.datetime.LocalDateTime
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -304,8 +303,8 @@ private fun backupRowSubtitle(backup: SettingsViewModel.BackupSummary): String =
     backup.phase is BackupUseCase.Phase.Restoring -> stringResource(R.string.settings_backup_row_restoring)
     backup.phase is BackupUseCase.Phase.Failed && backup.consecutiveFailures > 0 ->
         stringResource(R.string.settings_backup_row_failed)
-    backup.lastSuccessAt != null ->
-        stringResource(R.string.settings_backup_row_last_at, settingsBackupRelativeTime(backup.lastSuccessAt))
+    backup.lastSuccessAgo != null ->
+        stringResource(R.string.settings_backup_row_last_at, backup.lastSuccessAgo.toLabel())
     else -> stringResource(R.string.settings_backup_row_on)
 }
 
@@ -317,9 +316,6 @@ private fun backupRowSubtitleColor(backup: SettingsViewModel.BackupSummary): and
         ZeroTheme.colors.primaryContainer
     else -> ZeroTheme.colors.onSurfaceVariant
 }
-
-@Composable
-private fun settingsBackupRelativeTime(at: LocalDateTime): String = rememberBackupRelativeTime(at)
 
 @Composable
 private fun MoreToggleRow(
