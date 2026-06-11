@@ -7,10 +7,10 @@ import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -50,6 +50,13 @@ class DefaultAnalyticsViewModelTest {
     private val fakeCurrency = object : CurrencyPrimaryUseCase {
         override suspend fun getPrimaryCurrency() = Currency(id = Id.Known("usd"), name = "US Dollar", symbol = "$")
         override suspend fun setPrimaryCurrency(id: Id.Known) = Unit
+    }
+
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val dispatchers = object : DispatcherProvider {
+        override fun main() = dispatcher
+        override fun io() = dispatcher
+        override fun cpu() = dispatcher
     }
 
     @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -129,7 +136,7 @@ class DefaultAnalyticsViewModelTest {
 
     @Test
     fun `SeeAllCategories forwards to the handler`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel()
         viewModel.perform(AnalyticsViewModel.Action.SeeAllCategories)
         runCurrent()
 
@@ -138,7 +145,7 @@ class DefaultAnalyticsViewModelTest {
 
     @Test
     fun `SelectCategory forwards the id to the handler`() = runTest {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel()
         viewModel.perform(AnalyticsViewModel.Action.SelectCategory(Id.Known("c3")))
         runCurrent()
 
@@ -146,19 +153,19 @@ class DefaultAnalyticsViewModelTest {
     }
 
     private suspend fun TestScope.attached(): AnalyticsViewModel.State {
-        val viewModel = createViewModel(backgroundScope)
+        val viewModel = createViewModel()
         viewModel.attach()
         runCurrent()
         return viewModel.state.first()
     }
 
-    private fun createViewModel(scope: CoroutineScope) = DefaultAnalyticsViewModel(
+    private fun createViewModel() = DefaultAnalyticsViewModel(
         analyticsDetailUseCase = fakeUseCase,
         currencyPrimaryUseCase = fakeCurrency,
         onSeeAllCategoriesHandler = { seeAllInvoked = true },
         onAnalyticsCategorySelectedHandler = { selectedCategory = it },
         zonedClock = fakeClock,
-        coroutineScope = scope,
+        dispatchers = dispatchers,
     )
 
     private fun emptyAnalytics() = analyticsWith(breakdown = emptyList(), categoryCount = 0)

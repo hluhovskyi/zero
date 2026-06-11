@@ -2,12 +2,11 @@ package com.hluhovskyi.zero.analytics
 
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.AmountFormatter
-import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.DateRange
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -16,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
-import java.io.Closeable
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -31,8 +29,9 @@ internal class DefaultAnalyticsViewModel(
     private val onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
     private val onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
     private val zonedClock: ZonedClock,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-) : AnalyticsViewModel {
+    private val dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    AnalyticsViewModel {
 
     private val mutableState = MutableStateFlow(AnalyticsViewModel.State())
     override val state: Flow<AnalyticsViewModel.State> = mutableState
@@ -40,15 +39,15 @@ internal class DefaultAnalyticsViewModel(
     override fun perform(action: AnalyticsViewModel.Action) {
         when (action) {
             is AnalyticsViewModel.Action.SeeAllCategories ->
-                coroutineScope.launch(Dispatchers.Main) { onSeeAllCategoriesHandler.onSeeAllCategories() }
+                scope.launch(dispatchers.main()) { onSeeAllCategoriesHandler.onSeeAllCategories() }
 
             is AnalyticsViewModel.Action.SelectCategory ->
-                coroutineScope.launch(Dispatchers.Main) { onAnalyticsCategorySelectedHandler.onSelected(action.categoryId) }
+                scope.launch(dispatchers.main()) { onAnalyticsCategorySelectedHandler.onSelected(action.categoryId) }
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
+    override fun attachOnMain() {
+        scope.launch(dispatchers.io()) {
             val currencySymbol = currencyPrimaryUseCase.getPrimaryCurrency().symbol
             mutableState.update { it.copy(currencySymbol = currencySymbol) }
             analyticsDetailUseCase.query(lastSixMonths()).collectLatest { analytics ->
