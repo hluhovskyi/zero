@@ -42,8 +42,8 @@ internal class DefaultBottomBarViewModel(
             selected = false,
         ),
         BottomBarViewModel.Item(
-            id = BottomBarViewModel.CategoriesId,
-            iconUri = androidUriResourceFactory.drawable("ic_categories_24"),
+            id = BottomBarViewModel.AnalyticsId,
+            iconUri = androidUriResourceFactory.drawable("ic_analytics_24"),
             selected = false,
         ),
         BottomBarViewModel.Item(
@@ -63,7 +63,7 @@ internal class DefaultBottomBarViewModel(
             is BottomBarViewModel.Action.SelectItem -> {
                 val destination = when (action.item.id) {
                     BottomBarViewModel.HomeId -> Destinations.Home
-                    BottomBarViewModel.CategoriesId -> Destinations.Category.All
+                    BottomBarViewModel.AnalyticsId -> Destinations.Analytics
                     BottomBarViewModel.AccountsId -> Destinations.Account.All
                     BottomBarViewModel.BudgetId -> Destinations.Budget.All
                     BottomBarViewModel.SettingsId -> Destinations.Settings
@@ -111,7 +111,7 @@ internal class DefaultBottomBarViewModel(
 
     private fun Destination.toBottomBarId(): Id = when (this.route) {
         Destinations.Home.route -> BottomBarViewModel.HomeId
-        Destinations.Category.All.route -> BottomBarViewModel.CategoriesId
+        Destinations.Analytics.route -> BottomBarViewModel.AnalyticsId
         Destinations.Account.All.route -> BottomBarViewModel.AccountsId
         Destinations.Budget.All.route -> BottomBarViewModel.BudgetId
         Destinations.Settings.route -> BottomBarViewModel.SettingsId

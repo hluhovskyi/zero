@@ -422,4 +422,22 @@
     <string name="budget_over_increase_cta">Confirm Increase</string>
     <string name="budget_over_back_cd">Back</string>
     <string name="budget_over_close_cd">Close</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">Analytics</string>
+    <string name="analytics_period_last_6_months">Last 6 months</string>
+    <string name="analytics_net_cash_flow">Net cash flow</string>
+    <string name="analytics_cash_in">In</string>
+    <string name="analytics_cash_out">Out</string>
+    <string name="analytics_by_category">By category</string>
+    <string name="analytics_vs_prior">vs prior 6 mo</string>
+    <string name="analytics_spent">Spent</string>
+    <string name="analytics_remaining">Remaining</string>
+    <string name="analytics_trend_new">new</string>
+    <string name="analytics_trend_flat">—</string>
+    <string name="analytics_percent">%1$d%%</string>
+    <plurals name="analytics_see_all_categories">
+        <item quantity="one">See all %1$d category</item>
+        <item quantity="other">See all %1$d categories</item>
+    </plurals>
 </resources>

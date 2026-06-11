@@ -26,6 +26,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.DriveSnapshotLoader
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -110,7 +111,7 @@ private annotation class ForAccountTab
 
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-private annotation class ForCategoryTab
+private annotation class ForAnalyticsTab
 
 private const val TAG = "MainActivityScreenComponent"
 
@@ -138,15 +139,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
     @get:ForAccountTab
     protected abstract val accountTab: AttachableViewComponent
 
-    @get:ForCategoryTab
-    protected abstract val categoryTab: AttachableViewComponent
+    @get:ForAnalyticsTab
+    protected abstract val analyticsTab: AttachableViewComponent
 
     override fun attach(): Closeable = Closeables.merge(
         feedbackComponent.attach(),
         homeTab.attach(),
         budgetTab.attach(),
         accountTab.attach(),
-        categoryTab.attach(),
+        analyticsTab.attach(),
     )
 
     interface Dependencies {
@@ -171,6 +172,8 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val categoryDetailComponentBuilder: CategoryDetailComponent.Builder
         val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
+
+        val analyticsDetailComponentBuilder: AnalyticsDetailComponent.Builder
 
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
@@ -481,23 +484,43 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         }
 
         @Provides
+        @IntoSet
         @MainActivityScreenScope
-        @ForCategoryTab
-        fun categoryTabComponent(
+        fun categoryNavigationEntry(
             componentBuilder: CategoryComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(Destinations.Category.All) {
+            componentBuilder
+                .onCategorySelectedHandler { categoryId ->
+                    navigator.navigateTo(
+                        Destinations.Category.Item.Detail,
+                        Destinations.Category.Item.CategoryId.withValue(categoryId),
+                    )
+                }
+                .onAddCategoryHandler { type ->
+                    navigator.navigateTo(
+                        Destinations.Category.Edit,
+                        Destinations.Category.Edit.InitialType.withValue(type.name),
+                    )
+                }
+                .onBackHandler { navigator.back() }
+                .logging(logger)
+        }
+
+        @Provides
+        @MainActivityScreenScope
+        @ForAnalyticsTab
+        fun analyticsTabComponent(
+            componentBuilder: AnalyticsDetailComponent.Builder,
             navigator: Navigator,
             logger: Logger,
         ): AttachableViewComponent = componentBuilder
-            .onCategorySelectedHandler { categoryId ->
+            .onSeeAllCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+            .onAnalyticsCategorySelectedHandler { categoryId ->
                 navigator.navigateTo(
                     Destinations.Category.Item.Detail,
                     Destinations.Category.Item.CategoryId.withValue(categoryId),
-                )
-            }
-            .onAddCategoryHandler { type ->
-                navigator.navigateTo(
-                    Destinations.Category.Edit,
-                    Destinations.Category.Edit.InitialType.withValue(type.name),
                 )
             }
             .logging(logger)
@@ -506,10 +529,13 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
-        fun categoryNavigationEntry(
-            @ForCategoryTab component: AttachableViewComponent,
+        fun analyticsNavigationEntry(
+            @ForAnalyticsTab component: AttachableViewComponent,
             navigatorScope: NavigatorScope,
-        ): NavigatorEntry = navigatorScope.composable(Destinations.Category.All) {
+        ): NavigatorEntry = navigatorScope.composable(
+            destination = Destinations.Analytics,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
             component.AttachWithView()
         }
 

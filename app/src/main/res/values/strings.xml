@@ -8,12 +8,12 @@
     <string name="bottom_bar_home">Home</string>
     <string name="bottom_bar_accounts">Accounts</string>
     <string name="bottom_bar_budget">Budget</string>
-    <string name="bottom_bar_categories">Categories</string>
+    <string name="bottom_bar_analytics">Analytics</string>
     <string name="bottom_bar_settings">Settings</string>
     <string name="bottom_bar_home_icon_description">Home icon</string>
     <string name="bottom_bar_accounts_icon_description">Accounts icon</string>
     <string name="bottom_bar_budget_icon_description">Budget icon</string>
-    <string name="bottom_bar_categories_icon_description">Category icon</string>
+    <string name="bottom_bar_analytics_icon_description">Analytics icon</string>
     <string name="bottom_bar_settings_icon_description">Settings icon</string>
     <string name="bottom_bar_over_budget_description">Over budget</string>
 

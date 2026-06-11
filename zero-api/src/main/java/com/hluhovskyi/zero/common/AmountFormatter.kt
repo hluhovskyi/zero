@@ -10,5 +10,8 @@ interface AmountFormatter {
 
         /** Compact magnitude for tight spaces, e.g. `2.2K`, `4.5M`, `105.7B`. */
         Short,
+
+        /** Whole units with grouping, fractional part dropped (truncated), e.g. `1,234`. */
+        Whole,
     }
 }

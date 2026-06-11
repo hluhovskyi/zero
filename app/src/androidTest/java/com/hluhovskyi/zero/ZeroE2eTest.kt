@@ -159,4 +159,20 @@ class ZeroE2eTest : BaseE2eTest() {
             .assertCategoryLeft("0.00")
             .assertCategoryLeft("200.00")
     }
+
+    @Test
+    fun analyticsTabShowsCategoryBreakdownAndBacksFromCategories() {
+        // Two Food expenses (42 + 99) → the Analytics hub breaks them down by category,
+        // "See all categories" opens the existing Categories screen, and its back button returns.
+        seedExpenses()
+        onTransactions()
+            .assertHasExpense(amount = "42")
+            .openAnalytics()
+            .assertVisible()
+            .assertCategoryVisible("Food")
+            .openSeeAllCategories()
+            .assertVisible()
+            .goBack()
+            .assertVisible()
+    }
 }

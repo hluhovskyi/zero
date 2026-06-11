@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
@@ -84,6 +85,7 @@ abstract class CategoryComponent : AttachableViewComponent {
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
             .onAddCategoryHandler(OnAddCategoryHandler.Noop)
+            .onBackHandler(OnBackHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -96,6 +98,9 @@ abstract class CategoryComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAddCategoryHandler(handler: OnAddCategoryHandler): Builder
+
+        @BindsInstance
+        fun onBackHandler(handler: OnBackHandler): Builder
     }
 
     @dagger.Module
@@ -138,11 +143,13 @@ abstract class CategoryComponent : AttachableViewComponent {
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
             onAddCategoryHandler: OnAddCategoryHandler,
+            onBackHandler: OnBackHandler,
         ): ViewProvider = CategoryViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             onAddCategory = onAddCategoryHandler,
+            onBack = onBackHandler,
         )
     }
 }

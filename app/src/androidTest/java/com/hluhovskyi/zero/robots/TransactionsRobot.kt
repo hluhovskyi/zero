@@ -29,6 +29,16 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
         return TransactionEditRobot(composeRule)
     }
 
+    fun openAnalytics(): AnalyticsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Analytics").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("Analytics").performClick()
+        }
+        return AnalyticsRobot(composeRule)
+    }
+
     fun assertHasExpense(amount: String): TransactionsRobot {
         composeRule.apply {
             waitUntil(timeoutMillis = 5_000) {
