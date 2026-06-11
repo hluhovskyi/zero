@@ -6,7 +6,7 @@ import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-interface AnalyticsUseCase {
+interface AnalyticsDetailUseCase {
 
     fun query(range: DateRange): Flow<Analytics>
 
@@ -24,7 +24,7 @@ interface AnalyticsUseCase {
         val expense: Amount,
     )
 
-    object Noop : AnalyticsUseCase {
+    object Noop : AnalyticsDetailUseCase {
         override fun query(range: DateRange): Flow<Analytics> = emptyFlow()
     }
 }

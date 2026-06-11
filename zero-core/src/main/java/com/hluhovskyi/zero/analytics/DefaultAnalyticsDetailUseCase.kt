@@ -17,13 +17,13 @@ import kotlinx.datetime.plus
  * Composes the Analytics hub model: monthly cash flow (derived here) plus the category breakdown
  * (delegated to the shared [SpendingBreakdownUseCase]). Bucketing works for any range.
  */
-internal class DefaultAnalyticsUseCase(
+internal class DefaultAnalyticsDetailUseCase(
     private val transactionRepository: TransactionRepository,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
     private val spendingBreakdownUseCase: SpendingBreakdownUseCase,
-) : AnalyticsUseCase {
+) : AnalyticsDetailUseCase {
 
-    override fun query(range: DateRange): Flow<AnalyticsUseCase.Analytics> {
+    override fun query(range: DateRange): Flow<AnalyticsDetailUseCase.Analytics> {
         // The whole range, unscoped — shared by both queries. Cash flow reads every type (type = null);
         // the breakdown narrows to expenses itself.
         val filter = TransactionFilterCriteria(from = range.start, to = range.end)
@@ -34,7 +34,7 @@ internal class DefaultAnalyticsUseCase(
             spendingBreakdownUseCase.query(filter, trendSince = midpoint),
         ) { transactions, breakdown ->
             val cashFlow = buildCashFlow(range, transactions)
-            AnalyticsUseCase.Analytics(
+            AnalyticsDetailUseCase.Analytics(
                 totalIn = cashFlow.fold(Amount.zero()) { sum, bucket -> sum + bucket.income },
                 totalOut = cashFlow.fold(Amount.zero()) { sum, bucket -> sum + bucket.expense },
                 cashFlow = cashFlow,
@@ -46,7 +46,7 @@ internal class DefaultAnalyticsUseCase(
     private suspend fun buildCashFlow(
         range: DateRange,
         transactions: List<TransactionRepository.Transaction>,
-    ): List<AnalyticsUseCase.CashFlowBucket> {
+    ): List<AnalyticsDetailUseCase.CashFlowBucket> {
         val months = monthStarts(range)
         val income = HashMap<Int, Amount>()
         val expense = HashMap<Int, Amount>()
@@ -65,7 +65,7 @@ internal class DefaultAnalyticsUseCase(
             }
         }
         return months.map { month ->
-            AnalyticsUseCase.CashFlowBucket(
+            AnalyticsDetailUseCase.CashFlowBucket(
                 label = shortMonthLabel(month),
                 income = income.getValue(monthKey(month)),
                 expense = expense.getValue(monthKey(month)),

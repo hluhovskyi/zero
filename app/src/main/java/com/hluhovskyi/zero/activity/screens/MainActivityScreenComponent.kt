@@ -26,7 +26,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.CompositeNavigation
 import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentSerializer
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
-import com.hluhovskyi.zero.analytics.AnalyticsComponent
+import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.DriveSnapshotLoader
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -173,7 +173,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val categoryPickerComponentBuilder: CategoryPickerComponent.Builder
         val categoryEditComponentBuilder: CategoryEditComponent.Builder
 
-        val analyticsComponentBuilder: AnalyticsComponent.Builder
+        val analyticsDetailComponentBuilder: AnalyticsDetailComponent.Builder
 
         val accountComponentBuilder: AccountComponent.Builder
         val accountEditComponentBuilder: AccountEditComponent.Builder
@@ -512,7 +512,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @MainActivityScreenScope
         @ForAnalyticsTab
         fun analyticsTabComponent(
-            componentBuilder: AnalyticsComponent.Builder,
+            componentBuilder: AnalyticsDetailComponent.Builder,
             navigator: Navigator,
             logger: Logger,
         ): AttachableViewComponent = componentBuilder

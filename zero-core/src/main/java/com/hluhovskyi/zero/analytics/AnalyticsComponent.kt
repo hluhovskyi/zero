@@ -1,66 +1,41 @@
 package com.hluhovskyi.zero.analytics
 
-import com.hluhovskyi.zero.ImageLoader
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
-import com.hluhovskyi.zero.common.AmountFormatter
-import com.hluhovskyi.zero.common.AttachableViewComponent
-import com.hluhovskyi.zero.common.Buildable
-import com.hluhovskyi.zero.common.ViewProvider
-import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
-import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
 import com.hluhovskyi.zero.transactions.breakdown.DefaultSpendingBreakdownUseCase
 import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
-import dagger.BindsInstance
 import dagger.Provides
-import java.io.Closeable
 import javax.inject.Scope
 
 @Scope
 @Retention(AnnotationRetention.SOURCE)
 private annotation class AnalyticsScope
 
-private const val TAG = "AnalyticsComponent"
-
+/**
+ * Use-case graph for the analytics feature — wires the reusable [SpendingBreakdownUseCase] from the
+ * data layer, with no view of its own. Any feature can depend on it to reuse the same spend
+ * aggregation; the hub screen and its detail use case live in [AnalyticsDetailComponent].
+ */
 @AnalyticsScope
 @dagger.Component(
-    dependencies = [AnalyticsComponent.Dependencies::class],
     modules = [AnalyticsComponent.Module::class],
+    dependencies = [AnalyticsComponent.Dependencies::class],
 )
-abstract class AnalyticsComponent : AttachableViewComponent {
+interface AnalyticsComponent {
 
-    internal abstract val viewModel: AnalyticsViewModel
-
-    override val tag: String = TAG
-    override fun attach(): Closeable = viewModel.attach()
+    val spendingBreakdownUseCase: SpendingBreakdownUseCase
 
     interface Dependencies {
         val transactionRepository: TransactionRepository
         val categoriesQueryUseCase: CategoriesQueryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
-        val currencyPrimaryUseCase: CurrencyPrimaryUseCase
-        val amountFormatter: AmountFormatter
-        val imageLoader: ImageLoader
-        val zonedClock: ZonedClock
     }
 
     companion object {
-        fun builder(dependencies: Dependencies): Builder = DaggerAnalyticsComponent.builder()
+        fun create(dependencies: Dependencies): AnalyticsComponent = DaggerAnalyticsComponent.builder()
             .dependencies(dependencies)
-            .onSeeAllCategoriesHandler(OnSeeAllCategoriesHandler.Noop)
-            .onAnalyticsCategorySelectedHandler(OnAnalyticsCategorySelectedHandler.Noop)
-    }
-
-    @dagger.Component.Builder
-    interface Builder : Buildable<AnalyticsComponent> {
-        fun dependencies(dependencies: Dependencies): Builder
-
-        @BindsInstance
-        fun onSeeAllCategoriesHandler(handler: OnSeeAllCategoriesHandler): Builder
-
-        @BindsInstance
-        fun onAnalyticsCategorySelectedHandler(handler: OnAnalyticsCategorySelectedHandler): Builder
+            .build()
     }
 
     @dagger.Module
@@ -76,46 +51,6 @@ abstract class AnalyticsComponent : AttachableViewComponent {
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
-        )
-
-        @Provides
-        @AnalyticsScope
-        fun analyticsUseCase(
-            transactionRepository: TransactionRepository,
-            currencyConvertUseCase: CurrencyConvertUseCase,
-            spendingBreakdownUseCase: SpendingBreakdownUseCase,
-        ): AnalyticsUseCase = DefaultAnalyticsUseCase(
-            transactionRepository = transactionRepository,
-            currencyConvertUseCase = currencyConvertUseCase,
-            spendingBreakdownUseCase = spendingBreakdownUseCase,
-        )
-
-        @Provides
-        @AnalyticsScope
-        fun viewModel(
-            analyticsUseCase: AnalyticsUseCase,
-            currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-            onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
-            onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
-            zonedClock: ZonedClock,
-        ): AnalyticsViewModel = DefaultAnalyticsViewModel(
-            analyticsUseCase = analyticsUseCase,
-            currencyPrimaryUseCase = currencyPrimaryUseCase,
-            onSeeAllCategoriesHandler = onSeeAllCategoriesHandler,
-            onAnalyticsCategorySelectedHandler = onAnalyticsCategorySelectedHandler,
-            zonedClock = zonedClock,
-        )
-
-        @Provides
-        @AnalyticsScope
-        fun viewProvider(
-            viewModel: AnalyticsViewModel,
-            amountFormatter: AmountFormatter,
-            imageLoader: ImageLoader,
-        ): ViewProvider = AnalyticsViewProvider(
-            viewModel = viewModel,
-            amountFormatter = amountFormatter,
-            imageLoader = imageLoader,
         )
     }
 }

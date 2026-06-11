@@ -25,7 +25,7 @@ import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
-class DefaultAnalyticsUseCaseTest {
+class DefaultAnalyticsDetailUseCaseTest {
 
     @Mock private lateinit var transactionRepository: TransactionRepository
 
@@ -44,7 +44,7 @@ class DefaultAnalyticsUseCaseTest {
     // Jan 1 – Apr 30: buckets Jan/Feb/Mar/Apr.
     private val range = DateRange(LocalDate(2026, 1, 1), LocalDate(2026, 4, 30))
 
-    private fun useCase() = DefaultAnalyticsUseCase(
+    private fun useCase() = DefaultAnalyticsDetailUseCase(
         transactionRepository = transactionRepository,
         currencyConvertUseCase = identityConvert,
         spendingBreakdownUseCase = spendingBreakdownUseCase,

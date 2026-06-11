@@ -11,6 +11,7 @@ import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsComponent
+import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -58,6 +59,7 @@ import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
@@ -94,6 +96,7 @@ abstract class ActivityComponent :
     CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
     AnalyticsComponent.Dependencies,
+    AnalyticsDetailComponent.Dependencies,
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
@@ -197,9 +200,21 @@ abstract class ActivityComponent :
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
 
         @Provides
-        fun analyticsComponentBuilder(
+        @ActivityScope
+        fun analyticsComponent(
             component: ActivityComponent,
-        ): AnalyticsComponent.Builder = AnalyticsComponent.builder(component)
+        ): AnalyticsComponent = AnalyticsComponent.create(component)
+
+        @Provides
+        @ActivityScope
+        fun spendingBreakdownUseCase(
+            analyticsComponent: AnalyticsComponent,
+        ): SpendingBreakdownUseCase = analyticsComponent.spendingBreakdownUseCase
+
+        @Provides
+        fun analyticsDetailComponentBuilder(
+            component: ActivityComponent,
+        ): AnalyticsDetailComponent.Builder = AnalyticsDetailComponent.builder(component)
 
         @Provides
         fun budgetComponentBuilder(

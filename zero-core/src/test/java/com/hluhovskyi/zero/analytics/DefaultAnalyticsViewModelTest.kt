@@ -36,8 +36,8 @@ import java.math.BigDecimal
 class DefaultAnalyticsViewModelTest {
 
     private val analytics = MutableStateFlow(emptyAnalytics())
-    private val fakeUseCase = object : AnalyticsUseCase {
-        override fun query(range: DateRange): Flow<AnalyticsUseCase.Analytics> = analytics
+    private val fakeUseCase = object : AnalyticsDetailUseCase {
+        override fun query(range: DateRange): Flow<AnalyticsDetailUseCase.Analytics> = analytics
     }
 
     private var seeAllInvoked = false
@@ -153,7 +153,7 @@ class DefaultAnalyticsViewModelTest {
     }
 
     private fun createViewModel(scope: CoroutineScope) = DefaultAnalyticsViewModel(
-        analyticsUseCase = fakeUseCase,
+        analyticsDetailUseCase = fakeUseCase,
         currencyPrimaryUseCase = fakeCurrency,
         onSeeAllCategoriesHandler = { seeAllInvoked = true },
         onAnalyticsCategorySelectedHandler = { selectedCategory = it },
@@ -166,10 +166,10 @@ class DefaultAnalyticsViewModelTest {
     private fun analyticsWith(
         totalIn: String = "0",
         totalOut: String = "0",
-        cashFlow: List<AnalyticsUseCase.CashFlowBucket> = emptyList(),
+        cashFlow: List<AnalyticsDetailUseCase.CashFlowBucket> = emptyList(),
         breakdown: List<SpendingBreakdownUseCase.CategorySpend> = emptyList(),
         categoryCount: Int = 0,
-    ) = AnalyticsUseCase.Analytics(
+    ) = AnalyticsDetailUseCase.Analytics(
         totalIn = Amount(BigDecimal(totalIn)),
         totalOut = Amount(BigDecimal(totalOut)),
         cashFlow = cashFlow,
@@ -181,7 +181,7 @@ class DefaultAnalyticsViewModelTest {
         ),
     )
 
-    private fun bucket(label: String, income: String, expense: String) = AnalyticsUseCase.CashFlowBucket(
+    private fun bucket(label: String, income: String, expense: String) = AnalyticsDetailUseCase.CashFlowBucket(
         label = label,
         income = Amount(BigDecimal(income)),
         expense = Amount(BigDecimal(expense)),

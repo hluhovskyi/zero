@@ -21,12 +21,12 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Thin projection over [AnalyticsUseCase]. Hardcodes the range to the last 6 months (works for any
- * range) and does all screen-shape math here — top-N/"Other" splitting, share %, trend → enum,
+ * Thin projection over [AnalyticsDetailUseCase]. Hardcodes the range to the last 6 months (works for
+ * any range) and does all screen-shape math here — top-N/"Other" splitting, share %, trend → enum,
  * Amount → Float — so the ViewProvider performs zero arithmetic.
  */
 internal class DefaultAnalyticsViewModel(
-    private val analyticsUseCase: AnalyticsUseCase,
+    private val analyticsDetailUseCase: AnalyticsDetailUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
     private val onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
@@ -51,7 +51,7 @@ internal class DefaultAnalyticsViewModel(
         coroutineScope.launch {
             val currencySymbol = currencyPrimaryUseCase.getPrimaryCurrency().symbol
             mutableState.update { it.copy(currencySymbol = currencySymbol) }
-            analyticsUseCase.query(lastSixMonths()).collectLatest { analytics ->
+            analyticsDetailUseCase.query(lastSixMonths()).collectLatest { analytics ->
                 mutableState.update {
                     it.copy(
                         cashFlow = analytics.toCashFlow(),
@@ -68,7 +68,7 @@ internal class DefaultAnalyticsViewModel(
         return DateRange(start = start, end = today)
     }
 
-    private fun AnalyticsUseCase.Analytics.toCashFlow() = AnalyticsViewModel.CashFlow(
+    private fun AnalyticsDetailUseCase.Analytics.toCashFlow() = AnalyticsViewModel.CashFlow(
         net = totalIn - totalOut,
         totalIn = totalIn,
         totalOut = totalOut,
@@ -81,7 +81,7 @@ internal class DefaultAnalyticsViewModel(
         },
     )
 
-    private fun AnalyticsUseCase.Analytics.toBreakdown(): AnalyticsViewModel.Breakdown? {
+    private fun AnalyticsDetailUseCase.Analytics.toBreakdown(): AnalyticsViewModel.Breakdown? {
         val categories = breakdown.categories
         if (categories.isEmpty()) return null
         val total = breakdown.total
