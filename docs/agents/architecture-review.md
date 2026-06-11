@@ -49,6 +49,7 @@ Many house patterns are machine-enforced by custom lint detectors (see [Architec
 - **God interface / aggregate dependency.** One interface forcing unrelated consumers to depend on methods they don't use. → Split by consumer need.
 - **Downstream shim instead of a producer fix.** A new adapter/Mapper that reshapes a value for one consumer when the producer could emit the canonical shape for all. → Fix at the producer.
 - **Threading a value through every consumer.** A new constructor/builder arg added to many sites to carry one fact, when a default at the binding layer would do. → Hoist it.
+- **Sibling-package business-logic construction.** A feature `@Provides`-constructs (and imports) a *peer* feature's internal `Default*` impl instead of taking the interface through `Dependencies`. Building your own feature's use cases — or reaching *up* into a parent of the same family — is house style; reaching *sideways* into a peer couples you to its impl and forks the binding so every consumer re-news it. `internal` + same module hides it from the encapsulation lint, so it's this pass's call; the tell is the import — a `Default*` from a sibling package, not the interface. → Provide the shared interface once in the nearest common ancestor and inject it via `Dependencies`.
 
 ## Output
 
