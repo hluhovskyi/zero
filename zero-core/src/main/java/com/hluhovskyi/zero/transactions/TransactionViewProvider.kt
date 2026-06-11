@@ -260,7 +260,7 @@ private fun TransactionView(
                                 summary = summary,
                                 amountFormatter = amountFormatter,
                                 dateFormatter = dateFormatter,
-                                onShowBreakdown = { onShowBreakdown.onShowBreakdown() },
+                                onShowBreakdown = { onShowBreakdown.onShowBreakdown(state.activeFilter) },
                             )
                         }
                     }

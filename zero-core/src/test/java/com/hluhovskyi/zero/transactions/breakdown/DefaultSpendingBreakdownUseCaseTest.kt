@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions.breakdown
 
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.categories.CategoryType
 import com.hluhovskyi.zero.colors.ColorScheme
@@ -31,6 +32,8 @@ class DefaultSpendingBreakdownUseCaseTest {
 
     @Mock private lateinit var categoriesQueryUseCase: CategoriesQueryUseCase
 
+    @Mock private lateinit var accountsQueryUseCase: AccountsQueryUseCase
+
     private val identityConvert = object : CurrencyConvertUseCase {
         override suspend fun getRate(fromId: Id.Known, toId: Id.Known) = Rate(BigDecimal.ONE)
         override suspend fun convertToPrimary(amount: Amount, currencyId: Id.Known) = amount
@@ -43,13 +46,19 @@ class DefaultSpendingBreakdownUseCaseTest {
     private fun useCase() = DefaultSpendingBreakdownUseCase(
         transactionRepository = transactionRepository,
         categoriesQueryUseCase = categoriesQueryUseCase,
+        accountsQueryUseCase = accountsQueryUseCase,
         currencyConvertUseCase = identityConvert,
     )
 
-    private fun stub(transactions: List<TransactionRepository.Transaction>, categories: List<CategoriesQueryUseCase.Category>) {
+    private fun stub(
+        transactions: List<TransactionRepository.Transaction>,
+        categories: List<CategoriesQueryUseCase.Category>,
+        accounts: List<AccountsQueryUseCase.Account> = emptyList(),
+    ) {
         whenever(transactionRepository.query(any<TransactionRepository.Criteria.Filtered>(), any()))
             .thenReturn(flowOf(transactions))
         whenever(categoriesQueryUseCase.queryAll()).thenReturn(flowOf(categories))
+        whenever(accountsQueryUseCase.queryAll()).thenReturn(flowOf(accounts))
     }
 
     @Test
@@ -108,10 +117,34 @@ class DefaultSpendingBreakdownUseCaseTest {
         assertEquals(Amount.zero(), food.priorAmount)
     }
 
-    private fun expense(categoryId: String, amount: String, date: String) = TransactionRepository.Transaction.Expense(
-        id = Id.Known("e-$categoryId-$date"),
+    @Test
+    fun `ranks the same scoped expenses by account, reconciling with the total`() = runTest {
+        stub(
+            transactions = listOf(
+                expense("food", "100", "2026-01-10", account = "bank"),
+                expense("food", "30", "2026-02-05", account = "cash"),
+                expense("rent", "40", "2026-01-20", account = "cash"),
+                income("1000", "2026-01-15"), // excluded — not an expense
+            ),
+            categories = listOf(category("food"), category("rent")),
+            accounts = listOf(account("bank"), account("cash")),
+        )
+
+        val breakdown = useCase().query(filter).last()
+
+        // bank 100, cash 70 (30 + 40) — ranked by spend, summing to the same 170 total.
+        assertEquals(listOf(Id.Known("bank"), Id.Known("cash")), breakdown.accounts.map { it.accountId })
+        val cash = breakdown.accounts.first { it.accountId == Id.Known("cash") }
+        assertEquals(0, BigDecimal("70").compareTo(cash.amount.value))
+        assertEquals(2, cash.transactionCount)
+        assertEquals("Acc cash", cash.name)
+        assertEquals(0, BigDecimal("170").compareTo(breakdown.total.value))
+    }
+
+    private fun expense(categoryId: String, amount: String, date: String, account: String = "acc") = TransactionRepository.Transaction.Expense(
+        id = Id.Known("e-$categoryId-$account-$date"),
         amount = Amount(BigDecimal(amount)),
-        accountId = Id.Known("acc"),
+        accountId = Id.Known(account),
         currencyId = Id.Known("usd"),
         dateTime = LocalDateTime.parse("${date}T10:00:00"),
         updatedDateTime = LocalDateTime.parse("${date}T10:00:00"),
@@ -147,5 +180,12 @@ class DefaultSpendingBreakdownUseCaseTest {
         icon = Image.empty(),
         colorScheme = ColorScheme.Grey,
         type = type,
+    )
+
+    private fun account(id: String) = AccountsQueryUseCase.Account(
+        id = Id.Known(id),
+        name = "Acc $id",
+        colorScheme = ColorScheme.Grey,
+        icon = Image.empty(),
     )
 }

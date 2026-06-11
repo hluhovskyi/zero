@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsComponent
 import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -100,6 +101,7 @@ abstract class ActivityComponent :
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
+    SpendingBreakdownComponent.Dependencies,
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
@@ -270,6 +272,11 @@ abstract class ActivityComponent :
         fun categoryDetailComponentBuilder(
             component: ActivityComponent,
         ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
+
+        @Provides
+        fun spendingBreakdownComponentBuilder(
+            component: ActivityComponent,
+        ): SpendingBreakdownComponent.Builder = SpendingBreakdownComponent.builder(component)
 
         @Provides
         fun iconPickerComponentBuilder(

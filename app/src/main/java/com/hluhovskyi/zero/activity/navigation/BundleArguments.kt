@@ -1,7 +1,9 @@
 package com.hluhovskyi.zero.activity.navigation
 
 import android.os.Bundle
+import com.hluhovskyi.zero.activity.navigation.serialization.TransactionFilterNavigationArgumentSerializer
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.transactions.TransactionFilter
 
 internal class BundleArguments(
     private val bundle: Bundle?,
@@ -38,6 +40,14 @@ internal class BundleArguments(
                     // TODO: Add support for optional fallback in ArgumentValue
                     value = Id(value) as T,
                 )
+            }
+            TransactionFilter::class -> {
+                val value = bundle.getString(key.key)
+                if (!key.optional && value == null) {
+                    assertMissingArguments(key)
+                }
+
+                TransactionFilterNavigationArgumentSerializer.deserialize(key, value.orEmpty())
             }
             else -> assertMissingArguments(key)
         }

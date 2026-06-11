@@ -2,9 +2,9 @@ package com.hluhovskyi.zero.transactions
 
 fun interface OnShowBreakdownHandler {
 
-    fun onShowBreakdown()
+    fun onShowBreakdown(filter: TransactionFilter)
 
     object Noop : OnShowBreakdownHandler {
-        override fun onShowBreakdown() = Unit
+        override fun onShowBreakdown(filter: TransactionFilter) = Unit
     }
 }

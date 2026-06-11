@@ -27,6 +27,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.DriveSnapshotLoader
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -165,6 +166,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val homeComponentBuilder: HomeComponent.Builder
         val welcomeComponentBuilder: WelcomeComponent.Builder
         val transactionComponentBuilder: TransactionComponent.Builder
+        val spendingBreakdownComponentBuilder: SpendingBreakdownComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
@@ -370,6 +372,12 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                     }
                     .onAddTransactionHandler { navigator.navigateTo(Destinations.Transaction.Edit) }
                     .transactionFilterUseCase(transactionFilterUseCase)
+                    .onShowBreakdownHandler { filter ->
+                        navigator.navigateTo(
+                            Destinations.Transaction.Breakdown,
+                            Destinations.Transaction.Breakdown.FilterArg.withValue(filter),
+                        )
+                    }
                     .displayConfig(DisplayConfig(showFab = true)),
             )
             .logging(logger)
@@ -401,6 +409,23 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         ) {
             transactionFilterSheetComponentBuilder
                 .transactionFilterUseCase(transactionFilterUseCase)
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun spendingBreakdownNavigationEntry(
+            spendingBreakdownComponentBuilder: SpendingBreakdownComponent.Builder,
+            navigatorScope: NavigatorScope,
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.Transaction.Breakdown,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
+            spendingBreakdownComponentBuilder
+                .filter(arguments.getValue(Destinations.Transaction.Breakdown.FilterArg))
+                .onBackHandler { navigator.back() }
+                .logging(logger)
         }
 
         @Provides
