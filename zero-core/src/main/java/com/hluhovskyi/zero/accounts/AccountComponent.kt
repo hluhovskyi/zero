@@ -1,14 +1,14 @@
 package com.hluhovskyi.zero.accounts
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.analytics.MonthlyCashFlowUseCase
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -42,11 +42,11 @@ abstract class AccountComponent : AttachableViewComponent {
         val dispatchers: DispatcherProvider
         val iamgeLoader: ImageLoader
         val amountFormatter: AmountFormatter
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
 
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
+        val monthlyCashFlowUseCase: MonthlyCashFlowUseCase
 
         val accountRepository: AccountRepository
         val transactionRepository: TransactionRepository
@@ -103,8 +103,8 @@ abstract class AccountComponent : AttachableViewComponent {
             colorRepository: ColorRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            monthlyCashFlowUseCase: MonthlyCashFlowUseCase,
+            zonedClock: ZonedClock,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
@@ -113,8 +113,8 @@ abstract class AccountComponent : AttachableViewComponent {
             colorRepository = colorRepository,
             currencyConvertUseCase = currencyConvertUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            monthlyCashFlowUseCase = monthlyCashFlowUseCase,
+            zonedClock = zonedClock,
         )
 
         @Provides

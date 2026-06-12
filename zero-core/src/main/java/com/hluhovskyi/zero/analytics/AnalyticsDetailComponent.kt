@@ -7,10 +7,7 @@ import com.hluhovskyi.zero.common.Buildable
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
-import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable
@@ -41,8 +38,7 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
 
     interface Dependencies {
         val spendingBreakdownUseCase: SpendingBreakdownUseCase
-        val transactionRepository: TransactionRepository
-        val currencyConvertUseCase: CurrencyConvertUseCase
+        val monthlyCashFlowUseCase: MonthlyCashFlowUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val amountFormatter: AmountFormatter
         val imageLoader: ImageLoader
@@ -74,12 +70,10 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
         @Provides
         @AnalyticsDetailScope
         fun analyticsDetailUseCase(
-            transactionRepository: TransactionRepository,
-            currencyConvertUseCase: CurrencyConvertUseCase,
+            monthlyCashFlowUseCase: MonthlyCashFlowUseCase,
             spendingBreakdownUseCase: SpendingBreakdownUseCase,
         ): AnalyticsDetailUseCase = DefaultAnalyticsDetailUseCase(
-            transactionRepository = transactionRepository,
-            currencyConvertUseCase = currencyConvertUseCase,
+            monthlyCashFlowUseCase = monthlyCashFlowUseCase,
             spendingBreakdownUseCase = spendingBreakdownUseCase,
         )
 

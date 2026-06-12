@@ -1,14 +1,14 @@
 package com.hluhovskyi.zero.accounts
 
+import com.hluhovskyi.zero.analytics.MonthlyCashFlowUseCase
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.DateRange
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.coroutines.associateById
 import com.hluhovskyi.zero.common.coroutines.onEmptyReturnEmptyList
-import com.hluhovskyi.zero.common.time.Clock
-import com.hluhovskyi.zero.common.time.ZoneProvider
-import com.hluhovskyi.zero.common.time.localDateTime
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -17,6 +17,9 @@ import com.hluhovskyi.zero.transactions.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEmpty
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 
 internal class DefaultAccountUseCase(
     accountRepository: AccountRepository,
@@ -26,8 +29,8 @@ internal class DefaultAccountUseCase(
     private val colorRepository: ColorRepository,
     currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val currencyConvertUseCase: CurrencyConvertUseCase,
-    private val clock: Clock,
-    private val zoneProvider: ZoneProvider,
+    private val monthlyCashFlowUseCase: MonthlyCashFlowUseCase,
+    private val zonedClock: ZonedClock,
 ) : AccountUseCase {
 
     override val state: Flow<AccountUseCase.State> = combine(
@@ -40,9 +43,8 @@ internal class DefaultAccountUseCase(
         iconRepository.query(IconRepository.Criteria.All())
             .onEmptyReturnEmptyList()
             .associateById(),
-        transactionRepository.query(TransactionRepository.Criteria.All())
-            .onEmpty { emit(emptyList()) },
-    ) { accounts, accountIdToBalance, idToCurrency, idToIcon, allTransactions ->
+        monthlyCashFlowUseCase.query(netWorthTrendRange()),
+    ) { accounts, accountIdToBalance, idToCurrency, idToIcon, cashFlow ->
         val resultAccounts = accounts.map { account ->
             val colorScheme = (account.colorId as? Id.Known)
                 ?.let { colorRepository.schemeFor(it) }
@@ -76,17 +78,8 @@ internal class DefaultAccountUseCase(
             }
         }
 
-        val deltasByMonth: Map<Int, Amount> = allTransactions
-            .mapNotNull { transaction ->
-                transaction.netWorthContribution()?.let { (currencyId, signed) ->
-                    transaction.dateTime.monthIndex() to
-                        currencyConvertUseCase.convertToPrimary(signed, currencyId)
-                }
-            }
-            .groupBy({ it.first }, { it.second })
-            .mapValues { (_, deltas) -> deltas.fold(Amount.zero(), Amount::plus) }
-        val anchorMonthIndex = clock.localDateTime(zoneProvider.timeZone()).monthIndex()
-        val netWorthTrend = reconstructNetWorthTrend(balance, deltasByMonth, anchorMonthIndex)
+        // Net worth is the running cumulative of monthly cash flow, reconstructed from the live total.
+        val netWorthTrend = reconstructNetWorthTrend(balance, cashFlow.map { it.net })
 
         AccountUseCase.State(
             balance = balance,
@@ -97,6 +90,13 @@ internal class DefaultAccountUseCase(
             netWorthTrend = netWorthTrend,
             netWorthChange = netWorthChange(netWorthTrend),
         )
+    }
+
+    /** Trailing [NET_WORTH_TREND_MONTHS]-month window ending today, for the net-worth trend. */
+    private fun netWorthTrendRange(): DateRange {
+        val today = zonedClock.localDateTime().date
+        val start = LocalDate(today.year, today.monthNumber, 1).minus(NET_WORTH_TREND_MONTHS - 1, DateTimeUnit.MONTH)
+        return DateRange(start = start, end = today)
     }
 
     override fun perform(action: AccountUseCase.Action) {

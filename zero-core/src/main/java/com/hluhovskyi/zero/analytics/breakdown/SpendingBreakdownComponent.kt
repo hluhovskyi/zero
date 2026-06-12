@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.analytics.breakdown
 
 import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.analytics.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
@@ -11,7 +12,6 @@ import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.TransactionFilter
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import dagger.BindsInstance
 import dagger.Provides
 import java.io.Closeable

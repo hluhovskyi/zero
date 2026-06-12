@@ -12,6 +12,8 @@ import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsComponent
 import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.MonthlyCashFlowUseCase
+import com.hluhovskyi.zero.analytics.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -60,7 +62,6 @@ import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
@@ -212,6 +213,12 @@ abstract class ActivityComponent :
         fun spendingBreakdownUseCase(
             analyticsComponent: AnalyticsComponent,
         ): SpendingBreakdownUseCase = analyticsComponent.spendingBreakdownUseCase
+
+        @Provides
+        @ActivityScope
+        fun monthlyCashFlowUseCase(
+            analyticsComponent: AnalyticsComponent,
+        ): MonthlyCashFlowUseCase = analyticsComponent.monthlyCashFlowUseCase
 
         @Provides
         fun analyticsDetailComponentBuilder(

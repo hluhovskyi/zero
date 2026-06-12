@@ -1,4 +1,4 @@
-package com.hluhovskyi.zero.transactions.breakdown
+package com.hluhovskyi.zero.analytics
 
 import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
