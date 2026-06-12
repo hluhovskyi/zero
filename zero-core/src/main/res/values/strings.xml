@@ -445,6 +445,7 @@
     <string name="analytics_net_cash_flow">Net cash flow</string>
     <string name="analytics_cash_in">In</string>
     <string name="analytics_cash_out">Out</string>
+    <string name="analytics_view_cash_flow_trends">View cash-flow trends</string>
     <string name="analytics_by_category">By category</string>
     <string name="analytics_vs_prior">vs prior 6 mo</string>
     <string name="analytics_spent">Spent</string>

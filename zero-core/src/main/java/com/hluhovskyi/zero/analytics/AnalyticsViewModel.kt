@@ -14,6 +14,7 @@ interface AnalyticsViewModel : AttachableActionStateModel<AnalyticsViewModel.Act
 
     sealed interface Action {
         data object SeeAllCategories : Action
+        data object ViewCashFlowTrends : Action
         data class SelectCategory(val categoryId: Id.Known) : Action
     }
 

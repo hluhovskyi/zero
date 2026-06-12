@@ -543,6 +543,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): AttachableViewComponent = componentBuilder
             .onSeeAllCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+            .onCashFlowTrendsSelectedHandler { navigator.navigateTo(Destinations.Dev.CashFlow) }
             .onAnalyticsCategorySelectedHandler { categoryId ->
                 navigator.navigateTo(
                     Destinations.Category.Item.Detail,

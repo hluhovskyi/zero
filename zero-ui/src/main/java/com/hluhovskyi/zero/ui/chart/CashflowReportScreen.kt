@@ -85,7 +85,7 @@ private fun HeroCard(report: CashflowReport) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(ZeroTheme.colors.chartHeroSurface)
+            .background(ZeroTheme.colors.islandBackground)
             .padding(start = 20.dp, top = 18.dp, end = 20.dp, bottom = 16.dp),
     ) {
         Text(
@@ -93,19 +93,19 @@ private fun HeroCard(report: CashflowReport) {
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.chartHeroContentDim,
+                color = ZeroTheme.colors.islandContent.copy(alpha = 0.5f),
                 letterSpacing = 1.1.sp,
             ),
         )
         Text(
             text = fmtSign(report.net),
             modifier = Modifier.padding(top = 5.dp, bottom = 14.dp),
-            style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.chartHeroContent),
+            style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.islandContent),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HeroTile("IN", fmt0(report.totalIn), ZeroTheme.colors.chartCashIn, ZeroTheme.colors.chartCashIn.copy(alpha = 0.12f), Modifier.weight(1f))
-            HeroTile("OUT", fmt0(report.totalOut), ZeroTheme.colors.chartCashOut, ZeroTheme.colors.chartCashOut.copy(alpha = 0.12f), Modifier.weight(1f))
-            HeroTile("SAVED", "${report.savingsRate}%", ZeroTheme.colors.chartHeroContent, ZeroTheme.colors.chartHeroContent.copy(alpha = 0.06f), Modifier.weight(1f))
+            HeroTile("IN", fmt0(report.totalIn), ZeroTheme.colors.islandPositive, ZeroTheme.colors.islandPositive.copy(alpha = 0.12f), Modifier.weight(1f))
+            HeroTile("OUT", fmt0(report.totalOut), ZeroTheme.colors.islandNegative, ZeroTheme.colors.islandNegative.copy(alpha = 0.12f), Modifier.weight(1f))
+            HeroTile("SAVED", "${report.savingsRate}%", ZeroTheme.colors.islandContent, ZeroTheme.colors.islandContent.copy(alpha = 0.06f), Modifier.weight(1f))
         }
     }
 }
@@ -124,7 +124,7 @@ private fun HeroTile(label: String, value: String, valueColor: Color, background
             style = TextStyle(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = ZeroTheme.colors.chartHeroContentDim,
+                color = ZeroTheme.colors.islandContent.copy(alpha = 0.5f),
                 letterSpacing = 0.8.sp,
             ),
         )
@@ -134,8 +134,8 @@ private fun HeroTile(label: String, value: String, valueColor: Color, background
 
 @Composable
 private fun ByMonthCard(report: CashflowReport) {
-    val inColor = ZeroTheme.colors.chartCashIn
-    val outColor = ZeroTheme.colors.chartCashOut
+    val inColor = ZeroTheme.colors.islandPositive
+    val outColor = ZeroTheme.colors.islandNegative
     ReportCard {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
