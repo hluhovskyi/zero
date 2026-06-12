@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -215,5 +216,59 @@ class RoomTransactionRepositoryPaginationTest {
         assertTrue(tx is TransactionRepository.Transaction.Expense)
         assertEquals(Id.Known("t1"), tx.id)
         assertEquals(categoryId, (tx as TransactionRepository.Transaction.Expense).categoryId)
+    }
+
+    // --- Criteria.Filtered (universal) ---
+
+    @Test
+    fun `Filtered maps each dimension to selectFiltered args`() = runTest {
+        whenever(
+            transactionRoom.selectFiltered("user1", "2024-01-01", "2024-01-31", "INCOME", 1, listOf("c1"), 0, listOf("")),
+        ).thenReturn(flowOf(emptyList()))
+
+        repo.query(
+            TransactionRepository.Criteria.Filtered(
+                filter = TransactionFilterCriteria(
+                    from = LocalDate(2024, 1, 1),
+                    to = LocalDate(2024, 1, 31),
+                    categoryIds = setOf(Id.Known("c1")),
+                    accountIds = null,
+                ),
+                type = TransactionRepository.Type.Income,
+            ),
+        ).first()
+
+        verify(transactionRoom).selectFiltered(
+            userId = "user1",
+            from = "2024-01-01",
+            to = "2024-01-31",
+            type = "INCOME",
+            filterCategories = 1,
+            categoryIds = listOf("c1"),
+            filterAccounts = 0,
+            accountIds = listOf(""),
+        )
+    }
+
+    @Test
+    fun `Filtered with no dimensions passes nulls and bypass flags with sentinel lists`() = runTest {
+        whenever(
+            transactionRoom.selectFiltered("user1", null, null, null, 0, listOf(""), 0, listOf("")),
+        ).thenReturn(flowOf(emptyList()))
+
+        repo.query(
+            TransactionRepository.Criteria.Filtered(filter = TransactionFilterCriteria(), type = null),
+        ).first()
+
+        verify(transactionRoom).selectFiltered(
+            userId = "user1",
+            from = null,
+            to = null,
+            type = null,
+            filterCategories = 0,
+            categoryIds = listOf(""),
+            filterAccounts = 0,
+            accountIds = listOf(""),
+        )
     }
 }

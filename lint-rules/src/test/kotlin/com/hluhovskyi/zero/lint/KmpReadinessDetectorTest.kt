@@ -98,6 +98,23 @@ class KmpReadinessDetectorTest : LintDetectorTest() {
             .expectContains("KmpReadiness")
     }
 
+    fun `test flags zero-sync file importing java time`() {
+        lint()
+            .files(
+                kotlin(
+                    "../zero-sync/src/main/java/com/hluhovskyi/zero/sync/BadTime.kt",
+                    """
+                    package com.hluhovskyi.zero.sync
+                    import java.time.LocalDate
+                    class BadTime { val date: LocalDate? = null }
+                    """,
+                ).indented(),
+            )
+            .testModes(TestMode.DEFAULT)
+            .run()
+            .expectContains("KmpReadiness")
+    }
+
     fun `test allows KMP-ready file with kotlinx serialization`() {
         lint()
             .files(

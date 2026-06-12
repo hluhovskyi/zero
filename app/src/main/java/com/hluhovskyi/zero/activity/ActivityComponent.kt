@@ -10,6 +10,9 @@ import com.hluhovskyi.zero.accounts.detail.AccountDetailComponent
 import com.hluhovskyi.zero.accounts.edit.AccountEditComponent
 import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
+import com.hluhovskyi.zero.analytics.AnalyticsComponent
+import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
 import com.hluhovskyi.zero.budget.BudgetQueryUseCase
@@ -35,8 +38,10 @@ import com.hluhovskyi.zero.common.IncorrectStateDetector
 import com.hluhovskyi.zero.common.Logger
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
+import com.hluhovskyi.zero.common.merge
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -55,6 +60,7 @@ import com.hluhovskyi.zero.security.BiometricLockUseCase
 import com.hluhovskyi.zero.settings.SettingsComponent
 import com.hluhovskyi.zero.transactions.TransactionComponent
 import com.hluhovskyi.zero.transactions.TransactionRepository
+import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.transactions.edit.TransactionEditComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
@@ -90,9 +96,12 @@ abstract class ActivityComponent :
     CategoryPickerComponent.Dependencies,
     CurrencyPickerComponent.Dependencies,
     CategoryEditComponent.Dependencies,
+    AnalyticsComponent.Dependencies,
+    AnalyticsDetailComponent.Dependencies,
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
+    SpendingBreakdownComponent.Dependencies,
     TransactionEditComponent.Dependencies,
     TransactionPreviewComponent.Dependencies,
     IconPickerComponent.Dependencies,
@@ -113,6 +122,7 @@ abstract class ActivityComponent :
         val dispatcherProvider: DispatcherProvider
         val clock: Clock
         val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
         val imageLoader: ImageLoader
         val amountFormatter: AmountFormatter
         val dateFormatter: DateFormatter
@@ -192,6 +202,23 @@ abstract class ActivityComponent :
         ): CategoryComponent.Builder = CategoryComponent.builder(component)
 
         @Provides
+        @ActivityScope
+        fun analyticsComponent(
+            component: ActivityComponent,
+        ): AnalyticsComponent = AnalyticsComponent.create(component)
+
+        @Provides
+        @ActivityScope
+        fun spendingBreakdownUseCase(
+            analyticsComponent: AnalyticsComponent,
+        ): SpendingBreakdownUseCase = analyticsComponent.spendingBreakdownUseCase
+
+        @Provides
+        fun analyticsDetailComponentBuilder(
+            component: ActivityComponent,
+        ): AnalyticsDetailComponent.Builder = AnalyticsDetailComponent.builder(component)
+
+        @Provides
         fun budgetComponentBuilder(
             component: ActivityComponent,
         ): BudgetComponent.Builder = BudgetComponent.builder(component)
@@ -247,6 +274,11 @@ abstract class ActivityComponent :
         ): CategoryDetailComponent.Builder = CategoryDetailComponent.builder(component)
 
         @Provides
+        fun spendingBreakdownComponentBuilder(
+            component: ActivityComponent,
+        ): SpendingBreakdownComponent.Builder = SpendingBreakdownComponent.builder(component)
+
+        @Provides
         fun iconPickerComponentBuilder(
             component: ActivityComponent,
         ): IconPickerComponent.Builder = IconPickerComponent.builder(component)
@@ -272,9 +304,23 @@ abstract class ActivityComponent :
         fun attachActivityComponent(
             presetsComponent: PresetsComponent,
             biometricLockComponent: BiometricLockComponent,
-        ): Attachable = AttachActivityComponent(
-            presetsComponent = presetsComponent,
-            biometricLockComponent = biometricLockComponent,
+            attachJankStatsToActivity: AttachJankStatsToActivity,
+        ): Attachable = Attachable.merge(
+            AttachActivityComponent(
+                presetsComponent = presetsComponent,
+                biometricLockComponent = biometricLockComponent,
+            ),
+            attachJankStatsToActivity,
+        )
+
+        @Provides
+        @ActivityScope
+        fun attachJankStatsToActivity(
+            fragmentActivity: FragmentActivity,
+            logger: Logger,
+        ): AttachJankStatsToActivity = AttachJankStatsToActivity(
+            activity = fragmentActivity,
+            logger = logger,
         )
 
         @Provides

@@ -3,7 +3,6 @@ package com.hluhovskyi.zero.backup
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.datetime.LocalDateTime
 import java.io.Closeable
 
 interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewModel.Action, BackupDetailViewModel.State> {
@@ -25,7 +24,7 @@ interface BackupDetailViewModel : AttachableActionStateModel<BackupDetailViewMod
         val isSignedIn: Boolean = false,
         val accountLabel: String? = null,
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
-        val lastSuccessAt: LocalDateTime? = null,
+        val lastSuccessAgo: TimeAgo? = null,
         val lastError: BackupError? = null,
         val signInFeedback: BackupConnectionUseCase.SignInFeedback? = null,
         val disconnectFeedback: BackupConnectionUseCase.DisconnectFeedback? = null,

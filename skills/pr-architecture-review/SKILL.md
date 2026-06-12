@@ -34,7 +34,7 @@ The #1 mistake is reading only the diff. Structural smells (a duplicated decisio
 Work the catalog in [`docs/agents/architecture-review.md`](../../docs/agents/architecture-review.md):
 
 1. **Conformance** — does the change follow the house patterns (feature triad, ViewModel-no-derivation, attach-not-constructor, `@BindsInstance` lightweight-only, module boundaries, default-handlers, fix-at-producer)?
-2. **Smells** — scan for the signatures (sentinel/ignored param, boolean-as-type, duplicated decision, abstraction one impl fakes, wrong-layer ownership, special-case-as-branch, conflated responsibilities, downstream shim, threaded value).
+2. **Smells** — scan for the signatures (sentinel/ignored param, boolean-as-type, duplicated decision, abstraction one impl fakes, wrong-layer ownership, special-case-as-branch, conflated responsibilities, downstream shim, threaded value, sibling-package impl construction).
 3. **Collapse** — for each cluster of symptoms, name the one missing abstraction that removes them all. That collapse *is* the finding.
 
 ## Step 4 — Report

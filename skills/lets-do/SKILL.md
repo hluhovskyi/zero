@@ -114,10 +114,12 @@ Run all of the following. Fix any failure before opening the PR.
 **Batch the Gradle gates into a single fail-fast invocation** — one daemon spin-up, stops at the first failure. Don't run them as separate calls.
 
 ```bash
-./gradlew spotlessApply testDebugUnitTest lintDebug 2>&1 | tail -25
+./gradlew spotlessApply testDebugUnitTest lint 2>&1 | tail -25
 ```
 
-**`spotlessApply` is not optional** — CI's `test` job runs `spotlessKotlinCheck` (catches formatting *and* unused imports that `lintDebug` misses), so skipping it turns a clean local gate into a red CI on push. It auto-formats in place; `git add`/commit any files it changes before opening the PR.
+(`lint`, not `lintDebug` — the pure-JVM modules only register a `lint` task, and CI runs `lint`.)
+
+**`spotlessApply` is not optional** — CI's `test` job runs `spotlessKotlinCheck` (catches formatting *and* unused imports that `lint` misses), so skipping it turns a clean local gate into a red CI on push. It auto-formats in place; `git add`/commit any files it changes before opening the PR.
 
 **Acquire the emulator once**, at first UI need (Step 5), and hold it for all device work — don't acquire/release per check.
 

@@ -5,27 +5,28 @@ import com.hluhovskyi.zero.accounts.AccountConfigurationKey
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
-import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.BaseViewModel
 import com.hluhovskyi.zero.common.Currency
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Image
+import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.config.write
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
 import com.hluhovskyi.zero.icons.IconRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.Closeable
+import kotlinx.coroutines.withContext
 
 internal class DefaultAccountEditViewModel(
     private val accountId: Id = Id.Unknown,
@@ -37,24 +38,18 @@ internal class DefaultAccountEditViewModel(
     private val accountEditCurrencyUseCase: AccountEditCurrencyUseCase,
     private val onAccountSavedHandler: OnAccountSavedHandler,
     private val configurationRepository: ConfigurationRepository = ConfigurationRepository.Noop,
-    private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
-) : AccountEditViewModel {
+    private val dispatchers: DispatcherProvider,
+) : BaseViewModel(dispatchers),
+    AccountEditViewModel {
 
     private val mutableState = MutableStateFlow(CompositeState())
-    override val state: Flow<AccountEditViewModel.State> = mutableState
-        .map { state ->
-            AccountEditViewModel.State(
-                name = state.name,
-                balance = state.balance,
-                details = state.details,
-                category = state.category,
-                currencies = state.currencies,
-                selectedCurrency = state.selectedCurrency,
-                selectedIcon = state.icon,
-                colorScheme = state.colorScheme,
-                isEditMode = accountId is Id.Known,
-            )
-        }
+    override val state: StateFlow<AccountEditViewModel.State> = mutableState
+        .map { state -> state.toViewModelState() }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(1000),
+            initialValue = mutableState.value.toViewModelState(),
+        )
 
     override fun perform(action: AccountEditViewModel.Action) {
         when (action) {
@@ -88,7 +83,7 @@ internal class DefaultAccountEditViewModel(
                     ),
                 )
             }
-            is AccountEditViewModel.Action.Save -> coroutineScope.launch {
+            is AccountEditViewModel.Action.Save -> scope.launch(dispatchers.io()) {
                 val state = mutableState.value
                 val selectedCurrency = state.selectedCurrency ?: return@launch
                 val isNewAccount = accountId !is Id.Known
@@ -105,19 +100,17 @@ internal class DefaultAccountEditViewModel(
                     ),
                 )
                 if (isNewAccount) {
-                    launch {
-                        configurationRepository.write(AccountConfigurationKey.HasAddedAccount, true)
-                    }
+                    configurationRepository.write(AccountConfigurationKey.HasAddedAccount, true)
                 }
-                launch(context = Dispatchers.Main) {
+                withContext(context = dispatchers.main()) {
                     onAccountSavedHandler.onSaved()
                 }
             }
         }
     }
 
-    override fun attach(): Closeable = Closeables.of {
-        coroutineScope.launch {
+    override fun attachOnMain() {
+        scope.launch(dispatchers.io()) {
             if (accountId is Id.Known) {
                 val account = accountRepository.query(AccountRepository.Criteria.ById(accountId))
                     .firstOrNull()
@@ -160,7 +153,7 @@ internal class DefaultAccountEditViewModel(
                         }
                     }
             }
-            launch(context = Dispatchers.Main) {
+            launch(dispatchers.main()) {
                 accountEditIconUseCase.state.collect { iconState ->
                     when (iconState) {
                         is AccountEditIconUseCase.State.Picked -> mutableState.update { state ->
@@ -179,7 +172,7 @@ internal class DefaultAccountEditViewModel(
                     }
                 }
             }
-            launch(context = Dispatchers.Main) {
+            launch(dispatchers.main()) {
                 accountEditCurrencyUseCase.state
                     .filterIsInstance<AccountEditCurrencyUseCase.State.Picked>()
                     .collectLatest { currencyState ->
@@ -203,5 +196,17 @@ internal class DefaultAccountEditViewModel(
         val colorId: Id = Id.Unknown,
         val colorScheme: ColorScheme = ColorScheme.Grey,
         val targetCurrencyId: Id = Id.Unknown,
+    )
+
+    private fun CompositeState.toViewModelState() = AccountEditViewModel.State(
+        name = name,
+        balance = balance,
+        details = details,
+        category = category,
+        currencies = currencies,
+        selectedCurrency = selectedCurrency,
+        selectedIcon = icon,
+        colorScheme = colorScheme,
+        isEditMode = accountId is Id.Known,
     )
 }

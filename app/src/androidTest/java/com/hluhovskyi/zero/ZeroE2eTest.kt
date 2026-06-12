@@ -60,6 +60,22 @@ class ZeroE2eTest : BaseE2eTest() {
     }
 
     @Test
+    fun filterSummaryCardShowsCorrectAggregate() {
+        // Two USD expenses (42 + 99). Filtering to Expenses surfaces the summary card:
+        // no-income branch → Spent 141, Avg 70.5, Largest 99 over the complete filtered set.
+        seedExpenses()
+        onTransactions()
+            .openFilter()
+            .selectType("Expenses")
+            .apply()
+            .assertFilterSummaryCount("2 transactions")
+            .assertFilterSummaryStat("SPENT", "141")
+            .assertFilterSummaryStat("AVG", "70.5")
+            .assertFilterSummaryStat("LARGEST", "99")
+            .assertShowBreakdownVisible()
+    }
+
+    @Test
     fun pickingCurrencyInPickerUpdatesTransactionEditChip() {
         seedDefaultSetup()
         onTransactions()
@@ -142,5 +158,21 @@ class ZeroE2eTest : BaseE2eTest() {
             .confirm()
             .assertCategoryLeft("0.00")
             .assertCategoryLeft("200.00")
+    }
+
+    @Test
+    fun analyticsTabShowsCategoryBreakdownAndBacksFromCategories() {
+        // Two Food expenses (42 + 99) → the Analytics hub breaks them down by category,
+        // "See all categories" opens the existing Categories screen, and its back button returns.
+        seedExpenses()
+        onTransactions()
+            .assertHasExpense(amount = "42")
+            .openAnalytics()
+            .assertVisible()
+            .assertCategoryVisible("Food")
+            .openSeeAllCategories()
+            .assertVisible()
+            .goBack()
+            .assertVisible()
     }
 }

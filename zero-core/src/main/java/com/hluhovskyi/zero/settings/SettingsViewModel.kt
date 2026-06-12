@@ -2,9 +2,9 @@ package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.backup.BackupError
 import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.TimeAgo
 import com.hluhovskyi.zero.common.AttachableActionStateModel
 import com.hluhovskyi.zero.common.Uri
-import kotlinx.datetime.LocalDateTime
 
 interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Action, SettingsViewModel.State> {
 
@@ -39,15 +39,15 @@ interface SettingsViewModel : AttachableActionStateModel<SettingsViewModel.Actio
     )
 
     /**
-     * Straight passthrough of [BackupUseCase.State] plus the [isSignedIn] flag, projected so the
-     * row composable can pattern-match without re-querying the use case. The composable maps it
-     * to the row's secondary text — per `feedback_viewmodel_no_derivation` the ViewModel does no
-     * sort/check/mapping here.
+     * Passthrough of [BackupUseCase.State] plus the [isSignedIn] flag, projected so the row
+     * composable can pattern-match without re-querying the use case. [lastSuccessAgo] is the one
+     * derived field (time math belongs in the ViewModel); the composable only maps fields to the
+     * row's secondary text.
      */
     data class BackupSummary(
         val isSignedIn: Boolean = false,
         val phase: BackupUseCase.Phase = BackupUseCase.Phase.Idle,
-        val lastSuccessAt: LocalDateTime? = null,
+        val lastSuccessAgo: TimeAgo? = null,
         val lastError: BackupError? = null,
         val consecutiveFailures: Int = 0,
     )

@@ -29,6 +29,16 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
         return TransactionEditRobot(composeRule)
     }
 
+    fun openAnalytics(): AnalyticsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText("Analytics").fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText("Analytics").performClick()
+        }
+        return AnalyticsRobot(composeRule)
+    }
+
     fun assertHasExpense(amount: String): TransactionsRobot {
         composeRule.apply {
             waitUntil(timeoutMillis = 5_000) {
@@ -136,6 +146,29 @@ class TransactionsRobot(private val composeRule: ComposeTestRule) {
             }
             onAllNodesWithText(amount, substring = true).assertCountEquals(0)
         }
+        return this
+    }
+
+    fun assertFilterSummaryCount(label: String): TransactionsRobot {
+        composeRule.apply {
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNodeWithText(label).assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertFilterSummaryStat(label: String, value: String): TransactionsRobot {
+        composeRule.apply {
+            onNodeWithText(label).assertIsDisplayed()
+            onAllNodesWithText(value, substring = true)[0].assertIsDisplayed()
+        }
+        return this
+    }
+
+    fun assertShowBreakdownVisible(): TransactionsRobot {
+        composeRule.onNodeWithText("See breakdown for this filter").assertIsDisplayed()
         return this
     }
 }

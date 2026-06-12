@@ -13,4 +13,19 @@ fun interface Attachable {
     object Noop : Attachable {
         override fun attach(): Closeable = Closeables.empty()
     }
+
+    companion object
+}
+
+fun Attachable.Companion.merge(
+    vararg attachable: Attachable,
+): Attachable = MergeAttachable(attachable.toList())
+
+private class MergeAttachable(
+    private val attachables: Collection<Attachable>,
+) : Attachable {
+
+    override fun attach(): Closeable = Closeables.merge(
+        attachables.map { it.attach() },
+    )
 }

@@ -5,10 +5,12 @@ import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
 import com.hluhovskyi.zero.common.Buildable
+import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.config.ConfigurationRepository
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
@@ -44,8 +46,7 @@ abstract class CategoryComponent : AttachableViewComponent {
         val transactionRepository: TransactionRepository
         val currencyConvertUseCase: CurrencyConvertUseCase
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
-        val clock: Clock
-        val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
         val configurationRepository: ConfigurationRepository
         val dispatchers: DispatcherProvider
     }
@@ -73,19 +74,18 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun spendingUseCase(
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
             transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         fun builder(dependencies: Dependencies): Builder = DaggerCategoryComponent.builder()
             .dependencies(dependencies)
             .onCategorySelectedHandler(OnCategorySelectedHandler.Noop)
             .onAddCategoryHandler(OnAddCategoryHandler.Noop)
+            .onBackHandler(OnBackHandler.Noop)
     }
 
     @dagger.Component.Builder
@@ -98,6 +98,9 @@ abstract class CategoryComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onAddCategoryHandler(handler: OnAddCategoryHandler): Builder
+
+        @BindsInstance
+        fun onBackHandler(handler: OnBackHandler): Builder
     }
 
     @dagger.Module
@@ -108,13 +111,11 @@ abstract class CategoryComponent : AttachableViewComponent {
         fun categorySpendingUseCase(
             transactionRepository: TransactionRepository,
             currencyConvertUseCase: CurrencyConvertUseCase,
-            clock: Clock,
-            zoneProvider: ZoneProvider,
+            zonedClock: ZonedClock,
         ): CategorySpendingUseCase = DefaultCategorySpendingUseCase(
             transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
-            clock = clock,
-            zoneProvider = zoneProvider,
+            zonedClock = zonedClock,
         )
 
         @Provides
@@ -142,11 +143,13 @@ abstract class CategoryComponent : AttachableViewComponent {
             imageLoader: ImageLoader,
             amountFormatter: AmountFormatter,
             onAddCategoryHandler: OnAddCategoryHandler,
+            onBackHandler: OnBackHandler,
         ): ViewProvider = CategoryViewProvider(
             viewModel = viewModel,
             imageLoader = imageLoader,
             amountFormatter = amountFormatter,
             onAddCategory = onAddCategoryHandler,
+            onBack = onBackHandler,
         )
     }
 }

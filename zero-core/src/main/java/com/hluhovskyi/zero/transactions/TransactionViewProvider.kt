@@ -57,6 +57,7 @@ import com.hluhovskyi.zero.View
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.DateFormatter
 import com.hluhovskyi.zero.common.ViewProvider
+import com.hluhovskyi.zero.common.rememberPerformanceHolder
 import com.hluhovskyi.zero.transaction.TransactionExpenseView
 import com.hluhovskyi.zero.transaction.TransactionIncomeView
 import com.hluhovskyi.zero.transaction.TransactionTransferView
@@ -64,7 +65,10 @@ import com.hluhovskyi.zero.ui.SearchBar
 import com.hluhovskyi.zero.ui.ZeroFab
 import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 
 // Shared height for the search/filter header and the selection bar so the
 // list below them doesn't jump vertically when selection mode toggles.
@@ -77,6 +81,7 @@ internal class TransactionViewProvider(
     private val dateFormatter: DateFormatter,
     private val displayConfig: DisplayConfig = DisplayConfig(),
     private val onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
+    private val onShowBreakdown: OnShowBreakdownHandler = OnShowBreakdownHandler.Noop,
 ) : ViewProvider {
 
     @Composable
@@ -88,9 +93,12 @@ internal class TransactionViewProvider(
             dateFormatter = dateFormatter,
             displayConfig = displayConfig,
             onAddTransaction = onAddTransaction,
+            onShowBreakdown = onShowBreakdown,
         )
     }
 }
+
+private const val TAG = "TransactionView"
 
 @Composable
 private fun TransactionView(
@@ -100,12 +108,40 @@ private fun TransactionView(
     dateFormatter: DateFormatter,
     displayConfig: DisplayConfig = DisplayConfig(),
     onAddTransaction: OnAddTransactionHandler = OnAddTransactionHandler.Noop,
+    onShowBreakdown: OnShowBreakdownHandler = OnShowBreakdownHandler.Noop,
 ) {
     val state by viewModel.state.collectAsState()
     val lazyListState = rememberLazyListState()
 
+    val performanceHolder = rememberPerformanceHolder()
+    LaunchedEffect(performanceHolder, lazyListState) {
+        snapshotFlow { lazyListState.isScrollInProgress }
+            .collect { scrolling ->
+                if (scrolling) {
+                    performanceHolder.state?.putState(TAG, "scroll")
+                } else {
+                    performanceHolder.state?.removeState(TAG)
+                }
+            }
+    }
+
     BackHandler(enabled = state.inSelectionMode) {
         viewModel.perform(TransactionViewModel.Action.ExitSelection)
+    }
+
+    // When a search/filter narrows the list, reveal the summary card: wait until it
+    // actually renders (search results are debounced, so it appears after the query
+    // change) and only then scroll to the top — otherwise the card is inserted above
+    // the prior scroll anchor and stays off-screen.
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { state.searchQuery to state.activeFilter }
+            .distinctUntilChanged()
+            .collectLatest { (query, filter) ->
+                if (query.isNotBlank() || filter.isActive) {
+                    snapshotFlow { state.filterSummary != null }.first { it }
+                    lazyListState.scrollToItem(0)
+                }
+            }
     }
 
     val shouldLoadMore by remember {
@@ -218,6 +254,16 @@ private fun TransactionView(
                     state = lazyListState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
                 ) {
+                    state.filterSummary?.let { summary ->
+                        item(key = "filter-summary", contentType = "filter-summary") {
+                            FilterSummaryCard(
+                                summary = summary,
+                                amountFormatter = amountFormatter,
+                                dateFormatter = dateFormatter,
+                                onShowBreakdown = { onShowBreakdown.onShowBreakdown(state.activeFilter) },
+                            )
+                        }
+                    }
                     items(
                         items = state.transactions,
                         contentType = { item ->

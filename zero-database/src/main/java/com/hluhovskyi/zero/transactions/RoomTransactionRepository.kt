@@ -149,6 +149,19 @@ internal class RoomTransactionRepository(
                     )
                     .map { entities -> entities.mapNotNull { it.toRepository() } }
 
+                is TransactionRepository.Criteria.Filtered -> transactionRoom()
+                    .selectFiltered(
+                        userId = userId.value,
+                        from = criteria.filter.from?.toString(),
+                        to = criteria.filter.to?.toString(),
+                        type = criteria.type?.toEntityName(),
+                        filterCategories = if (criteria.filter.categoryIds == null) 0 else 1,
+                        categoryIds = criteria.filter.categoryIds.orSentinel(),
+                        filterAccounts = if (criteria.filter.accountIds == null) 0 else 1,
+                        accountIds = criteria.filter.accountIds.orSentinel(),
+                    )
+                    .map { entities -> entities.mapNotNull { it.toRepository() } }
+
                 is TransactionRepository.Criteria.AccountBalanceDeltas -> transactionRoom()
                     .selectAccountBalanceDeltas(userId.value)
                     .map { rows ->
@@ -157,6 +170,16 @@ internal class RoomTransactionRepository(
             }
         }
         .uncheckedCast()
+
+    private fun TransactionRepository.Type.toEntityName(): String = when (this) {
+        TransactionRepository.Type.Expense -> TransactionEntity.Type.EXPENSE
+        TransactionRepository.Type.Income -> TransactionEntity.Type.INCOME
+        TransactionRepository.Type.Transfer -> TransactionEntity.Type.TRANSFER
+    }.name
+
+    // Never-empty so the gated `IN (...)` stays valid SQL; "" matches no real id, and each set's
+    // flag is 0 (bypassed) whenever it is null.
+    private fun Set<Id.Known>?.orSentinel(): List<String> = this?.map { it.value }?.ifEmpty { NONE_SENTINEL } ?: NONE_SENTINEL
 
     // trigger grows the window by PAGE_SIZE (scan seeds the first page); flatMapLatest keeps one
     // live selectWindow at the current size, so Room surfaces inserts/edits/deletes without re-fetch.
@@ -311,5 +334,6 @@ internal class RoomTransactionRepository(
 
     private companion object {
         const val PAGE_SIZE = 100
+        val NONE_SENTINEL = listOf("")
     }
 }

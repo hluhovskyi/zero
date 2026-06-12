@@ -2,13 +2,13 @@ package com.hluhovskyi.zero.sync
 
 import com.hluhovskyi.zero.common.Id
 import com.hluhovskyi.zero.common.Uri
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.resource.ResourceResolver
 import com.hluhovskyi.zero.resource.ResourceStatus
 import com.hluhovskyi.zero.resource.UriRequest
 import com.hluhovskyi.zero.resource.UriResult
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -22,12 +22,13 @@ internal class DefaultSyncEngine(
     private val budgetPipeline: SyncPipeline<SyncBudget>,
     private val resourceResolver: ResourceResolver,
     private val serializer: SyncSerializer,
+    private val clock: Clock,
 ) : SyncEngine {
 
     override suspend fun export(userId: Id.Known): SyncSnapshot = SyncSnapshot(
         version = SNAPSHOT_VERSION,
         userId = userId,
-        exportedAt = Clock.System.now().toLocalDateTime(TimeZone.UTC),
+        exportedAt = clock.now().toLocalDateTime(TimeZone.UTC),
         categories = categoryPipeline.source.exportAll(userId),
         accounts = accountPipeline.source.exportAll(userId),
         transactions = transactionPipeline.source.exportAll(userId),

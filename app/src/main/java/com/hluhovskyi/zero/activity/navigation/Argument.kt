@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.activity.navigation
 
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.transactions.TransactionFilter
 import kotlin.reflect.KClass
 
 interface Argument<Type : Any> {
@@ -56,3 +57,12 @@ private data class IdKnownArgument(
     override val fallback: Id.Known? = null,
     override val argumentClass: KClass<Id.Known> = Id.Known::class,
 ) : Argument<Id.Known>
+
+internal fun filterValueOf(key: String): Argument<TransactionFilter> = FilterArgument(key)
+
+private data class FilterArgument(
+    override val key: String,
+    override val optional: Boolean = false,
+    override val fallback: TransactionFilter? = null,
+    override val argumentClass: KClass<TransactionFilter> = TransactionFilter::class,
+) : Argument<TransactionFilter>

@@ -44,6 +44,12 @@ interface TransactionRepository {
         ) : Criteria<List<Transaction>>
 
         data class ForAccounts(val accountIds: Set<Id.Known>) : Criteria<List<Transaction>>
+
+        /** Universal filter: the domain [filter] narrowed to a single [type] (null = any), AND-combined in SQL. */
+        data class Filtered(
+            val filter: TransactionFilterCriteria,
+            val type: Type?,
+        ) : Criteria<List<Transaction>>
         data class ForAccountBetween(
             val accountId: Id.Known,
             val from: LocalDate,
@@ -52,6 +58,8 @@ interface TransactionRepository {
 
         class AccountBalanceDeltas : Criteria<Map<Id.Known, Amount>>
     }
+
+    enum class Type { Expense, Income, Transfer }
 
     sealed interface Trigger {
 

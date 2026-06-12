@@ -1,6 +1,7 @@
 package com.hluhovskyi.zero.activity.navigation
 
 import com.hluhovskyi.zero.common.Id
+import com.hluhovskyi.zero.transactions.TransactionFilter
 
 internal object Destinations {
 
@@ -17,6 +18,9 @@ internal object Destinations {
 
     sealed interface Transaction : Destination {
         object Filter : Transaction, Destination by destinationOf("transactions/filter")
+        object Breakdown : Transaction, Destination by destinationOf("transactions/breakdown/{filter}", FilterArg) {
+            object FilterArg : Argument<TransactionFilter> by filterValueOf("filter")
+        }
         object Edit : Transaction, Destination by destinationOf("transactions/edit", SelectedCategoryId, SelectedAccountId) {
             object SelectedCategoryId : Argument<Id> by idOptionalValueOf("selectedCategoryId")
             object SelectedAccountId : Argument<Id> by idOptionalValueOf("selectedAccountId")
@@ -72,6 +76,8 @@ internal object Destinations {
     }
 
     object Home : Destination by destinationOf("home")
+
+    object Analytics : Destination by destinationOf("analytics")
 
     sealed interface Budget : Destination {
         object All : Budget, Destination by destinationOf("budget")

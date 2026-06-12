@@ -24,6 +24,10 @@ Plans are saved to `docs/superpowers/plans/` and serve as the contract between s
 
 Pass `--raw` to `dump-ui.sh` when you need full XML attribute detail.
 
+## Build Verification — Compile Scope
+
+**A main-source compile is not a green build** — `compileDebugKotlin`/`assembleDebug` skip `src/test`, so after any change to a public or internal signature (constructor, function params) run `testDebugUnitTest` before claiming it compiles; otherwise a test that constructs the changed type breaks only in CI.
+
 ## Complexity Circuit Breaker
 
 **The "Hacky Code" Circuit Breaker:** If you iterate on a fix more than twice and your solution requires dropping down to low-level framework APIs (e.g., `PointerEventPass.Initial`, Reflection, or Global Registries) for a common UI or logic problem, you must STOP. Revert your changes and present the fundamental constraint to the user before proceeding. Do not brute-force the framework.

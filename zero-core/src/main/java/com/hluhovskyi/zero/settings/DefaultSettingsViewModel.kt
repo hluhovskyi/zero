@@ -2,7 +2,9 @@ package com.hluhovskyi.zero.settings
 
 import com.hluhovskyi.zero.auth.OAuthTokenProvider
 import com.hluhovskyi.zero.backup.BackupUseCase
+import com.hluhovskyi.zero.backup.TimeAgo
 import com.hluhovskyi.zero.common.Closeables
+import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.export.ExportUseCase
 import com.hluhovskyi.zero.security.BiometricAuthenticator
@@ -30,6 +32,7 @@ internal class DefaultSettingsViewModel(
     private val biometricAuthenticator: BiometricAuthenticator,
     private val oauthTokenProvider: OAuthTokenProvider,
     private val backupUseCase: BackupUseCase,
+    private val clock: Clock,
     private val coroutineScope: CoroutineScope = CoroutineScope(context = Dispatchers.IO),
 ) : SettingsViewModel {
 
@@ -115,7 +118,7 @@ internal class DefaultSettingsViewModel(
                     SettingsViewModel.BackupSummary(
                         isSignedIn = isSignedIn,
                         phase = backup.phase,
-                        lastSuccessAt = backup.lastSuccessAt,
+                        lastSuccessAgo = backup.lastSuccessAt?.let { TimeAgo.of(it, clock) },
                         lastError = backup.lastError,
                         consecutiveFailures = backup.consecutiveFailures,
                     )

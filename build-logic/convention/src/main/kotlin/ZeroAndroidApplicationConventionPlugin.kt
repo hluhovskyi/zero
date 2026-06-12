@@ -23,8 +23,9 @@ class ZeroAndroidApplicationConventionPlugin : Plugin<Project> {
             stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("stable_config.conf"))
             if (isPerfBuild) {
                 includeSourceInformation.set(true)
+                includeTraceMarkers.set(true)
             }
-            if (providers.gradleProperty("composeReports").isPresent) {
+            if (isPerfBuild || providers.gradleProperty("composeReports").isPresent) {
                 reportsDestination.set(layout.buildDirectory.dir("compose_compiler"))
                 metricsDestination.set(layout.buildDirectory.dir("compose_compiler"))
             }

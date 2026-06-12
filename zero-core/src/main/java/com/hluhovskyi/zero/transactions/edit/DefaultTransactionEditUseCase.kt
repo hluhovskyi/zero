@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.transactions.edit
 
+import androidx.tracing.trace
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.common.Amount
@@ -114,8 +115,10 @@ internal class DefaultTransactionEditUseCase(
             mutableDraft.update { it.copy(isModified = true) }
         }
         when (action) {
-            is TransactionEditUseCase.Action.ChangeAmount -> mutableDraft.update { draft ->
-                draft.copy(amount = action.amount, targetAmount = draft.receivedFor(action.amount, draft.rate))
+            is TransactionEditUseCase.Action.ChangeAmount -> trace("$TAG:changeAmount") {
+                mutableDraft.update { draft ->
+                    draft.copy(amount = action.amount, targetAmount = draft.receivedFor(action.amount, draft.rate))
+                }
             }
 
             is TransactionEditUseCase.Action.ChangeRate -> mutableDraft.update { draft ->

@@ -35,7 +35,7 @@ Pass `--no-questions` to skip brainstorming and proceed straight to execution.
 2. **Follow code style conventions; run `./gradlew spotlessApply` before pushing** — formatting is spotless-enforced and CI's `spotlessCheck` gates the merge, but no local hook runs it. See [Code Style](docs/agents/code-style.md).
 3. **Strict Development Lifecycle**:
     - **Strict Handshake**: No execution or verification (build/test) until the final plan in `docs/superpowers/plans/` is explicitly approved (e.g. "Go ahead").
-    - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lintDebug`) and verify UI behavior (via `android-ui-inspector` or `./scripts/ui/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
+    - **Plan Verification Steps**: When writing an implementation plan, the verification phase MUST explicitly include steps to run linters (e.g., `./gradlew lint` — not `lintDebug`, which skips the pure-JVM modules) and verify UI behavior (via `android-ui-inspector` or `./scripts/ui/dump-ui.sh`). Never write a plan that relies solely on compilation (`assembleDebug`) as its success metric.
     - **Implicit Denial**: Technical feedback is NOT approval. Re-propose and wait for a fresh handshake after any plan update.
     - **Minimalism**: Change ONLY what is in the approved plan. No unrelated refactors, visibility changes, or "cleanup".
     - **Zero Deviation**: Approved plans are binding. Stop and re-propose if implementation requires any architectural or logic change.
@@ -59,8 +59,9 @@ zero-image-loading   → ImageLoader interface + Coil impl
 zero-crash           → CrashComponent (Sentry crash reporting, attach-only)
 zero-sync            → JSON export/import and LWW delta sync engine (pure Kotlin JVM, no Android)
 zero-backup          → Backup orchestration + Drive REST client (pure Kotlin JVM, no Android)
-zero-auth            → Google OAuth (Credential Manager + token exchange)
+zero-auth            → Google OAuth (Identity Authorization API, short-lived access tokens)
 zero-remote          → Server-side HTTP calls
+zero-test-bridge     → e2e test seam (ships in the APK; no test-framework deps)
 ```
 
 **Dependency flow:** `app → zero-core → zero-api`, `app → zero-database → zero-api`, `app → zero-sync → zero-api`, `app → zero-remote → zero-api`, `zero-core → zero-ui` (dumb views, no domain types), `zero-core → zero-image-loading`.

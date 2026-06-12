@@ -23,7 +23,7 @@ internal interface BottomBarViewModel : AttachableActionStateModel<BottomBarView
         val HomeId = Id.Known("home")
         val AccountsId = Id.Known("accounts")
         val BudgetId = Id.Known("budget")
-        val CategoriesId = Id.Known("categories")
+        val AnalyticsId = Id.Known("analytics")
         val SettingsId = Id.Known("settings")
     }
 }
