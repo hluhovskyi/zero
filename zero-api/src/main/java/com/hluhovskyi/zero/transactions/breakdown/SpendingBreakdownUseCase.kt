@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
 
-/** Ranks expenses matched by [filter] by category (primary currency); [trendSince] splits each row recent/prior. */
+/** Ranks [filter]-scoped expenses (primary currency) by category and by account; [trendSince] splits categories recent/prior. */
 interface SpendingBreakdownUseCase {
 
     fun query(
@@ -22,6 +22,8 @@ interface SpendingBreakdownUseCase {
         val transactionCount: Int,
         val categoryCount: Int,
         val categories: List<CategorySpend>,
+        // Defaulted: category-only consumers (the hub) need not set it.
+        val accounts: List<AccountSpend> = emptyList(),
     )
 
     data class CategorySpend(
@@ -33,6 +35,15 @@ interface SpendingBreakdownUseCase {
         val transactionCount: Int,
         val recentAmount: Amount,
         val priorAmount: Amount,
+    )
+
+    data class AccountSpend(
+        val accountId: Id.Known,
+        val name: String,
+        val icon: Image,
+        val colorScheme: ColorScheme,
+        val amount: Amount,
+        val transactionCount: Int,
     )
 
     object Noop : SpendingBreakdownUseCase {

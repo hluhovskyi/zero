@@ -274,6 +274,20 @@
     <string name="filter_summary_label_received">Received</string>
     <string name="filter_summary_placeholder">—</string>
     <string name="filter_summary_show_breakdown">See breakdown for this filter</string>
+
+    <!-- Scoped spending breakdown report -->
+    <string name="breakdown_title">Spending</string>
+    <string name="breakdown_filtered_by">Filtered by</string>
+    <string name="breakdown_spent">spent</string>
+    <string name="breakdown_donut_spent">Spent</string>
+    <string name="breakdown_dimension_category">By category</string>
+    <string name="breakdown_dimension_account">By account</string>
+    <string name="breakdown_share_percent">%1$d%%</string>
+    <plurals name="breakdown_row_txns">
+        <item quantity="one">%1$d txn</item>
+        <item quantity="other">%1$d txns</item>
+    </plurals>
+
     <string name="transaction_edit_title">Edit Transaction</string>
     <string name="transaction_new_title">New Transaction</string>
     <string name="transaction_duplicate_from_title">Duplicate from</string>

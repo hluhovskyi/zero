@@ -5,7 +5,7 @@ Zero uses a custom layer on top of Jetpack Navigation with URL-based routes.
 ## Key Types
 
 - `Destination` — a screen/route definition (`destinationOf("path", ...args)`)
-- `Argument<T>` — typed nav argument; supports `Id`, `String`
+- `Argument<T>` — typed nav argument; `Id`/`String` out of the box, plus any type with a registered `TypedNavigationArgumentSerializer` (see below)
 - `ArgumentValue<T>` — argument + its value; created via `argument.withValue(value)`
 - `Navigator` — performs navigation actions, observes back stack
 - `NavigatorScope.buildable(destination) { ... }` — registers a destination whose component is built each time it's navigated to; the lambda receives `this: NavigatorScope.Context` with `navigator` and `arguments`
@@ -26,6 +26,8 @@ Zero uses a custom layer on top of Jetpack Navigation with URL-based routes.
 ## Passing Data Between Screens
 
 Data flows as navigation arguments — not stored state on use cases or view models. When a picker screen needs context (e.g., a color ID to preview icons), encode it as an `Argument<Id>` on the destination and resolve it at the destination using a repository.
+
+**A richer value object can be a real nav argument too — don't reach for a shared mutable carrier.** Add a `TypedNavigationArgumentSerializer<T>`, register it in `CompositeNavigationArgumentSerializer`, define `Argument<T>` via a `*ValueOf` helper, and add the `T::class` branch to `BundleArguments.get()` (send side is already generic via `DefaultNavigationRouteResolver`). The serializer must emit a route-safe string (hex/Base64 the payload); keep it pure-JVM so it unit-tests without Robolectric. `TransactionFilterNavigationArgumentSerializer` (the Spending breakdown's inherited filter — a set-of-ids + enums object) is the reference.
 
 ## Returning a Result from a Screen
 

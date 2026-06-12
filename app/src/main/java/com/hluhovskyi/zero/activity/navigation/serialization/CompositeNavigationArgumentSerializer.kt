@@ -8,6 +8,7 @@ internal class CompositeNavigationArgumentSerializer(
         StringNavigationArgumentSerializer,
         IdNavigationArgumentSerializer,
         IdKnownNavigationArgumentSerializer,
+        TransactionFilterNavigationArgumentSerializer,
     ),
 ) : NavigationArgumentSerializer {
 

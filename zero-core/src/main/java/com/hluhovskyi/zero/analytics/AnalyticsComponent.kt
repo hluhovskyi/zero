@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.analytics
 
+import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
@@ -29,6 +30,7 @@ interface AnalyticsComponent {
     interface Dependencies {
         val transactionRepository: TransactionRepository
         val categoriesQueryUseCase: CategoriesQueryUseCase
+        val accountsQueryUseCase: AccountsQueryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
     }
 
@@ -46,10 +48,12 @@ interface AnalyticsComponent {
         fun spendingBreakdownUseCase(
             transactionRepository: TransactionRepository,
             categoriesQueryUseCase: CategoriesQueryUseCase,
+            accountsQueryUseCase: AccountsQueryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
         ): SpendingBreakdownUseCase = DefaultSpendingBreakdownUseCase(
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
+            accountsQueryUseCase = accountsQueryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
         )
     }
