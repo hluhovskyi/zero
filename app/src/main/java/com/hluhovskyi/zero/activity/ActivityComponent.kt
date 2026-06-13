@@ -12,6 +12,7 @@ import com.hluhovskyi.zero.activity.screens.MainActivityScreenComponent
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsComponent
 import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.CashFlowReportComponent
 import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.budget.BudgetComponent
@@ -98,6 +99,7 @@ abstract class ActivityComponent :
     CategoryEditComponent.Dependencies,
     AnalyticsComponent.Dependencies,
     AnalyticsDetailComponent.Dependencies,
+    CashFlowReportComponent.Dependencies,
     HomeComponent.Dependencies,
     WelcomeComponent.Dependencies,
     TransactionComponent.Dependencies,
@@ -217,6 +219,11 @@ abstract class ActivityComponent :
         fun analyticsDetailComponentBuilder(
             component: ActivityComponent,
         ): AnalyticsDetailComponent.Builder = AnalyticsDetailComponent.builder(component)
+
+        @Provides
+        fun cashFlowReportComponentBuilder(
+            component: ActivityComponent,
+        ): CashFlowReportComponent.Builder = CashFlowReportComponent.builder(component)
 
         @Provides
         fun budgetComponentBuilder(

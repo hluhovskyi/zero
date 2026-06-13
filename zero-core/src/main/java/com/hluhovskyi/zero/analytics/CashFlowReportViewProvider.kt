@@ -1,8 +1,4 @@
-// Debug-only cash-flow report (Settings → Developer → Cash flow), rebuilt from the Analytics
-// Exploration design. Dev-facing labels stay inline rather than in the localized string table.
-@file:Suppress("HardcodedComposableString")
-
-package com.hluhovskyi.zero.ui.chart
+package com.hluhovskyi.zero.analytics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,55 +8,74 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hluhovskyi.zero.ImageLoader
+import com.hluhovskyi.zero.R
+import com.hluhovskyi.zero.View
+import com.hluhovskyi.zero.common.Amount
+import com.hluhovskyi.zero.common.AmountFormatter
+import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.ui.CategoryIconView
 import com.hluhovskyi.zero.ui.DetailTopBar
+import com.hluhovskyi.zero.ui.chart.BarChart
+import com.hluhovskyi.zero.ui.chart.BarChartData
+import com.hluhovskyi.zero.ui.chart.BarGroup
+import com.hluhovskyi.zero.ui.chart.BarValue
+import com.hluhovskyi.zero.ui.chart.LineChart
+import com.hluhovskyi.zero.ui.chart.LineChartData
+import com.hluhovskyi.zero.ui.common.toUi
 import com.hluhovskyi.zero.ui.theme.ZeroTheme
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
-@Composable
-fun CashflowReportScreen(onBack: () -> Unit) {
-    val report = remember { cashflowReport() }
-    Column(
-        modifier = Modifier.fillMaxSize().background(ZeroTheme.colors.surface),
-    ) {
-        DetailTopBar(title = "Cash flow", onBack = onBack)
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            PeriodChip()
-            HeroCard(report)
-            ByMonthCard(report)
-            SavingsRateCard(report)
-            IncomeSourcesSection(report)
-            ComparisonSection(report)
+internal class CashFlowReportViewProvider(
+    private val viewModel: CashFlowReportViewModel,
+    private val amountFormatter: AmountFormatter,
+    private val imageLoader: ImageLoader,
+) : ViewProvider {
+
+    @Composable
+    override fun View() {
+        val state by viewModel.state.collectAsState(initial = CashFlowReportViewModel.State())
+        Column(modifier = Modifier.fillMaxSize().background(ZeroTheme.colors.surface)) {
+            DetailTopBar(
+                title = stringResource(R.string.cashflow_title),
+                onBack = { viewModel.perform(CashFlowReportViewModel.Action.Back) },
+            )
+            val report = state.report ?: return
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                PeriodChip()
+                HeroCard(report, state.currencySymbol, amountFormatter)
+                ByMonthCard(report, state.currencySymbol, amountFormatter)
+                SavingsRateCard(report)
+                if (report.incomeSources.isNotEmpty()) {
+                    IncomeSourcesSection(report, state.currencySymbol, amountFormatter, imageLoader)
+                }
+                ComparisonSection(report, state.currencySymbol, amountFormatter)
+            }
         }
     }
 }
@@ -69,7 +84,7 @@ fun CashflowReportScreen(onBack: () -> Unit) {
 private fun PeriodChip() {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         Text(
-            text = "Last 6 months",
+            text = stringResource(R.string.analytics_period_last_6_months),
             modifier = Modifier
                 .clip(RoundedCornerShape(11.dp))
                 .background(ZeroTheme.colors.surfaceContainerLow)
@@ -80,7 +95,7 @@ private fun PeriodChip() {
 }
 
 @Composable
-private fun HeroCard(report: CashflowReport) {
+private fun HeroCard(report: CashFlowReportViewModel.Report, currencySymbol: String, formatter: AmountFormatter) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -89,7 +104,7 @@ private fun HeroCard(report: CashflowReport) {
             .padding(start = 20.dp, top = 18.dp, end = 20.dp, bottom = 16.dp),
     ) {
         Text(
-            text = "NET CASH FLOW",
+            text = stringResource(R.string.analytics_net_cash_flow).uppercase(),
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -98,14 +113,32 @@ private fun HeroCard(report: CashflowReport) {
             ),
         )
         Text(
-            text = fmtSign(report.net),
+            text = formatter.whole(report.net, currencySymbol),
             modifier = Modifier.padding(top = 5.dp, bottom = 14.dp),
             style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.islandContent),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HeroTile("IN", fmt0(report.totalIn), ZeroTheme.colors.islandPositive, ZeroTheme.colors.islandPositive.copy(alpha = 0.12f), Modifier.weight(1f))
-            HeroTile("OUT", fmt0(report.totalOut), ZeroTheme.colors.islandNegative, ZeroTheme.colors.islandNegative.copy(alpha = 0.12f), Modifier.weight(1f))
-            HeroTile("SAVED", "${report.savingsRate}%", ZeroTheme.colors.islandContent, ZeroTheme.colors.islandContent.copy(alpha = 0.06f), Modifier.weight(1f))
+            HeroTile(
+                label = stringResource(R.string.analytics_cash_in).uppercase(),
+                value = formatter.whole(report.totalIn, currencySymbol),
+                valueColor = ZeroTheme.colors.islandPositive,
+                background = ZeroTheme.colors.islandPositive.copy(alpha = 0.12f),
+                modifier = Modifier.weight(1f),
+            )
+            HeroTile(
+                label = stringResource(R.string.analytics_cash_out).uppercase(),
+                value = formatter.whole(report.totalOut, currencySymbol),
+                valueColor = ZeroTheme.colors.islandNegative,
+                background = ZeroTheme.colors.islandNegative.copy(alpha = 0.12f),
+                modifier = Modifier.weight(1f),
+            )
+            HeroTile(
+                label = stringResource(R.string.cashflow_saved).uppercase(),
+                value = stringResource(R.string.analytics_percent, report.savingsRate),
+                valueColor = ZeroTheme.colors.islandContent,
+                background = ZeroTheme.colors.islandContent.copy(alpha = 0.06f),
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -133,7 +166,7 @@ private fun HeroTile(label: String, value: String, valueColor: Color, background
 }
 
 @Composable
-private fun ByMonthCard(report: CashflowReport) {
+private fun ByMonthCard(report: CashFlowReportViewModel.Report, currencySymbol: String, formatter: AmountFormatter) {
     val inColor = ZeroTheme.colors.islandPositive
     val outColor = ZeroTheme.colors.islandNegative
     ReportCard {
@@ -142,27 +175,29 @@ private fun ByMonthCard(report: CashflowReport) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("By month", style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurface))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "${report.latest.label} in ${fmt0(report.latest.moneyIn)}",
-                    style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = inColor),
-                )
-                Text(
-                    "out ${fmt0(report.latest.moneyOut)}",
-                    style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = outColor),
-                )
+            Text(stringResource(R.string.cashflow_by_month), style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurface))
+            report.latest?.let { latest ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "${latest.label} ${stringResource(R.string.analytics_cash_in)} ${formatter.whole(Amount(latest.income.toDouble()), currencySymbol)}",
+                        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = inColor),
+                    )
+                    Text(
+                        text = "${stringResource(R.string.analytics_cash_out)} ${formatter.whole(Amount(latest.expense.toDouble()), currencySymbol)}",
+                        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = outColor),
+                    )
+                }
             }
         }
         BarChart(
             data = BarChartData(
-                report.months.map { BarGroup(it.label, listOf(BarValue(it.moneyIn, inColor), BarValue(it.moneyOut, outColor))) },
+                report.months.map { BarGroup(it.label, listOf(BarValue(it.income, inColor), BarValue(it.expense, outColor))) },
             ),
             modifier = Modifier.fillMaxWidth(),
             barAreaHeight = 120.dp,
         )
         Text(
-            text = "Tap a month for its breakdown",
+            text = stringResource(R.string.cashflow_tap_month),
             modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
             textAlign = TextAlign.Center,
             style = TextStyle(fontSize = 11.sp, color = ZeroTheme.colors.onSurfaceVariant),
@@ -171,7 +206,7 @@ private fun ByMonthCard(report: CashflowReport) {
 }
 
 @Composable
-private fun SavingsRateCard(report: CashflowReport) {
+private fun SavingsRateCard(report: CashFlowReportViewModel.Report) {
     ReportCard {
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
@@ -180,7 +215,7 @@ private fun SavingsRateCard(report: CashflowReport) {
         ) {
             Column {
                 Text(
-                    text = "SAVINGS RATE",
+                    text = stringResource(R.string.cashflow_savings_rate).uppercase(),
                     modifier = Modifier.padding(bottom = 4.dp),
                     style = TextStyle(
                         fontSize = 11.sp,
@@ -191,17 +226,17 @@ private fun SavingsRateCard(report: CashflowReport) {
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        "${report.savingsRate}%",
+                        stringResource(R.string.analytics_percent, report.savingsRate),
                         style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.primary),
                     )
                     Text(
-                        " avg",
+                        " ${stringResource(R.string.cashflow_savings_avg)}",
                         style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant),
                     )
                 }
             }
             Text(
-                "${report.savingsRateMin}–${report.savingsRateMax}% range",
+                stringResource(R.string.cashflow_savings_range, report.savingsRateMin, report.savingsRateMax),
                 style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurfaceVariant),
             )
         }
@@ -224,17 +259,27 @@ private fun SavingsRateCard(report: CashflowReport) {
 }
 
 @Composable
-private fun IncomeSourcesSection(report: CashflowReport) {
+private fun IncomeSourcesSection(
+    report: CashFlowReportViewModel.Report,
+    currencySymbol: String,
+    formatter: AmountFormatter,
+    imageLoader: ImageLoader,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionLabel("INCOME SOURCES")
-        report.incomeSources.forEachIndexed { index, source ->
-            IncomeRow(source, incomeIcon(index))
+        SectionLabel(stringResource(R.string.cashflow_income_sources).uppercase())
+        report.incomeSources.forEach { source ->
+            IncomeRow(source, currencySymbol, formatter, imageLoader)
         }
     }
 }
 
 @Composable
-private fun IncomeRow(source: IncomeShare, icon: ImageVector) {
+private fun IncomeRow(
+    source: CashFlowReportViewModel.IncomeShare,
+    currencySymbol: String,
+    formatter: AmountFormatter,
+    imageLoader: ImageLoader,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,8 +289,13 @@ private fun IncomeRow(source: IncomeShare, icon: ImageVector) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CategoryIconView(color = source.swatch, size = 38.dp) {
-            Icon(imageVector = icon, contentDescription = null, tint = ZeroTheme.colors.surface)
+        CategoryIconView(colorScheme = source.colorScheme.toUi(), size = 38.dp) { tint ->
+            imageLoader.View(
+                image = source.icon,
+                modifier = Modifier.sizeIn(maxHeight = 22.dp, maxWidth = 22.dp),
+                scale = ImageLoader.Scale.Crop,
+                tint = tint,
+            )
         }
         Column(modifier = Modifier.weight(1f)) {
             Row(
@@ -253,11 +303,11 @@ private fun IncomeRow(source: IncomeShare, icon: ImageVector) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(source.name, style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = ZeroTheme.colors.onSurface))
-                Text(fmt0(source.amount), style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface))
+                Text(formatter.whole(source.amount, currencySymbol), style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = ZeroTheme.colors.onSurface))
             }
-            ShareBar(fraction = source.sharePercent / 100f, color = source.swatch)
+            ShareBar(fraction = source.sharePercent / 100f, color = source.colorScheme.primary.toUi())
             Text(
-                text = "${source.sharePercent}% of income",
+                text = stringResource(R.string.cashflow_income_share, source.sharePercent),
                 modifier = Modifier.padding(top = 6.dp),
                 style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = ZeroTheme.colors.onSurfaceVariant),
             )
@@ -285,9 +335,9 @@ private fun ShareBar(fraction: Float, color: Color) {
 }
 
 @Composable
-private fun ComparisonSection(report: CashflowReport) {
+private fun ComparisonSection(report: CashFlowReportViewModel.Report, currencySymbol: String, formatter: AmountFormatter) {
     Column {
-        SectionLabel("VS PREVIOUS 6 MONTHS")
+        SectionLabel(stringResource(R.string.cashflow_vs_previous).uppercase())
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -296,34 +346,51 @@ private fun ComparisonSection(report: CashflowReport) {
                 .background(ZeroTheme.colors.surfaceContainerLowest)
                 .padding(horizontal = 16.dp),
         ) {
-            report.comparisons.forEachIndexed { index, row ->
-                if (index > 0) HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
-                ComparisonRow(row)
-            }
+            MoneyComparisonRow(stringResource(R.string.cashflow_money_in), report.moneyIn, currencySymbol, formatter)
+            HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
+            MoneyComparisonRow(stringResource(R.string.cashflow_money_out), report.moneyOut, currencySymbol, formatter)
+            HorizontalDivider(color = ZeroTheme.colors.surfaceContainer, thickness = 1.dp)
+            RateComparisonRow(stringResource(R.string.cashflow_savings_rate), report.savingsRateChange)
         }
     }
 }
 
 @Composable
-private fun ComparisonRow(row: PeriodComparison) {
-    val up = row.delta >= 0f
+private fun MoneyComparisonRow(label: String, delta: CashFlowReportViewModel.Delta, currencySymbol: String, formatter: AmountFormatter) {
+    ComparisonRow(
+        label = label,
+        value = formatter.whole(delta.now, currencySymbol),
+        deltaText = formatter.signed(delta.magnitude, delta.isPositive, currencySymbol),
+        isPositive = delta.isPositive,
+    )
+}
+
+@Composable
+private fun RateComparisonRow(label: String, change: CashFlowReportViewModel.RateChange) {
+    ComparisonRow(
+        label = label,
+        value = stringResource(R.string.analytics_percent, change.nowPercent),
+        deltaText = (if (change.isPositive) "+" else "−") + stringResource(R.string.cashflow_points, change.magnitudePoints),
+        isPositive = change.isPositive,
+    )
+}
+
+@Composable
+private fun ComparisonRow(label: String, value: String, deltaText: String, isPositive: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(row.label, style = TextStyle(fontSize = 14.sp, color = ZeroTheme.colors.onSurface))
+        Text(label, style = TextStyle(fontSize = 14.sp, color = ZeroTheme.colors.onSurface))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
+            Text(value, style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurface))
             Text(
-                text = if (row.isMoney) fmt0(row.nowValue) else "${row.nowValue.roundToInt()}%",
-                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.onSurface),
-            )
-            Text(
-                text = if (row.isMoney) fmtSign(row.delta) else "${if (up) "+" else ""}${row.delta.roundToInt()} pts",
+                text = deltaText,
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (up) ZeroTheme.colors.secondary else ZeroTheme.colors.error,
+                    color = if (isPositive) ZeroTheme.colors.secondary else ZeroTheme.colors.error,
                 ),
             )
         }
@@ -357,12 +424,6 @@ private fun SectionLabel(text: String) {
     )
 }
 
-private fun incomeIcon(index: Int): ImageVector = when (index) {
-    0 -> Icons.Outlined.Payments
-    1 -> Icons.Outlined.Work
-    else -> Icons.Outlined.Savings
-}
+private fun AmountFormatter.whole(amount: Amount, currencySymbol: String): String = format(amount, currencySymbol, AmountFormatter.Style.Whole)
 
-private fun fmt0(value: Float): String = "$" + "%,d".format(value.roundToInt())
-
-private fun fmtSign(value: Float): String = (if (value >= 0f) "+$" else "–$") + "%,d".format(abs(value).roundToInt())
+private fun AmountFormatter.signed(magnitude: Amount, isPositive: Boolean, currencySymbol: String): String = (if (isPositive) "+" else "−") + format(magnitude, currencySymbol, AmountFormatter.Style.Whole)

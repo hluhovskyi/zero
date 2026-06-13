@@ -27,6 +27,7 @@ import com.hluhovskyi.zero.activity.navigation.serialization.NavigationArgumentS
 import com.hluhovskyi.zero.activity.navigation.withValue
 import com.hluhovskyi.zero.activity.screens.bottombar.BottomBarComponent
 import com.hluhovskyi.zero.analytics.AnalyticsDetailComponent
+import com.hluhovskyi.zero.analytics.CashFlowReportComponent
 import com.hluhovskyi.zero.analytics.breakdown.SpendingBreakdownComponent
 import com.hluhovskyi.zero.backup.BackupDetailComponent
 import com.hluhovskyi.zero.backup.DriveSnapshotLoader
@@ -75,7 +76,6 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
-import com.hluhovskyi.zero.ui.chart.CashflowReportScreen
 import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
@@ -168,6 +168,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         val welcomeComponentBuilder: WelcomeComponent.Builder
         val transactionComponentBuilder: TransactionComponent.Builder
         val spendingBreakdownComponentBuilder: SpendingBreakdownComponent.Builder
+        val cashFlowReportComponentBuilder: CashFlowReportComponent.Builder
         val transactionEditComponentBuilder: TransactionEditComponent.Builder
         val transactionPreviewComponentBuilder: TransactionPreviewComponent.Builder
 
@@ -1031,9 +1032,16 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @IntoSet
         @MainActivityScreenScope
         fun cashFlowNavigationEntry(
+            cashFlowReportComponentBuilder: CashFlowReportComponent.Builder,
             navigatorScope: NavigatorScope,
-        ): NavigatorEntry = navigatorScope.composable(Destinations.CashFlow) {
-            CashflowReportScreen(onBack = { navigator.back() })
+            logger: Logger,
+        ): NavigatorEntry = navigatorScope.buildable(
+            destination = Destinations.CashFlow,
+            displayOption = NavigatorEntry.DisplayOption.FullyVisible,
+        ) {
+            cashFlowReportComponentBuilder
+                .onBackHandler { navigator.back() }
+                .logging(logger)
         }
 
         @Provides

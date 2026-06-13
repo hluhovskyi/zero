@@ -455,4 +455,19 @@
         <item quantity="one">See all %1$d category</item>
         <item quantity="other">See all %1$d categories</item>
     </plurals>
+
+    <!-- Cash-flow report -->
+    <string name="cashflow_title">Cash flow</string>
+    <string name="cashflow_saved">Saved</string>
+    <string name="cashflow_by_month">By month</string>
+    <string name="cashflow_tap_month">Tap a month for its breakdown</string>
+    <string name="cashflow_savings_rate">Savings rate</string>
+    <string name="cashflow_savings_avg">avg</string>
+    <string name="cashflow_savings_range">%1$d–%2$d%% range</string>
+    <string name="cashflow_income_sources">Income sources</string>
+    <string name="cashflow_income_share">%1$d%% of income</string>
+    <string name="cashflow_vs_previous">vs previous 6 months</string>
+    <string name="cashflow_money_in">Money in</string>
+    <string name="cashflow_money_out">Money out</string>
+    <string name="cashflow_points">%1$d pts</string>
 </resources>
