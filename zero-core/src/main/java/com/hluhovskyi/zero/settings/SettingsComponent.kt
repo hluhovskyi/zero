@@ -55,7 +55,6 @@ abstract class SettingsComponent : AttachableViewComponent {
             .onImportSelectedHandler(OnImportSelectedHandler.Noop)
             .onBackupSelectedHandler(OnBackupSelectedHandler.Noop)
             .onDevChartsSelectedHandler(OnDevChartsSelectedHandler.Noop)
-            .onDevCashFlowSelectedHandler(OnDevCashFlowSelectedHandler.Noop)
             .isDebugBuild(false)
             .settingsCurrencyUseCase(SettingsCurrencyUseCase.Noop)
     }
@@ -72,9 +71,6 @@ abstract class SettingsComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onDevChartsSelectedHandler(handler: OnDevChartsSelectedHandler): Builder
-
-        @BindsInstance
-        fun onDevCashFlowSelectedHandler(handler: OnDevCashFlowSelectedHandler): Builder
 
         @BindsInstance
         fun isDebugBuild(isDebugBuild: Boolean): Builder
@@ -112,7 +108,6 @@ abstract class SettingsComponent : AttachableViewComponent {
             onImportSelected: OnImportSelectedHandler,
             onBackupSelected: OnBackupSelectedHandler,
             onDevChartsSelected: OnDevChartsSelectedHandler,
-            onDevCashFlowSelected: OnDevCashFlowSelectedHandler,
             isDebugBuild: Boolean,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             settingsCurrencyUseCase: SettingsCurrencyUseCase,
@@ -126,7 +121,6 @@ abstract class SettingsComponent : AttachableViewComponent {
             onImportSelected = onImportSelected,
             onBackupSelected = onBackupSelected,
             onDevChartsSelected = onDevChartsSelected,
-            onDevCashFlowSelected = onDevCashFlowSelected,
             isDebugBuild = isDebugBuild,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             settingsCurrencyUseCase = settingsCurrencyUseCase,

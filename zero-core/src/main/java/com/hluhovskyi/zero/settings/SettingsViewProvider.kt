@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CloudUpload
@@ -181,12 +180,6 @@ private fun MoreView(viewModel: SettingsViewModel) {
                             primaryText = stringResource(R.string.settings_dev_charts),
                             secondaryText = stringResource(R.string.settings_dev_charts_description),
                             onClick = { viewModel.perform(SettingsViewModel.Action.OpenDevCharts) },
-                        )
-                        MoreRow(
-                            icon = Icons.AutoMirrored.Outlined.ShowChart,
-                            primaryText = stringResource(R.string.settings_dev_cashflow),
-                            secondaryText = stringResource(R.string.settings_dev_cashflow_description),
-                            onClick = { viewModel.perform(SettingsViewModel.Action.OpenDevCashFlow) },
                         )
                     }
                 }

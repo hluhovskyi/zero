@@ -543,7 +543,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): AttachableViewComponent = componentBuilder
             .onSeeAllCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
-            .onCashFlowTrendsSelectedHandler { navigator.navigateTo(Destinations.Dev.CashFlow) }
+            .onCashFlowTrendsSelectedHandler { navigator.navigateTo(Destinations.CashFlow) }
             .onAnalyticsCategorySelectedHandler { categoryId ->
                 navigator.navigateTo(
                     Destinations.Category.Item.Detail,
@@ -1011,7 +1011,6 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
                 .onImportSelectedHandler { navigator.navigateTo(Destinations.Import) }
                 .onBackupSelectedHandler { navigator.navigateTo(Destinations.Backup) }
                 .onDevChartsSelectedHandler { navigator.navigateTo(Destinations.Dev.Charts) }
-                .onDevCashFlowSelectedHandler { navigator.navigateTo(Destinations.Dev.CashFlow) }
                 .isDebugBuild(BuildConfig.DEBUG)
                 .settingsCurrencyUseCase(settingsCurrencyUseCase)
                 .biometricLockUseCase(biometricLockUseCase)
@@ -1031,9 +1030,9 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
         @Provides
         @IntoSet
         @MainActivityScreenScope
-        fun devCashFlowNavigationEntry(
+        fun cashFlowNavigationEntry(
             navigatorScope: NavigatorScope,
-        ): NavigatorEntry = navigatorScope.composable(Destinations.Dev.CashFlow) {
+        ): NavigatorEntry = navigatorScope.composable(Destinations.CashFlow) {
             CashflowReportScreen(onBack = { navigator.back() })
         }
 
