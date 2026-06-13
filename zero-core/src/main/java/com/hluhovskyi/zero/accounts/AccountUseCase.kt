@@ -14,5 +14,7 @@ interface AccountUseCase : ActionStateModel<AccountUseCase.Action, AccountUseCas
         val liabilities: Amount = Amount.zero(),
         val currency: Currency? = null,
         val accounts: List<Account> = emptyList(),
+        val netWorthTrend: List<Amount> = emptyList(),
+        val netWorthChange: NetWorthChange? = null,
     )
 }

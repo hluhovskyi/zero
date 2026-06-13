@@ -4,8 +4,6 @@ import com.hluhovskyi.zero.accounts.AccountsQueryUseCase
 import com.hluhovskyi.zero.categories.CategoriesQueryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.transactions.TransactionRepository
-import com.hluhovskyi.zero.transactions.breakdown.DefaultSpendingBreakdownUseCase
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import dagger.Provides
 import javax.inject.Scope
 
@@ -26,6 +24,7 @@ private annotation class AnalyticsScope
 interface AnalyticsComponent {
 
     val spendingBreakdownUseCase: SpendingBreakdownUseCase
+    val monthlyCashFlowUseCase: MonthlyCashFlowUseCase
 
     interface Dependencies {
         val transactionRepository: TransactionRepository
@@ -54,6 +53,16 @@ interface AnalyticsComponent {
             transactionRepository = transactionRepository,
             categoriesQueryUseCase = categoriesQueryUseCase,
             accountsQueryUseCase = accountsQueryUseCase,
+            currencyConvertUseCase = currencyConvertUseCase,
+        )
+
+        @Provides
+        @AnalyticsScope
+        fun monthlyCashFlowUseCase(
+            transactionRepository: TransactionRepository,
+            currencyConvertUseCase: CurrencyConvertUseCase,
+        ): MonthlyCashFlowUseCase = DefaultMonthlyCashFlowUseCase(
+            transactionRepository = transactionRepository,
             currencyConvertUseCase = currencyConvertUseCase,
         )
     }

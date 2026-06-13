@@ -10,7 +10,6 @@ import com.hluhovskyi.zero.common.Image
 import com.hluhovskyi.zero.common.coroutines.DispatcherProvider
 import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -173,7 +172,7 @@ class DefaultAnalyticsViewModelTest {
     private fun analyticsWith(
         totalIn: String = "0",
         totalOut: String = "0",
-        cashFlow: List<AnalyticsDetailUseCase.CashFlowBucket> = emptyList(),
+        cashFlow: List<MonthlyCashFlowUseCase.MonthBucket> = emptyList(),
         breakdown: List<SpendingBreakdownUseCase.CategorySpend> = emptyList(),
         categoryCount: Int = 0,
     ) = AnalyticsDetailUseCase.Analytics(
@@ -188,7 +187,7 @@ class DefaultAnalyticsViewModelTest {
         ),
     )
 
-    private fun bucket(label: String, income: String, expense: String) = AnalyticsDetailUseCase.CashFlowBucket(
+    private fun bucket(label: String, income: String, expense: String) = MonthlyCashFlowUseCase.MonthBucket(
         label = label,
         income = Amount(BigDecimal(income)),
         expense = Amount(BigDecimal(expense)),

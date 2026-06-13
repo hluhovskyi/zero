@@ -5,6 +5,7 @@ import com.hluhovskyi.zero.accounts.AccountDetailSpendingUseCase
 import com.hluhovskyi.zero.accounts.AccountRepository
 import com.hluhovskyi.zero.accounts.AccountUseCase
 import com.hluhovskyi.zero.accounts.DefaultAccountUseCase
+import com.hluhovskyi.zero.analytics.MonthlyCashFlowUseCase
 import com.hluhovskyi.zero.colors.ColorRepository
 import com.hluhovskyi.zero.common.AmountFormatter
 import com.hluhovskyi.zero.common.AttachableViewComponent
@@ -14,6 +15,7 @@ import com.hluhovskyi.zero.common.OnBackHandler
 import com.hluhovskyi.zero.common.ViewProvider
 import com.hluhovskyi.zero.common.time.Clock
 import com.hluhovskyi.zero.common.time.ZoneProvider
+import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyConvertUseCase
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.currencies.CurrencyRepository
@@ -57,9 +59,11 @@ abstract class AccountDetailComponent : AttachableViewComponent {
         val colorRepository: ColorRepository
         val currencyPrimaryUseCase: CurrencyPrimaryUseCase
         val currencyConvertUseCase: CurrencyConvertUseCase
+        val monthlyCashFlowUseCase: MonthlyCashFlowUseCase
 
         val clock: Clock
         val zoneProvider: ZoneProvider
+        val zonedClock: ZonedClock
     }
 
     companion object {
@@ -107,6 +111,8 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             colorRepository: ColorRepository,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             currencyConvertUseCase: CurrencyConvertUseCase,
+            monthlyCashFlowUseCase: MonthlyCashFlowUseCase,
+            zonedClock: ZonedClock,
         ): AccountUseCase = DefaultAccountUseCase(
             accountRepository = accountRepository,
             transactionRepository = transactionRepository,
@@ -115,6 +121,8 @@ abstract class AccountDetailComponent : AttachableViewComponent {
             colorRepository = colorRepository,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             currencyConvertUseCase = currencyConvertUseCase,
+            monthlyCashFlowUseCase = monthlyCashFlowUseCase,
+            zonedClock = zonedClock,
         )
 
         @Provides

@@ -52,10 +52,15 @@ internal class DefaultAccountViewModel(
                 .collectLatest { (useCaseState, hasAdded) ->
                     mutableState.update { state ->
                         state.copy(
-                            balance = useCaseState.balance,
-                            assets = useCaseState.assets,
-                            liabilities = useCaseState.liabilities,
-                            currency = useCaseState.currency,
+                            netWorth = AccountViewModel.State.NetWorth(
+                                balance = useCaseState.balance,
+                                assets = useCaseState.assets,
+                                liabilities = useCaseState.liabilities,
+                                currency = useCaseState.currency,
+                                trendPoints = useCaseState.netWorthTrend.map { it.value.toFloat() },
+                                change = useCaseState.netWorthChange,
+                                isNegative = useCaseState.balance < 0L,
+                            ),
                             activeAccounts = useCaseState.accounts.filter { it.archivedAt == null },
                             archivedAccounts = useCaseState.accounts.filter { it.archivedAt != null },
                             hasAddedAccount = hasAdded,

@@ -1,5 +1,6 @@
 package com.hluhovskyi.zero.analytics.breakdown
 
+import com.hluhovskyi.zero.analytics.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.colors.ColorScheme
 import com.hluhovskyi.zero.common.Amount
 import com.hluhovskyi.zero.common.BaseViewModel
@@ -10,7 +11,6 @@ import com.hluhovskyi.zero.common.time.ZonedClock
 import com.hluhovskyi.zero.currencies.CurrencyPrimaryUseCase
 import com.hluhovskyi.zero.transactions.TransactionFilter
 import com.hluhovskyi.zero.transactions.TransactionFilterCriteria
-import com.hluhovskyi.zero.transactions.breakdown.SpendingBreakdownUseCase
 import com.hluhovskyi.zero.transactions.toDateRange
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
