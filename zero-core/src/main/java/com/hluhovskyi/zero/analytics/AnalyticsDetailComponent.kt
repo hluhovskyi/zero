@@ -50,6 +50,7 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
         fun builder(dependencies: Dependencies): Builder = DaggerAnalyticsDetailComponent.builder()
             .dependencies(dependencies)
             .onSeeAllCategoriesHandler(OnSeeAllCategoriesHandler.Noop)
+            .onCashFlowTrendsSelectedHandler(OnCashFlowTrendsSelectedHandler.Noop)
             .onAnalyticsCategorySelectedHandler(OnAnalyticsCategorySelectedHandler.Noop)
     }
 
@@ -59,6 +60,9 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
 
         @BindsInstance
         fun onSeeAllCategoriesHandler(handler: OnSeeAllCategoriesHandler): Builder
+
+        @BindsInstance
+        fun onCashFlowTrendsSelectedHandler(handler: OnCashFlowTrendsSelectedHandler): Builder
 
         @BindsInstance
         fun onAnalyticsCategorySelectedHandler(handler: OnAnalyticsCategorySelectedHandler): Builder
@@ -83,6 +87,7 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
             analyticsDetailUseCase: AnalyticsDetailUseCase,
             currencyPrimaryUseCase: CurrencyPrimaryUseCase,
             onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
+            onCashFlowTrendsSelectedHandler: OnCashFlowTrendsSelectedHandler,
             onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
             zonedClock: ZonedClock,
             dispatcherProvider: DispatcherProvider,
@@ -90,6 +95,7 @@ abstract class AnalyticsDetailComponent : AttachableViewComponent {
             analyticsDetailUseCase = analyticsDetailUseCase,
             currencyPrimaryUseCase = currencyPrimaryUseCase,
             onSeeAllCategoriesHandler = onSeeAllCategoriesHandler,
+            onCashFlowTrendsSelectedHandler = onCashFlowTrendsSelectedHandler,
             onAnalyticsCategorySelectedHandler = onAnalyticsCategorySelectedHandler,
             zonedClock = zonedClock,
             dispatchers = dispatcherProvider,

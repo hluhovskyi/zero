@@ -75,6 +75,7 @@ import com.hluhovskyi.zero.transactions.edit.TransactionEditCurrencyUseCase
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterSheetComponent
 import com.hluhovskyi.zero.transactions.filter.TransactionFilterUseCase
 import com.hluhovskyi.zero.transactions.preview.TransactionPreviewComponent
+import com.hluhovskyi.zero.ui.chart.CashflowReportScreen
 import com.hluhovskyi.zero.ui.chart.ChartsGalleryScreen
 import com.hluhovskyi.zero.welcome.WelcomeComponent
 import dagger.BindsInstance
@@ -542,6 +543,7 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             logger: Logger,
         ): AttachableViewComponent = componentBuilder
             .onSeeAllCategoriesHandler { navigator.navigateTo(Destinations.Category.All) }
+            .onCashFlowTrendsSelectedHandler { navigator.navigateTo(Destinations.CashFlow) }
             .onAnalyticsCategorySelectedHandler { categoryId ->
                 navigator.navigateTo(
                     Destinations.Category.Item.Detail,
@@ -1023,6 +1025,15 @@ internal abstract class MainActivityScreenComponent : AttachableViewComponent {
             navigatorScope: NavigatorScope,
         ): NavigatorEntry = navigatorScope.composable(Destinations.Dev.Charts) {
             ChartsGalleryScreen(onBack = { navigator.back() })
+        }
+
+        @Provides
+        @IntoSet
+        @MainActivityScreenScope
+        fun cashFlowNavigationEntry(
+            navigatorScope: NavigatorScope,
+        ): NavigatorEntry = navigatorScope.composable(Destinations.CashFlow) {
+            CashflowReportScreen(onBack = { navigator.back() })
         }
 
         @Provides

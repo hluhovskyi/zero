@@ -71,7 +71,14 @@ internal class AnalyticsViewProvider(
                 .padding(bottom = 24.dp),
         ) {
             Header()
-            state.cashFlow?.let { FlowCard(it, state.currencySymbol, amountFormatter) }
+            state.cashFlow?.let {
+                FlowCard(
+                    cashFlow = it,
+                    currencySymbol = state.currencySymbol,
+                    amountFormatter = amountFormatter,
+                    onViewTrends = { viewModel.perform(AnalyticsViewModel.Action.ViewCashFlowTrends) },
+                )
+            }
             state.breakdown?.let { breakdown ->
                 BreakdownCard(
                     breakdown = breakdown,
@@ -126,6 +133,7 @@ private fun FlowCard(
     cashFlow: AnalyticsViewModel.CashFlow,
     currencySymbol: String,
     amountFormatter: AmountFormatter,
+    onViewTrends: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -167,6 +175,21 @@ private fun FlowCard(
             ),
             modifier = Modifier.fillMaxWidth(),
         )
+        Spacer(Modifier.height(16.dp))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(ZeroTheme.colors.islandContent.copy(alpha = 0.08f)))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onViewTrends)
+                .padding(top = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.analytics_view_cash_flow_trends),
+                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ZeroTheme.colors.islandAction),
+            )
+            Icon(Icons.Filled.KeyboardArrowRight, contentDescription = null, tint = ZeroTheme.colors.islandAction, modifier = Modifier.size(18.dp))
+        }
     }
 }
 

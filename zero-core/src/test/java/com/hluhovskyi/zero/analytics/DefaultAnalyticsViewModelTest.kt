@@ -40,6 +40,7 @@ class DefaultAnalyticsViewModelTest {
     }
 
     private var seeAllInvoked = false
+    private var trendsInvoked = false
     private var selectedCategory: Id.Known? = null
 
     private val fakeClock = object : ZonedClock {
@@ -143,6 +144,15 @@ class DefaultAnalyticsViewModelTest {
     }
 
     @Test
+    fun `ViewCashFlowTrends forwards to the handler`() = runTest {
+        val viewModel = createViewModel()
+        viewModel.perform(AnalyticsViewModel.Action.ViewCashFlowTrends)
+        runCurrent()
+
+        assertTrue(trendsInvoked)
+    }
+
+    @Test
     fun `SelectCategory forwards the id to the handler`() = runTest {
         val viewModel = createViewModel()
         viewModel.perform(AnalyticsViewModel.Action.SelectCategory(Id.Known("c3")))
@@ -162,6 +172,7 @@ class DefaultAnalyticsViewModelTest {
         analyticsDetailUseCase = fakeUseCase,
         currencyPrimaryUseCase = fakeCurrency,
         onSeeAllCategoriesHandler = { seeAllInvoked = true },
+        onCashFlowTrendsSelectedHandler = { trendsInvoked = true },
         onAnalyticsCategorySelectedHandler = { selectedCategory = it },
         zonedClock = fakeClock,
         dispatchers = dispatchers,

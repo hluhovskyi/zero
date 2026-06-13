@@ -96,6 +96,7 @@ internal object Destinations {
         }
     }
 
+    object CashFlow : Destination by destinationOf("cashflow")
     object Settings : Destination by destinationOf("settings")
     object Backup : Destination by destinationOf("backup")
     object Import : Destination by destinationOf("import", InitialSource) {

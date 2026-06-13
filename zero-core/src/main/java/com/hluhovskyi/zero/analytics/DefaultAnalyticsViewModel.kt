@@ -27,6 +27,7 @@ internal class DefaultAnalyticsViewModel(
     private val analyticsDetailUseCase: AnalyticsDetailUseCase,
     private val currencyPrimaryUseCase: CurrencyPrimaryUseCase,
     private val onSeeAllCategoriesHandler: OnSeeAllCategoriesHandler,
+    private val onCashFlowTrendsSelectedHandler: OnCashFlowTrendsSelectedHandler,
     private val onAnalyticsCategorySelectedHandler: OnAnalyticsCategorySelectedHandler,
     private val zonedClock: ZonedClock,
     private val dispatchers: DispatcherProvider,
@@ -40,6 +41,9 @@ internal class DefaultAnalyticsViewModel(
         when (action) {
             is AnalyticsViewModel.Action.SeeAllCategories ->
                 scope.launch(dispatchers.main()) { onSeeAllCategoriesHandler.onSeeAllCategories() }
+
+            is AnalyticsViewModel.Action.ViewCashFlowTrends ->
+                scope.launch(dispatchers.main()) { onCashFlowTrendsSelectedHandler.onCashFlowTrendsSelected() }
 
             is AnalyticsViewModel.Action.SelectCategory ->
                 scope.launch(dispatchers.main()) { onAnalyticsCategorySelectedHandler.onSelected(action.categoryId) }
